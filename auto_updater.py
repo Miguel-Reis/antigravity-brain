@@ -41,7 +41,7 @@ def get_git_status() -> Dict[str, Any]:
 
     _, sha = _run_git(["rev-parse", "--short", "HEAD"])
     _, branch = _run_git(["rev-parse", "--abbrev-ref", "HEAD"])
-    _, remote_url = _run_git([" remote", "get-url", "origin"])
+    _, remote_url = _run_git(["remote", "get-url", "origin"])
     if not remote_url or "unknown" in remote_url.lower():
         _, remote_url = _run_git(["config", "--get", "remote.origin.url"])
     _, last_msg = _run_git(["log", "-1", "--pretty=%s (%cr)"])
