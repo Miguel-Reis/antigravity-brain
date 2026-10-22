@@ -137,15 +137,26 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             return {}
         user_query = f"workspace {ws} architecture environment"
 
-    # Evita injetar novamente nos sub-passos de tool loop do mesmo pedido do utilizador
+    # Evita injetar novamente nos sub-passos de tool loop do mesmo pedido do utilizador,
+    # mas atualiza o progresso em tempo real no Swarm Monitor!
+    swarm_eng = SwarmEngine(db)
     if not db.mark_turn_injected(conv_id, user_query):
+        try:
+            swarm_eng.on_turn_step(inv_num)
+        except Exception:
+            pass
         return {}
+
+    try:
+        swarm_eng.on_turn_start(user_query, raw_ws)
+    except Exception:
+        pass
 
     memories = db.search_memories(query=user_query, workspace=ws, n_results=5)
     checkpoint = db.get_checkpoint(ws)
     scout_map = ""
     try:
-        scout_map = SwarmEngine(db).get_latest_scout_map(ws)
+        scout_map = swarm_eng.get_latest_scout_map(ws)
     except Exception:
         scout_map = ""
 

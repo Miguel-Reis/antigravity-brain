@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from brain_inject import resolve_transcript_path
 from db_engine import BrainDB
+from swarm_engine import SwarmEngine
 
 
 def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: BrainDB) -> int:
@@ -77,14 +78,14 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
             if is_new:
                 harvested_count += 1
 
-        # 2. Extrai edições de ficheiros (write_to_file / replace_file_content)
+        # 2. Extrai edições de ficheiros (write_file / edit_file / write_to_file / replace_file_content)
         tool_calls = step.get("tool_calls") or []
         for tc in tool_calls:
             t_name = tc.get("name", "")
             args = tc.get("args") or {}
-            if t_name in ("write_to_file", "replace_file_content"):
-                target_file = str(args.get("TargetFile", "")).strip('"').replace("\\\\", "/")
-                desc = str(args.get("Description", "")).strip('"')
+            if t_name in ("write_to_file", "replace_file_content", "write_file", "edit_file"):
+                target_file = str(args.get("TargetFile") or args.get("Path") or "").strip('"').replace("\\\\", "/")
+                desc = str(args.get("Description") or args.get("Instruction") or "Edição cirúrgica").strip('"')
                 if target_file and "/brain/" not in target_file:
                     bname = os.path.basename(target_file)
                     if bname not in modified_files:
@@ -110,6 +111,12 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
             last_completed="; ".join(completed_actions[-3:])[:300],
             key_files=", ".join(modified_files[-6:])[:200],
         )
+
+    # 3b. Atualiza o Swarm Monitor automaticamente no fecho do turno
+    try:
+        SwarmEngine(db).on_turn_complete(modified_files, completed_actions)
+    except Exception:
+        pass
 
     # 4. Regista telemetria real do turno
     db.log_telemetry(
