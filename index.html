@@ -1321,10 +1321,10 @@
     <!-- Top Blueprint Bar -->
     <div class="swarm-topbar">
       <div style="display:flex; align-items:center; gap:12px;">
-        <span style="color:#ec4899; font-weight:700; font-size:12px;">● v2.4-swarm</span>
-        <span style="color:var(--text-muted); font-size:11.5px;">scout: <strong style="color:#6ee7b7;">scout-flash-lite (1x read)</strong></span>
-        <span style="color:var(--text-muted); font-size:11.5px;">architect: <strong style="color:#f472b6;" id="swArchModel">opus-5.5</strong></span>
-        <span style="color:var(--text-muted); font-size:11.5px;">workers: <strong style="color:#c4b5fd;" id="swDispModel">haiku-4.5 / flash</strong></span>
+        <span style="color:#ec4899; font-weight:700; font-size:12px;">● agy-swarm v2.4</span>
+        <span style="color:var(--text-muted); font-size:11.5px;">scout: <strong style="color:#6ee7b7;" id="swScoutModel">flash_lite (research)</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">architect: <strong style="color:#f472b6;" id="swArchModel">pro (Gemini Pro)</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">workers: <strong style="color:#c4b5fd;" id="swDispModel">flash / flash_lite</strong></span>
       </div>
 
       <div class="swarm-stage-pills">
@@ -1348,7 +1348,7 @@
         <button class="btn-scout-emerald" onclick="triggerScoutOnly()" title="Lança apenas o Agente Batedor (Scout) para ler a codebase 1x e atualizar o Mapa Partilhado no brain.db">
           🔍 Scout Codebase (1x)
         </button>
-        <button class="btn-swarm-pink" onclick="triggerSwarmRun()" title="Executa SCOUT (1x) ➔ PLAN (Opus) ➔ 24 Workers Paralelos (Flash) ➔ 48 Verify Checks">
+        <button class="btn-swarm-pink" onclick="triggerSwarmRun()" title="Executa SCOUT (flash_lite) ➔ PLAN (pro) ➔ 24 Workers Paralelos (flash / flash_lite) ➔ 48 Verify Checks">
           ⚡ Run Swarm (24 Lanes)
         </button>
       </div>
@@ -1371,11 +1371,11 @@
         </div>
       </div>
 
-      <!-- Box 1: ARCHITECT (Opus 5.5) -->
+      <!-- Box 1: ARCHITECT (Antigravity Pro) -->
       <div class="bp-box pink-border">
         <div class="bp-header pink">
           <span>1. ARCHITECT</span>
-          <span>opus-5.5</span>
+          <span>Model: pro (Gemini Pro)</span>
         </div>
         <div class="bp-body">
           <div class="bp-kv"><span>role:</span> <strong>planner (decoupled)</strong></div>
@@ -1386,11 +1386,11 @@
         </div>
       </div>
 
-      <!-- Box 2: DISPATCHER (Haiku 4.5 / Flash) -->
+      <!-- Box 2: DISPATCHER (Antigravity invoke_subagent: flash / flash_lite) -->
       <div class="bp-box">
         <div class="bp-header">
-          <span>2. DISPATCHER</span>
-          <span>haiku-4.5 · flash</span>
+          <span>2. DISPATCHER (invoke_subagent)</span>
+          <span>Model: flash · flash_lite</span>
         </div>
         <div class="bp-body" style="justify-content:space-between;">
           <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-muted);">
@@ -1485,7 +1485,7 @@
       <div class="bp-box">
         <div class="bp-header">
           <span>QUEUE · 24 PARALLEL LANES</span>
-          <span>haiku-4.5 / flash</span>
+          <span>Model: flash / flash_lite</span>
         </div>
         <div class="bp-body">
           <div class="queue-counters">
@@ -1513,7 +1513,7 @@
             <span style="color:#6ee7b7; font-size:11px; font-weight:700;" id="swAuditPassBadge">✓ 48/48 VERIFIED</span>
           </div>
           <div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">
-            claude/agy $ <span style="color:#f472b6;">swarm run --scout-once --agents 24 --parallel</span>
+            antigravity $ <span style="color:#f472b6;">invoke_subagent --scout flash_lite --arch pro --workers flash</span>
           </div>
         </div>
       </div>
@@ -2602,8 +2602,10 @@
       const logs = data.logs || [];
 
       // Top metadata
-      document.getElementById('swArchModel').textContent = run.architect_model || 'opus-5.5';
-      document.getElementById('swDispModel').textContent = run.dispatcher_model || 'haiku-4.5 / flash';
+      document.getElementById('swArchModel').textContent = run.architect_model || 'pro (Gemini Pro)';
+      document.getElementById('swDispModel').textContent = run.dispatcher_model || 'flash (Gemini Flash)';
+      const scoutModEl = document.getElementById('swScoutModel');
+      if (scoutModEl) scoutModEl.textContent = run.scout_model || 'flash_lite (research)';
       document.getElementById('swScoutTime').textContent = `${run.scout_duration_ms || 11.4} ms`;
       document.getElementById('swScoutFiles').textContent = `${run.scout_files_count || 0} ficheiros lidos 1x`;
       document.getElementById('swScoutSymbols').textContent = `${run.scout_symbols_count || 0} símbolos AST`;
@@ -2653,7 +2655,7 @@
           return `
             <div class="worker-card ${escapeHtml(t.status)}" onclick="cycleTaskStatus('${escapeHtml(t.task_code)}', '${escapeHtml(t.status)}')" title="Clique para alternar estado de ${escapeHtml(t.task_code)}">
               <div class="wc-head">
-                <span>${escapeHtml(t.task_code)}</span>
+                <span>${escapeHtml(t.task_code)} · <small style="opacity:0.9;">${escapeHtml(t.worker_model || 'flash · self')}</small></span>
                 <span>${escapeHtml(t.status === 'done' ? (t.duration_sec + 's') : t.status)}</span>
               </div>
               <div class="wc-body">

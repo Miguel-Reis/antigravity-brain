@@ -41,11 +41,11 @@ CODE_EXTENSIONS = {
 class SwarmEngine:
     """
     Motor Asymmetric Swarm + Scout Shared Codebase Blackboard para Antigravity Brain v2.
-    Fluxo:
-      0. SCOUT (flash-lite / AST Scanner): Lê a codebase 1 única vez e grava um Mapa Partilhado no brain.db.
-      1. ARCHITECT (opus-5.5 / pro): Lê o objetivo + Mapa do Scout 1 vez, gera as 4 lanes (UI, API, TESTS, DOCS) e para de gastar tokens.
-      2. SWARM WORKERS (flash / flash-lite): Recebem o Mapa Partilhado do Scout sem reler ficheiros, executam em paralelo e atualizam o estado.
-      3. VERIFY & MERGE: Executa 2 checks automáticos por tarefa (48/48 checks para 24 tarefas) e consolida o resultado.
+    Usa os modelos e subagentes nativos do Antigravity (invoke_subagent):
+      0. SCOUT (Model='flash_lite', TypeName='research'): Lê a codebase 1 única vez e grava um Mapa Partilhado no brain.db.
+      1. ARCHITECT (Model='pro' / inherit): Lê o objetivo + Mapa do Scout 1 vez, gera as 4 lanes (UI, API, TESTS, DOCS) e para de gastar tokens.
+      2. SWARM WORKERS (Model='flash' | 'flash_lite', TypeName='self' | 'test-engineer'): Recebem o Mapa Partilhado do Scout sem reler ficheiros, executam em paralelo e atualizam o estado.
+      3. VERIFY & MERGE (TypeName='code-reviewer' / automated gates): Executa 2 checks automáticos por tarefa (48/48 checks) e consolida o resultado.
     """
 
     def __init__(self, db: Optional[BrainDB] = None) -> None:
@@ -62,9 +62,9 @@ class SwarmEngine:
                     workspace TEXT DEFAULT 'brain_mcp',
                     workspace_path TEXT DEFAULT '',
                     status TEXT DEFAULT 'done',
-                    architect_model TEXT DEFAULT 'opus-5.5',
-                    dispatcher_model TEXT DEFAULT 'haiku-4.5 / flash',
-                    scout_model TEXT DEFAULT 'scout-flash-lite',
+                    architect_model TEXT DEFAULT 'pro (Gemini Pro)',
+                    dispatcher_model TEXT DEFAULT 'flash (Gemini Flash)',
+                    scout_model TEXT DEFAULT 'flash_lite (research)',
                     architect_tokens INTEGER DEFAULT 2840,
                     scout_files_count INTEGER DEFAULT 0,
                     scout_symbols_count INTEGER DEFAULT 0,
@@ -96,7 +96,7 @@ class SwarmEngine:
                     title TEXT NOT NULL,
                     target_file TEXT DEFAULT '',
                     symbols_hint TEXT DEFAULT '',
-                    worker_model TEXT DEFAULT 'flash-4.5',
+                    worker_model TEXT DEFAULT 'flash',
                     status TEXT DEFAULT 'queued',
                     progress INTEGER DEFAULT 0,
                     verify_1 INTEGER DEFAULT 0,
@@ -129,6 +129,35 @@ class SwarmEngine:
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_swarm_logs_run ON swarm_logs(run_id);"
+            )
+
+            # Migrar registos antigos para a nomenclatura nativa de modelos do Antigravity
+            conn.execute(
+                """
+                UPDATE swarm_runs
+                SET architect_model = 'pro (Gemini Pro)',
+                    dispatcher_model = 'flash (Gemini Flash)',
+                    scout_model = 'flash_lite (research)'
+                WHERE architect_model LIKE '%opus%' OR dispatcher_model LIKE '%haiku%';
+                """
+            )
+            conn.execute(
+                """
+                UPDATE swarm_tasks
+                SET worker_model = CASE
+                    WHEN lane = 'TESTS' THEN 'flash · test-engineer'
+                    WHEN lane = 'DOCS' THEN 'flash_lite · self'
+                    ELSE 'flash · self'
+                END
+                WHERE worker_model LIKE '%haiku%' OR worker_model = 'flash-4.5';
+                """
+            )
+            conn.execute(
+                """
+                UPDATE swarm_logs
+                SET message = REPLACE(REPLACE(message, 'opus-5.5', 'Model=pro'), 'haiku-4.5', 'Model=flash')
+                WHERE message LIKE '%opus%' OR message LIKE '%haiku%';
+                """
             )
 
     @staticmethod
@@ -344,6 +373,12 @@ class SwarmEngine:
             ("docs-06", "PR merge & changelog summary", "ultraplan.md", "§ Release Notes"),
         ]
 
+        lane_models = {
+            "UI": "flash · self",
+            "API": "flash · self",
+            "TESTS": "flash · test-engineer",
+            "DOCS": "flash_lite · self",
+        }
         all_tasks: List[Dict[str, Any]] = []
         for lane_name, specs in (
             ("UI", ui_specs),
@@ -359,7 +394,7 @@ class SwarmEngine:
                         "title": title,
                         "target_file": tfile,
                         "symbols_hint": sym,
-                        "worker_model": "haiku-4.5 / flash",
+                        "worker_model": lane_models.get(lane_name, "flash · self"),
                     }
                 )
         return all_tasks
@@ -403,9 +438,9 @@ class SwarmEngine:
                     scout["workspace"],
                     scout["workspace_path"],
                     "swarming" if animate_live else "done",
-                    "opus-5.5",
-                    "haiku-4.5 / flash",
-                    "scout-flash-lite",
+                    "pro (Gemini Pro)",
+                    "flash (Gemini Flash)",
+                    "flash_lite (research)",
                     2840,
                     scout["files_count"],
                     scout["symbols_count"],
@@ -429,19 +464,19 @@ class SwarmEngine:
                 conn,
                 run_id,
                 "scout",
-                f"SCOUT-01 leu {scout['files_count']} ficheiros ({scout['symbols_count']} símbolos) em {scout['duration_ms']}ms -> Blackboard partilhado",
+                f"SCOUT-01 (Model=flash_lite, TypeName=research) leu {scout['files_count']} ficheiros ({scout['symbols_count']} símbolos) em {scout['duration_ms']}ms -> Blackboard partilhado",
             )
             self._log_event(
                 conn,
                 run_id,
                 "plan",
-                f"ARCHITECT (opus-5.5) leu objetivo + Scout Map 1x (2,840 tok) e parou de gastar tokens",
+                f"ARCHITECT (Model=pro) leu objetivo + Scout Map 1x (2,840 tok) e parou de gastar tokens",
             )
             self._log_event(
                 conn,
                 run_id,
                 "disp",
-                "DISPATCHER (flash) dividiu backlog em 24 lanes paralelas (6 UI, 6 API, 6 TESTS, 6 DOCS)",
+                "DISPATCHER (invoke_subagent Model=flash | flash_lite) dividiu backlog em 4 lanes (UI, API, TESTS, DOCS)",
             )
 
             for idx, t in enumerate(tasks_spec):
