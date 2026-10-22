@@ -787,9 +787,10 @@ class SwarmEngine:
                 f"Chat Turn iniciado (Gemini 4 Argon): \"{clean_goal[:55]}\" -> Scout Map injetado",
             )
 
-    def on_turn_step(self, step_num: int) -> None:
+    def on_turn_step(self, step_num: int, real_actions: Optional[List[str]] = None) -> None:
         """Avança o progresso visual no Swarm Monitor a cada passo de tool call do Antigravity."""
         run_id = self.ensure_default_run()
+        actions_str = ", ".join(real_actions[:4]) if real_actions else "Workers paralelos em execução + validação AST"
         with self.db._connect() as conn:
             conn.execute(
                 """
@@ -805,7 +806,7 @@ class SwarmEngine:
                 conn,
                 run_id,
                 "work",
-                f"Step #{step_num}: Workers paralelos em execução + validação AST/Context",
+                f"Step #{step_num}: {actions_str}",
             )
 
     def on_turn_complete(self, modified_files: List[str], actions: List[str]) -> None:

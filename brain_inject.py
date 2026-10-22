@@ -75,6 +75,50 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> Optional[str]
     return None
 
 
+def extract_latest_tool_actions(transcript_path: Optional[str]) -> List[str]:
+    """Extrai as ferramentas/ficheiros reais que o Antigravity acabou de executar neste passo."""
+    if not transcript_path or not os.path.isfile(transcript_path):
+        return []
+    try:
+        file_size = os.path.getsize(transcript_path)
+        read_size = min(file_size, 32768)
+        with open(transcript_path, "rb") as f:
+            if file_size > read_size:
+                f.seek(file_size - read_size)
+            tail_bytes = f.read()
+        lines = tail_bytes.decode("utf-8", errors="ignore").splitlines()
+        for line in reversed(lines):
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                step = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if step.get("type") == "PLANNER_RESPONSE" and step.get("tool_calls"):
+                actions: List[str] = []
+                for tc in step.get("tool_calls") or []:
+                    name = tc.get("name", "tool")
+                    args = tc.get("args") or {}
+                    target = (
+                        args.get("Path")
+                        or args.get("TargetFile")
+                        or args.get("AbsolutePath")
+                        or args.get("Role")
+                        or args.get("toolSummary")
+                        or args.get("CommandLine", "")[:35]
+                    )
+                    if target and ("/" in str(target) or "\\" in str(target)):
+                        target = os.path.basename(str(target).rstrip("/\\"))
+                    actions.append(f"{name}({target})" if target else name)
+                return actions
+            if step.get("type") == "USER_INPUT":
+                break
+    except Exception:
+        pass
+    return []
+
+
 def build_ephemeral_context(
     memories: List[Dict[str, Any]],
     checkpoint: Optional[Dict[str, Any]],
@@ -138,11 +182,12 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         user_query = f"workspace {ws} architecture environment"
 
     # Evita injetar novamente nos sub-passos de tool loop do mesmo pedido do utilizador,
-    # mas atualiza o progresso em tempo real no Swarm Monitor!
+    # mas atualiza o progresso em tempo real no Swarm Monitor com as tools reais!
     swarm_eng = SwarmEngine(db)
     if not db.mark_turn_injected(conv_id, user_query):
         try:
-            swarm_eng.on_turn_step(inv_num)
+            real_actions = extract_latest_tool_actions(transcript_path)
+            swarm_eng.on_turn_step(inv_num, real_actions)
         except Exception:
             pass
         return {}
