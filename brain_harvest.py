@@ -59,17 +59,20 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         turn_cached_tokens += int(step.get("cache_read_tokens", 0) or 0)
         turn_output_tokens += int(step.get("output_tokens", 0) or 0)
 
-        # 1. Extrai marcadores explícitos <!-- brain: Topico | Facto --> no texto da resposta
+        # 1. Extrai marcadores explícitos <!-- brain: Topico | Facto --> no texto da resposta (linha única segura)
         content = step.get("content", "") or ""
         explicit_matches = re.findall(
-            r"<!--\s*brain:\s*([^|\n]+?)\s*\|\s*(.*?)\s*-->",
+            r"<!--\s*brain:\s*([^|\n`<>{}]{3,85}?)\s*\|\s*([^\n<>]{6,420}?)\s*-->",
             content,
-            flags=re.DOTALL,
         )
         for topic, fact in explicit_matches:
+            t_clean = topic.strip()
+            f_clean = fact.strip()
+            if any(x in t_clean.lower() for x in ("topico", "short topic", "\\s*")):
+                continue
             _, is_new = db.store_fact(
-                topic=topic.strip(),
-                fact=fact.strip(),
+                topic=t_clean,
+                fact=f_clean,
                 workspace=workspace,
                 category="explicit_note",
                 tags="auto_harvested explicit",
@@ -78,30 +81,42 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
             if is_new:
                 harvested_count += 1
 
-        # 2. Extrai edições de ficheiros (write_file / edit_file / write_to_file / replace_file_content)
+        # 2. Extrai edições de ficheiros (1 memória consolidada por ficheiro para não poluir o grafo)
         tool_calls = step.get("tool_calls") or []
         for tc in tool_calls:
             t_name = tc.get("name", "")
             args = tc.get("args") or {}
             if t_name in ("write_to_file", "replace_file_content", "write_file", "edit_file"):
                 target_file = str(args.get("TargetFile") or args.get("Path") or "").strip('"').replace("\\\\", "/")
-                desc = str(args.get("Description") or args.get("Instruction") or "Edição cirúrgica").strip('"')
+                desc = str(args.get("Description") or args.get("Instruction") or "Atualização de código").strip('"')[:160]
                 if target_file and "/brain/" not in target_file:
                     bname = os.path.basename(target_file)
                     if bname not in modified_files:
                         modified_files.append(bname)
                     if desc:
                         completed_actions.append(f"{bname}: {desc}")
-                        _, is_new = db.store_fact(
-                            topic=f"Ficheiro {bname} ({workspace})",
-                            fact=f"Path: {target_file} — {desc}",
-                            workspace=workspace,
-                            category="code_change",
-                            tags=f"{bname} {workspace} file edit",
-                            importance=3,
-                        )
-                        if is_new:
-                            harvested_count += 1
+                        topic_key = f"Ficheiro {bname} ({workspace})"
+                        fact_val = f"Path: {target_file} — Última edição: {desc}"
+                        with db._connect() as conn:
+                            existing = conn.execute(
+                                "SELECT id FROM memories WHERE workspace = ? AND topic = ? LIMIT 1;",
+                                (workspace.lower(), topic_key),
+                            ).fetchone()
+                            if existing:
+                                conn.execute(
+                                    "UPDATE memories SET fact = ?, last_accessed = CURRENT_TIMESTAMP WHERE id = ?;",
+                                    (fact_val, existing["id"]),
+                                )
+                            else:
+                                db.store_fact(
+                                    topic=topic_key,
+                                    fact=fact_val,
+                                    workspace=workspace,
+                                    category="code_change",
+                                    tags=f"{bname} {workspace} file edit",
+                                    importance=3,
+                                )
+                                harvested_count += 1
 
     # 3. Atualiza o Checkpoint automático do workspace se houve alterações de código
     if modified_files or completed_actions:

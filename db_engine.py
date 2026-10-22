@@ -204,6 +204,28 @@ class BrainDB:
                 """
             )
 
+            # 6. Limpeza automática de entradas duplicadas de ficheiros ou regex corrompido
+            conn.execute(
+                """
+                DELETE FROM memories
+                WHERE LENGTH(fact) > 650
+                   OR topic LIKE '%\\s*%'
+                   OR topic LIKE '%Topico%'
+                   OR topic LIKE '%Short Topic%';
+                """
+            )
+            conn.execute(
+                """
+                DELETE FROM memories
+                WHERE category = 'code_change'
+                  AND id NOT IN (
+                      SELECT MAX(id) FROM memories
+                      WHERE category = 'code_change'
+                      GROUP BY workspace, topic
+                  );
+                """
+            )
+
     @staticmethod
     def _compute_hash(topic: str, fact: str, workspace: str = "global") -> str:
         norm = f"{workspace.strip().lower()}::{topic.strip().lower()}::{fact.strip().lower()}"

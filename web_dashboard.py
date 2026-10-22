@@ -114,7 +114,7 @@ def build_obsidian_graph_payload(
         all_memories = [
             dict(r)
             for r in conn.execute(
-                "SELECT * FROM memories ORDER BY importance DESC, id DESC;"
+                "SELECT * FROM memories ORDER BY importance DESC, id DESC LIMIT 120;"
             ).fetchall()
         ]
         all_checkpoints = [
