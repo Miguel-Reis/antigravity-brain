@@ -37,13 +37,18 @@ STOPWORDS = {
 }
 
 
+_INITIALIZED_DBS: set[str] = set()
+
+
 class BrainDB:
     """Motor Híbrido SQLite (WAL) + FTS5 (BM25) + Checkpoints + Telemetria."""
 
     def __init__(self, db_path: str = DEFAULT_DB_PATH) -> None:
         self.db_path = db_path
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        self._init_schema()
+        if self.db_path not in _INITIALIZED_DBS:
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            self._init_schema()
+            _INITIALIZED_DBS.add(self.db_path)
 
     @contextlib.contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:

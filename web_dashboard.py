@@ -312,9 +312,7 @@ def build_obsidian_graph_payload(
                         }
                     )
 
-    mcp_audit = audit_mcp_servers()
-    plug_audit = audit_plugins()
-    is_lean = all(item["in_lean_profile"] for item in mcp_audit) and len(mcp_audit) <= 3
+    mcp_audit, plug_audit, is_lean = _get_cached_diet_audit()
 
     all_ws = sorted({m.get("workspace", "global") or "global" for m in all_memories})
     all_cats = sorted({m.get("category", "general") or "general" for m in all_memories})
@@ -334,6 +332,22 @@ def build_obsidian_graph_payload(
             "categories": all_cats,
         },
     }
+
+
+_DIET_CACHE: Dict[str, Any] = {"ts": 0.0, "mcp": [], "plug": {}, "is_lean": False}
+
+
+def _get_cached_diet_audit(force: bool = False) -> Tuple[List[Dict[str, Any]], Dict[str, Any], bool]:
+    now = time.time()
+    if force or not _DIET_CACHE["mcp"] or (now - _DIET_CACHE["ts"] > 120.0):
+        mcp_audit = audit_mcp_servers()
+        plug_audit = audit_plugins()
+        is_lean = all(item["in_lean_profile"] for item in mcp_audit) and len(mcp_audit) <= 3
+        _DIET_CACHE["ts"] = now
+        _DIET_CACHE["mcp"] = mcp_audit
+        _DIET_CACHE["plug"] = plug_audit
+        _DIET_CACHE["is_lean"] = is_lean
+    return _DIET_CACHE["mcp"], _DIET_CACHE["plug"], _DIET_CACHE["is_lean"]
 
 
 class BrainDashboardHandler(BaseHTTPRequestHandler):
@@ -455,6 +469,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "Modo inválido"}, 400)
                 return
             msg = switch_mcp_profile(mode)
+            _get_cached_diet_audit(force=True)
             self._send_json({"ok": True, "message": msg, "mode": mode})
             return
 

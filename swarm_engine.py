@@ -38,6 +38,10 @@ CODE_EXTENSIONS = {
 }
 
 
+_INITIALIZED_SWARM_DBS: set[str] = set()
+_DEFAULT_RUN_CACHED: Dict[str, int] = {}
+
+
 class SwarmEngine:
     """
     Motor Asymmetric Swarm + Scout Shared Codebase Blackboard para Antigravity Brain v2.
@@ -50,7 +54,9 @@ class SwarmEngine:
 
     def __init__(self, db: Optional[BrainDB] = None) -> None:
         self.db = db or BrainDB()
-        self._init_swarm_schema()
+        if self.db.db_path not in _INITIALIZED_SWARM_DBS:
+            self._init_swarm_schema()
+            _INITIALIZED_SWARM_DBS.add(self.db.db_path)
 
     def _init_swarm_schema(self) -> None:
         with self.db._connect() as conn:
@@ -724,16 +730,22 @@ class SwarmEngine:
         return self.get_swarm_dashboard(run_id)
 
     def ensure_default_run(self) -> int:
+        if self.db.db_path in _DEFAULT_RUN_CACHED:
+            return _DEFAULT_RUN_CACHED[self.db.db_path]
         with self.db._connect() as conn:
             row = conn.execute("SELECT id FROM swarm_runs ORDER BY id DESC LIMIT 1;").fetchone()
             if row:
-                return int(row["id"])
+                rid = int(row["id"])
+                _DEFAULT_RUN_CACHED[self.db.db_path] = rid
+                return rid
         res = self.start_live_swarm_run(
             goal="ship v2.4: Scout Shared Map + Asymmetric Swarm Dashboard",
             workspace_path=os.path.dirname(os.path.abspath(__file__)),
             animate_live=False,
         )
-        return int(res["run"]["id"])
+        rid = int(res["run"]["id"])
+        _DEFAULT_RUN_CACHED[self.db.db_path] = rid
+        return rid
 
     def get_latest_scout_map(self, workspace: str = "global") -> str:
         """Devolve o Mapa Partilhado do Scout para ser injetado automaticamente nos subagentes."""

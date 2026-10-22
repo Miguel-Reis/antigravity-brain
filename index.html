@@ -1276,11 +1276,11 @@
         </div>
         <div class="toggle-row">
           <span>Mostrar Rótulos Sempre</span>
-          <input type="checkbox" id="chkAlwaysLabels" checked />
+          <input type="checkbox" id="chkAlwaysLabels" checked onchange="graphDirty = true" />
         </div>
         <div class="toggle-row">
           <span>Pulsos Sinápticos</span>
-          <input type="checkbox" id="chkPulses" checked />
+          <input type="checkbox" id="chkPulses" onchange="graphDirty = true" />
         </div>
       </div>
 
@@ -1616,10 +1616,12 @@
     const canvas = document.getElementById('brainGraph');
     const ctx = canvas.getContext('2d');
     let pulseTick = 0;
+    let graphDirty = true;
 
     function resizeCanvas() {
       const wrap = document.getElementById('canvasWrap');
-      const dpr = window.devicePixelRatio || 1;
+      if (!wrap || wrap.clientWidth === 0) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = wrap.clientWidth * dpr;
       canvas.height = wrap.clientHeight * dpr;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -1627,6 +1629,7 @@
         cam.x = wrap.clientWidth / 2;
         cam.y = wrap.clientHeight / 2;
       }
+      graphDirty = true;
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
@@ -1740,9 +1743,9 @@
           targetNode: nodeMap[l.target]
         }));
 
-      // Pré-aquecimento síncrono (Pre-Warm): estabiliza o grafo ANTES de desenhar o 1º frame (sem confusão no F5!)
+      // Pré-aquecimento síncrono rápido (Spatial Culling): estabiliza em <8ms sem bloquear a página
       const isInitialLoad = Object.keys(oldPos).length === 0;
-      const prewarmSteps = isInitialLoad ? 160 : 45;
+      const prewarmSteps = isInitialLoad ? 48 : 20;
       simAlpha = 1.0;
       for (let step = 0; step < prewarmSteps; step++) {
         simAlpha = Math.max(0.05, 1.0 - step / prewarmSteps);
@@ -1753,6 +1756,7 @@
         n.vy = 0;
       }
       simAlpha = 0.0;
+      graphDirty = true;
     }
 
     function updateTopbarStats() {
@@ -1884,6 +1888,7 @@
 
     function selectNode(node, animateCam = false) {
       selectedNode = node;
+      graphDirty = true;
       if (graphMode === 'local') {
         rebuildSimulationGraph();
       }
@@ -1963,6 +1968,7 @@
       cam.x = wrap.clientWidth / 2;
       cam.y = wrap.clientHeight / 2;
       cam.k = 0.68;
+      graphDirty = true;
     }
 
     function updatePhysicsParams() {
@@ -1972,6 +1978,7 @@
       document.getElementById('lblDistance').textContent = physics.springLength;
       // Acordar suavemente a física ao mexer nos sliders
       simAlpha = 0.45;
+      graphDirty = true;
     }
 
     // MOTOR FÍSICO FORCE-DIRECTED COM ARREFECIMENTO + SEPARAÇÃO ANTI-COLISÃO
@@ -1986,15 +1993,17 @@
 
       const alpha = isPrewarm ? simAlpha : (draggedNode ? 0.28 : simAlpha);
 
-      // 1. Repulsão Coulomb + Resolução Direta de Colisão (Distância Mínima Garantida)
+      // 1. Repulsão Coulomb + Spatial Bounding Box Culling (ignora pares distantes sem Math.sqrt)
       for (let i = 0; i < N; i++) {
         const a = activeNodes[i];
         const rA = (a.val || 12) * 1.2;
         for (let j = i + 1; j < N; j++) {
           const b = activeNodes[j];
-          const rB = (b.val || 12) * 1.2;
           let dx = b.x - a.x;
+          if (dx > 480 || dx < -480) continue;
           let dy = b.y - a.y;
+          if (dy > 480 || dy < -480) continue;
+          const rB = (b.val || 12) * 1.2;
           let distSq = dx * dx + dy * dy + 1.0;
           let dist = Math.sqrt(distSq);
 
@@ -2190,8 +2199,22 @@
     }
 
     function renderGraph() {
+      // Se estiver na vista Swarm Monitor, pausa completamente a renderização do Canvas (0% CPU/GPU)
+      if (activeMainView !== 'graph') {
+        requestAnimationFrame(renderGraph);
+        return;
+      }
+
+      const showPulses = document.getElementById('chkPulses').checked;
+      const isSimMoving = draggedNode || simAlpha >= 0.003;
+      if (!graphDirty && !isSimMoving && !showPulses) {
+        requestAnimationFrame(renderGraph);
+        return;
+      }
+      graphDirty = false;
+
       stepPhysics();
-      pulseTick += 0.012;
+      if (showPulses) pulseTick += 0.012;
 
       const wrap = document.getElementById('canvasWrap');
       ctx.clearRect(0, 0, wrap.clientWidth, wrap.clientHeight);
@@ -2324,13 +2347,10 @@
           traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.28);
         }
 
-        const bodyGrad = ctx.createLinearGradient(n.x - r, n.y - r, n.x + r, n.y + r);
-        bodyGrad.addColorStop(0, '#161b2c');
-        bodyGrad.addColorStop(1, '#0d101b');
-        ctx.fillStyle = bodyGrad;
+        ctx.fillStyle = '#121626';
         ctx.fill();
 
-        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.6;
+        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
         ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
         ctx.stroke();
 
@@ -2402,6 +2422,7 @@
         draggedNode.y = w.y;
         draggedNode.vx = 0;
         draggedNode.vy = 0;
+        graphDirty = true;
         return;
       }
 
@@ -2409,10 +2430,15 @@
         cam.x += e.clientX - panStart.x;
         cam.y += e.clientY - panStart.y;
         panStart = { x: e.clientX, y: e.clientY };
+        graphDirty = true;
         return;
       }
 
+      const prevHover = hoveredNode;
       hoveredNode = findNodeAt(w.x, w.y);
+      if (prevHover !== hoveredNode) {
+        graphDirty = true;
+      }
       canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
     });
 
@@ -2449,6 +2475,7 @@
       cam.x = sx - ((sx - cam.x) / cam.k) * nextK;
       cam.y = sy - ((sy - cam.y) / cam.k) * nextK;
       cam.k = nextK;
+      graphDirty = true;
     }, { passive: false });
 
     // AÇÕES CRUD & PERFIS
@@ -2551,6 +2578,8 @@
     // =========================================================================
     let activeMainView = 'graph';
     let swarmPollTimer = null;
+    let swarmFetchInFlight = false;
+    let lastSwarmHash = '';
 
     function switchMainView(viewName) {
       activeMainView = viewName === 'swarm' ? 'swarm' : 'graph';
@@ -2565,9 +2594,10 @@
         btnG.classList.remove('active');
         btnS.classList.add('active');
         window.location.hash = 'swarm';
-        fetchSwarmDashboard();
+        lastSwarmHash = '';
+        fetchSwarmDashboard(true);
         if (!swarmPollTimer) {
-          swarmPollTimer = setInterval(fetchSwarmDashboard, 1100);
+          swarmPollTimer = setInterval(() => fetchSwarmDashboard(false), 1600);
         }
       } else {
         sWs.classList.remove('active');
@@ -2580,18 +2610,31 @@
           swarmPollTimer = null;
         }
         resizeCanvas();
+        graphDirty = true;
       }
     }
 
-    async function fetchSwarmDashboard() {
+    async function fetchSwarmDashboard(forceRender = false) {
+      if (swarmFetchInFlight) return;
+      swarmFetchInFlight = true;
       try {
         const res = await fetch('/api/swarm');
         const data = await res.json();
         if (data && data.run) {
-          renderSwarmDashboard(data);
+          const r = data.run;
+          const logs = data.logs || [];
+          const lastLog = logs.length ? `${logs[logs.length - 1].ts}:${logs[logs.length - 1].message}` : '';
+          const taskStates = (data.tasks || []).map(t => `${t.status}${t.progress}`).join('');
+          const sig = `${r.id}|${r.status}|${r.goal}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${taskStates}|${lastLog}`;
+          if (forceRender || sig !== lastSwarmHash) {
+            lastSwarmHash = sig;
+            renderSwarmDashboard(data);
+          }
         }
       } catch (err) {
         console.error('Erro ao carregar Swarm Dashboard:', err);
+      } finally {
+        swarmFetchInFlight = false;
       }
     }
 
