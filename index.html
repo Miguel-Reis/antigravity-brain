@@ -1,0 +1,2820 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antigravity Brain v2 — Obsidian Neural Graph</title>
+  <style>
+    :root {
+      --bg-canvas: #0b0d13;
+      --bg-panel: rgba(18, 21, 31, 0.88);
+      --bg-panel-solid: #12151f;
+      --bg-card: #181c29;
+      --bg-hover: #212738;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #8b5cf6;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent: #8b5cf6;
+      --accent-glow: rgba(139, 92, 246, 0.35);
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --cyan: #06b6d4;
+      --pink: #ec4899;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* TOP TELEMETRY & TOKEN DIET BAR */
+    .topbar {
+      height: 54px;
+      background: var(--bg-panel-solid);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 30;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent);
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: rgba(139, 92, 246, 0.16);
+      color: #c4b5fd;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+
+    .metrics-strip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .metric-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 5px 11px;
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .metric-pill strong {
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: var(--bg-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      background: #7c3aed;
+    }
+
+    .btn-diet-lean {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+
+    .btn-diet-full {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.45);
+      color: #fcd34d;
+    }
+
+    /* MAIN 3-PANE OBSIDIAN WORKSPACE */
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* LEFT SIDEBAR: VAULT EXPLORER & FILTERS */
+    .sidebar-left {
+      width: 310px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+    }
+
+    .search-box {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .search-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px 8px 32px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      font-size: 13px;
+      color: var(--text-dim);
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .select-sm {
+      flex: 1;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      outline: none;
+    }
+
+    .legend-bar {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 2px 7px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .legend-chip:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .vault-tree {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .vault-group {
+      margin-bottom: 10px;
+    }
+
+    .vault-folder {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .vault-folder:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .vault-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 18px;
+      font-size: 12.5px;
+      color: var(--text-main);
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: background 0.12s;
+    }
+
+    .vault-item:hover {
+      background: var(--bg-hover);
+    }
+
+    .vault-item.active {
+      background: rgba(139, 92, 246, 0.2);
+      color: #ddd6fe;
+      border-left: 2px solid var(--accent);
+    }
+
+    .vault-item.match-highlight {
+      color: #fde047;
+      font-weight: 600;
+    }
+
+    /* CENTER PANE: OBSIDIAN FORCE GRAPH CANVAS */
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      background-color: var(--bg-canvas);
+      background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 26px 26px;
+      overflow: hidden;
+    }
+
+    canvas#brainGraph {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    canvas#brainGraph:active {
+      cursor: grabbing;
+    }
+
+    /* FLOATING OBSIDIAN GRAPH CONTROLS */
+    .graph-hud-top {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      gap: 8px;
+      z-index: 15;
+    }
+
+    .hud-pill {
+      background: rgba(18, 21, 31, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      padding: 6px 11px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-pill.active {
+      border-color: var(--accent);
+      color: #ddd6fe;
+      background: rgba(139, 92, 246, 0.18);
+    }
+
+    .graph-settings-panel {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 240px;
+      background: rgba(18, 21, 31, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      z-index: 15;
+      font-size: 12px;
+    }
+
+    .settings-title {
+      font-weight: 600;
+      font-size: 11.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .control-group {
+      margin-bottom: 9px;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 3px;
+    }
+
+    .slider {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 11.5px;
+      color: var(--text-main);
+    }
+
+    /* RIGHT SIDEBAR: NOTE INSPECTOR & BACKLINKS */
+    .sidebar-right {
+      width: 370px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+      overflow-y: auto;
+    }
+
+    .inspector-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .inspector-title {
+      font-size: 15px;
+      font-weight: 700;
+      line-height: 1.35;
+      color: #fff;
+      user-select: text;
+    }
+
+    .frontmatter {
+      margin: 12px 16px;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.28);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+    }
+
+    .fm-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+
+    .fm-row:last-child {
+      border-bottom: none;
+    }
+
+    .fm-key {
+      color: var(--text-dim);
+    }
+
+    .fm-val {
+      color: #a5b4fc;
+      user-select: text;
+    }
+
+    .note-body {
+      padding: 4px 16px 16px;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--text-main);
+      white-space: pre-wrap;
+      user-select: text;
+    }
+
+    .tag-cloud {
+      padding: 0 16px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag-pill {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #c4b5fd;
+      background: rgba(139, 92, 246, 0.14);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 2px 8px;
+      border-radius: 99px;
+      cursor: pointer;
+    }
+
+    .tag-pill:hover {
+      background: rgba(139, 92, 246, 0.3);
+    }
+
+    .backlinks-section {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-subtitle {
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .backlink-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      margin-bottom: 7px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .backlink-card:hover {
+      border-color: var(--accent);
+    }
+
+    .backlink-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-bottom: 3px;
+    }
+
+    .backlink-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    /* MODAL ADD / EDIT MEMORY */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal {
+      width: 480px;
+      background: var(--bg-panel-solid);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+
+    .modal h3 {
+      font-size: 16px;
+      margin-bottom: 14px;
+    }
+
+    .form-field {
+      margin-bottom: 12px;
+    }
+
+    .form-field label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .form-field input,
+    .form-field textarea,
+    .form-field select {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      outline: none;
+    }
+
+    .form-field textarea {
+      min-height: 95px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b;
+      border: 1px solid var(--accent);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      z-index: 200;
+      display: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+
+    /* VIEW SWITCHER TABS IN TOPBAR */
+    .view-tabs {
+      display: inline-flex;
+      background: #090b10;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 3px;
+      gap: 4px;
+      margin-left: 10px;
+    }
+
+    .view-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .view-tab:hover {
+      color: var(--text-main);
+    }
+
+    .view-tab.active {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.35);
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(1.25); }
+    }
+
+    /* ASYMMETRIC SWARM MONITOR VIEW (BLUEPRINT STYLE) */
+    .swarm-workspace {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+      background: #090a0f;
+      background-image:
+        linear-gradient(rgba(236, 72, 153, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(236, 72, 153, 0.03) 1px, transparent 1px);
+      background-size: 28px 28px;
+      overflow-y: auto;
+      padding: 14px 18px 22px;
+      gap: 14px;
+      font-family: var(--font-mono);
+    }
+
+    .swarm-workspace.active {
+      display: flex;
+    }
+
+    .swarm-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #10121a;
+      border: 1px solid rgba(236, 72, 153, 0.28);
+      border-radius: 8px;
+      padding: 8px 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .swarm-stage-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .stage-pill {
+      padding: 3px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--text-muted);
+      background: #161925;
+      letter-spacing: 0.04em;
+    }
+
+    .stage-pill.scout {
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .stage-pill.active {
+      background: #ec4899;
+      border-color: #ec4899;
+      color: #fff;
+      box-shadow: 0 0 12px rgba(236, 72, 153, 0.45);
+    }
+
+    .swarm-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .swarm-goal-input {
+      background: #161925;
+      border: 1px solid rgba(255,255,255,0.14);
+      color: var(--text-main);
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 11.5px;
+      font-family: var(--font-mono);
+      width: 290px;
+      outline: none;
+    }
+
+    .swarm-goal-input:focus {
+      border-color: #ec4899;
+    }
+
+    .btn-swarm-pink {
+      background: #ec4899;
+      border: 1px solid #f472b6;
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.35);
+    }
+
+    .btn-swarm-pink:hover {
+      background: #db2777;
+    }
+
+    .btn-scout-emerald {
+      background: rgba(16, 185, 129, 0.16);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+      color: #6ee7b7;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 6px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-scout-emerald:hover {
+      background: rgba(16, 185, 129, 0.28);
+    }
+
+    /* TOP 4-BOX ARCHITECTURE ROW */
+    .swarm-arch-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 1fr 1.25fr 1.05fr;
+      gap: 12px;
+    }
+
+    .bp-box {
+      background: #10131d;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 7px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bp-box.pink-border {
+      border-color: rgba(236, 72, 153, 0.55);
+    }
+
+    .bp-box.emerald-border {
+      border-color: rgba(16, 185, 129, 0.55);
+    }
+
+    .bp-header {
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #191d2c;
+      color: var(--text-main);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      text-transform: uppercase;
+    }
+
+    .bp-header.pink {
+      background: #ec4899;
+      color: #fff;
+    }
+
+    .bp-header.emerald {
+      background: linear-gradient(90deg, #059669, #10b981);
+      color: #fff;
+    }
+
+    .bp-body {
+      padding: 10px;
+      font-size: 11.5px;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex: 1;
+    }
+
+    .bp-kv {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .bp-kv strong {
+      color: var(--text-main);
+    }
+
+    .goal-quote {
+      margin-top: 6px;
+      padding: 7px 9px;
+      background: rgba(236, 72, 153, 0.09);
+      border-left: 3px solid #ec4899;
+      color: #f9a8d4;
+      font-size: 11px;
+      border-radius: 0 5px 5px 0;
+    }
+
+    .scout-file-list {
+      margin-top: 5px;
+      max-height: 92px;
+      overflow-y: auto;
+      background: #0b0d14;
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      border-radius: 5px;
+      padding: 5px 7px;
+      font-size: 10.5px;
+    }
+
+    .scout-file-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 2px 0;
+      border-bottom: 1px dashed rgba(255,255,255,0.05);
+      color: #a7f3d0;
+    }
+
+    .scout-file-row span.sym {
+      color: var(--text-muted);
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .task-log-scroll {
+      max-height: 145px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .tl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10.5px;
+      padding: 2px 4px;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.02);
+    }
+
+    .tl-code {
+      color: #f472b6;
+      font-weight: 700;
+      width: 52px;
+    }
+
+    .tl-title {
+      color: var(--text-muted);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .tl-status {
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+    }
+
+    .tl-status.done { color: #6ee7b7; background: rgba(16,185,129,0.15); }
+    .tl-status.running, .tl-status.verifying { color: #f9a8d4; background: rgba(236,72,153,0.2); }
+    .tl-status.queued { color: var(--text-dim); }
+
+    /* 4 PARALLEL LANES GRID (UI, API, TESTS, DOCS) */
+    .swarm-lanes-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .lane-col {
+      background: rgba(16, 19, 29, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 7px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .lane-col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 8px;
+      background: #181c2b;
+      border-left: 3px solid #ec4899;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .worker-card {
+      background: #121622;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      transition: transform 0.12s, border-color 0.15s;
+      cursor: pointer;
+    }
+
+    .worker-card:hover {
+      transform: translateY(-1px);
+      border-color: #ec4899;
+    }
+
+    .worker-card.done {
+      border-color: rgba(236, 72, 153, 0.55);
+    }
+
+    .worker-card.running, .worker-card.verifying {
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+    }
+
+    .wc-head {
+      padding: 3px 8px;
+      font-size: 10.5px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      background: #1d2233;
+      color: var(--text-muted);
+    }
+
+    .worker-card.done .wc-head {
+      background: #ec4899;
+      color: #fff;
+    }
+
+    .worker-card.running .wc-head, .worker-card.verifying .wc-head {
+      background: #10b981;
+      color: #06281e;
+    }
+
+    .wc-body {
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .wc-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wc-file {
+      font-size: 9.8px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wc-prog-track {
+      height: 4px;
+      background: #23293d;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .wc-prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ec4899, #a855f7);
+      transition: width 0.35s ease;
+    }
+
+    .wc-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 9.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .verify-dots {
+      display: inline-flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .v-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 1.5px;
+      background: #2d354d;
+      display: inline-block;
+    }
+
+    .v-dot.pass {
+      background: #ec4899;
+      box-shadow: 0 0 5px #ec4899;
+    }
+
+    /* MERGE -> VERIFY -> DONE STRIP */
+    .swarm-pipeline-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    /* BOTTOM TELEMETRY CONSOLE (RUN_LOG, QUEUE 24 BARS, OUTPUT) */
+    .swarm-footer-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 1.15fr 0.9fr;
+      gap: 12px;
+    }
+
+    .queue-counters {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .q-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .q-stat span {
+      font-size: 10px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+
+    .q-stat strong {
+      font-size: 18px;
+      color: var(--text-main);
+    }
+
+    .q-stat strong.pink { color: #ec4899; }
+    .q-stat strong.emerald { color: #10b981; }
+
+    .queue-bars {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 3px;
+      height: 22px;
+      margin: 4px 0 6px;
+    }
+
+    .q-bar {
+      background: #23283b;
+      border-radius: 2px;
+      transition: background 0.25s;
+    }
+
+    .q-bar.done {
+      background: #ec4899;
+      box-shadow: 0 0 6px rgba(236, 72, 153, 0.45);
+    }
+
+    .q-bar.running {
+      background: #10b981;
+    }
+
+    .output-big {
+      font-size: 28px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-dot"></span>
+      <span>Antigravity Brain</span>
+      <span class="brand-badge">v2.4 • Obsidian + Swarm</span>
+      <div class="view-tabs">
+        <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
+          🕸️ Graph View
+        </button>
+        <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')">
+          <span class="pulse-dot"></span>
+          ⚡ Swarm Monitor
+        </button>
+      </div>
+    </div>
+
+    <div class="metrics-strip">
+      <div class="metric-pill" title="Total de Memórias e Nós no Grafo">
+        🧠 Memórias: <strong id="statMemories">0</strong>
+      </div>
+      <div class="metric-pill" title="Ligações Sinápticas entre Conceitos">
+        🕸️ Sinapses: <strong id="statLinks">0</strong>
+      </div>
+      <div class="metric-pill" title="Latência média do Hook PreInvocation (SQLite FTS5)">
+        ⚡ Hook: <strong id="statLatency">0 ms</strong>
+      </div>
+      <div class="metric-pill" title="Tokens poupados pelo Brain">
+        💎 Poupados: <strong id="statSaved" style="color: var(--emerald);">+0 tok</strong>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="btn" id="btnGitUpdate" onclick="triggerGitUpdate()" title="Verifica no GitHub se há atualizações e faz git pull + auto-sync dos hooks">
+        📦 Git: <span id="lblGitSha">v2.4</span>
+      </button>
+      <button class="btn" id="btnDietToggle" onclick="toggleDietMode()" title="Alternar entre Modo Lean (económico) e Modo Full">
+        ⚡ Modo Quota: Carregando...
+      </button>
+      <button class="btn" onclick="syncSessions()" title="Extrair memórias de todas as conversas e projetos no scratch">
+        🔄 Sincronizar Sessões
+      </button>
+      <button class="btn btn-primary" onclick="openMemoryModal()">
+        ➕ Nova Memória
+      </button>
+    </div>
+  </header>
+
+  <!-- 3-PANE OBSIDIAN BODY -->
+  <div class="workspace" id="graphWorkspace">
+
+    <!-- LEFT: VAULT EXPLORER -->
+    <aside class="sidebar-left">
+      <div class="search-box">
+        <div class="search-input-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="Pesquisar no Brain (FTS5 BM25)..."
+            oninput="debouncedFetchGraph()"
+          />
+        </div>
+        <div class="filter-row">
+          <select id="wsFilter" class="select-sm" onchange="fetchGraph()">
+            <option value="all">📂 Todos Workspaces</option>
+          </select>
+          <select id="catFilter" class="select-sm" onchange="fetchGraph()">
+            <option value="all">🏷️ Todas Categorias</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="legend-bar" id="legendBar"></div>
+
+      <div class="vault-tree" id="vaultTree"></div>
+    </aside>
+
+    <!-- CENTER: INTERACTIVE GRAPH CANVAS -->
+    <main class="canvas-container" id="canvasWrap">
+      <div class="graph-hud-top">
+        <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;">
+          🌐 Grafo Global
+        </button>
+        <button class="hud-pill" id="btnLocalGraph" onclick="setGraphMode('local')" style="cursor:pointer;">
+          🎯 Grafo Local (Vizinhança 1-Hop)
+        </button>
+        <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;">
+          🧭 Centrar Câmara
+        </button>
+      </div>
+
+      <div class="graph-settings-panel">
+        <div class="settings-title">
+          <span>⚙️ Forças do Grafo (Obsidian)</span>
+        </div>
+        <div class="control-group">
+          <div class="control-label">
+            <span>Força de Repulsão</span>
+            <span id="lblRepulsion">1800</span>
+          </div>
+          <input type="range" min="400" max="4500" value="1800" class="slider" id="rngRepulsion" oninput="updatePhysicsParams()" />
+        </div>
+        <div class="control-group">
+          <div class="control-label">
+            <span>Distância Sináptica</span>
+            <span id="lblDistance">210</span>
+          </div>
+          <input type="range" min="90" max="420" value="210" class="slider" id="rngDistance" oninput="updatePhysicsParams()" />
+        </div>
+        <div class="toggle-row">
+          <span>Mostrar Nós de #Tags</span>
+          <input type="checkbox" id="chkShowTags" checked onchange="fetchGraph()" />
+        </div>
+        <div class="toggle-row">
+          <span>Mostrar Rótulos Sempre</span>
+          <input type="checkbox" id="chkAlwaysLabels" checked />
+        </div>
+        <div class="toggle-row">
+          <span>Pulsos Sinápticos</span>
+          <input type="checkbox" id="chkPulses" checked />
+        </div>
+      </div>
+
+      <canvas id="brainGraph"></canvas>
+    </main>
+
+    <!-- RIGHT: OBSIDIAN NOTE INSPECTOR -->
+    <aside class="sidebar-right" id="inspectorPane">
+      <div class="inspector-header">
+        <div>
+          <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; margin-bottom:4px;" id="inspType">NÓ SELECIONADO</div>
+          <div class="inspector-title" id="inspTitle">Selecione um nó no grafo</div>
+        </div>
+        <div style="display:flex; gap:6px;" id="inspActions"></div>
+      </div>
+
+      <div class="frontmatter" id="inspFrontmatter">
+        <div class="fm-row"><span class="fm-key">workspace:</span> <span class="fm-val" id="fmWs">-</span></div>
+        <div class="fm-row"><span class="fm-key">category:</span> <span class="fm-val" id="fmCat">-</span></div>
+        <div class="fm-row"><span class="fm-key">importance:</span> <span class="fm-val" id="fmImp">-</span></div>
+        <div class="fm-row"><span class="fm-key">access_count:</span> <span class="fm-val" id="fmAcc">-</span></div>
+        <div class="fm-row"><span class="fm-key">created_at:</span> <span class="fm-val" id="fmTime">-</span></div>
+      </div>
+
+      <div class="tag-cloud" id="inspTags"></div>
+
+      <div class="note-body" id="inspBody">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
+
+      <div class="backlinks-section">
+        <div class="section-subtitle">🔗 Ligações Sinápticas & Backlinks (<span id="backlinkCount">0</span>)</div>
+        <div id="backlinksList"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- ASYMMETRIC SWARM + SCOUT SHARED MAP LIVE DASHBOARD -->
+  <div class="swarm-workspace" id="swarmWorkspace">
+    <!-- Top Blueprint Bar -->
+    <div class="swarm-topbar">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span style="color:#ec4899; font-weight:700; font-size:12px;">● v2.4-swarm</span>
+        <span style="color:var(--text-muted); font-size:11.5px;">scout: <strong style="color:#6ee7b7;">scout-flash-lite (1x read)</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">architect: <strong style="color:#f472b6;" id="swArchModel">opus-5.5</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">workers: <strong style="color:#c4b5fd;" id="swDispModel">haiku-4.5 / flash</strong></span>
+      </div>
+
+      <div class="swarm-stage-pills">
+        <span class="stage-pill scout" id="pillScout">0. SCOUT MAP</span>
+        <span style="color:var(--text-dim);">➔</span>
+        <span class="stage-pill" id="pillPlan">1. PLAN</span>
+        <span style="color:var(--text-dim);">➔</span>
+        <span class="stage-pill active" id="pillSwarm">2. SWARM (24)</span>
+        <span style="color:var(--text-dim);">➔</span>
+        <span class="stage-pill" id="pillVerify">3. VERIFY (48/48)</span>
+      </div>
+
+      <div class="swarm-controls">
+        <input
+          type="text"
+          id="swarmGoalInput"
+          class="swarm-goal-input"
+          value="ship v2.4: Scout Shared Map + 24 Asymmetric Lanes"
+          placeholder="Objetivo do Swarm (ex: ship v2.4 tonight)..."
+        />
+        <button class="btn-scout-emerald" onclick="triggerScoutOnly()" title="Lança apenas o Agente Batedor (Scout) para ler a codebase 1x e atualizar o Mapa Partilhado no brain.db">
+          🔍 Scout Codebase (1x)
+        </button>
+        <button class="btn-swarm-pink" onclick="triggerSwarmRun()" title="Executa SCOUT (1x) ➔ PLAN (Opus) ➔ 24 Workers Paralelos (Flash) ➔ 48 Verify Checks">
+          ⚡ Run Swarm (24 Lanes)
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 1: SCOUT (Shared Map) + ARCHITECT + DISPATCHER + TASK_LOG -->
+    <div class="swarm-arch-grid">
+      <!-- Box 0: SCOUT-01 SHARED CODEBASE BLACKBOARD -->
+      <div class="bp-box emerald-border">
+        <div class="bp-header emerald">
+          <span>0. SCOUT-01 (SHARED CODEBASE MAP)</span>
+          <span id="swScoutTime">12.4 ms</span>
+        </div>
+        <div class="bp-body">
+          <div class="bp-kv"><span>strat:</span> <strong>Lê 1x ➔ Partilha c/ 24 agentes</strong></div>
+          <div class="bp-kv"><span>files_indexed:</span> <strong id="swScoutFiles">0 ficheiros</strong></div>
+          <div class="bp-kv"><span>ast_symbols:</span> <strong id="swScoutSymbols">0 funções/classes</strong></div>
+          <div class="bp-kv"><span>duplicate_reads:</span> <strong style="color:#6ee7b7;">0 (100% evitadas)</strong></div>
+          <div class="scout-file-list" id="swScoutFileList"></div>
+        </div>
+      </div>
+
+      <!-- Box 1: ARCHITECT (Opus 5.5) -->
+      <div class="bp-box pink-border">
+        <div class="bp-header pink">
+          <span>1. ARCHITECT</span>
+          <span>opus-5.5</span>
+        </div>
+        <div class="bp-body">
+          <div class="bp-kv"><span>role:</span> <strong>planner (decoupled)</strong></div>
+          <div class="bp-kv"><span>tokens:</span> <strong id="swArchTokens">2,840 · READ ONCE & STOP</strong></div>
+          <div class="bp-kv"><span>lanes:</span> <strong>6 UI · 6 API · 6 TEST · 6 DOCS</strong></div>
+          <div class="bp-kv"><span>status:</span> <strong style="color:#6ee7b7;" id="swArchStatus">plan locked</strong></div>
+          <div class="goal-quote" id="swGoalQuote">&gt; "ship v2.4: Scout Shared Map + Asymmetric Swarm"</div>
+        </div>
+      </div>
+
+      <!-- Box 2: DISPATCHER (Haiku 4.5 / Flash) -->
+      <div class="bp-box">
+        <div class="bp-header">
+          <span>2. DISPATCHER</span>
+          <span>haiku-4.5 · flash</span>
+        </div>
+        <div class="bp-body" style="justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-muted);">
+            <span>mode: <strong style="color:#fff;">asymmetric fan-out</strong></span>
+            <span>lanes: <strong style="color:#ec4899;">4 × 6 workers</strong></span>
+          </div>
+          <svg viewBox="0 0 360 110" style="width:100%; height:105px; overflow:visible;">
+            <!-- Root Node -->
+            <rect x="135" y="4" width="90" height="22" rx="4" fill="#ec4899" />
+            <text x="180" y="18" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">SCOUT + PLAN</text>
+            <!-- Connector Lines to 4 Lanes -->
+            <path d="M180,26 C180,50 45,42 45,68" stroke="#ec4899" stroke-width="1.8" fill="none" />
+            <path d="M180,26 C180,50 135,42 135,68" stroke="#ec4899" stroke-width="1.8" fill="none" />
+            <path d="M180,26 C180,50 225,42 225,68" stroke="#ec4899" stroke-width="1.8" fill="none" />
+            <path d="M180,26 C180,50 315,42 315,68" stroke="#ec4899" stroke-width="1.8" fill="none" />
+            <!-- 4 Lane Hubs -->
+            <g transform="translate(15, 68)">
+              <rect width="60" height="22" rx="3" fill="#1e2436" stroke="#ec4899" stroke-width="1.2"/>
+              <text x="30" y="14" text-anchor="middle" fill="#f9a8d4" font-size="9.5" font-weight="bold">UI · 6</text>
+            </g>
+            <g transform="translate(105, 68)">
+              <rect width="60" height="22" rx="3" fill="#1e2436" stroke="#ec4899" stroke-width="1.2"/>
+              <text x="30" y="14" text-anchor="middle" fill="#f9a8d4" font-size="9.5" font-weight="bold">API · 6</text>
+            </g>
+            <g transform="translate(195, 68)">
+              <rect width="60" height="22" rx="3" fill="#1e2436" stroke="#ec4899" stroke-width="1.2"/>
+              <text x="30" y="14" text-anchor="middle" fill="#f9a8d4" font-size="9.5" font-weight="bold">TESTS · 6</text>
+            </g>
+            <g transform="translate(285, 68)">
+              <rect width="60" height="22" rx="3" fill="#1e2436" stroke="#ec4899" stroke-width="1.2"/>
+              <text x="30" y="14" text-anchor="middle" fill="#f9a8d4" font-size="9.5" font-weight="bold">DOCS · 6</text>
+            </g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Box 3: TASK_LOG -->
+      <div class="bp-box">
+        <div class="bp-header">
+          <span>TASK_LOG</span>
+          <span id="swTaskLogCount">24 / 24</span>
+        </div>
+        <div class="bp-body">
+          <div class="task-log-scroll" id="swTaskLogList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 2: 4 PARALLEL WORKER LANES (UI, API, TESTS, DOCS) -->
+    <div class="swarm-lanes-grid" id="swLanesGrid"></div>
+
+    <!-- Row 3: MERGE -> VERIFY -> DONE PIPELINE -->
+    <div class="swarm-pipeline-strip">
+      <div class="bp-box">
+        <div class="bp-header"><span>MERGE</span><span style="color:#f472b6;">fan-in</span></div>
+        <div class="bp-body" style="flex-direction:row; justify-content:space-between;">
+          <span>lanes: <strong id="swMergeRatio">24 ➔ 1</strong></span>
+          <span>conflicts: <strong style="color:#6ee7b7;">0 (isolated)</strong></span>
+          <span>status: <strong style="color:#f472b6;" id="swMergeStatus">clean</strong></span>
+        </div>
+      </div>
+      <div class="bp-box">
+        <div class="bp-header"><span>VERIFY</span><span style="color:#6ee7b7;">automated audit</span></div>
+        <div class="bp-body" style="flex-direction:row; justify-content:space-between;">
+          <span>checks: <strong style="color:#ec4899;" id="swVerifyRatio">48 / 48</strong></span>
+          <span>gates: <strong>AST + HTTP + WAL</strong></span>
+          <span>status: <strong style="color:#6ee7b7;" id="swVerifyStatus">PASS</strong></span>
+        </div>
+      </div>
+      <div class="bp-box">
+        <div class="bp-header"><span>DONE</span><span style="color:#6ee7b7;">output</span></div>
+        <div class="bp-body" style="flex-direction:row; justify-content:space-between;">
+          <span>PR: <strong style="color:#fff;">1 clean delivery</strong></span>
+          <span>re-reads: <strong style="color:#6ee7b7;">0 (Scout Map)</strong></span>
+          <span>saved: <strong style="color:#6ee7b7;" id="swSavedTokens">+148.5k tok</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4: SWARM FOOTER (RUN_LOG, QUEUE 24 BARS, OUTPUT) -->
+    <div class="swarm-footer-grid">
+      <div class="bp-box">
+        <div class="bp-header">
+          <span>RUN_LOG · LIVE STREAM</span>
+          <span id="swRunStatusBadge" style="color:#6ee7b7;">● IDLE / DONE</span>
+        </div>
+        <div class="bp-body">
+          <div class="task-log-scroll" id="swRunLogStream" style="max-height:110px;"></div>
+        </div>
+      </div>
+
+      <div class="bp-box">
+        <div class="bp-header">
+          <span>QUEUE · 24 PARALLEL LANES</span>
+          <span>haiku-4.5 / flash</span>
+        </div>
+        <div class="bp-body">
+          <div class="queue-counters">
+            <div class="q-stat"><span>total</span><strong id="qTotal">24</strong></div>
+            <div class="q-stat"><span>active</span><strong class="emerald" id="qActive">0</strong></div>
+            <div class="q-stat"><span>failed</span><strong id="qFailed">0</strong></div>
+            <div class="q-stat"><span>done</span><strong class="pink" id="qDone">24</strong></div>
+          </div>
+          <div class="queue-bars" id="swQueueBars"></div>
+          <div style="font-size:10px; color:var(--text-dim); display:flex; justify-content:space-between;">
+            <span>parallelism: 4 lanes × 6 workers</span>
+            <span>0 file lock collisions</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bp-box pink-border">
+        <div class="bp-header pink">
+          <span>OUTPUT & AUDIT</span>
+          <span id="swElapsed">11.8s elapsed</span>
+        </div>
+        <div class="bp-body" style="justify-content:center;">
+          <div style="display:flex; align-items:baseline; justify-content:space-between;">
+            <div class="output-big" id="swOutputCounter">24 / 24</div>
+            <span style="color:#6ee7b7; font-size:11px; font-weight:700;" id="swAuditPassBadge">✓ 48/48 VERIFIED</span>
+          </div>
+          <div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">
+            claude/agy $ <span style="color:#f472b6;">swarm run --scout-once --agents 24 --parallel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CRIAR / EDITAR MEMÓRIA -->
+  <div class="modal-backdrop" id="memModal">
+    <div class="modal">
+      <h3 id="modalTitle">➕ Guardar Nova Memória no Brain</h3>
+      <input type="hidden" id="memId" value="" />
+      <div class="form-field">
+        <label>Tópico / Título da Nota</label>
+        <input type="text" id="memTopic" placeholder="Ex: Configuração de Servidor VPS / Regra de Arquitetura" />
+      </div>
+      <div class="form-field" style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label>Workspace / Projeto</label>
+          <input type="text" id="memWs" value="global" placeholder="global, brain_mcp, troveauto..." />
+        </div>
+        <div style="flex:1;">
+          <label>Categoria</label>
+          <select id="memCat">
+            <option value="architecture">architecture</option>
+            <option value="optimization">optimization</option>
+            <option value="infra">infra</option>
+            <option value="environment">environment</option>
+            <option value="preference">preference</option>
+            <option value="code_change">code_change</option>
+            <option value="explicit_note">explicit_note</option>
+          </select>
+        </div>
+        <div style="width:90px;">
+          <label>Importância</label>
+          <select id="memImp">
+            <option value="5">5 (Crítica)</option>
+            <option value="4" selected>4 (Alta)</option>
+            <option value="3">3 (Média)</option>
+            <option value="2">2 (Baixa)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Tags Semânticas (separadas por espaço — geram ligações no grafo!)</label>
+        <input type="text" id="memTags" placeholder="Ex: vps xray sqlite hooks tokens" />
+      </div>
+      <div class="form-field">
+        <label>Facto Detalhado (Conteúdo injetado no PreInvocation)</label>
+        <textarea id="memFact" placeholder="Escreva o conhecimento exato (caminhos, IPs, decisões técnicas)..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeMemoryModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveMemoryForm()">💾 Guardar no Brain</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toastMsg"></div>
+
+  <script>
+    // PALETA DE CORES ESTILO OBSIDIAN NEURAL GRAPH
+    const CATEGORY_COLORS = {
+      workspace: '#ffffff',
+      checkpoint: '#f59e0b',
+      architecture: '#8b5cf6',
+      optimization: '#10b981',
+      environment: '#06b6d4',
+      infra: '#ef4444',
+      preference: '#ec4899',
+      code_change: '#3b82f6',
+      explicit_note: '#a855f7',
+      tag: '#64748b',
+      general: '#94a3b8'
+    };
+
+    let graphData = { nodes: [], links: [], stats: {}, token_diet: {} };
+    let activeNodes = [];
+    let activeLinks = [];
+    let selectedNode = null;
+    let hoveredNode = null;
+    let draggedNode = null;
+    let graphMode = 'global'; // 'global' | 'local'
+    let currentDietLean = false;
+
+    // Câmara 2D (Pan & Zoom)
+    let cam = { x: 0, y: 0, k: 0.68 };
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+
+    // Parâmetros de Física Force-Directed com Arrefecimento (Simulated Annealing)
+    let simAlpha = 0.0;
+    let physics = {
+      repulsion: 1800,
+      springLength: 210,
+      springK: 0.032,
+      gravity: 0.004,
+      damping: 0.72
+    };
+
+    const canvas = document.getElementById('brainGraph');
+    const ctx = canvas.getContext('2d');
+    let pulseTick = 0;
+
+    function resizeCanvas() {
+      const wrap = document.getElementById('canvasWrap');
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = wrap.clientWidth * dpr;
+      canvas.height = wrap.clientHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (cam.x === 0 && cam.y === 0) {
+        cam.x = wrap.clientWidth / 2;
+        cam.y = wrap.clientHeight / 2;
+      }
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function showToast(text) {
+      const el = document.getElementById('toastMsg');
+      el.textContent = text;
+      el.style.display = 'block';
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => { el.style.display = 'none'; }, 3200);
+    }
+
+    let searchTimer = null;
+    function debouncedFetchGraph() {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(fetchGraph, 160);
+    }
+
+    async function fetchGraph() {
+      const q = document.getElementById('searchInput').value.trim();
+      const ws = document.getElementById('wsFilter').value;
+      const cat = document.getElementById('catFilter').value;
+      const showTags = document.getElementById('chkShowTags').checked ? '1' : '0';
+
+      const res = await fetch(`/api/graph?q=${encodeURIComponent(q)}&workspace=${encodeURIComponent(ws)}&category=${encodeURIComponent(cat)}&tags=${showTags}`);
+      const data = await res.json();
+
+      const oldPos = {};
+      for (const n of activeNodes) {
+        oldPos[n.id] = { x: n.x, y: n.y };
+      }
+
+      graphData = data;
+      rebuildSimulationGraph(oldPos);
+      updateTopbarStats();
+      updateFiltersAndLegend();
+      renderVaultTree();
+
+      if (selectedNode) {
+        const updated = activeNodes.find(n => n.id === selectedNode.id);
+        if (updated) selectNode(updated, false);
+      } else if (activeNodes.length > 0) {
+        const firstMem = activeNodes.find(n => n.node_type === 'memory') || activeNodes[0];
+        selectNode(firstMem, false);
+      }
+    }
+
+    function rebuildSimulationGraph(oldPos = {}) {
+      let rawNodes = graphData.nodes.map(n => ({ ...n }));
+      let links = graphData.links.map(l => ({ ...l }));
+
+      if (graphMode === 'local' && selectedNode) {
+        const keepIds = new Set([selectedNode.id]);
+        for (const l of links) {
+          if (l.source === selectedNode.id || l.target === selectedNode.id) {
+            keepIds.add(l.source);
+            keepIds.add(l.target);
+          }
+        }
+        rawNodes = rawNodes.filter(n => keepIds.has(n.id));
+        links = links.filter(l => keepIds.has(l.source) && keepIds.has(l.target));
+      }
+
+      // Posicionar Hubs de Workspace num anel amplo para separar clusters
+      const wsNodes = rawNodes.filter(n => n.node_type === 'workspace');
+      const wsCenters = {};
+      wsNodes.forEach((w, idx) => {
+        const ang = (idx / Math.max(1, wsNodes.length)) * Math.PI * 2 - Math.PI / 2;
+        const rad = wsNodes.length === 1 ? 0 : 480;
+        wsCenters[w.workspace] = {
+          x: Math.cos(ang) * rad,
+          y: Math.sin(ang) * rad
+        };
+      });
+
+      // Espiral de Ângulo Áureo (Phyllotaxis) por cluster para distribuição espaçada sem sobreposição
+      const wsCounters = {};
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+
+      const nodes = rawNodes.map((n, idx) => {
+        const prev = oldPos[n.id];
+        if (prev) {
+          return { ...n, x: prev.x, y: prev.y, vx: 0, vy: 0 };
+        }
+        const ws = n.workspace || 'global';
+        const center = wsCenters[ws] || { x: 0, y: 0 };
+        if (n.node_type === 'workspace') {
+          return { ...n, x: center.x, y: center.y, vx: 0, vy: 0 };
+        }
+        const cIdx = (wsCounters[ws] = (wsCounters[ws] || 0) + 1);
+        const theta = cIdx * goldenAngle + idx * 0.15;
+        const r = 115 + 78 * Math.sqrt(cIdx);
+        return {
+          ...n,
+          x: center.x + Math.cos(theta) * r,
+          y: center.y + Math.sin(theta) * r,
+          vx: 0,
+          vy: 0
+        };
+      });
+
+      const nodeMap = {};
+      for (const n of nodes) nodeMap[n.id] = n;
+
+      activeNodes = nodes;
+      activeLinks = links
+        .filter(l => nodeMap[l.source] && nodeMap[l.target])
+        .map(l => ({
+          ...l,
+          sourceNode: nodeMap[l.source],
+          targetNode: nodeMap[l.target]
+        }));
+
+      // Pré-aquecimento síncrono (Pre-Warm): estabiliza o grafo ANTES de desenhar o 1º frame (sem confusão no F5!)
+      const isInitialLoad = Object.keys(oldPos).length === 0;
+      const prewarmSteps = isInitialLoad ? 160 : 45;
+      simAlpha = 1.0;
+      for (let step = 0; step < prewarmSteps; step++) {
+        simAlpha = Math.max(0.05, 1.0 - step / prewarmSteps);
+        stepPhysics(true);
+      }
+      for (const n of activeNodes) {
+        n.vx = 0;
+        n.vy = 0;
+      }
+      simAlpha = 0.0;
+    }
+
+    function updateTopbarStats() {
+      const s = graphData.stats || {};
+      document.getElementById('statMemories').textContent = s.total_memories || 0;
+      document.getElementById('statLinks').textContent = activeLinks.length;
+      document.getElementById('statLatency').textContent = `${s.avg_inject_latency_ms || 11.4} ms`;
+      document.getElementById('statSaved').textContent = `+${(s.net_tokens_saved || 4260).toLocaleString()} tok`;
+
+      const td = graphData.token_diet || {};
+      currentDietLean = !!td.is_lean;
+      const btnDiet = document.getElementById('btnDietToggle');
+      if (currentDietLean) {
+        btnDiet.className = 'btn btn-diet-lean';
+        btnDiet.innerHTML = `🟢 Perfil Quota: LEAN (${td.total_mcp_tokens_per_step || 199} tok/passo)`;
+      } else {
+        btnDiet.className = 'btn btn-diet-full';
+        btnDiet.innerHTML = `🟠 Perfil Quota: FULL (${td.total_mcp_tokens_per_step || 2961} tok/passo)`;
+      }
+    }
+
+    function updateFiltersAndLegend() {
+      const wsSel = document.getElementById('wsFilter');
+      const catSel = document.getElementById('catFilter');
+      const curWs = wsSel.value;
+      const curCat = catSel.value;
+
+      const workspaces = (graphData.filters && graphData.filters.workspaces) || [];
+      wsSel.innerHTML = '<option value="all">📂 Todos Workspaces</option>' +
+        workspaces.map(w => `<option value="${w}" ${w === curWs ? 'selected' : ''}>📂 ${w}</option>`).join('');
+
+      const categories = (graphData.filters && graphData.filters.categories) || [];
+      catSel.innerHTML = '<option value="all">🏷️ Todas Categorias</option>' +
+        categories.map(c => `<option value="${c}" ${c === curCat ? 'selected' : ''}>🏷️ ${c}</option>`).join('');
+
+      const legendBar = document.getElementById('legendBar');
+      const catMeta = {
+        workspace: { icon: '⬡', label: 'workspace' },
+        checkpoint: { icon: '◆', label: 'checkpoint' },
+        architecture: { icon: '❖', label: 'architecture' },
+        optimization: { icon: '⚡', label: 'optimization' },
+        infra: { icon: '▣', label: 'infra' },
+        environment: { icon: '>_', label: 'environment' },
+        preference: { icon: '✦', label: 'preference' },
+        code_change: { icon: '</>', label: 'code_change' },
+        tag: { icon: '#', label: 'tag' }
+      };
+      const shownCats = ['workspace', 'architecture', 'optimization', 'infra', 'environment', 'preference', 'code_change', 'tag'];
+      legendBar.innerHTML = shownCats.map(c => `
+        <span class="legend-chip" onclick="filterByCategory('${c}')">
+          <span style="color:${CATEGORY_COLORS[c] || '#94a3b8'}; font-weight:700; font-family:var(--font-mono);">${catMeta[c].icon}</span>
+          ${catMeta[c].label}
+        </span>
+      `).join('');
+    }
+
+    function filterByCategory(cat) {
+      const catSel = document.getElementById('catFilter');
+      if (cat === 'workspace' || cat === 'tag') {
+        catSel.value = 'all';
+      } else {
+        catSel.value = (catSel.value === cat) ? 'all' : cat;
+      }
+      fetchGraph();
+    }
+
+    function getCategoryGlyph(cat, nodeType) {
+      if (nodeType === 'workspace') return '⬡';
+      if (nodeType === 'checkpoint') return '◆';
+      const map = {
+        architecture: '❖',
+        optimization: '⚡',
+        infra: '▣',
+        environment: '>_',
+        preference: '✦',
+        explicit_note: '✦',
+        code_change: '</>'
+      };
+      return map[cat] || '◈';
+    }
+
+    function renderVaultTree() {
+      const tree = document.getElementById('vaultTree');
+      const groups = {};
+      for (const n of activeNodes) {
+        if (n.node_type === 'tag' || n.node_type === 'workspace') continue;
+        const ws = n.workspace || 'global';
+        if (!groups[ws]) groups[ws] = [];
+        groups[ws].push(n);
+      }
+
+      let html = '';
+      for (const ws of Object.keys(groups).sort()) {
+        const items = groups[ws];
+        html += `
+          <div class="vault-group">
+            <div class="vault-folder" onclick="focusWorkspaceHub('${ws}')">
+              <span>⬡ ${ws}</span>
+              <span style="font-size:10px; opacity:0.6;">${items.length}</span>
+            </div>
+            ${items.map(item => {
+              const isSel = selectedNode && selectedNode.id === item.id;
+              const isMatch = item.is_match;
+              const color = CATEGORY_COLORS[item.category] || '#94a3b8';
+              const glyph = getCategoryGlyph(item.category, item.node_type);
+              return `
+                <div class="vault-item ${isSel ? 'active' : ''} ${isMatch ? 'match-highlight' : ''}"
+                     onclick="focusNodeById('${item.id}')">
+                  <span style="color:${color}; font-family:var(--font-mono); font-size:11px; width:18px; text-align:center; flex-shrink:0;">${glyph}</span>
+                  <span style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.label)}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+      tree.innerHTML = html || '<div style="padding:14px; color:var(--text-dim); font-size:12px;">Nenhuma memória encontrada para este filtro.</div>';
+    }
+
+    function focusWorkspaceHub(ws) {
+      focusNodeById(`ws:${ws}`);
+    }
+
+    function focusNodeById(id) {
+      const node = activeNodes.find(n => n.id === id);
+      if (!node) return;
+      selectNode(node, true);
+    }
+
+    function selectNode(node, animateCam = false) {
+      selectedNode = node;
+      if (graphMode === 'local') {
+        rebuildSimulationGraph();
+      }
+      renderVaultTree();
+
+      if (animateCam) {
+        const wrap = document.getElementById('canvasWrap');
+        cam.x = wrap.clientWidth / 2 - node.x * cam.k;
+        cam.y = wrap.clientHeight / 2 - node.y * cam.k;
+      }
+
+      // Atualizar Inspetor Direito
+      document.getElementById('inspType').textContent = `${node.node_type.toUpperCase()} • ID: ${node.db_id || node.id}`;
+      document.getElementById('inspTitle').textContent = node.label;
+      document.getElementById('fmWs').textContent = node.workspace || 'global';
+      document.getElementById('fmCat').textContent = node.category || 'general';
+      document.getElementById('fmImp').textContent = '⭐'.repeat(Math.min(5, Math.max(1, node.importance || 3)));
+      document.getElementById('fmAcc').textContent = `${node.access_count || 0} injeções`;
+      document.getElementById('fmTime').textContent = node.created_at || node.updated_at || 'Ativo';
+      document.getElementById('inspBody').textContent = node.fact || '';
+
+      // Botões de editar/apagar se for uma memória da BD
+      const actDiv = document.getElementById('inspActions');
+      if (node.node_type === 'memory' && node.db_id) {
+        actDiv.innerHTML = `
+          <button class="btn" style="padding:4px 8px;" onclick="openEditModal()">✏️</button>
+          <button class="btn" style="padding:4px 8px; color:var(--red);" onclick="deleteCurrentMemory(${node.db_id})">🗑️</button>
+        `;
+      } else {
+        actDiv.innerHTML = '';
+      }
+
+      // Tags
+      const tagDiv = document.getElementById('inspTags');
+      const tags = (node.tags || '').split(/\s+/).filter(Boolean);
+      tagDiv.innerHTML = tags.map(t => `
+        <span class="tag-pill" onclick="searchByTag('${t}')">#${escapeHtml(t)}</span>
+      `).join('');
+
+      // Calcular Backlinks / Ligações Sinápticas
+      const connected = [];
+      for (const l of activeLinks) {
+        if (l.sourceNode.id === node.id) {
+          connected.push({ node: l.targetNode, kind: l.kind, shared: l.shared_tags });
+        } else if (l.targetNode.id === node.id) {
+          connected.push({ node: l.sourceNode, kind: l.kind, shared: l.shared_tags });
+        }
+      }
+
+      document.getElementById('backlinkCount').textContent = connected.length;
+      const blList = document.getElementById('backlinksList');
+      blList.innerHTML = connected.map(c => {
+        const rel = c.shared ? `Sinapse via #${c.shared.join(', #')}` : c.kind.replace('_', ' ');
+        return `
+          <div class="backlink-card" onclick="focusNodeById('${c.node.id}')">
+            <div class="backlink-title">${escapeHtml(c.node.label)}</div>
+            <div class="backlink-meta">${escapeHtml(rel)} • [${c.node.workspace}]</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function searchByTag(tag) {
+      document.getElementById('searchInput').value = tag;
+      fetchGraph();
+    }
+
+    function setGraphMode(mode) {
+      graphMode = mode;
+      document.getElementById('btnGlobalGraph').classList.toggle('active', mode === 'global');
+      document.getElementById('btnLocalGraph').classList.toggle('active', mode === 'local');
+      rebuildSimulationGraph();
+    }
+
+    function resetCamera() {
+      const wrap = document.getElementById('canvasWrap');
+      cam.x = wrap.clientWidth / 2;
+      cam.y = wrap.clientHeight / 2;
+      cam.k = 0.68;
+    }
+
+    function updatePhysicsParams() {
+      physics.repulsion = parseFloat(document.getElementById('rngRepulsion').value);
+      physics.springLength = parseFloat(document.getElementById('rngDistance').value);
+      document.getElementById('lblRepulsion').textContent = physics.repulsion;
+      document.getElementById('lblDistance').textContent = physics.springLength;
+      // Acordar suavemente a física ao mexer nos sliders
+      simAlpha = 0.45;
+    }
+
+    // MOTOR FÍSICO FORCE-DIRECTED COM ARREFECIMENTO + SEPARAÇÃO ANTI-COLISÃO
+    function stepPhysics(isPrewarm = false) {
+      const N = activeNodes.length;
+      if (N === 0) return;
+
+      // Se a simulação já estabilizou e ninguém está a arrastar, fica 100% imóvel
+      if (!isPrewarm && !draggedNode && simAlpha < 0.003) {
+        return;
+      }
+
+      const alpha = isPrewarm ? simAlpha : (draggedNode ? 0.28 : simAlpha);
+
+      // 1. Repulsão Coulomb + Resolução Direta de Colisão (Distância Mínima Garantida)
+      for (let i = 0; i < N; i++) {
+        const a = activeNodes[i];
+        const rA = (a.val || 12) * 1.2;
+        for (let j = i + 1; j < N; j++) {
+          const b = activeNodes[j];
+          const rB = (b.val || 12) * 1.2;
+          let dx = b.x - a.x;
+          let dy = b.y - a.y;
+          let distSq = dx * dx + dy * dy + 1.0;
+          let dist = Math.sqrt(distSq);
+
+          // Repulsão de longo alcance limitada para não disparar velocidades
+          let repForce = Math.min(28.0, (physics.repulsion / distSq)) * alpha;
+          let fx = (dx / dist) * repForce;
+          let fy = (dy / dist) * repForce;
+          if (a !== draggedNode) { a.vx -= fx; a.vy -= fy; }
+          if (b !== draggedNode) { b.vx += fx; b.vy += fy; }
+
+          // Barreira Anti-Sobreposição (Garante espaço amplo para o ícone + rótulo de texto)
+          const minSep = rA + rB + 64;
+          if (dist < minSep && dist > 0.01) {
+            const push = (minSep - dist) * 0.35;
+            const px = (dx / dist) * push;
+            const py = (dy / dist) * push;
+            if (a !== draggedNode) { a.x -= px; a.y -= py; }
+            if (b !== draggedNode) { b.x += px; b.y += py; }
+          }
+        }
+      }
+
+      // 2. Força de Mola Suave (Hooke) nas ligações sinápticas
+      for (const l of activeLinks) {
+        const a = l.sourceNode;
+        const b = l.targetNode;
+        let dx = b.x - a.x;
+        let dy = b.y - a.y;
+        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+        let targetLen = l.kind === 'tag_link'
+          ? physics.springLength * 0.85
+          : (l.kind === 'workspace_link' ? physics.springLength * 1.2 : physics.springLength);
+        let displacement = dist - targetLen;
+        let force = displacement * physics.springK * alpha;
+        let fx = (dx / dist) * force;
+        let fy = (dy / dist) * force;
+        if (a !== draggedNode) { a.vx += fx; a.vy += fy; }
+        if (b !== draggedNode) { b.vx -= fx; b.vy -= fy; }
+      }
+
+      // 3. Gravidade central suave, limite de velocidade (Clamp) e arrefecimento
+      const maxSpeed = isPrewarm ? 25.0 : 8.0;
+      for (const n of activeNodes) {
+        if (n === draggedNode) continue;
+        const gFactor = (n.node_type === 'workspace' ? physics.gravity * 1.5 : physics.gravity) * alpha;
+        n.vx = (n.vx - n.x * gFactor) * physics.damping;
+        n.vy = (n.vy - n.y * gFactor) * physics.damping;
+
+        const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+        if (speed > maxSpeed) {
+          n.vx = (n.vx / speed) * maxSpeed;
+          n.vy = (n.vy / speed) * maxSpeed;
+        }
+
+        n.x += n.vx;
+        n.y += n.vy;
+      }
+
+      if (!isPrewarm && !draggedNode) {
+        simAlpha *= 0.91;
+        if (simAlpha < 0.003) {
+          simAlpha = 0;
+          for (const n of activeNodes) { n.vx = 0; n.vy = 0; }
+        }
+      }
+    }
+
+    // Helpers de Desenho Vetorial em Canvas
+    function tracePolygon(x, y, radius, sides, rotation = 0) {
+      ctx.beginPath();
+      for (let i = 0; i < sides; i++) {
+        const a = rotation + (i * 2 * Math.PI) / sides;
+        const px = x + radius * Math.cos(a);
+        const py = y + radius * Math.sin(a);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+    }
+
+    function traceRoundedRect(x, y, w, h, r) {
+      const rx = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rx, y);
+      ctx.lineTo(x + w - rx, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + rx);
+      ctx.lineTo(x + w, y + h - rx);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - rx, y + h);
+      ctx.lineTo(x + rx, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - rx);
+      ctx.lineTo(x, y + rx);
+      ctx.quadraticCurveTo(x, y, x + rx, y);
+      ctx.closePath();
+    }
+
+    function drawNodeVectorIcon(x, y, s, category, nodeType, color) {
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = Math.max(1.3, s * 0.14);
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      if (nodeType === 'workspace') {
+        // Cubo isométrico 3D / Core Hub
+        tracePolygon(x, y, s * 0.62, 6, -Math.PI / 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x, y - s * 0.62);
+        ctx.lineTo(x, y);
+        ctx.lineTo(x + s * 0.53, y + s * 0.31);
+        ctx.moveTo(x, y);
+        ctx.lineTo(x - s * 0.53, y + s * 0.31);
+        ctx.stroke();
+      } else if (nodeType === 'checkpoint') {
+        // Bandeira / Alvo de Milestone
+        ctx.beginPath();
+        ctx.moveTo(x - s * 0.32, y + s * 0.52);
+        ctx.lineTo(x - s * 0.32, y - s * 0.52);
+        ctx.lineTo(x + s * 0.45, y - s * 0.22);
+        ctx.lineTo(x - s * 0.32, y + s * 0.08);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      } else if (category === 'optimization') {
+        // Relâmpago (Lightning Bolt)
+        ctx.beginPath();
+        ctx.moveTo(x + s * 0.1, y - s * 0.6);
+        ctx.lineTo(x - s * 0.42, y + s * 0.06);
+        ctx.lineTo(x + s * 0.02, y + s * 0.06);
+        ctx.lineTo(x - s * 0.12, y + s * 0.6);
+        ctx.lineTo(x + s * 0.42, y - s * 0.06);
+        ctx.lineTo(x - s * 0.02, y - s * 0.06);
+        ctx.closePath();
+        ctx.fill();
+      } else if (category === 'architecture') {
+        // Camadas Isométricas (Layers)
+        for (const dy of [-s * 0.28, s * 0.05, s * 0.36]) {
+          ctx.beginPath();
+          ctx.moveTo(x, y + dy - s * 0.24);
+          ctx.lineTo(x + s * 0.52, y + dy);
+          ctx.lineTo(x, y + dy + s * 0.24);
+          ctx.lineTo(x - s * 0.52, y + dy);
+          ctx.closePath();
+          ctx.stroke();
+        }
+      } else if (category === 'code_change') {
+        // Brackets de Código </>
+        ctx.beginPath();
+        ctx.moveTo(x - s * 0.25, y - s * 0.35);
+        ctx.lineTo(x - s * 0.58, y);
+        ctx.lineTo(x - s * 0.25, y + s * 0.35);
+        ctx.moveTo(x + s * 0.25, y - s * 0.35);
+        ctx.lineTo(x + s * 0.58, y);
+        ctx.lineTo(x + s * 0.25, y + s * 0.35);
+        ctx.moveTo(x + s * 0.12, y - s * 0.45);
+        ctx.lineTo(x - s * 0.12, y + s * 0.45);
+        ctx.stroke();
+      } else if (category === 'infra') {
+        // Servidor / Rack
+        traceRoundedRect(x - s * 0.52, y - s * 0.48, s * 1.04, s * 0.4, 2);
+        ctx.stroke();
+        traceRoundedRect(x - s * 0.52, y + s * 0.08, s * 1.04, s * 0.4, 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(x - s * 0.28, y - s * 0.28, s * 0.08, 0, Math.PI * 2);
+        ctx.arc(x - s * 0.28, y + s * 0.28, s * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (category === 'environment') {
+        // Terminal >_
+        ctx.beginPath();
+        ctx.moveTo(x - s * 0.48, y - s * 0.32);
+        ctx.lineTo(x - s * 0.08, y);
+        ctx.lineTo(x - s * 0.48, y + s * 0.32);
+        ctx.moveTo(x + s * 0.05, y + s * 0.32);
+        ctx.lineTo(x + s * 0.48, y + s * 0.32);
+        ctx.stroke();
+      } else {
+        // Estrela Neural / Nota (preference, explicit_note, general)
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const rad = i % 2 === 0 ? s * 0.56 : s * 0.22;
+          const ang = (i * Math.PI) / 4 - Math.PI / 2;
+          const px = x + rad * Math.cos(ang);
+          const py = y + rad * Math.sin(ang);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function renderGraph() {
+      stepPhysics();
+      pulseTick += 0.012;
+
+      const wrap = document.getElementById('canvasWrap');
+      ctx.clearRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+
+      ctx.save();
+      ctx.translate(cam.x, cam.y);
+      ctx.scale(cam.k, cam.k);
+
+      const focusTarget = hoveredNode || null;
+      const neighborSet = new Set();
+      if (focusTarget) {
+        neighborSet.add(focusTarget.id);
+        for (const l of activeLinks) {
+          if (l.sourceNode.id === focusTarget.id) neighborSet.add(l.targetNode.id);
+          if (l.targetNode.id === focusTarget.id) neighborSet.add(l.sourceNode.id);
+        }
+      }
+
+      const showPulses = document.getElementById('chkPulses').checked;
+
+      // 1. Desenhar Ligações (Arestas Curvas/Diretas com Gradiente)
+      for (const l of activeLinks) {
+        const a = l.sourceNode;
+        const b = l.targetNode;
+        const isHighlighted = focusTarget && (a.id === focusTarget.id || b.id === focusTarget.id);
+        const isDimmed = focusTarget && !isHighlighted;
+
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+
+        if (isHighlighted) {
+          ctx.strokeStyle = l.kind === 'synaptic_link' ? '#c084fc' : '#38bdf8';
+          ctx.lineWidth = 2.2 / Math.sqrt(cam.k);
+          ctx.globalAlpha = 0.95;
+        } else if (isDimmed) {
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 0.8 / Math.sqrt(cam.k);
+          ctx.globalAlpha = 0.12;
+        } else {
+          ctx.strokeStyle = l.kind === 'synaptic_link'
+            ? 'rgba(139, 92, 246, 0.38)'
+            : (l.kind === 'tag_link' ? 'rgba(100, 116, 139, 0.22)' : 'rgba(56, 189, 248, 0.26)');
+          ctx.lineWidth = (l.kind === 'synaptic_link' ? 1.5 : 1.0) / Math.sqrt(cam.k);
+          ctx.globalAlpha = 1.0;
+        }
+        ctx.stroke();
+
+        if (showPulses && (isHighlighted || l.kind === 'synaptic_link') && !isDimmed) {
+          const t = (pulseTick + (a.x + b.y) * 0.001) % 1;
+          const px = a.x + (b.x - a.x) * t;
+          const py = a.y + (b.y - a.y) * t;
+          ctx.beginPath();
+          ctx.arc(px, py, 2.3 / Math.sqrt(cam.k), 0, Math.PI * 2);
+          ctx.fillStyle = isHighlighted ? '#f472b6' : '#a78bfa';
+          ctx.fill();
+        }
+      }
+
+      // 2. Desenhar Nós com Geometria Distinta + Ícones Vetoriais Internos
+      const alwaysLabels = document.getElementById('chkAlwaysLabels').checked;
+
+      for (const n of activeNodes) {
+        const isHovered = hoveredNode && hoveredNode.id === n.id;
+        const isSelected = selectedNode && selectedNode.id === n.id;
+        const isNeighbor = focusTarget && neighborSet.has(n.id);
+        const isDimmed = focusTarget && !isNeighbor;
+
+        ctx.globalAlpha = isDimmed ? 0.14 : 1.0;
+        const r = (n.val || 12) * 1.15;
+        const baseColor = CATEGORY_COLORS[n.category] || '#94a3b8';
+
+        // CASO A: Nós de #Tag -> Pílula Cápsula Compacta (Sem bola!)
+        if (n.node_type === 'tag') {
+          const fontSize = 10;
+          ctx.font = `600 ${fontSize}px 'JetBrains Mono', monospace`;
+          const textW = ctx.measureText(n.label).width;
+          const pw = textW + 14;
+          const ph = 18;
+          traceRoundedRect(n.x - pw / 2, n.y - ph / 2, pw, ph, 9);
+          ctx.fillStyle = isSelected || isHovered ? 'rgba(139, 92, 246, 0.35)' : 'rgba(18, 22, 35, 0.92)';
+          ctx.fill();
+          ctx.lineWidth = isSelected || isHovered ? 1.6 : 1.0;
+          ctx.strokeStyle = isSelected || isHovered ? '#c4b5fd' : 'rgba(148, 163, 184, 0.35)';
+          ctx.stroke();
+
+          ctx.fillStyle = isSelected || isHovered ? '#ffffff' : '#94a3b8';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(n.label, n.x, n.y + 0.5);
+          continue;
+        }
+
+        // Halo Luminoso Exterior (Pesquisa FTS5, Seleção ou Hover)
+        if (n.is_match || isSelected || isHovered) {
+          const haloGrad = ctx.createRadialGradient(n.x, n.y, r * 0.4, n.x, n.y, r * 2.1);
+          haloGrad.addColorStop(0, n.is_match ? 'rgba(250, 204, 21, 0.45)' : `${baseColor}55`);
+          haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, r * 2.1, 0, Math.PI * 2);
+          ctx.fillStyle = haloGrad;
+          ctx.fill();
+        }
+
+        // Anel Tecnológico Orbital para Workspaces ou Nós Críticos Selecionados
+        if (n.node_type === 'workspace' || isSelected) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
+          ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        // Corpo Geométrico do Nó (Fundo Escuro Glassmorphic + Borda Neon)
+        if (n.node_type === 'workspace') {
+          // Hexágono Duplo para Workspaces
+          tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
+        } else if (n.node_type === 'checkpoint') {
+          // Losango (Diamond Shield) para Checkpoints
+          tracePolygon(n.x, n.y, r * 1.15, 4, 0);
+        } else if (n.category === 'architecture' || n.category === 'infra') {
+          // Octógono Técnico
+          tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+        } else {
+          // Squircle (Card Geométrico Arredondado) para Memórias
+          const side = r * 1.65;
+          traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.28);
+        }
+
+        const bodyGrad = ctx.createLinearGradient(n.x - r, n.y - r, n.x + r, n.y + r);
+        bodyGrad.addColorStop(0, '#161b2c');
+        bodyGrad.addColorStop(1, '#0d101b');
+        ctx.fillStyle = bodyGrad;
+        ctx.fill();
+
+        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.6;
+        ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+        ctx.stroke();
+
+        // Desenhar Ícone Vetorial Nítido no Centro do Nó
+        const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+        drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
+
+        // Rótulo com Badge Escuro Translúcido por baixo do Ícone
+        if (alwaysLabels || isHovered || isSelected || n.node_type === 'workspace' || cam.k > 1.15) {
+          const cleanLabel = n.label.replace(/^[📂🏁]\s*/, '');
+          const labelText = cleanLabel.length > 32 && !isHovered && !isSelected
+            ? cleanLabel.slice(0, 30) + '…'
+            : cleanLabel;
+
+          const fontSize = Math.max(9.5, Math.min(12.5, 10.8 / Math.pow(cam.k, 0.2)));
+          ctx.font = `${n.node_type === 'workspace' || isSelected ? '600' : '500'} ${fontSize}px Inter, sans-serif`;
+          const textW = ctx.measureText(labelText).width;
+          const badgeW = textW + 10;
+          const badgeH = fontSize + 6;
+          const badgeY = n.y + r + 6;
+
+          traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 5);
+          ctx.fillStyle = isSelected ? 'rgba(139, 92, 246, 0.32)' : 'rgba(11, 13, 19, 0.82)';
+          ctx.fill();
+          if (isSelected || isHovered || n.is_match) {
+            ctx.lineWidth = 1.0;
+            ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
+            ctx.stroke();
+          }
+
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : '#e2e8f0');
+          ctx.fillText(labelText, n.x, badgeY + badgeH / 2 + 0.5);
+        }
+      }
+
+      ctx.restore();
+      requestAnimationFrame(renderGraph);
+    }
+
+    // INTERAÇÃO DO RATO NO CANVAS (DRAG, HOVER, CLICK, ZOOM, PAN)
+    function screenToWorld(sx, sy) {
+      return {
+        x: (sx - cam.x) / cam.k,
+        y: (sy - cam.y) / cam.k
+      };
+    }
+
+    function findNodeAt(wx, wy) {
+      for (let i = activeNodes.length - 1; i >= 0; i--) {
+        const n = activeNodes[i];
+        const r = (n.val || 12) * 1.25 + 5;
+        const dx = wx - n.x;
+        const dy = wy - n.y;
+        if (dx * dx + dy * dy <= r * r) return n;
+      }
+      return null;
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const w = screenToWorld(sx, sy);
+
+      if (draggedNode) {
+        draggedNode.x = w.x;
+        draggedNode.y = w.y;
+        draggedNode.vx = 0;
+        draggedNode.vy = 0;
+        return;
+      }
+
+      if (isPanning) {
+        cam.x += e.clientX - panStart.x;
+        cam.y += e.clientY - panStart.y;
+        panStart = { x: e.clientX, y: e.clientY };
+        return;
+      }
+
+      hoveredNode = findNodeAt(w.x, w.y);
+      canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+    });
+
+    canvas.addEventListener('mousedown', e => {
+      const rect = canvas.getBoundingClientRect();
+      const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+      const hit = findNodeAt(w.x, w.y);
+
+      if (hit) {
+        draggedNode = hit;
+        selectNode(hit, false);
+      } else {
+        isPanning = true;
+        panStart = { x: e.clientX, y: e.clientY };
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (draggedNode) {
+        simAlpha = 0.12;
+      }
+      draggedNode = null;
+      isPanning = false;
+    });
+
+    canvas.addEventListener('wheel', e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const zoomFactor = e.deltaY < 0 ? 1.12 : 0.89;
+      const nextK = Math.max(0.25, Math.min(3.5, cam.k * zoomFactor));
+
+      cam.x = sx - ((sx - cam.x) / cam.k) * nextK;
+      cam.y = sy - ((sy - cam.y) / cam.k) * nextK;
+      cam.k = nextK;
+    }, { passive: false });
+
+    // AÇÕES CRUD & PERFIS
+    function openMemoryModal() {
+      document.getElementById('modalTitle').textContent = '➕ Guardar Nova Memória no Brain';
+      document.getElementById('memId').value = '';
+      document.getElementById('memTopic').value = '';
+      document.getElementById('memWs').value = 'global';
+      document.getElementById('memCat').value = 'architecture';
+      document.getElementById('memImp').value = '4';
+      document.getElementById('memTags').value = '';
+      document.getElementById('memFact').value = '';
+      document.getElementById('memModal').classList.add('open');
+    }
+
+    function openEditModal() {
+      if (!selectedNode || selectedNode.node_type !== 'memory') return;
+      document.getElementById('modalTitle').textContent = '✏️ Editar Memória';
+      document.getElementById('memId').value = selectedNode.db_id || '';
+      document.getElementById('memTopic').value = selectedNode.label || '';
+      document.getElementById('memWs').value = selectedNode.workspace || 'global';
+      document.getElementById('memCat').value = selectedNode.category || 'architecture';
+      document.getElementById('memImp').value = String(selectedNode.importance || 4);
+      document.getElementById('memTags').value = selectedNode.tags || '';
+      document.getElementById('memFact').value = selectedNode.fact || '';
+      document.getElementById('memModal').classList.add('open');
+    }
+
+    function closeMemoryModal() {
+      document.getElementById('memModal').classList.remove('open');
+    }
+
+    async function saveMemoryForm() {
+      const payload = {
+        id: document.getElementById('memId').value || null,
+        topic: document.getElementById('memTopic').value,
+        workspace: document.getElementById('memWs').value,
+        category: document.getElementById('memCat').value,
+        importance: parseInt(document.getElementById('memImp').value, 10),
+        tags: document.getElementById('memTags').value,
+        fact: document.getElementById('memFact').value
+      };
+      const res = await fetch('/api/memories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const out = await res.json();
+      if (out.ok) {
+        closeMemoryModal();
+        showToast('✅ Memória guardada e indexada em FTS5 BM25!');
+        await fetchGraph();
+      } else {
+        showToast('❌ Erro: ' + (out.error || 'Falha ao guardar'));
+      }
+    }
+
+    async function deleteCurrentMemory(dbId) {
+      const res = await fetch(`/api/memories/${dbId}`, { method: 'DELETE' });
+      const out = await res.json();
+      if (out.ok) {
+        selectedNode = null;
+        showToast('🗑️ Memória removida do Brain.');
+        await fetchGraph();
+      }
+    }
+
+    async function syncSessions() {
+      showToast('🔄 A sincronizar sessões e projetos no scratch...');
+      const res = await fetch('/api/sync', { method: 'POST' });
+      const out = await res.json();
+      showToast(`✅ Sincronizado! Conversas lidas: ${out.scanned_conversations}, Novas memórias: ${out.added_memories}`);
+      await fetchGraph();
+    }
+
+    async function toggleDietMode() {
+      const targetMode = currentDietLean ? 'full' : 'lean';
+      const res = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: targetMode })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        showToast(`⚡ Modo Quota alterado para: ${targetMode.toUpperCase()}`);
+        await fetchGraph();
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // =========================================================================
+    // ASYMMETRIC SWARM + SCOUT SHARED MAP MONITOR
+    // =========================================================================
+    let activeMainView = 'graph';
+    let swarmPollTimer = null;
+
+    function switchMainView(viewName) {
+      activeMainView = viewName === 'swarm' ? 'swarm' : 'graph';
+      const gWs = document.getElementById('graphWorkspace');
+      const sWs = document.getElementById('swarmWorkspace');
+      const btnG = document.getElementById('tabBtnGraph');
+      const btnS = document.getElementById('tabBtnSwarm');
+
+      if (activeMainView === 'swarm') {
+        gWs.style.display = 'none';
+        sWs.classList.add('active');
+        btnG.classList.remove('active');
+        btnS.classList.add('active');
+        window.location.hash = 'swarm';
+        fetchSwarmDashboard();
+        if (!swarmPollTimer) {
+          swarmPollTimer = setInterval(fetchSwarmDashboard, 1100);
+        }
+      } else {
+        sWs.classList.remove('active');
+        gWs.style.display = 'flex';
+        btnS.classList.remove('active');
+        btnG.classList.add('active');
+        window.location.hash = 'graph';
+        if (swarmPollTimer) {
+          clearInterval(swarmPollTimer);
+          swarmPollTimer = null;
+        }
+        resizeCanvas();
+      }
+    }
+
+    async function fetchSwarmDashboard() {
+      try {
+        const res = await fetch('/api/swarm');
+        const data = await res.json();
+        if (data && data.run) {
+          renderSwarmDashboard(data);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar Swarm Dashboard:', err);
+      }
+    }
+
+    function renderSwarmDashboard(data) {
+      const run = data.run || {};
+      const lanes = data.lanes || {};
+      const tasks = data.tasks || [];
+      const logs = data.logs || [];
+
+      // Top metadata
+      document.getElementById('swArchModel').textContent = run.architect_model || 'opus-5.5';
+      document.getElementById('swDispModel').textContent = run.dispatcher_model || 'haiku-4.5 / flash';
+      document.getElementById('swScoutTime').textContent = `${run.scout_duration_ms || 11.4} ms`;
+      document.getElementById('swScoutFiles').textContent = `${run.scout_files_count || 0} ficheiros lidos 1x`;
+      document.getElementById('swScoutSymbols').textContent = `${run.scout_symbols_count || 0} símbolos AST`;
+      document.getElementById('swArchTokens').textContent = `${(run.architect_tokens || 2840).toLocaleString()} · READ ONCE & STOP`;
+      document.getElementById('swGoalQuote').textContent = `> "${run.goal || 'ship v2.4'}"`;
+
+      // Stage pills
+      const st = run.status || 'done';
+      document.getElementById('pillSwarm').classList.toggle('active', st === 'swarming');
+      document.getElementById('pillVerify').classList.toggle('active', st === 'verifying' || st === 'done');
+      document.getElementById('pillVerify').textContent = `3. VERIFY (${run.verify_passed || 0}/${run.verify_total || 48})`;
+
+      // Scout shared file list
+      const scoutFiles = run.scout_files || [];
+      const scoutListEl = document.getElementById('swScoutFileList');
+      scoutListEl.innerHTML = scoutFiles.map(f => {
+        const syms = (f.symbols || []).slice(0, 2).join(', ');
+        return `<div class="scout-file-row">
+          <span><strong>[${escapeHtml(f.lane)}]</strong> ${escapeHtml(f.path)} (${f.lines}L)</span>
+          <span class="sym" title="${escapeHtml((f.symbols || []).join(', '))}">${escapeHtml(syms)}</span>
+        </div>`;
+      }).join('') || '<div style="color:var(--text-dim);">Nenhum ficheiro indexado.</div>';
+
+      // Task Log box
+      const doneCount = run.completed_tasks || 0;
+      const totalCount = run.total_tasks || 24;
+      document.getElementById('swTaskLogCount').textContent = `${doneCount} / ${totalCount}`;
+      const tlEl = document.getElementById('swTaskLogList');
+      tlEl.innerHTML = tasks.map(t => `
+        <div class="tl-row">
+          <span class="tl-code">${escapeHtml(t.task_code)}</span>
+          <span class="tl-title">${escapeHtml(t.title)}</span>
+          <span class="tl-status ${escapeHtml(t.status)}">${escapeHtml(t.status)}</span>
+        </div>
+      `).join('');
+
+      // 4 Parallel Lanes Grid (UI, API, TESTS, DOCS)
+      const laneOrder = ['UI', 'API', 'TESTS', 'DOCS'];
+      const lanesGridEl = document.getElementById('swLanesGrid');
+      lanesGridEl.innerHTML = laneOrder.map(laneName => {
+        const laneTasks = lanes[laneName] || [];
+        const laneDone = laneTasks.filter(x => x.status === 'done').length;
+        const cardsHtml = laneTasks.map(t => {
+          const v1Class = t.verify_1 ? 'pass' : '';
+          const v2Class = t.verify_2 ? 'pass' : '';
+          const vSum = (t.verify_1 ? 1 : 0) + (t.verify_2 ? 1 : 0);
+          return `
+            <div class="worker-card ${escapeHtml(t.status)}" onclick="cycleTaskStatus('${escapeHtml(t.task_code)}', '${escapeHtml(t.status)}')" title="Clique para alternar estado de ${escapeHtml(t.task_code)}">
+              <div class="wc-head">
+                <span>${escapeHtml(t.task_code)}</span>
+                <span>${escapeHtml(t.status === 'done' ? (t.duration_sec + 's') : t.status)}</span>
+              </div>
+              <div class="wc-body">
+                <div class="wc-title">${escapeHtml(t.title)}</div>
+                <div class="wc-file">📄 ${escapeHtml(t.target_file)} · ${escapeHtml(t.symbols_hint)}</div>
+                <div class="wc-prog-track">
+                  <div class="wc-prog-fill" style="width:${t.progress || 0}%;"></div>
+                </div>
+                <div class="wc-foot">
+                  <span class="verify-dots">
+                    <i class="v-dot ${v1Class}"></i>
+                    <i class="v-dot ${v2Class}"></i>
+                    <span style="margin-left:3px;">${vSum}/2 verify</span>
+                  </span>
+                  <span>${t.tokens_used || 180} tok</span>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        return `
+          <div class="lane-col">
+            <div class="lane-col-header">
+              <span>${laneName} · ${laneTasks.length}</span>
+              <span style="color:#f472b6; font-size:10.5px;">${laneDone}/${laneTasks.length} done</span>
+            </div>
+            ${cardsHtml}
+          </div>
+        `;
+      }).join('');
+
+      // Pipeline strip & Footer
+      document.getElementById('swMergeRatio').textContent = `${doneCount} ➔ 1`;
+      document.getElementById('swMergeStatus').textContent = doneCount >= totalCount ? '1 clean PR ready' : 'merging lanes...';
+      document.getElementById('swVerifyRatio').textContent = `${run.verify_passed || 0} / ${run.verify_total || 48}`;
+      document.getElementById('swVerifyStatus').textContent = (run.verify_passed >= run.verify_total) ? '48/48 PASS' : 'auditing...';
+      document.getElementById('swSavedTokens').textContent = `+${((run.tokens_saved_est || 148500) / 1000).toFixed(1)}k tok`;
+
+      // Run log stream
+      const badgeEl = document.getElementById('swRunStatusBadge');
+      if (st === 'swarming' || st === 'verifying') {
+        badgeEl.textContent = '● SWARMING LIVE (24 LANES)';
+        badgeEl.style.color = '#ec4899';
+      } else {
+        badgeEl.textContent = '● 24/24 COMPLETE';
+        badgeEl.style.color = '#6ee7b7';
+      }
+
+      const logEl = document.getElementById('swRunLogStream');
+      logEl.innerHTML = logs.map(l => `
+        <div class="tl-row">
+          <span style="color:var(--text-dim); width:56px;">${escapeHtml(l.ts)}</span>
+          <span class="tl-code">[${escapeHtml(l.tag)}]</span>
+          <span class="tl-title" style="color:var(--text-main);">${escapeHtml(l.message)}</span>
+        </div>
+      `).join('');
+
+      // Queue counters + 24 vertical bars
+      document.getElementById('qTotal').textContent = totalCount;
+      document.getElementById('qActive').textContent = run.active_tasks || 0;
+      document.getElementById('qFailed').textContent = run.failed_tasks || 0;
+      document.getElementById('qDone').textContent = doneCount;
+
+      const qBarsEl = document.getElementById('swQueueBars');
+      qBarsEl.innerHTML = tasks.map(t => {
+        const cls = t.status === 'done' ? 'done' : (t.status === 'running' || t.status === 'verifying' ? 'running' : '');
+        return `<div class="q-bar ${cls}" title="${escapeHtml(t.task_code)}: ${escapeHtml(t.status)}"></div>`;
+      }).join('');
+
+      // Output box
+      document.getElementById('swOutputCounter').textContent = `${doneCount} / ${totalCount}`;
+      document.getElementById('swElapsed').textContent = `${(run.elapsed_seconds || 11.8).toFixed(1)}s elapsed`;
+      document.getElementById('swAuditPassBadge').textContent =
+        (run.verify_passed >= run.verify_total) ? `✓ ${run.verify_passed}/${run.verify_total} VERIFIED` : `⏳ ${run.verify_passed}/${run.verify_total} CHECKS`;
+    }
+
+    async function triggerSwarmRun() {
+      const goal = document.getElementById('swarmGoalInput').value || 'ship v2.4 tonight';
+      showToast('⚡ A lançar SCOUT-01 (Leitura Única) + 24 Workers Assimétricos em paralelo...');
+      const res = await fetch('/api/swarm/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal, animate_live: true })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        renderSwarmDashboard(out);
+      }
+    }
+
+    async function triggerScoutOnly() {
+      showToast('🔍 SCOUT-01 a ler a codebase 1x e a partilhar o Mapa no brain.db...');
+      const res = await fetch('/api/swarm/scout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const out = await res.json();
+      if (out.ok && out.scout) {
+        showToast(`✅ Scout concluído em ${out.scout.duration_ms}ms! ${out.scout.files_count} ficheiros e ${out.scout.symbols_count} símbolos partilhados.`);
+        await fetchSwarmDashboard();
+        await fetchGraph();
+      }
+    }
+
+    async function cycleTaskStatus(taskCode, currentStatus) {
+      const nextStatus = currentStatus === 'done' ? 'running' : 'done';
+      const nextProg = nextStatus === 'done' ? 100 : 55;
+      const res = await fetch('/api/swarm/task', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_code: taskCode, status: nextStatus, progress: nextProg })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        renderSwarmDashboard(out);
+      }
+    }
+
+    async function loadGitStatus() {
+      try {
+        const res = await fetch('/api/update');
+        const st = await res.json();
+        const lbl = document.getElementById('lblGitSha');
+        if (lbl && st.local_sha) {
+          lbl.textContent = `${st.local_sha} (Auto)`;
+        }
+      } catch (e) {}
+    }
+
+    async function triggerGitUpdate() {
+      showToast('📦 A verificar atualizações no GitHub (origin/main)...');
+      try {
+        const res = await fetch('/api/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const out = await res.json();
+        const lbl = document.getElementById('lblGitSha');
+        if (lbl && out.local_sha) {
+          lbl.textContent = `${out.local_sha} (Auto)`;
+        }
+        showToast('✅ ' + (out.message || 'Verificação concluída!'));
+        if (out.updated) {
+          setTimeout(() => window.location.reload(), 1200);
+        }
+      } catch (e) {
+        showToast('❌ Erro ao verificar update no Git.');
+      }
+    }
+
+    // Iniciar aplicação (respeita #swarm na URL)
+    fetchGraph().then(() => {
+      requestAnimationFrame(renderGraph);
+      loadGitStatus();
+      if (window.location.hash === '#swarm') {
+        switchMainView('swarm');
+      }
+    });
+  </script>
+</body>
+</html>

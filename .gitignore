@@ -1,0 +1,16 @@
+# Base de dados privada de memórias locais (NUNCA enviar para o Git)
+brain.db
+brain.db-wal
+brain.db-shm
+*.db
+*.db-wal
+*.db-shm
+
+# Dados legados ChromaDB e cache Python
+chroma_data/
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.env
