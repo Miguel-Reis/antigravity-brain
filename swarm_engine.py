@@ -62,8 +62,8 @@ class SwarmEngine:
                     workspace TEXT DEFAULT 'brain_mcp',
                     workspace_path TEXT DEFAULT '',
                     status TEXT DEFAULT 'done',
-                    architect_model TEXT DEFAULT 'pro (Gemini Pro)',
-                    dispatcher_model TEXT DEFAULT 'flash (Gemini Flash)',
+                    architect_model TEXT DEFAULT 'Gemini 4 Argon (inherit / pro)',
+                    dispatcher_model TEXT DEFAULT 'Gemini 4 Argon + Flash',
                     scout_model TEXT DEFAULT 'flash_lite (research)',
                     architect_tokens INTEGER DEFAULT 2840,
                     scout_files_count INTEGER DEFAULT 0,
@@ -131,32 +131,32 @@ class SwarmEngine:
                 "CREATE INDEX IF NOT EXISTS idx_swarm_logs_run ON swarm_logs(run_id);"
             )
 
-            # Migrar registos antigos para a nomenclatura nativa de modelos do Antigravity
+            # Migrar registos antigos para a nomenclatura nativa de modelos do Antigravity (incluindo Gemini 4 Argon)
             conn.execute(
                 """
                 UPDATE swarm_runs
-                SET architect_model = 'pro (Gemini Pro)',
-                    dispatcher_model = 'flash (Gemini Flash)',
+                SET architect_model = 'Gemini 4 Argon (inherit / pro)',
+                    dispatcher_model = 'Gemini 4 Argon + Flash',
                     scout_model = 'flash_lite (research)'
-                WHERE architect_model LIKE '%opus%' OR dispatcher_model LIKE '%haiku%';
+                WHERE architect_model LIKE '%opus%' OR architect_model = 'pro (Gemini Pro)';
                 """
             )
             conn.execute(
                 """
                 UPDATE swarm_tasks
                 SET worker_model = CASE
+                    WHEN task_code IN ('ui-01', 'api-01', 'api-02') THEN 'gemini-4-argon · inherit'
                     WHEN lane = 'TESTS' THEN 'flash · test-engineer'
                     WHEN lane = 'DOCS' THEN 'flash_lite · self'
                     ELSE 'flash · self'
-                END
-                WHERE worker_model LIKE '%haiku%' OR worker_model = 'flash-4.5';
+                END;
                 """
             )
             conn.execute(
                 """
                 UPDATE swarm_logs
-                SET message = REPLACE(REPLACE(message, 'opus-5.5', 'Model=pro'), 'haiku-4.5', 'Model=flash')
-                WHERE message LIKE '%opus%' OR message LIKE '%haiku%';
+                SET message = REPLACE(REPLACE(message, 'opus-5.5', 'Gemini 4 Argon'), 'Model=pro', 'Gemini 4 Argon (inherit)')
+                WHERE message LIKE '%opus%' OR message LIKE '%Model=pro%';
                 """
             )
 
@@ -379,6 +379,7 @@ class SwarmEngine:
             "TESTS": "flash · test-engineer",
             "DOCS": "flash_lite · self",
         }
+        argon_core_tasks = {"ui-01", "api-01", "api-02"}
         all_tasks: List[Dict[str, Any]] = []
         for lane_name, specs in (
             ("UI", ui_specs),
@@ -387,6 +388,11 @@ class SwarmEngine:
             ("DOCS", doc_specs),
         ):
             for code, title, tfile, sym in specs:
+                w_model = (
+                    "gemini-4-argon · inherit"
+                    if code in argon_core_tasks
+                    else lane_models.get(lane_name, "flash · self")
+                )
                 all_tasks.append(
                     {
                         "task_code": code,
@@ -394,7 +400,7 @@ class SwarmEngine:
                         "title": title,
                         "target_file": tfile,
                         "symbols_hint": sym,
-                        "worker_model": lane_models.get(lane_name, "flash · self"),
+                        "worker_model": w_model,
                     }
                 )
         return all_tasks
@@ -438,8 +444,8 @@ class SwarmEngine:
                     scout["workspace"],
                     scout["workspace_path"],
                     "swarming" if animate_live else "done",
-                    "pro (Gemini Pro)",
-                    "flash (Gemini Flash)",
+                    "Gemini 4 Argon (inherit / pro)",
+                    "Gemini 4 Argon + Flash",
                     "flash_lite (research)",
                     2840,
                     scout["files_count"],
@@ -470,13 +476,13 @@ class SwarmEngine:
                 conn,
                 run_id,
                 "plan",
-                f"ARCHITECT (Model=pro) leu objetivo + Scout Map 1x (2,840 tok) e parou de gastar tokens",
+                "ARCHITECT (Gemini 4 Argon) leu objetivo + Scout Map 1x (2,840 tok) e parou de gastar tokens",
             )
             self._log_event(
                 conn,
                 run_id,
                 "disp",
-                "DISPATCHER (invoke_subagent Model=flash | flash_lite) dividiu backlog em 4 lanes (UI, API, TESTS, DOCS)",
+                "DISPATCHER (Gemini 4 Argon + Flash/Flash-Lite) dividiu backlog em 4 lanes (UI, API, TESTS, DOCS)",
             )
 
             for idx, t in enumerate(tasks_spec):

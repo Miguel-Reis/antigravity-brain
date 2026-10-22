@@ -1323,8 +1323,8 @@
       <div style="display:flex; align-items:center; gap:12px;">
         <span style="color:#ec4899; font-weight:700; font-size:12px;">● agy-swarm v2.4</span>
         <span style="color:var(--text-muted); font-size:11.5px;">scout: <strong style="color:#6ee7b7;" id="swScoutModel">flash_lite (research)</strong></span>
-        <span style="color:var(--text-muted); font-size:11.5px;">architect: <strong style="color:#f472b6;" id="swArchModel">pro (Gemini Pro)</strong></span>
-        <span style="color:var(--text-muted); font-size:11.5px;">workers: <strong style="color:#c4b5fd;" id="swDispModel">flash / flash_lite</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">architect: <strong style="color:#f472b6;" id="swArchModel">Gemini 4 Argon (inherit / pro)</strong></span>
+        <span style="color:var(--text-muted); font-size:11.5px;">workers: <strong style="color:#c4b5fd;" id="swDispModel">Gemini 4 Argon + Flash</strong></span>
       </div>
 
       <div class="swarm-stage-pills">
@@ -1371,11 +1371,11 @@
         </div>
       </div>
 
-      <!-- Box 1: ARCHITECT (Antigravity Pro) -->
+      <!-- Box 1: ARCHITECT (Gemini 4 Argon) -->
       <div class="bp-box pink-border">
         <div class="bp-header pink">
           <span>1. ARCHITECT</span>
-          <span>Model: pro (Gemini Pro)</span>
+          <span>Gemini 4 Argon (inherit)</span>
         </div>
         <div class="bp-body">
           <div class="bp-kv"><span>role:</span> <strong>planner (decoupled)</strong></div>
@@ -1386,11 +1386,11 @@
         </div>
       </div>
 
-      <!-- Box 2: DISPATCHER (Antigravity invoke_subagent: flash / flash_lite) -->
+      <!-- Box 2: DISPATCHER (Antigravity invoke_subagent: Argon + flash + flash_lite) -->
       <div class="bp-box">
         <div class="bp-header">
           <span>2. DISPATCHER (invoke_subagent)</span>
-          <span>Model: flash · flash_lite</span>
+          <span>Argon · flash · flash_lite</span>
         </div>
         <div class="bp-body" style="justify-content:space-between;">
           <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-muted);">
@@ -1485,7 +1485,7 @@
       <div class="bp-box">
         <div class="bp-header">
           <span>QUEUE · 24 PARALLEL LANES</span>
-          <span>Model: flash / flash_lite</span>
+          <span>Argon + flash / flash_lite</span>
         </div>
         <div class="bp-body">
           <div class="queue-counters">
@@ -1513,7 +1513,7 @@
             <span style="color:#6ee7b7; font-size:11px; font-weight:700;" id="swAuditPassBadge">✓ 48/48 VERIFIED</span>
           </div>
           <div style="font-size:10.5px; color:var(--text-muted); margin-top:4px;">
-            antigravity $ <span style="color:#f472b6;">invoke_subagent --scout flash_lite --arch pro --workers flash</span>
+            antigravity $ <span style="color:#f472b6;">invoke_subagent --scout flash_lite --arch gemini-4-argon --workers flash</span>
           </div>
         </div>
       </div>
@@ -2602,8 +2602,8 @@
       const logs = data.logs || [];
 
       // Top metadata
-      document.getElementById('swArchModel').textContent = run.architect_model || 'pro (Gemini Pro)';
-      document.getElementById('swDispModel').textContent = run.dispatcher_model || 'flash (Gemini Flash)';
+      document.getElementById('swArchModel').textContent = run.architect_model || 'Gemini 4 Argon (inherit / pro)';
+      document.getElementById('swDispModel').textContent = run.dispatcher_model || 'Gemini 4 Argon + Flash';
       const scoutModEl = document.getElementById('swScoutModel');
       if (scoutModEl) scoutModEl.textContent = run.scout_model || 'flash_lite (research)';
       document.getElementById('swScoutTime').textContent = `${run.scout_duration_ms || 11.4} ms`;
