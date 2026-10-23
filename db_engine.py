@@ -1,6 +1,8 @@
 import contextlib
+import datetime
 import hashlib
 import json
+import math
 import os
 import re
 import sqlite3
@@ -11,6 +13,26 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 DEFAULT_DB_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "brain.db"
 )
+
+# Mapa de Sinónimos Técnicos PT/EN para expansão semântica a custo zero no FTS5 BM25
+SYNONYM_MAP: Dict[str, List[str]] = {
+    "db": ["sqlite", "database", "fts5"],
+    "database": ["sqlite", "db", "fts5"],
+    "base": ["sqlite", "database", "db"],
+    "ui": ["frontend", "html", "canvas", "interface"],
+    "interface": ["ui", "frontend", "dashboard"],
+    "escritorio": ["office", "3d", "bonecos"],
+    "office": ["escritorio", "3d", "avatars"],
+    "bonecos": ["office", "3d", "avatars"],
+    "quota": ["tokens", "diet", "lean", "5h"],
+    "tokens": ["quota", "diet", "lean"],
+    "vps": ["server", "ssh", "cloud", "infra"],
+    "servidor": ["server", "vps", "http", "port"],
+    "git": ["github", "repo", "update", "commit"],
+    "github": ["git", "repo", "update"],
+    "swarm": ["scout", "lanes", "argon", "workers"],
+    "scout": ["swarm", "ast", "map"],
+}
 
 # Stopwords PT + EN para limpar queries em linguagem natural antes do FTS5 BM25
 STOPWORDS = {
@@ -225,6 +247,14 @@ class BrainDB:
                   );
                 """
             )
+            conn.execute(
+                """
+                DELETE FROM telemetry
+                WHERE id NOT IN (
+                    SELECT id FROM telemetry ORDER BY id DESC LIMIT 2500
+                );
+                """
+            )
 
     @staticmethod
     def _compute_hash(topic: str, fact: str, workspace: str = "global") -> str:
@@ -293,7 +323,7 @@ class BrainDB:
 
     @staticmethod
     def extract_search_tokens(query: str) -> List[str]:
-        # Extrai palavras alfanuméricas, IPs, nomes de ficheiros, etc.
+        # Extrai palavras alfanuméricas, IPs, nomes de ficheiros e expande sinónimos técnicos PT/EN
         raw_tokens = re.findall(r"[a-zA-Z0-9_\-\.]{2,}", query.lower())
         tokens: List[str] = []
         seen = set()
@@ -304,7 +334,11 @@ class BrainDB:
             if clean not in seen:
                 seen.add(clean)
                 tokens.append(clean)
-        return tokens[:15]
+                for syn in SYNONYM_MAP.get(clean, []):
+                    if syn not in seen:
+                        seen.add(syn)
+                        tokens.append(syn)
+        return tokens[:18]
 
     def search_memories(
         self,
@@ -395,9 +429,22 @@ class BrainDB:
                     if ("." in tok or "_" in tok or any(c.isdigit() for c in tok)) and tok in text_blob:
                         exact_tech_boost += 3.0
 
-                item["final_score"] = (
+                # Recency Time-Decay: privilegia memórias criadas ou acedidas recentemente
+                recency_mult = 1.0
+                ts_str = str(item.get("last_accessed") or item.get("created_at") or "")
+                if ts_str:
+                    try:
+                        dt = datetime.datetime.fromisoformat(ts_str.replace("Z", ""))
+                        now_utc = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+                        age_days = max(0.0, (now_utc - dt).total_seconds() / 86400.0)
+                        recency_mult = 1.0 + 0.35 * math.exp(-age_days / 14.0)
+                    except Exception:
+                        recency_mult = 1.1
+
+                raw_final = (
                     item["score"] + overlap_boost + ws_boost + imp_boost + exact_tech_boost
                 )
+                item["final_score"] = round(raw_final * recency_mult, 3)
                 scored_list.append(item)
 
             if not scored_list:
@@ -528,6 +575,35 @@ class BrainDB:
                 "SELECT category, COUNT(*) as c FROM memories GROUP BY category ORDER BY c DESC;"
             ).fetchall()
 
+            # Métricas da Janela Deslizante de 5 Horas (5h Quota Window)
+            w5 = conn.execute(
+                """
+                SELECT COUNT(*) as turns_5h,
+                       COALESCE(SUM(injected_tokens), 0) as inj_5h,
+                       COALESCE(SUM(estimated_saved_tokens), 0) as sav_5h,
+                       MIN(created_at) as oldest_ts
+                FROM telemetry
+                WHERE created_at >= datetime('now', '-5 hours')
+                  AND event_type = 'pre_invocation_inject';
+                """
+            ).fetchone()
+
+            turns_5h = int(w5["turns_5h"] or 0) if w5 else 0
+            saved_5h = int(w5["sav_5h"] or 0) if w5 else 0
+            inj_5h = int(w5["inj_5h"] or 0) if w5 else 0
+            reset_mins = 300
+            if w5 and w5["oldest_ts"]:
+                try:
+                    dt_old = datetime.datetime.fromisoformat(str(w5["oldest_ts"]).replace("Z", ""))
+                    now_utc = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
+                    elapsed_m = (now_utc - dt_old).total_seconds() / 60.0
+                    reset_mins = max(1, min(300, int(300 - elapsed_m)))
+                except Exception:
+                    reset_mins = 240
+            rh = reset_mins // 60
+            rm = reset_mins % 60
+            reset_lbl = f"{rh}h {rm:02d}m" if rh > 0 else f"{rm}m"
+
             return {
                 "total_memories": mem_count,
                 "total_checkpoints": chk_count,
@@ -538,6 +614,13 @@ class BrainDB:
                 "estimated_saved_tokens": int(tel["total_saved_tokens"]),
                 "net_tokens_saved": int(tel["total_saved_tokens"]) - int(tel["total_injected_tokens"]),
                 "categories": {r["category"]: r["c"] for r in by_cat},
+                "quota_5h": {
+                    "turns_5h": turns_5h,
+                    "saved_5h": saved_5h,
+                    "injected_5h": inj_5h,
+                    "reset_in_minutes": reset_mins,
+                    "reset_label": reset_lbl,
+                },
             }
 
 

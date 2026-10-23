@@ -16,7 +16,12 @@ from auto_updater import check_and_apply_update, get_git_status, start_auto_upda
 from brain_harvest import harvest_latest_turn
 from db_engine import BrainDB, seed_initial_memories
 from swarm_engine import SwarmEngine
-from token_diet import audit_mcp_servers, audit_plugins, switch_mcp_profile
+from token_diet import (
+    audit_mcp_servers,
+    audit_plugins,
+    switch_mcp_profile,
+    toggle_single_mcp_server,
+)
 
 PORT = 8765
 INDEX_HTML_PATH = os.path.join(CURRENT_DIR, "index.html")
@@ -343,7 +348,8 @@ def _get_cached_diet_audit(force: bool = False) -> Tuple[List[Dict[str, Any]], D
     if force or not _DIET_CACHE["mcp"] or (now - _DIET_CACHE["ts"] > 120.0):
         mcp_audit = audit_mcp_servers()
         plug_audit = audit_plugins()
-        is_lean = all(item["in_lean_profile"] for item in mcp_audit) and len(mcp_audit) <= 3
+        enabled_mcps = [item for item in mcp_audit if item.get("enabled", True)]
+        is_lean = all(item["in_lean_profile"] for item in enabled_mcps) and len(enabled_mcps) <= 3
         _DIET_CACHE["ts"] = now
         _DIET_CACHE["mcp"] = mcp_audit
         _DIET_CACHE["plug"] = plug_audit
@@ -415,6 +421,14 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             db = BrainDB()
             swarm = SwarmEngine(db)
             self._send_json(swarm.get_swarm_dashboard(run_id))
+            return
+
+        if parsed.path == "/api/swarm/diff":
+            qs = urllib.parse.parse_qs(parsed.query)
+            target_file = qs.get("file", ["index.html"])[0]
+            db = BrainDB()
+            swarm = SwarmEngine(db)
+            self._send_json(swarm.get_file_git_diff(target_file))
             return
 
         if parsed.path == "/api/office":
@@ -542,6 +556,14 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             swarm = SwarmEngine(db)
             state = swarm.toggle_office_agent_status(agent_id=agent_id, target_status=target_status)
             self._send_json({"ok": True, **state})
+            return
+
+        if parsed.path == "/api/mcp/toggle":
+            srv = str(body.get("server", "")).strip()
+            res = toggle_single_mcp_server(srv)
+            _get_cached_diet_audit(force=True)
+            swarm = SwarmEngine(db)
+            self._send_json({**res, "office": swarm.get_office_state()})
             return
 
         if parsed.path == "/api/update":

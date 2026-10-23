@@ -52,11 +52,24 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
     harvested_count = 0
     modified_files: List[str] = []
     completed_actions: List[str] = []
+    detected_errors: List[str] = []
     turn_input_tokens = 0
     turn_cached_tokens = 0
     turn_output_tokens = 0
 
     for step in turn_steps:
+        if step.get("type") == "TOOL_RESPONSE":
+            t_out = str(step.get("content") or "")
+            err_match = re.search(
+                r"(SyntaxError: [^\n]+|TypeError: [^\n]+|ValueError: [^\n]+|KeyError: [^\n]+|ModuleNotFoundError: [^\n]+)",
+                t_out,
+            )
+            if err_match:
+                err_txt = err_match.group(1).strip()[:120]
+                if err_txt not in detected_errors:
+                    detected_errors.append(err_txt)
+            continue
+
         if step.get("type") != "PLANNER_RESPONSE":
             continue
 
@@ -124,6 +137,17 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
                                 harvested_count += 1
 
     # 3. Atualiza o Checkpoint automático do workspace + Auto-Refresh do Scout Map se houve alterações de código
+    if detected_errors and modified_files:
+        bug_target = modified_files[-1]
+        db.store_fact(
+            topic=f"Auto-Bugfix: {bug_target} ({workspace})",
+            fact=f"Erro resolvido no turno: {detected_errors[-1]} -> Corrigido em {', '.join(modified_files[:3])}.",
+            workspace=workspace,
+            category="optimization",
+            tags=f"bugfix {bug_target} {workspace} erro",
+            importance=4,
+        )
+
     if modified_files or completed_actions:
         db.save_checkpoint(
             workspace=workspace,

@@ -97,6 +97,9 @@ def check_and_apply_update(force_fetch: bool = True) -> Dict[str, Any]:
     except Exception:
         pass
 
+    if rc_pull == 0:
+        _schedule_server_hot_reload()
+
     new_status = get_git_status()
     return {
         **new_status,
@@ -111,6 +114,44 @@ def check_and_apply_update(force_fetch: bool = True) -> Dict[str, Any]:
             else f"Erro ao atualizar: {pull_out}"
         ),
     }
+
+
+def _schedule_server_hot_reload() -> None:
+    """Se estivermos dentro do processo web_dashboard.py, agenda um hot-restart limpo em background."""
+    if "web_dashboard" not in " ".join(sys.argv).lower():
+        return
+
+    def _restart() -> None:
+        time.sleep(1.2)
+        dashboard_py = str(REPO_DIR / "web_dashboard.py")
+        py_exe = sys.executable
+        if os.name == "nt":
+            pw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
+            if os.path.isfile(pw):
+                py_exe = pw
+            flags = 0x08000000 | 0x00000200
+            subprocess.Popen(
+                [py_exe, dashboard_py],
+                cwd=str(REPO_DIR),
+                creationflags=flags,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+            )
+        else:
+            subprocess.Popen(
+                [py_exe, dashboard_py],
+                cwd=str(REPO_DIR),
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                close_fds=True,
+                start_new_session=True,
+            )
+        os._exit(0)
+
+    threading.Thread(target=_restart, daemon=True).start()
 
 
 def start_auto_update_daemon(interval_seconds: int = 1800) -> None:

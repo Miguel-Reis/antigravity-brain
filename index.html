@@ -1421,7 +1421,7 @@
     <div class="brand">
       <span class="brand-dot"></span>
       <span>Antigravity Brain</span>
-      <span class="brand-badge">v2.5 • Graph + Swarm + 3D Office</span>
+      <span class="brand-badge">v2.7 • Graph + Swarm + 3D Office</span>
       <div class="view-tabs">
         <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
           🕸️ Graph View
@@ -1448,6 +1448,9 @@
       </div>
       <div class="metric-pill" title="Tokens poupados pelo Brain">
         💎 Poupados: <strong id="statSaved" style="color: var(--emerald);">+0 tok</strong>
+      </div>
+      <div class="metric-pill" title="Monitor da Janela Deslizante de Quota de 5 Horas (turnos e tempo até renovação)">
+        ⏱️ Janela 5h: <strong id="statWindow5h" style="color: #38bdf8;">Reset 5h</strong>
       </div>
     </div>
 
@@ -1925,6 +1928,18 @@
     </div>
   </div>
 
+  <!-- MODAL INSPECIONAR GIT DIFF & SÍMBOLOS AST DO FICHEIRO -->
+  <div class="modal-backdrop" id="diffModal">
+    <div class="modal" style="width: 720px; max-width: 94vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 id="diffModalTitle" style="margin:0;">📄 Git Diff & Símbolos AST</h3>
+        <button class="btn" onclick="closeDiffModal()">✖ Fechar</button>
+      </div>
+      <div id="diffModalSymbols" style="font-size:11px; color:#6ee7b7; background:#0b0f19; padding:8px 10px; border-radius:6px; border:1px solid rgba(16,185,129,0.3); font-family:var(--font-mono); margin-bottom:10px;"></div>
+      <pre id="diffModalBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:420px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+    </div>
+  </div>
+
   <div class="toast" id="toastMsg"></div>
 
   <script>
@@ -2119,6 +2134,12 @@
       document.getElementById('statLinks').textContent = activeLinks.length;
       document.getElementById('statLatency').textContent = `${s.avg_inject_latency_ms || 11.4} ms`;
       document.getElementById('statSaved').textContent = `+${(s.net_tokens_saved || 4260).toLocaleString()} tok`;
+
+      const q5 = s.quota_5h || {};
+      const w5El = document.getElementById('statWindow5h');
+      if (w5El) {
+        w5El.textContent = `${q5.turns_5h || 1} turnos • Reset ${q5.reset_label || '4h 50m'}`;
+      }
 
       const td = graphData.token_diet || {};
       currentDietLean = !!td.is_lean;
@@ -3035,9 +3056,9 @@
       const scoutListEl = document.getElementById('swScoutFileList');
       scoutListEl.innerHTML = scoutFiles.map(f => {
         const syms = (f.symbols || []).slice(0, 2).join(', ');
-        return `<div class="scout-file-row">
+        return `<div class="scout-file-row" style="cursor:pointer;" onclick="openFileDiffModal('${escapeHtml(f.path)}')" title="Clique para ver Git Diff & Símbolos AST de ${escapeHtml(f.path)}">
           <span><strong>[${escapeHtml(f.lane)}]</strong> ${escapeHtml(f.path)} (${f.lines}L)</span>
-          <span class="sym" title="${escapeHtml((f.symbols || []).join(', '))}">${escapeHtml(syms)}</span>
+          <span class="sym" title="${escapeHtml((f.symbols || []).join(', '))}">🔍 ${escapeHtml(syms)}</span>
         </div>`;
       }).join('') || '<div style="color:var(--text-dim);">Nenhum ficheiro indexado.</div>';
 
@@ -3072,7 +3093,7 @@
               </div>
               <div class="wc-body">
                 <div class="wc-title">${escapeHtml(t.title)}</div>
-                <div class="wc-file">📄 ${escapeHtml(t.target_file)} · ${escapeHtml(t.symbols_hint)}</div>
+                <div class="wc-file" style="color:#38bdf8; text-decoration:underline dotted;" onclick="event.stopPropagation(); openFileDiffModal('${escapeHtml(t.target_file)}')" title="Clique para inspecionar Git Diff & Símbolos AST de ${escapeHtml(t.target_file)}">📄 ${escapeHtml(t.target_file)} · ${escapeHtml(t.symbols_hint)}</div>
                 <div class="wc-prog-track">
                   <div class="wc-prog-fill" style="width:${t.progress || 0}%;"></div>
                 </div>
@@ -3188,6 +3209,26 @@
       }
     }
 
+    async function openFileDiffModal(fileName) {
+      document.getElementById('diffModalTitle').textContent = `📄 ${fileName} • Git Diff & AST`;
+      document.getElementById('diffModalSymbols').textContent = 'A extrair símbolos AST e git diff...';
+      document.getElementById('diffModalBody').textContent = 'A carregar...';
+      document.getElementById('diffModal').classList.add('open');
+      try {
+        const res = await fetch(`/api/swarm/diff?file=${encodeURIComponent(fileName)}`);
+        const data = await res.json();
+        const syms = (data.symbols || []).join('  •  ') || 'Nenhum símbolo exportado';
+        document.getElementById('diffModalSymbols').textContent = `🌳 ${data.lines || 0} linhas | AST & Rotas: ${syms}`;
+        document.getElementById('diffModalBody').textContent = data.diff || 'Sem alterações no Git.';
+      } catch (e) {
+        document.getElementById('diffModalBody').textContent = 'Erro ao carregar git diff.';
+      }
+    }
+
+    function closeDiffModal() {
+      document.getElementById('diffModal').classList.remove('open');
+    }
+
     async function loadGitStatus() {
       try {
         const res = await fetch('/api/update');
@@ -3229,6 +3270,10 @@
     let officeAnimRunning = false;
     let officeInitialized = false;
     let officeAgentsData = [];
+    let officeMcpServers = [];
+    let officeBoardData = {};
+    let officeMcpHitboxes = [];
+    let hoveredMcpServer = null;
     let officeSimAgents = {};
     let selectedOfficeAgentId = 'arch-01';
     let hoveredOfficeAgentId = null;
@@ -3360,6 +3405,8 @@
         const res = await fetch('/api/office');
         const data = await res.json();
         if (data && Array.isArray(data.agents)) {
+          officeMcpServers = data.mcp_servers || [];
+          officeBoardData = data.board || {};
           syncOfficeAgentsToSim(data.agents, data.summary || {});
         }
       } catch (err) {
@@ -3468,6 +3515,22 @@
         `;
       };
 
+      const renderMcpCard = (m) => {
+        const isOn = m.enabled !== false;
+        return `
+          <div class="roster-card ${isOn ? 'working' : 'paused'}" onclick="toggleMcpServer3D('${escapeHtml(m.server)}')" title="Clique para ${isOn ? 'PAUSAR' : 'ATIVAR'} o servidor MCP ${escapeHtml(m.server)}">
+            <div class="rc-top">
+              <span>🖥️ ${escapeHtml(m.server)}</span>
+              <span class="rc-badge ${isOn ? 'working' : 'paused'}">${isOn ? '🟢 ON' : '💤 OFF'}</span>
+            </div>
+            <div class="rc-meta">
+              <span>🔧 ${m.tools || 0} tools (${m.schema_kb || 0} KB)</span>
+              <span>${isOn ? `~${m.header_tokens_per_step || 0} tok/step` : `Poupa ${m.potential_tokens || 0} tok`}</span>
+            </div>
+          </div>
+        `;
+      };
+
       listEl.innerHTML = `
         <div class="roster-section-lbl">
           <span>🟢 A Trabalhar nas Secretárias (${workingAgents.length})</span>
@@ -3477,7 +3540,34 @@
           <span>☕ Em Pausa no Lounge (${pausedAgents.length})</span>
         </div>
         ${pausedAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Nenhum agente em pausa.</div>'}
+        <div class="roster-section-lbl" style="margin-top:14px;">
+          <span>🖥️ Sala de Servidores MCP 3D (${officeMcpServers.filter(x => x.enabled !== false).length}/${officeMcpServers.length} ON)</span>
+        </div>
+        ${officeMcpServers.map(renderMcpCard).join('')}
       `;
+    }
+
+    async function toggleMcpServer3D(serverName) {
+      if (!serverName) return;
+      const res = await fetch('/api/mcp/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ server: serverName })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        if (out.office) {
+          officeMcpServers = out.office.mcp_servers || [];
+          officeBoardData = out.office.board || {};
+          syncOfficeAgentsToSim(out.office.agents || [], out.office.summary || {});
+        }
+        showToast(out.enabled
+          ? `🟢 Torre MCP '${serverName}' LIGADA na Sala de Servidores 3D!`
+          : `💤 Torre MCP '${serverName}' PAUSADA (tokens poupados por passo)!`);
+        fetchGraph();
+      } else {
+        showToast('❌ ' + (out.error || 'Falha ao alternar servidor MCP'));
+      }
     }
 
     function selectOfficeAgent(agentId) {
@@ -3838,9 +3928,73 @@
       drawFloorCarpet3D(10, -235, 330, 115, 'rgba(236, 72, 153, 0.09)', '#ec4899', '👑 COMANDO ARGON & SCOUT MAP');
       drawFloorCarpet3D(-135, 95, 480, 460, 'rgba(59, 130, 246, 0.05)', '#38bdf8', '💻 ZONA DE SECRETÁRIAS (WORKSTATIONS)');
       drawFloorCarpet3D(345, 45, 235, 560, 'rgba(245, 158, 11, 0.07)', '#f59e0b', '☕ ZONA DE PAUSA · LOUNGE & CAFÉ');
+      drawFloorCarpet3D(-365, 25, 165, 210, 'rgba(56, 189, 248, 0.07)', '#38bdf8', '🖥 SALA DE SERVIDORES MCP 3D');
 
-      // 3. Construir Lista de Objetos 3D (Mobiliário + Secretárias + Bonecos) e ordenar por profundidade (Z-Buffer Painter)
+      // 3. Construir Lista de Objetos 3D (Mobiliário + Secretárias + Racks MCP + Quadro Holográfico + Bonecos)
       const renderables = [];
+      officeMcpHitboxes = [];
+
+      // Quadro Holográfico 3D na Parede Norte (atrás da Mesa de Comando do Gemini 4 Argon)
+      renderables.push({
+        depth: projectOffice3D(-85, 46, -225).depth,
+        draw: () => {
+          drawBox3D(-85, 28, -228, 175, 44, 5, '#0f172a', '#1e1b4b', '#312e81', '#ec4899');
+          const pBoard = projectOffice3D(-85, 52, -223);
+          const sc = officeCam.zoom;
+          const bStats = officeBoardData || {};
+          const doneT = bStats.completed_tasks ?? 24;
+          const totT = bStats.total_tasks ?? 24;
+          const verP = bStats.verify_passed ?? 48;
+          const verT = bStats.verify_total ?? 48;
+          const scF = bStats.scout_files_count ?? 12;
+          officeCtx.save();
+          officeCtx.textAlign = 'center';
+          officeCtx.font = `800 ${Math.max(8, Math.round(9.5 * sc))}px Inter, sans-serif`;
+          officeCtx.fillStyle = '#f472b6';
+          officeCtx.fillText('⚡ QUADRO HOLOGRÁFICO · SWARM KANBAN & SCOUT', pBoard.x, pBoard.y - 10 * sc);
+          officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * sc))}px "JetBrains Mono", monospace`;
+          officeCtx.fillStyle = '#e2e8f0';
+          officeCtx.fillText(
+            `TAREFAS: ${doneT}/${totT}  |  VERIFY: ${verP}/${verT} PASS  |  SCOUT: ${scF} fich.`,
+            pBoard.x,
+            pBoard.y + 4 * sc
+          );
+          officeCtx.restore();
+        }
+      });
+
+      // Racks de Servidores MCP 3D (Clicáveis para Ativar/Pausar cada MCP em tempo real)
+      const mcpList = (officeMcpServers && officeMcpServers.length) ? officeMcpServers.slice(0, 6) : [];
+      mcpList.forEach((mcp, idx) => {
+        const col = idx % 2;
+        const row = Math.floor(idx / 2);
+        const rx = -405 + col * 78;
+        const rz = -45 + row * 68;
+        const isOn = mcp.enabled !== false;
+        renderables.push({
+          depth: projectOffice3D(rx, 24, rz).depth,
+          draw: () => {
+            const topCol = isOn ? '#0284c7' : '#334155';
+            const leftCol = isOn ? '#0369a1' : '#1e293b';
+            const rightCol = isOn ? '#075985' : '#0f172a';
+            const strokeCol = (hoveredOfficeMcpName === mcp.name) ? '#ffffff' : (isOn ? '#38bdf8' : 'rgba(148,163,184,0.3)');
+            drawBox3D(rx, 1, rz, 34, 46, 28, topCol, leftCol, rightCol, strokeCol);
+            // LEDs frontais do Rack 3D
+            const ledCol = isOn ? '#10b981' : '#f59e0b';
+            drawBox3D(rx, 34, rz + 13, 22, 3, 3, ledCol, ledCol, ledCol);
+            drawBox3D(rx, 24, rz + 13, 22, 3, 3, isOn ? '#38bdf8' : '#475569', ledCol, ledCol);
+
+            const pRack = projectOffice3D(rx, 54, rz);
+            officeMcpHitboxes.push({ name: mcp.name, x: pRack.x, y: pRack.y + 14 * officeCam.zoom });
+            officeCtx.save();
+            officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * officeCam.zoom))}px "JetBrains Mono", monospace`;
+            officeCtx.textAlign = 'center';
+            officeCtx.fillStyle = isOn ? '#7dd3fc' : '#94a3b8';
+            officeCtx.fillText(`${isOn ? '🟢' : '⏸'} ${mcp.name.slice(0, 12)}`, pRack.x, pRack.y);
+            officeCtx.restore();
+          }
+        });
+      });
 
       // Portal Quântico 3D (Noroeste)
       renderables.push({
@@ -4044,7 +4198,7 @@
         return;
       }
 
-      // Hit-test para hover em cima de um boneco 3D
+      // Hit-test para hover em cima de um boneco 3D ou Rack MCP 3D
       let foundId = null;
       for (const sim of Object.values(officeSimAgents)) {
         if (Math.hypot(mx - sim.screenX, my - sim.screenY) < 28 * officeCam.zoom) {
@@ -4053,13 +4207,28 @@
         }
       }
       hoveredOfficeAgentId = foundId;
-      officeCanvas.style.cursor = foundId ? 'pointer' : (officeCam.dragging ? 'grabbing' : 'grab');
+
+      let foundMcp = null;
+      if (!foundId) {
+        for (const hb of officeMcpHitboxes) {
+          if (Math.hypot(mx - hb.x, my - hb.y) < 24 * officeCam.zoom) {
+            foundMcp = hb.name;
+            break;
+          }
+        }
+      }
+      hoveredOfficeMcpName = foundMcp;
+      officeCanvas.style.cursor = (foundId || foundMcp) ? 'pointer' : (officeCam.dragging ? 'grabbing' : 'grab');
     });
 
     window.addEventListener('mouseup', () => {
       if (activeMainView !== 'office') return;
-      if (officeCam.dragging && !officeCam.moved && hoveredOfficeAgentId) {
-        selectOfficeAgent(hoveredOfficeAgentId);
+      if (officeCam.dragging && !officeCam.moved) {
+        if (hoveredOfficeAgentId) {
+          selectOfficeAgent(hoveredOfficeAgentId);
+        } else if (hoveredOfficeMcpName) {
+          toggleMcpServer3D(hoveredOfficeMcpName);
+        }
       }
       officeCam.dragging = false;
     });

@@ -22,14 +22,30 @@ CORE_PLUGINS = {"antigravity-brain", "claude-architect-coder", "context7", "stri
 
 
 def audit_mcp_servers() -> List[Dict[str, Any]]:
-    if not os.path.isfile(MCP_CONFIG_PATH):
-        return []
-    with open(MCP_CONFIG_PATH, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
+    active_servers: Dict[str, Any] = {}
+    if os.path.isfile(MCP_CONFIG_PATH):
+        try:
+            with open(MCP_CONFIG_PATH, "r", encoding="utf-8") as f:
+                active_servers = (json.load(f) or {}).get("mcpServers", {})
+        except Exception:
+            pass
 
-    servers = cfg.get("mcpServers", {})
+    full_servers: Dict[str, Any] = dict(active_servers)
+    if os.path.isfile(MCP_FULL_BACKUP):
+        try:
+            with open(MCP_FULL_BACKUP, "r", encoding="utf-8") as fb:
+                for k, v in ((json.load(fb) or {}).get("mcpServers", {})).items():
+                    full_servers.setdefault(k, v)
+        except Exception:
+            pass
+
+    if os.path.isdir(MCP_SCHEMAS_DIR):
+        for entry in os.listdir(MCP_SCHEMAS_DIR):
+            if os.path.isdir(os.path.join(MCP_SCHEMAS_DIR, entry)):
+                full_servers.setdefault(entry, {})
+
     report = []
-    for s_name in servers:
+    for s_name in full_servers:
         s_dir = os.path.join(MCP_SCHEMAS_DIR, s_name)
         tool_count = 0
         schema_bytes = 0
@@ -38,18 +54,68 @@ def audit_mcp_servers() -> List[Dict[str, Any]]:
                 if fname.endswith(".json"):
                     tool_count += 1
                     schema_bytes += os.path.getsize(os.path.join(s_dir, fname))
-        header_tokens = tool_count * 7 + 15
+        is_enabled = s_name in active_servers
+        header_tokens = (tool_count * 7 + 15) if is_enabled else 0
         report.append(
             {
                 "server": s_name,
+                "enabled": is_enabled,
                 "tools": tool_count,
                 "schema_kb": round(schema_bytes / 1024.0, 1),
                 "header_tokens_per_step": header_tokens,
+                "potential_tokens": tool_count * 7 + 15,
                 "in_lean_profile": s_name in LEAN_MCP_SERVERS,
             }
         )
-    report.sort(key=lambda x: x["tools"], reverse=True)
+    report.sort(key=lambda x: (not x["enabled"], -x["tools"]))
     return report
+
+
+def toggle_single_mcp_server(server_name: str) -> Dict[str, Any]:
+    """Ativa ou pausa individualmente um único servidor MCP (usado na Sala de Servidores 3D)."""
+    if not os.path.isfile(MCP_CONFIG_PATH):
+        return {"ok": False, "error": "mcp_config.json não encontrado."}
+
+    with open(MCP_CONFIG_PATH, "r", encoding="utf-8") as f:
+        current_cfg = json.load(f) or {}
+    curr_servers = current_cfg.get("mcpServers", {})
+
+    if not os.path.isfile(MCP_FULL_BACKUP) and len(curr_servers) > 0:
+        shutil.copy2(MCP_CONFIG_PATH, MCP_FULL_BACKUP)
+
+    backup_servers: Dict[str, Any] = {}
+    if os.path.isfile(MCP_FULL_BACKUP):
+        try:
+            with open(MCP_FULL_BACKUP, "r", encoding="utf-8") as fb:
+                backup_servers = (json.load(fb) or {}).get("mcpServers", {})
+        except Exception:
+            pass
+
+    if server_name in curr_servers:
+        # Guardar definição no backup antes de pausar
+        if server_name not in backup_servers:
+            backup_servers[server_name] = curr_servers[server_name]
+            with open(MCP_FULL_BACKUP, "w", encoding="utf-8") as fb:
+                json.dump({"mcpServers": backup_servers}, fb, indent=2)
+        del curr_servers[server_name]
+        new_state = False
+    else:
+        if server_name in backup_servers:
+            curr_servers[server_name] = backup_servers[server_name]
+            new_state = True
+        else:
+            return {"ok": False, "error": f"Configuração de '{server_name}' não encontrada no backup."}
+
+    current_cfg["mcpServers"] = curr_servers
+    with open(MCP_CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(current_cfg, f, indent=2)
+
+    return {
+        "ok": True,
+        "server": server_name,
+        "enabled": new_state,
+        "mcp_servers": audit_mcp_servers(),
+    }
 
 
 def audit_plugins() -> Dict[str, Any]:

@@ -119,13 +119,25 @@ def extract_latest_tool_actions(transcript_path: Optional[str]) -> List[str]:
     return []
 
 
+def compute_adaptive_budget(user_query: str) -> int:
+    """Ajusta dinamicamente o orçamento de caracteres conforme a complexidade do pedido."""
+    q = (user_query or "").strip().lower()
+    deep_keywords = ("analise", "arquitetura", "bug", "erro", "refactor", "todos", "melhoria", "ultraplan", "implement")
+    if len(q) > 85 or any(k in q for k in deep_keywords):
+        return 1680  # ~420 tokens para tarefas complexas
+    if len(q) < 22:
+        return 1020  # ~255 tokens para confirmações rápidas
+    return MAX_EPHEMERAL_CHARS
+
+
 def build_ephemeral_context(
     memories: List[Dict[str, Any]],
     checkpoint: Optional[Dict[str, Any]],
     workspace: str,
     scout_map: str = "",
+    max_chars: int = MAX_EPHEMERAL_CHARS,
 ) -> str:
-    """Formata um bloco ultra-compacto (<320 tokens) para injeção efémera + Scout Shared Map."""
+    """Formata um bloco ultra-compacto para injeção efémera + Scout Shared Map."""
     parts: List[str] = [
         f"[BRAIN_MEMORY | ws={workspace} | Use estes factos e o SCOUT_MAP para evitar buscas/leituras redundantes]"
     ]
@@ -143,7 +155,7 @@ def build_ephemeral_context(
         parts.append(chk_line[:280])
 
     if scout_map:
-        parts.append(scout_map[:420])
+        parts.append(scout_map[:480])
 
     seen_topics: set[str] = set()
     for m in memories:
@@ -157,7 +169,7 @@ def build_ephemeral_context(
         fact = (m.get("fact") or "").strip()
         ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
         entry = f"- {ws_tag}{topic}: {fact}"
-        if sum(len(p) for p in parts) + len(entry) + 2 > MAX_EPHEMERAL_CHARS:
+        if sum(len(p) for p in parts) + len(entry) + 2 > max_chars:
             break
         parts.append(entry)
 
@@ -216,7 +228,10 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     if not memories and not checkpoint and not scout_map:
         return {}
 
-    ephemeral_msg = build_ephemeral_context(memories, checkpoint, ws, scout_map=scout_map)
+    budget_chars = compute_adaptive_budget(user_query)
+    ephemeral_msg = build_ephemeral_context(
+        memories, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars
+    )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)
     # Estimativa conservadora: evitar 1 round-trip de busca/view_file poupa ~4.500 tokens
