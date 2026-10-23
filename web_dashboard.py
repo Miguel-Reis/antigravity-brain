@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import re
@@ -357,9 +358,20 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
     def _send_json(self, data: Any, status: int = 200) -> None:
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        etag = f'W/"{hashlib.md5(raw).hexdigest()[:16]}-{len(raw)}"'
+        if status == 200 and self.command == "GET":
+            inm = self.headers.get("If-None-Match", "")
+            if inm and inm == etag:
+                self.send_response(304)
+                self.send_header("ETag", etag)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.end_headers()
+                return
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(raw)

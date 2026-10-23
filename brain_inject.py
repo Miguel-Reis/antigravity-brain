@@ -131,22 +131,30 @@ def build_ephemeral_context(
     ]
 
     if checkpoint:
+        c_goal = (checkpoint.get("goal") or checkpoint.get("last_completed") or "Sessão ativa").strip()
+        c_status = (checkpoint.get("status") or "Ativo • Auto-Synced").strip()
+        c_files = (checkpoint.get("key_files") or "N/A").strip()
         chk_line = (
-            f"CHECKPOINT ({checkpoint.get('project', workspace)}): "
-            f"Goal={checkpoint.get('goal', 'N/A')} | "
-            f"Status={checkpoint.get('status', 'N/A')} | "
-            f"Files={checkpoint.get('key_files', 'N/A')}"
+            f"CHECKPOINT ({checkpoint.get('project') or workspace}): "
+            f"Goal={c_goal[:90]} | "
+            f"Status={c_status[:45]} | "
+            f"Files={c_files[:95]}"
         )
         parts.append(chk_line[:280])
 
     if scout_map:
         parts.append(scout_map[:420])
 
+    seen_topics: set[str] = set()
     for m in memories:
-        topic = m.get("topic", "Fact")
+        topic = (m.get("topic") or "Fact").strip()
         if topic.startswith("Scout Shared Codebase Map") and scout_map:
             continue
-        fact = m.get("fact", "")
+        norm_topic = re.sub(r"\s+", " ", topic.lower())
+        if norm_topic in seen_topics:
+            continue
+        seen_topics.add(norm_topic)
+        fact = (m.get("fact") or "").strip()
         ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
         entry = f"- {ws_tag}{topic}: {fact}"
         if sum(len(p) for p in parts) + len(entry) + 2 > MAX_EPHEMERAL_CHARS:
@@ -197,7 +205,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     except Exception:
         pass
 
-    memories = db.search_memories(query=user_query, workspace=ws, n_results=5)
+    memories = db.search_memories(query=user_query, workspace=ws, n_results=8)
     checkpoint = db.get_checkpoint(ws)
     scout_map = ""
     try:

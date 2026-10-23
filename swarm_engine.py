@@ -1102,6 +1102,43 @@ class SwarmEngine:
                 (aid, name, role, kind, dept, model, ws, task, desk_idx, color, now - 120.0, now),
             )
 
+    @staticmethod
+    def _build_agent_display_name(prompt: str, workspace: str, short_id: str, is_sub: bool) -> str:
+        """Gera um título curto e legível para o boneco 3D a partir do tema da conversa ou workspace."""
+        prefix = "🤖" if is_sub else "💬"
+        ws_clean = (workspace or "global").strip()
+
+        if is_sub and ws_clean not in ("global", "default", "brain_mcp"):
+            return f"{prefix} {ws_clean.title()[:15]} (#{short_id[:4]})"
+
+        if (prompt or "").strip() == "Sessão Antigravity ativa" and ws_clean not in ("global", "default"):
+            return f"{prefix} {ws_clean.title()[:15]} (#{short_id[:4]})"
+
+        # Extrair palavras significativas do prompt (ignorando caminhos @[...] e stopwords curtas)
+        cleaned = re.sub(r"@\[.*?\]", " ", prompt or "")
+        cleaned = re.sub(r"https?://\S+", " ", cleaned)
+        cleaned = re.sub(r"[/\\][A-Za-z0-9_.-]+", " ", cleaned)
+        words = re.findall(r"[A-Za-zÀ-ÿ0-9]{4,}", cleaned)
+        stopwords = {
+            "para", "como", "onde", "possa", "quando", "estao", "estão", "tambem",
+            "também", "algo", "isso", "este", "esta", "pelo", "pela", "mesmo",
+            "depois", "acha", "achas", "estes", "factos", "brain", "memory",
+            "user", "request", "with", "criar", "fazer", "algum", "tipo", "sessão",
+            "antigravity", "ativa", "ultraplan"
+        }
+        meaningful = [w for w in words if w.lower() not in stopwords]
+
+        if meaningful:
+            topic_words = " ".join(meaningful[:2]).title()
+            if len(topic_words) > 18:
+                topic_words = topic_words[:18].rstrip()
+            return f"{prefix} {topic_words} (#{short_id[:4]})"
+
+        if ws_clean and ws_clean not in ("global", "default"):
+            return f"{prefix} {ws_clean.title()[:15]} (#{short_id[:4]})"
+
+        return f"{prefix} {'Sub' if is_sub else 'Conv'} #{short_id[:6]}"
+
     def register_conversation_activity(
         self,
         conversation_id: str,
@@ -1116,13 +1153,13 @@ class SwarmEngine:
         if not conversation_id or conversation_id == "default":
             return
         short_id = conversation_id[:8]
-        aid = f"sub-{short_id}" if kind == "subagent" else f"conv-{short_id}"
+        is_sub = kind == "subagent"
+        aid = f"sub-{short_id}" if is_sub else f"conv-{short_id}"
         now = time.time()
         ws_clean = BrainDB.normalize_workspace(workspace or "global")
         palette = ["#f43f5e", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#14b8a6"]
         color = palette[sum(ord(c) for c in short_id) % len(palette)]
-        label_prefix = "Subagente" if kind == "subagent" else "Conv"
-        agent_name = f"{label_prefix} #{short_id[:6]} ({ws_clean})"
+        agent_name = self._build_agent_display_name(current_task, ws_clean, short_id, is_sub)
         task_clean = " ".join((current_task or "Em execução no Antigravity").split())[:85]
 
         with self.db._connect() as conn:
@@ -1337,18 +1374,23 @@ class SwarmEngine:
             any_conv_working = any((now - mtime) < 35.0 for mtime, _, _ in top_convs)
             core_working = swarm_active or any_conv_working
 
+            target_core_st = "working" if core_working else "paused"
+            target_core_task = (
+                f"A coordenar: {swarm_goal[:55]}"
+                if core_working
+                else "Em pausa no Lounge · Plano bloqueado"
+            )
             conn.execute(
                 """
                 UPDATE office_agents
-                SET status = CASE WHEN ? THEN 'working' ELSE 'paused' END,
-                    current_task = CASE
-                        WHEN ? THEN 'A coordenar: ' || ?
-                        ELSE 'Em pausa no Lounge · Plano bloqueado'
-                    END,
+                SET status = ?,
+                    current_task = ?,
                     updated_at = ?
-                WHERE kind IN ('architect', 'scout', 'lane_worker') AND manual_override = 0;
+                WHERE kind IN ('architect', 'scout', 'lane_worker')
+                  AND manual_override = 0
+                  AND (status != ? OR current_task != ?);
                 """,
-                (1 if core_working else 0, 1 if core_working else 0, swarm_goal[:55], now),
+                (target_core_st, target_core_task, round(now, 0), target_core_st, target_core_task),
             )
 
             # 2. Sincronizar conversas e subagentes reais do Antigravity
@@ -1382,8 +1424,7 @@ class SwarmEngine:
                 else:
                     task_txt = f"☕ Em pausa · Última tarefa: {meta['prompt'][:52]}"
 
-                prefix = "🤖 Subagente" if is_sub else "💬 Conversa"
-                name = f"{prefix} #{short_id[:6]}"
+                name = self._build_agent_display_name(meta["prompt"], ws, short_id, is_sub)
                 role = f"{'Subagent Worker' if is_sub else 'Session Agent'} ({ws})"
                 model = "flash · subagent" if is_sub else "Gemini 4 Argon"
                 color = palette[sum(ord(c) for c in short_id) % len(palette)]
@@ -1455,8 +1496,8 @@ class SwarmEngine:
         for r in rows:
             d = dict(r)
             spawn_age = max(0.0, now - float(d.get("spawned_at") or 0.0))
-            d["spawn_age_sec"] = round(spawn_age, 1)
             d["is_new"] = spawn_age < 25.0
+            d["spawn_age_sec"] = round(spawn_age, 0) if d["is_new"] else 30.0
             if d["is_new"]:
                 new_spawns += 1
             if d.get("status") == "working":
@@ -1475,7 +1516,6 @@ class SwarmEngine:
                 "paused": paused_count,
                 "conversations_and_subagents": conv_count,
                 "new_spawns": new_spawns,
-                "timestamp": now,
             },
         }
 

@@ -3763,16 +3763,29 @@
       officeCtx.textAlign = 'center';
       officeCtx.fillText(labelTxt, headPt.x, by + 13);
 
-      // Balão de pensamento / tarefa ao vivo se estiver selecionado, hovered ou a trabalhar numa conversa
-      if (isSelected || isHovered || (isWorking && ag.kind !== 'lane_worker')) {
-        const taskShort = (ag.current_task || '').slice(0, 36);
+      // Balão de pensamento / tarefa ao vivo (ou conversa de café periódica no Lounge)
+      const chitchatSlot = Math.floor(Date.now() / 3800);
+      const isLoungeTalking = !isWorking && ((chitchatSlot + sim.deskIdx) % 5 === 0);
+      const loungePhrases = [
+        '☕ +148.5k tokens poupados hoje!',
+        '🔍 Scout Map pronto em 11ms',
+        '🛋️ Standby · 0% consumo CPU',
+        '🕹️ 48/48 checks verificados!',
+        '💬 A aguardar novo prompt...'
+      ];
+
+      if (isSelected || isHovered || (isWorking && ag.kind !== 'lane_worker') || isLoungeTalking) {
+        const rawBubble = (isLoungeTalking && !isSelected && !isHovered)
+          ? loungePhrases[(chitchatSlot + sim.deskIdx) % loungePhrases.length]
+          : (ag.current_task || '');
+        const taskShort = rawBubble.slice(0, 38);
         if (taskShort) {
           officeCtx.font = '500 9.5px "JetBrains Mono", monospace';
           const tw = officeCtx.measureText(taskShort).width + 12;
           const tx = headPt.x - tw * 0.5;
           const ty = by - 19;
           officeCtx.fillStyle = 'rgba(9, 13, 22, 0.92)';
-          officeCtx.strokeStyle = ag.avatar_color || '#ec4899';
+          officeCtx.strokeStyle = isLoungeTalking ? '#f59e0b' : (ag.avatar_color || '#ec4899');
           officeCtx.lineWidth = 1;
           officeCtx.beginPath();
           officeCtx.roundRect(tx, ty, tw, 16, 4);
@@ -3931,6 +3944,42 @@
             }
           }
         });
+      });
+
+      // Drone 3D Holográfico do SCOUT-01 (entrega o [SCOUT_SHARED_MAP] entre o Scout, o Arquiteto Argon e as Secretárias)
+      const dronePhase = (nowMs * 0.00055) % 1;
+      const droneWaypoints = [
+        { x: DESK_SLOTS[1].x, z: DESK_SLOTS[1].z },
+        { x: DESK_SLOTS[0].x, z: DESK_SLOTS[0].z },
+        { x: -135, z: 35 },
+        { x: DESK_SLOTS[1].x, z: DESK_SLOTS[1].z }
+      ];
+      const segIdx = Math.min(2, Math.floor(dronePhase * 3));
+      const segT = (dronePhase * 3) - segIdx;
+      const wpA = droneWaypoints[segIdx];
+      const wpB = droneWaypoints[segIdx + 1];
+      const droneX = wpA.x + (wpB.x - wpA.x) * segT;
+      const droneZ = wpA.z + (wpB.z - wpA.z) * segT;
+      const droneY = 66 + Math.sin(nowMs * 0.006) * 5;
+
+      renderables.push({
+        depth: projectOffice3D(droneX, droneY, droneZ).depth,
+        draw: () => {
+          const dGround = projectOffice3D(droneX, 2, droneZ);
+          const dPos = projectOffice3D(droneX, droneY, droneZ);
+          // Cone laser verde de scan do Scout Map
+          officeCtx.beginPath();
+          officeCtx.moveTo(dPos.x, dPos.y);
+          officeCtx.lineTo(dGround.x - 12 * officeCam.zoom, dGround.y);
+          officeCtx.lineTo(dGround.x + 12 * officeCam.zoom, dGround.y);
+          officeCtx.closePath();
+          officeCtx.fillStyle = 'rgba(16, 185, 129, 0.14)';
+          officeCtx.fill();
+
+          // Corpo 3D do Drone
+          drawBox3D(droneX, droneY, droneZ, 14, 6, 14, '#10b981', '#059669', '#047857', '#6ee7b7');
+          drawBox3D(droneX, droneY + 6, droneZ, 6, 3, 6, '#ec4899', '#db2777', '#be185d');
+        }
       });
 
       // Atualizar física de caminhada de cada Boneco 3D e adicionar à fila de renderização

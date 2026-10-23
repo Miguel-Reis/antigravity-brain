@@ -38,9 +38,14 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
 
     # Isola apenas os passos após o último USER_INPUT
     last_user_idx = 0
+    turn_user_goal = ""
     for idx in range(len(steps) - 1, -1, -1):
         if steps[idx].get("type") == "USER_INPUT":
             last_user_idx = idx
+            raw_u = str(steps[idx].get("content") or "")
+            m_req = re.search(r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", raw_u, flags=re.DOTALL)
+            if m_req:
+                turn_user_goal = " ".join(m_req.group(1).split())[:110]
             break
 
     turn_steps = steps[last_user_idx:]
@@ -118,14 +123,20 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
                                 )
                                 harvested_count += 1
 
-    # 3. Atualiza o Checkpoint automático do workspace se houve alterações de código
+    # 3. Atualiza o Checkpoint automático do workspace + Auto-Refresh do Scout Map se houve alterações de código
     if modified_files or completed_actions:
         db.save_checkpoint(
             workspace=workspace,
             project=workspace,
+            goal=turn_user_goal or f"Desenvolvimento ativo em {workspace}",
+            status="Ativo • Auto-Synced",
             last_completed="; ".join(completed_actions[-3:])[:300],
             key_files=", ".join(modified_files[-6:])[:200],
         )
+        try:
+            SwarmEngine(db).run_codebase_scout(os.path.dirname(os.path.abspath(__file__)))
+        except Exception:
+            pass
 
     # 4. Regista telemetria real do turno
     db.log_telemetry(
