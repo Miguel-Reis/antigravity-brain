@@ -1328,7 +1328,9 @@ class SwarmEngine:
                 )
 
             if req_matches:
-                first_prompt = " ".join(req_matches[-1].split())[:80]
+                raw_req = req_matches[-1].replace("\\n", " ").replace("\\r", " ").replace("\\t", " ")
+                raw_req = re.sub(r"^/ultraplan\s*", "", raw_req.strip(), flags=re.IGNORECASE)
+                first_prompt = " ".join(raw_req.split())[:80]
             else:
                 # Se não tem tags <USER_REQUEST>, é tipicamente um subagente invocado por invoke_subagent
                 for line in head_text.splitlines()[:6]:
