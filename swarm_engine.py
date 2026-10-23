@@ -1346,18 +1346,37 @@ class SwarmEngine:
                     except Exception:
                         pass
 
-            # Analisar as últimas linhas para saber se está ativamente em tool_calls ou se já terminou
+            # Analisar as últimas linhas para saber se está ativamente a executar um turno/tool_calls ou se já terminou
             tail_lines = [ln.strip() for ln in tail_text.splitlines() if ln.strip().startswith("{")]
-            for ln in reversed(tail_lines):
+            step_index = 0
+            is_mid_turn = False
+            recent_tools: List[Dict[str, str]] = []
+            touched_lanes: set[str] = set()
+
+            for idx_rev, ln in enumerate(reversed(tail_lines)):
                 try:
                     step = json.loads(ln)
                 except Exception:
                     continue
                 st_type = step.get("type", "")
-                if not last_step_type and st_type in ("USER_INPUT", "PLANNER_RESPONSE", "TOOL_RESPONSE"):
-                    last_step_type = st_type
-                    if st_type == "PLANNER_RESPONSE" and step.get("tool_calls"):
+                if idx_rev == 0:
+                    step_index = int(step.get("step_index") or len(tail_lines))
+                    # No Antigravity:
+                    # - USER_INPUT / EPHEMERAL_MESSAGE = utilizador enviou mensagem, modelo a iniciar
+                    # - PLANNER_RESPONSE com tool_calls = ferramenta ou subagente em execução neste momento
+                    # - GENERIC / TOOL_RESPONSE = ferramenta acabou de responder, modelo está a pensar no próximo passo
+                    # Apenas PLANNER_RESPONSE SEM tool_calls significa que o agente respondeu ao utilizador e terminou o turno!
+                    if st_type in ("USER_INPUT", "EPHEMERAL_MESSAGE", "GENERIC", "TOOL_RESPONSE"):
+                        is_mid_turn = True
                         has_pending_tools = True
+                    elif st_type == "PLANNER_RESPONSE":
+                        if step.get("tool_calls"):
+                            is_mid_turn = True
+                            has_pending_tools = True
+                        else:
+                            is_mid_turn = False
+                    last_step_type = st_type
+
                 if st_type == "PLANNER_RESPONSE" and step.get("tool_calls"):
                     t_calls = step.get("tool_calls") or []
                     for tc in t_calls:
@@ -1374,16 +1393,37 @@ class SwarmEngine:
                                     "prompt": sub_prompt,
                                 }
                             )
+                        target = (
+                            t_args.get("Path")
+                            or t_args.get("Role")
+                            or t_args.get("toolSummary")
+                            or t_args.get("CommandLine", "")[:34]
+                        )
+                        if target and ("/" in str(target) or "\\" in str(target)):
+                            target = os.path.basename(str(target).rstrip("/\\"))
+                        action_lbl = f"{t_name}({target})" if target else t_name
                         if not latest_action:
-                            target = (
-                                t_args.get("Path")
-                                or t_args.get("Role")
-                                or t_args.get("toolSummary")
-                                or t_args.get("CommandLine", "")[:30]
+                            latest_action = action_lbl
+                        if len(recent_tools) < 4:
+                            recent_tools.append(
+                                {
+                                    "tool": t_name,
+                                    "target": str(target or ""),
+                                    "label": action_lbl,
+                                }
                             )
-                            if target and ("/" in str(target) or "\\" in str(target)):
-                                target = os.path.basename(str(target).rstrip("/\\"))
-                            latest_action = f"{t_name}({target})" if target else t_name
+                        # Mapear ferramentas/ficheiros para as Lanes de Especialistas do Escritório 3D
+                        tgt_low = str(target or "").lower()
+                        if any(ext in tgt_low for ext in (".html", ".css", ".tsx", ".jsx", ".vue", "ui")):
+                            touched_lanes.add("UI")
+                        if any(ext in tgt_low for ext in (".py", ".ts", ".go", ".rs", ".sql", "db", "api", "server", "engine")):
+                            touched_lanes.add("API")
+                        if t_name == "run_command" or "test" in tgt_low or "check" in tgt_low or "verify" in tgt_low:
+                            touched_lanes.add("TESTS")
+                        if any(ext in tgt_low for ext in (".md", ".json", "git", "gitignore", "doc")):
+                            touched_lanes.add("DOCS")
+                        if t_name in ("read_file", "search_web", "call_mcp_tool", "invoke_subagent"):
+                            touched_lanes.add("SCOUT")
         except Exception:
             pass
 
@@ -1394,6 +1434,10 @@ class SwarmEngine:
             "latest_action": latest_action,
             "last_step_type": last_step_type,
             "has_pending_tools": has_pending_tools,
+            "is_mid_turn": is_mid_turn,
+            "step_index": step_index,
+            "recent_tools": recent_tools,
+            "touched_lanes": list(touched_lanes),
             "spawned_subagents": spawned_subagents[-3:],
             "mtime": mtime,
         }
@@ -1408,7 +1452,7 @@ class SwarmEngine:
         e sincroniza o estado dos bonecos no Escritório 3D (a trabalhar vs em pausa).
         """
         now = time.time()
-        if now - float(_OFFICE_SCAN_CACHE.get("ts", 0.0)) < 1.4:
+        if now - float(_OFFICE_SCAN_CACHE.get("ts", 0.0)) < 1.0:
             return
         _OFFICE_SCAN_CACHE["ts"] = now
 
@@ -1429,76 +1473,66 @@ class SwarmEngine:
                 pass
 
         recent_convs.sort(reverse=True)
-        top_convs = recent_convs[:8]
+        top_convs = recent_convs[:10]
 
         palette = ["#06b6d4", "#f43f5e", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#14b8a6"]
 
         with self.db._connect() as conn:
             self._ensure_core_office_agents(conn)
-
-            # 1. Atualizar estado da equipa principal Swarm consoante a run atual
-            run_row = conn.execute(
-                "SELECT status, goal, started_at FROM swarm_runs ORDER BY id DESC LIMIT 1;"
-            ).fetchone()
-            swarm_active = False
-            swarm_goal = "Monitorização contínua do Brain"
-            if run_row:
-                swarm_goal = str(run_row["goal"] or swarm_goal)
-                r_stat = str(run_row["status"] or "done")
-                r_start = float(run_row["started_at"] or 0.0)
-                swarm_active = r_stat in ("swarming", "verifying") and (now - r_start < 180.0)
-
-            # Verificar também se alguma conversa esteve ativa nos últimos 35s
-            any_conv_working = any((now - mtime) < 35.0 for mtime, _, _ in top_convs)
-            core_working = swarm_active or any_conv_working
-
-            target_core_st = "working" if core_working else "paused"
-            target_core_task = (
-                f"A coordenar: {swarm_goal[:55]}"
-                if core_working
-                else "Em pausa no Lounge · Plano bloqueado"
-            )
-            conn.execute(
-                """
-                UPDATE office_agents
-                SET status = ?,
-                    current_task = ?,
-                    updated_at = ?
-                WHERE kind IN ('architect', 'scout', 'lane_worker')
-                  AND manual_override = 0
-                  AND (status != ? OR current_task != ?);
-                """,
-                (target_core_st, target_core_task, round(now, 0), target_core_st, target_core_task),
-            )
-
-            # 2. Sincronizar conversas e subagentes reais do Antigravity
             existing_rows = {
                 r["agent_id"]: dict(r)
                 for r in conn.execute("SELECT * FROM office_agents;").fetchall()
             }
             known_before = bool(_OFFICE_SCAN_CACHE["mtime_map"])
 
+            active_conv_metas: List[Dict[str, Any]] = []
+            active_lanes_from_app: set[str] = set()
+            latest_active_prompt = ""
+            latest_active_action = ""
+
+            # 1. Sincronizar conversas e subagentes reais do Antigravity primeiro
             for idx, (mtime, conv_id, tp) in enumerate(top_convs):
                 meta = self._inspect_transcript_meta(tp, conv_id)
                 short_id = conv_id[:8]
                 is_sub = bool(meta["is_subagent"])
                 kind = "subagent" if is_sub else "conversation"
                 aid = f"sub-{short_id}" if is_sub else f"conv-{short_id}"
-                ws = meta["workspace"] or "global"
-                age_sec = now - mtime
+                ws = BrainDB.normalize_workspace(meta["workspace"] or "global")
+                age_sec = max(0.0, now - mtime)
 
-                # Está a trabalhar se o transcript foi modificado há menos de 38s
-                is_working = (age_sec < 38.0) and (
-                    meta["has_pending_tools"]
-                    or meta["last_step_type"] in ("USER_INPUT", "TOOL_RESPONSE")
-                    or age_sec < 18.0
+                # Deteção fiável de trabalho em curso na App Antigravity:
+                # 1) Se está a meio de um turno (USER_INPUT, EPHEMERAL_MESSAGE, GENERIC ou PLANNER_RESPONSE c/ tool_calls) até 300s
+                # 2) Ou se o transcript foi atualizado nos últimos 45s
+                # 3) Ou se o hook PreInvocation / Ordem Direta marcou working nos últimos 75s
+                cur_row = existing_rows.get(aid)
+                recent_hook_working = False
+                if cur_row and cur_row.get("status") == "working":
+                    hook_age = now - float(cur_row.get("updated_at") or 0.0)
+                    if hook_age < 75.0 and meta.get("is_mid_turn", False):
+                        recent_hook_working = True
+
+                is_working = (
+                    (bool(meta.get("is_mid_turn")) and age_sec < 300.0)
+                    or (age_sec < 42.0 and meta.get("last_step_type") != "PLANNER_RESPONSE")
+                    or (age_sec < 22.0)
+                    or recent_hook_working
                 )
                 status = "working" if is_working else "paused"
 
+                if is_working:
+                    active_conv_metas.append({"aid": aid, "conv_id": conv_id, "meta": meta, "age_sec": age_sec})
+                    for ln_tag in meta.get("touched_lanes", []):
+                        active_lanes_from_app.add(ln_tag)
+                    if not latest_active_prompt:
+                        latest_active_prompt = meta["prompt"]
+                    if not latest_active_action and meta.get("latest_action"):
+                        latest_active_action = meta["latest_action"]
+
+                step_badge = f"[Step #{meta.get('step_index', 1)}] " if is_working and meta.get("step_index") else ""
                 if is_working and meta["latest_action"]:
-                    task_txt = f"⚡ {meta['latest_action']} · {meta['prompt'][:48]}"
+                    task_txt = f"⚡ {step_badge}{meta['latest_action']} · {meta['prompt'][:44]}"
                 elif is_working:
-                    task_txt = f"⚡ {meta['prompt'][:68]}"
+                    task_txt = f"⚡ {step_badge}A processar na App · {meta['prompt'][:58]}"
                 else:
                     task_txt = f"☕ Em pausa · Última tarefa: {meta['prompt'][:52]}"
 
@@ -1509,20 +1543,23 @@ class SwarmEngine:
 
                 if aid in existing_rows:
                     cur = existing_rows[aid]
-                    if not cur.get("manual_override"):
+                    # Expirar manual_override antigo após 180s para voltar a sincronizar com a app real
+                    man_ovr = int(cur.get("manual_override") or 0)
+                    if man_ovr and (now - float(cur.get("updated_at") or 0.0) > 180.0):
+                        man_ovr = 0
+                    if not man_ovr:
                         conn.execute(
                             """
                             UPDATE office_agents
                             SET name = ?, role = ?, workspace = ?, status = ?,
-                                current_task = ?, updated_at = ?
+                                current_task = ?, manual_override = 0, updated_at = ?
                             WHERE agent_id = ?;
                             """,
                             (name, role, ws, status, task_txt, mtime, aid),
                         )
                 else:
-                    # Se já tínhamos carregado o mapa antes, então esta conversa/subagente acabou de nascer!
-                    spawn_ts = now if (known_before or age_sec < 45.0) else mtime
-                    desk_idx = 8 + idx
+                    spawn_ts = now if (known_before or age_sec < 60.0) else mtime
+                    desk_idx = 8 + (idx % 10)
                     conn.execute(
                         """
                         INSERT INTO office_agents
@@ -1548,8 +1585,75 @@ class SwarmEngine:
                     )
                 _OFFICE_SCAN_CACHE["mtime_map"][conv_id] = mtime
 
+            # 2. Atualizar estado da equipa principal (Arquiteto Argon, Scout e Especialistas das Lanes)
+            run_row = conn.execute(
+                "SELECT status, goal, started_at FROM swarm_runs ORDER BY id DESC LIMIT 1;"
+            ).fetchone()
+            swarm_active = False
+            swarm_goal = "Monitorização contínua do Brain"
+            if run_row:
+                swarm_goal = str(run_row["goal"] or swarm_goal)
+                r_stat = str(run_row["status"] or "done")
+                r_start = float(run_row["started_at"] or 0.0)
+                swarm_active = r_stat in ("swarming", "verifying") and (now - r_start < 180.0)
+
+            any_conv_working = len(active_conv_metas) > 0
+            core_command_working = swarm_active or any_conv_working
+
+            # Mapear cada boneco especialista para saber se deve estar a trabalhar agora mesmo
+            core_agent_Ids = ["arch-01", "scout-01", "ui-01", "ui-02", "api-01", "api-02", "test-01", "doc-01"]
+            lane_by_agent = {
+                "arch-01": "COMMAND",
+                "scout-01": "SCOUT",
+                "ui-01": "UI",
+                "ui-02": "UI",
+                "api-01": "API",
+                "api-02": "API",
+                "test-01": "TESTS",
+                "doc-01": "DOCS",
+            }
+            act_suffix = f" ({latest_active_action})" if latest_active_action else ""
+            active_goal_short = (latest_active_prompt or swarm_goal)[:50]
+
+            for cid in core_agent_Ids:
+                c_row = existing_rows.get(cid)
+                if not c_row:
+                    continue
+                man_ovr = int(c_row.get("manual_override") or 0)
+                if man_ovr and (now - float(c_row.get("updated_at") or 0.0) < 120.0):
+                    continue  # Respeitar ordem direta recente enviada pelo utilizador no Office 3D
+
+                dept_lane = lane_by_agent.get(cid, "COMMAND")
+                if swarm_active:
+                    should_work = True
+                elif any_conv_working:
+                    # Quando há uma conversa a trabalhar na App, o Arquiteto, o Scout e as Lanes tocadas trabalham em equipa!
+                    should_work = dept_lane in ("COMMAND", "SCOUT") or (dept_lane in active_lanes_from_app) or (not active_lanes_from_app and cid in ("ui-01", "api-01"))
+                else:
+                    should_work = False
+
+                new_st = "working" if should_work else "paused"
+                if should_work:
+                    if cid == "arch-01":
+                        new_task = f"⚡ A coordenar na App: {active_goal_short}{act_suffix}"
+                    elif cid == "scout-01":
+                        new_task = f"🔍 Scout AST ativo{act_suffix} · {active_goal_short}"
+                    else:
+                        new_task = f"⚡ [{dept_lane}] Em execução{act_suffix} · {active_goal_short}"
+                else:
+                    new_task = "☕ Em pausa no Lounge · A aguardar nova task"
+
+                conn.execute(
+                    """
+                    UPDATE office_agents
+                    SET status = ?, current_task = ?, manual_override = 0, updated_at = ?
+                    WHERE agent_id = ?;
+                    """,
+                    (new_st, new_task[:90], round(now, 0), cid),
+                )
+
     def get_office_state(self) -> Dict[str, Any]:
-        """Devolve todos os agentes (bonecos 3D) e métricas do Escritório 3D."""
+        """Devolve todos os agentes (bonecos 3D), tasks em curso e métricas do Escritório 3D."""
         self._sync_live_conversations_to_office()
         now = time.time()
         with self.db._connect() as conn:
@@ -1566,17 +1670,29 @@ class SwarmEngine:
             ).fetchall()
             run_row = conn.execute(
                 """
-                SELECT goal, status, completed_tasks, total_tasks, verify_passed,
-                       verify_total, scout_files_count, scout_symbols_count, tokens_saved_est
+                SELECT id, goal, status, completed_tasks, total_tasks, verify_passed,
+                       verify_total, scout_files_count, scout_symbols_count, tokens_saved_est, started_at
                 FROM swarm_runs ORDER BY id DESC LIMIT 1;
                 """
             ).fetchone()
+            swarm_task_rows = []
+            if run_row:
+                swarm_task_rows = conn.execute(
+                    """
+                    SELECT task_code, lane, title, target_file, worker_model, status, progress, updated_at
+                    FROM swarm_tasks
+                    WHERE run_id = ? AND status IN ('running', 'verifying')
+                    ORDER BY id ASC LIMIT 12;
+                    """,
+                    (run_row["id"],),
+                ).fetchall()
 
         agents: List[Dict[str, Any]] = []
         working_count = 0
         paused_count = 0
         conv_count = 0
         new_spawns = 0
+        live_tasks: List[Dict[str, Any]] = []
 
         for r in rows:
             d = dict(r)
@@ -1587,11 +1703,82 @@ class SwarmEngine:
                 new_spawns += 1
             if d.get("status") == "working":
                 working_count += 1
+                # Criar entrada na lista de Tasks em Curso para cada agente ativo
+                upd_age = max(1, int(now - float(d.get("updated_at") or now)))
+                elapsed_s = f"{upd_age}s" if upd_age < 120 else f"{upd_age // 60}m {upd_age % 60}s"
+                is_direct = bool(d.get("manual_override"))
+                t_badge = (
+                    "🎯 ORDEM DIRETA"
+                    if is_direct
+                    else ("💬 APP ANTIGRAVITY" if d.get("kind") in ("conversation", "subagent") else f"⚡ LANE {d.get('department', 'SWARM')}")
+                )
+                prog_est = 75 if is_direct else (65 if d.get("kind") in ("conversation", "subagent") else 80)
+                live_tasks.append(
+                    {
+                        "task_id": f"live-{d['agent_id']}",
+                        "badge": t_badge,
+                        "title": str(d.get("current_task") or "Em execução").replace("⚡ ", ""),
+                        "agent_id": d["agent_id"],
+                        "agent_name": d["name"],
+                        "avatar_color": d.get("avatar_color") or "#ec4899",
+                        "workspace": d.get("workspace") or "brain_mcp",
+                        "model": d.get("model") or "Gemini 4 Argon",
+                        "status": "running",
+                        "progress": prog_est,
+                        "elapsed": elapsed_s,
+                        "is_active": True,
+                    }
+                )
             else:
                 paused_count += 1
             if d.get("kind") in ("conversation", "subagent"):
                 conv_count += 1
             agents.append(d)
+
+        # Adicionar também tasks ativas da tabela swarm_tasks (quando um Swarm está a correr)
+        for st in swarm_task_rows:
+            st_d = dict(st)
+            lane = st_d.get("lane", "UI")
+            lane_agent_map = {"UI": "ui-01", "API": "api-01", "TESTS": "test-01", "DOCS": "doc-01"}
+            mapped_aid = lane_agent_map.get(lane, "arch-01")
+            live_tasks.append(
+                {
+                    "task_id": f"swarm-{st_d['task_code']}",
+                    "badge": f"🐝 SWARM · {lane}",
+                    "title": f"[{st_d['task_code'].upper()}] {st_d['title']} ({st_d['target_file']})",
+                    "agent_id": mapped_aid,
+                    "agent_name": f"{mapped_aid.upper()} ({st_d['worker_model']})",
+                    "avatar_color": "#ec4899" if lane == "API" else ("#06b6d4" if lane == "UI" else "#10b981"),
+                    "workspace": "brain_mcp",
+                    "model": st_d.get("worker_model") or "flash",
+                    "status": st_d.get("status") or "running",
+                    "progress": int(st_d.get("progress") or 50),
+                    "elapsed": "ao vivo",
+                    "is_active": True,
+                }
+            )
+
+        active_tasks_count = len(live_tasks)
+
+        # Se não houver nenhuma task a correr neste segundo, mostrar as últimas 4 tasks concluídas recentemente para histórico
+        if not live_tasks:
+            for a in agents[:4]:
+                live_tasks.append(
+                    {
+                        "task_id": f"recent-{a['agent_id']}",
+                        "badge": "✅ CONCLUÍDA",
+                        "title": str(a.get("current_task") or "Pronto").replace("☕ Em pausa · ", ""),
+                        "agent_id": a["agent_id"],
+                        "agent_name": a["name"],
+                        "avatar_color": a.get("avatar_color") or "#64748b",
+                        "workspace": a.get("workspace") or "brain_mcp",
+                        "model": a.get("model") or "Gemini 4 Argon",
+                        "status": "done",
+                        "progress": 100,
+                        "elapsed": "concluída",
+                        "is_active": False,
+                    }
+                )
 
         mcp_list: List[Dict[str, Any]] = []
         try:
@@ -1602,7 +1789,7 @@ class SwarmEngine:
             pass
 
         board_info = dict(run_row) if run_row else {
-            "goal": "Antigravity Brain v2.7",
+            "goal": "Antigravity Brain v2.8",
             "status": "done",
             "completed_tasks": 24,
             "total_tasks": 24,
@@ -1617,6 +1804,7 @@ class SwarmEngine:
 
         return {
             "agents": agents,
+            "live_tasks": live_tasks,
             "mcp_servers": mcp_list,
             "board": board_info,
             "heatmap": heatmap_list,
@@ -1624,6 +1812,7 @@ class SwarmEngine:
                 "total_agents": len(agents),
                 "working": working_count,
                 "paused": paused_count,
+                "active_tasks": active_tasks_count,
                 "conversations_and_subagents": conv_count,
                 "new_spawns": new_spawns,
             },
