@@ -3896,9 +3896,15 @@
       });
       const out = await res.json();
       if (out.ok && out.agents) {
+        officeMcpServers = out.mcp_servers || officeMcpServers;
+        officeBoardData = out.board || officeBoardData;
+        officeHeatmapData = out.heatmap || officeHeatmapData;
         syncOfficeAgentsToSim(out.agents, out.summary || {});
         const ag = out.agents.find(x => x.agent_id === selectedOfficeAgentId);
-        showToast(`💬 Ordem enviada a ${ag ? ag.name : selectedOfficeAgentId}! Foi para a secretária trabalhar e a diretiva foi fixada (📌[PIN]) no Brain.`);
+        const repMsg = (out.execution_report && out.execution_report.summary)
+          ? out.execution_report.summary
+          : `Ordem executada e fixada (📌[PIN]) no Brain!`;
+        showToast(`🤖 ${ag ? ag.name : selectedOfficeAgentId}: ${repMsg}`);
         fetchGraph();
       }
     }
