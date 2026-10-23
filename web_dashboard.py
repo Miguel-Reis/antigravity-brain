@@ -91,17 +91,115 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
                 except Exception:
                     pass
 
-    # 2. Analisar transcripts recentes em ~/.gemini/antigravity/brain
+    # 2. Analisar profundamente todos os transcripts e artefactos .md em ~/.gemini/antigravity/brain
     if os.path.isdir(BRAIN_LOGS_ROOT):
         for conv_id in os.listdir(BRAIN_LOGS_ROOT):
-            t_path = os.path.join(
-                BRAIN_LOGS_ROOT, conv_id, ".system_generated", "logs", "transcript.jsonl"
-            )
+            conv_dir = os.path.join(BRAIN_LOGS_ROOT, conv_id)
+            if not os.path.isdir(conv_dir) or conv_id.startswith("."):
+                continue
+
+            # 2a. Extrair artefactos Markdown (.md) da conversa (planos, walkthroughs, ultraplan)
+            for fname in os.listdir(conv_dir):
+                if fname.endswith(".md"):
+                    md_path = os.path.join(conv_dir, fname)
+                    try:
+                        with open(md_path, "r", encoding="utf-8", errors="ignore") as mf:
+                            md_text = mf.read(6000)
+                        first_hdr = ""
+                        for ln in md_text.splitlines():
+                            if ln.startswith("#"):
+                                first_hdr = ln.lstrip("#").strip()[:70]
+                                break
+                        summary_snippet = " ".join(md_text.split())[:260]
+                        if summary_snippet:
+                            _, is_new = db.store_fact(
+                                topic=f"Artefacto: {first_hdr or fname} ({conv_id[:6]})",
+                                fact=f"Documento {fname} na conversa {conv_id[:8]}: {summary_snippet}",
+                                workspace="global",
+                                category="architecture",
+                                tags=f"artifact {fname.replace('.md', '')} plan doc",
+                                importance=4,
+                            )
+                            if is_new:
+                                added_memories += 1
+                    except Exception:
+                        pass
+
+            # 2b. Extrair todos os turnos, edições de ficheiros e comentários <!-- brain: ... --> do transcript.jsonl
+            t_path = os.path.join(conv_dir, ".system_generated", "logs", "transcript.jsonl")
             if os.path.isfile(t_path):
                 try:
                     c = harvest_latest_turn(t_path, "brain_mcp", conv_id, db)
                     harvested_turns += 1
                     added_memories += c
+
+                    with open(t_path, "r", encoding="utf-8", errors="ignore") as tf:
+                        for raw_ln in tf:
+                            raw_ln = raw_ln.strip()
+                            if not raw_ln.startswith("{"):
+                                continue
+                            try:
+                                step = json.loads(raw_ln)
+                            except Exception:
+                                continue
+                            if step.get("type") != "PLANNER_RESPONSE":
+                                continue
+
+                            content_txt = str(step.get("content") or "")
+                            for b_match in re.finditer(
+                                r"<!--\s*brain:\s*([^|\n]+?)\s*\|\s*(.*?)\s*-->",
+                                content_txt,
+                                flags=re.DOTALL,
+                            ):
+                                b_topic = b_match.group(1).strip()[:120]
+                                b_fact = " ".join(b_match.group(2).strip().split())[:450]
+                                if b_topic and b_fact:
+                                    _, is_new = db.store_fact(
+                                        topic=b_topic,
+                                        fact=b_fact,
+                                        workspace="brain_mcp",
+                                        category="explicit_note",
+                                        tags="explicit brain_comment architecture",
+                                        importance=5,
+                                    )
+                                    if is_new:
+                                        added_memories += 1
+
+                            for tc in step.get("tool_calls") or []:
+                                t_name = tc.get("name", "")
+                                args = tc.get("args") or {}
+                                if t_name in (
+                                    "write_to_file",
+                                    "replace_file_content",
+                                    "multi_replace_file_content",
+                                    "write_file",
+                                    "edit_file",
+                                ):
+                                    target = (
+                                        args.get("TargetFile")
+                                        or args.get("Path")
+                                        or args.get("AbsolutePath")
+                                        or ""
+                                    )
+                                    if target and (".gemini/antigravity/brain" not in target.replace("\\", "/")):
+                                        base_f = os.path.basename(target.rstrip("/\\"))
+                                        if any(
+                                            k in base_f.lower()
+                                            for k in ("check_", "tmp_", "run_office_sim")
+                                        ):
+                                            continue
+                                        file_ws = db.normalize_workspace(os.path.dirname(target))
+                                        ext = os.path.splitext(base_f)[1].lstrip(".").lower() or "file"
+                                        _, is_new = db.store_fact(
+                                            topic=f"Ficheiro {base_f} ({file_ws})",
+                                            fact=f"Ficheiro do projeto {file_ws} em {target.replace(chr(92), '/')} (modificado via {t_name}).",
+                                            workspace=file_ws,
+                                            category="code_change",
+                                            tags=f"file edit {ext} {base_f.lower()} {file_ws}",
+                                            importance=3,
+                                        )
+                                        if is_new:
+                                            added_memories += 1
                 except Exception:
                     pass
 
@@ -120,7 +218,7 @@ def build_obsidian_graph_payload(
         all_memories = [
             dict(r)
             for r in conn.execute(
-                "SELECT * FROM memories ORDER BY importance DESC, id DESC LIMIT 120;"
+                "SELECT * FROM memories ORDER BY importance DESC, id DESC LIMIT 650;"
             ).fetchall()
         ]
         all_checkpoints = [
@@ -262,7 +360,7 @@ def build_obsidian_graph_payload(
     ignored_synapse_tags = {"file", "edit", "explicit", "auto_harvested", "global", "scratch", "brain_mcp"} | set(workspaces)
     pair_weights: Dict[Tuple[str, str], List[str]] = {}
     for tag, mem_list in tag_to_mem_ids.items():
-        if len(mem_list) < 2 or len(mem_list) > 18 or tag in ignored_synapse_tags:
+        if len(mem_list) < 2 or len(mem_list) > 35 or tag in ignored_synapse_tags:
             continue
         for i in range(len(mem_list)):
             for j in range(i + 1, len(mem_list)):
@@ -273,7 +371,7 @@ def build_obsidian_graph_payload(
     sorted_pairs = sorted(pair_weights.items(), key=lambda kv: len(kv[1]), reverse=True)
     synapse_degree: Dict[str, int] = {}
     for (a, b), shared_tags in sorted_pairs:
-        if synapse_degree.get(a, 0) >= 5 or synapse_degree.get(b, 0) >= 5:
+        if synapse_degree.get(a, 0) >= 6 or synapse_degree.get(b, 0) >= 6:
             continue
         synapse_degree[a] = synapse_degree.get(a, 0) + 1
         synapse_degree[b] = synapse_degree.get(b, 0) + 1
@@ -292,7 +390,7 @@ def build_obsidian_graph_payload(
         for tag, mem_list in tag_to_mem_ids.items():
             if tag in ignored_synapse_tags:
                 continue
-            if 2 <= len(mem_list) <= 20:
+            if 2 <= len(mem_list) <= 45:
                 tag_node_id = f"tag:{tag}"
                 node_ids.add(tag_node_id)
                 nodes.append(

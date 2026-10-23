@@ -266,7 +266,85 @@ class BrainDB:
         if not workspace_path:
             return "global"
         clean = workspace_path.replace("\\", "/").rstrip("/")
-        return os.path.basename(clean).lower() or "global"
+        low = clean.lower()
+
+        # 1. Se estiver dentro de scratch/<projeto>/..., extrair o nome do projeto raiz no scratch
+        m_scratch = re.search(r"/antigravity/scratch/([^/]+)", low)
+        if m_scratch:
+            proj = m_scratch.group(1)
+            if proj not in ("", "scratch"):
+                return proj
+
+        # 2. Se for um caminho dentro de .gemini/antigravity/brain/<uuid>, é global
+        if "/antigravity/brain/" in low or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", os.path.basename(low)):
+            return "global"
+
+        # 3. Detetar projetos conhecidos em qualquer parte do caminho
+        known_roots = (
+            "brain_mcp",
+            "mike-freelance",
+            "00_automation",
+            "troveauto",
+            "shadowmeter",
+            "cgclima-site",
+            "project-jarvis",
+            "aion2",
+            "strix",
+            "antigravity-backup",
+            "03-web-micro-saas",
+            "02-desktop-utility",
+            "01-resilient-scraper",
+            "mvp-factory",
+        )
+        for kr in known_roots:
+            if f"/{kr}/" in f"/{low}/":
+                return kr
+
+        if any(
+            k in f"/{low}/"
+            for k in (
+                "/mt2/",
+                "/n2-mt2/",
+                "/metin2/",
+                "/userinterface/",
+                "/eterlib/",
+                "/mileslib/",
+                "/uiscript/",
+                "/gamelib/",
+                "/eterbase/",
+                "/etergrnlib/",
+                "/effectlib/",
+                "/scriptlib/",
+                "/dumpproto/",
+                "/n2pacher/",
+            )
+        ):
+            return "mt2"
+
+        # 4. Subir na árvore se a pasta folha for genérica (src, components, pages, scripts, app, etc.)
+        generic_folders = {
+            "src", "app", "components", "pages", "scripts", "script", "core", "main",
+            "tests", "__tests__", "test", "tools", "ui", "db", "server", "client",
+            "public", "include", "includes", "lib", "bin", "config", "data", "_data",
+            "css", "js", "source", "root", "game", "desktop", "audio", "security",
+            "styles-xml", "web_hud", "new", "control", "economy", "engine", "pt",
+            "en", "vision", "base", "companion", "patcher", "quest", "sidebar",
+            "src-tauri", "xml", "chat", "daemon", "dashboard", "login", "model",
+            "share", "sidecar", "types", "web", ".agents", "auth", "cmake", "images",
+            "languages", "mcp", "modules", "net", "nginx", "presentation", "rules",
+            "schemes", "shared", "skills", "toolchain", "use"
+        }
+        parts = [p for p in low.split("/") if p and not p.endswith(":")]
+        for part in reversed(parts):
+            if re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", part):
+                continue
+            if part not in generic_folders and part not in ("users", "guels", ".gemini", "antigravity", "scratch", "documents", "desktop"):
+                return part
+
+        base = os.path.basename(low)
+        if base in generic_folders or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", base):
+            return "global"
+        return base or "global"
 
     def store_fact(
         self,
@@ -678,15 +756,13 @@ class BrainDB:
                 topic = str(d["topic"] or "").strip()
                 norm_topic = re.sub(r"\s+", " ", topic.lower())
 
-                # 1. Verificar se é uma memória de ficheiro cujo caminho em disco já foi apagado
-                if norm_topic.startswith("ficheiro "):
-                    m_path = re.search(r"([A-Za-z]:[/\\][^\s\"']+)", str(d.get("fact") or ""))
-                    if m_path:
-                        disk_p = m_path.group(1).rstrip(".,;)")
-                        if not os.path.exists(disk_p):
-                            to_delete.append(mid)
-                            stale_removed += 1
-                            continue
+                # 1. Verificar apenas se é um ficheiro temporário de teste (check_*.js / tmp_*) já apagado
+                if norm_topic.startswith("ficheiro ") and any(
+                    k in norm_topic for k in ("check_", "tmp_", "run_office_sim_test")
+                ):
+                    to_delete.append(mid)
+                    stale_removed += 1
+                    continue
 
                 key = (ws, norm_topic)
                 if key in by_key:
