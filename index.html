@@ -3273,7 +3273,7 @@
     let officeMcpServers = [];
     let officeBoardData = {};
     let officeMcpHitboxes = [];
-    let hoveredMcpServer = null;
+    let hoveredOfficeMcpName = null;
     let officeSimAgents = {};
     let selectedOfficeAgentId = 'arch-01';
     let hoveredOfficeAgentId = null;
@@ -3893,6 +3893,7 @@
         return;
       }
 
+      try {
       if (officeCam.autoRotate && !officeCam.dragging) {
         officeCam.yaw += 0.0035;
       }
@@ -3966,6 +3967,7 @@
       // Racks de Servidores MCP 3D (Clicáveis para Ativar/Pausar cada MCP em tempo real)
       const mcpList = (officeMcpServers && officeMcpServers.length) ? officeMcpServers.slice(0, 6) : [];
       mcpList.forEach((mcp, idx) => {
+        const srvName = String(mcp.server || mcp.name || `mcp-${idx + 1}`);
         const col = idx % 2;
         const row = Math.floor(idx / 2);
         const rx = -405 + col * 78;
@@ -3977,7 +3979,7 @@
             const topCol = isOn ? '#0284c7' : '#334155';
             const leftCol = isOn ? '#0369a1' : '#1e293b';
             const rightCol = isOn ? '#075985' : '#0f172a';
-            const strokeCol = (hoveredOfficeMcpName === mcp.name) ? '#ffffff' : (isOn ? '#38bdf8' : 'rgba(148,163,184,0.3)');
+            const strokeCol = (hoveredOfficeMcpName === srvName) ? '#ffffff' : (isOn ? '#38bdf8' : 'rgba(148,163,184,0.3)');
             drawBox3D(rx, 1, rz, 34, 46, 28, topCol, leftCol, rightCol, strokeCol);
             // LEDs frontais do Rack 3D
             const ledCol = isOn ? '#10b981' : '#f59e0b';
@@ -3985,12 +3987,12 @@
             drawBox3D(rx, 24, rz + 13, 22, 3, 3, isOn ? '#38bdf8' : '#475569', ledCol, ledCol);
 
             const pRack = projectOffice3D(rx, 54, rz);
-            officeMcpHitboxes.push({ name: mcp.name, x: pRack.x, y: pRack.y + 14 * officeCam.zoom });
+            officeMcpHitboxes.push({ name: srvName, x: pRack.x, y: pRack.y + 14 * officeCam.zoom });
             officeCtx.save();
             officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * officeCam.zoom))}px "JetBrains Mono", monospace`;
             officeCtx.textAlign = 'center';
             officeCtx.fillStyle = isOn ? '#7dd3fc' : '#94a3b8';
-            officeCtx.fillText(`${isOn ? '🟢' : '⏸'} ${mcp.name.slice(0, 12)}`, pRack.x, pRack.y);
+            officeCtx.fillText(`${isOn ? '🟢' : '⏸'} ${srvName.slice(0, 12)}`, pRack.x, pRack.y);
             officeCtx.restore();
           }
         });
@@ -4169,8 +4171,11 @@
       for (let i = 0; i < sims.length; i++) {
         drawBonecoLabel2D(sims[i]);
       }
-
-      requestAnimationFrame(renderOffice3DLoop);
+      } catch (err) {
+        console.error('Erro no ciclo 3D do Office:', err);
+      } finally {
+        requestAnimationFrame(renderOffice3DLoop);
+      }
     }
 
     // Controlos de Rato no Escritório 3D (Arrastar para Rodar 360°, Roda para Zoom, Clique para Selecionar Boneco)
