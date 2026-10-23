@@ -623,6 +623,269 @@ class BrainDB:
                 },
             }
 
+    def toggle_pin_memory(self, mem_id: int) -> Dict[str, Any]:
+        """Fixa (Pin) ou desafixa uma memória no topo do bloco [BRAIN_MEMORY]."""
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT id, topic, tags, importance FROM memories WHERE id = ?;",
+                (int(mem_id),),
+            ).fetchone()
+            if not row:
+                return {"ok": False, "error": "Memória não encontrada"}
+            cur_tags = str(row["tags"] or "").split()
+            is_pinned = "pinned" in [t.lower() for t in cur_tags]
+            if is_pinned:
+                new_tags = " ".join(t for t in cur_tags if t.lower() != "pinned")
+                new_imp = 4
+            else:
+                new_tags = " ".join(cur_tags + ["pinned"]).strip()
+                new_imp = 5
+            conn.execute(
+                "UPDATE memories SET tags = ?, importance = ?, last_accessed = CURRENT_TIMESTAMP WHERE id = ?;",
+                (new_tags, new_imp, int(mem_id)),
+            )
+            return {
+                "ok": True,
+                "id": int(mem_id),
+                "topic": row["topic"],
+                "pinned": not is_pinned,
+                "importance": new_imp,
+                "tags": new_tags,
+            }
+
+    def run_memory_doctor(self) -> Dict[str, Any]:
+        """
+        Memory Doctor (v2.8): Analisa todas as memórias para fundir tópicos duplicados,
+        remover referências a ficheiros apagados e otimizar o índice FTS5 BM25.
+        """
+        repo_dir = os.path.dirname(os.path.abspath(__file__))
+        merged_count = 0
+        stale_removed = 0
+        upgraded_pins = 0
+
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, workspace, category, topic, fact, tags, importance, access_count FROM memories ORDER BY id ASC;"
+            ).fetchall()
+
+            by_key: Dict[Tuple[str, str], Dict[str, Any]] = {}
+            to_delete: List[int] = []
+
+            for r in rows:
+                d = dict(r)
+                mid = int(d["id"])
+                ws = str(d["workspace"] or "global").strip().lower()
+                topic = str(d["topic"] or "").strip()
+                norm_topic = re.sub(r"\s+", " ", topic.lower())
+
+                # 1. Verificar se é uma memória de ficheiro cujo caminho em disco já foi apagado
+                if norm_topic.startswith("ficheiro "):
+                    m_path = re.search(r"([A-Za-z]:[/\\][^\s\"']+)", str(d.get("fact") or ""))
+                    if m_path:
+                        disk_p = m_path.group(1).rstrip(".,;)")
+                        if not os.path.exists(disk_p):
+                            to_delete.append(mid)
+                            stale_removed += 1
+                            continue
+
+                key = (ws, norm_topic)
+                if key in by_key:
+                    primary = by_key[key]
+                    # Fundir tags, access_count e importância na memória principal
+                    p_tags = set(str(primary["tags"] or "").split()) | set(str(d["tags"] or "").split())
+                    new_tags = " ".join(sorted(p_tags))
+                    new_imp = max(int(primary["importance"] or 3), int(d["importance"] or 3))
+                    new_acc = int(primary["access_count"] or 0) + int(d["access_count"] or 0)
+                    new_fact = d["fact"] if len(str(d["fact"])) >= len(str(primary["fact"])) else primary["fact"]
+
+                    conn.execute(
+                        "UPDATE memories SET fact = ?, tags = ?, importance = ?, access_count = ? WHERE id = ?;",
+                        (new_fact, new_tags, new_imp, new_acc, int(primary["id"])),
+                    )
+                    primary["fact"] = new_fact
+                    primary["tags"] = new_tags
+                    primary["importance"] = new_imp
+                    primary["access_count"] = new_acc
+                    to_delete.append(mid)
+                    merged_count += 1
+                else:
+                    by_key[key] = d
+
+                # Garantir que memórias com tag 'pinned' ou 'directive' têm importância 5
+                if ("pinned" in str(d["tags"]).lower() or d["category"] == "directive") and int(d["importance"] or 3) < 5:
+                    conn.execute("UPDATE memories SET importance = 5 WHERE id = ?;", (mid,))
+                    upgraded_pins += 1
+
+            if to_delete:
+                placeholders = ",".join("?" for _ in to_delete)
+                conn.execute(f"DELETE FROM memories WHERE id IN ({placeholders});", to_delete)
+
+            # Otimizar índice FTS5 BM25
+            try:
+                conn.execute("INSERT INTO memories_fts(memories_fts) VALUES('optimize');")
+            except Exception:
+                pass
+
+            healthy_total = conn.execute("SELECT COUNT(*) as c FROM memories;").fetchone()["c"]
+
+        return {
+            "ok": True,
+            "merged_duplicates": merged_count,
+            "stale_removed": stale_removed,
+            "upgraded_pins": upgraded_pins,
+            "healthy_memories": int(healthy_total),
+            "fts5_optimized": True,
+        }
+
+    def export_brain_pack(self, workspace_filter: str = "all") -> Dict[str, Any]:
+        """Exporta o cérebro em formato .brainpack.json e em formato Markdown Obsidian Vault com [[WikiLinks]]."""
+        ws_clean = (workspace_filter or "all").strip().lower()
+        with self._connect() as conn:
+            if ws_clean != "all":
+                mems = [
+                    dict(r)
+                    for r in conn.execute(
+                        "SELECT * FROM memories WHERE workspace = ? ORDER BY importance DESC, id ASC;",
+                        (ws_clean,),
+                    ).fetchall()
+                ]
+                chks = [
+                    dict(r)
+                    for r in conn.execute(
+                        "SELECT * FROM checkpoints WHERE workspace = ?;", (ws_clean,)
+                    ).fetchall()
+                ]
+            else:
+                mems = [
+                    dict(r)
+                    for r in conn.execute(
+                        "SELECT * FROM memories ORDER BY workspace ASC, importance DESC, id ASC;"
+                    ).fetchall()
+                ]
+                chks = [
+                    dict(r)
+                    for r in conn.execute("SELECT * FROM checkpoints ORDER BY workspace ASC;").fetchall()
+                ]
+
+        # Construir documento Markdown compatível com Obsidian Vault (com [[WikiLinks]] entre notas)
+        md_lines = [
+            "---",
+            f"title: Antigravity Brain Vault ({ws_clean.upper()})",
+            "version: 2.8",
+            f"memories_count: {len(mems)}",
+            f"checkpoints_count: {len(chks)}",
+            "---",
+            "",
+            f"# 🧠 Antigravity Brain Vault — `{ws_clean.upper()}`",
+            "",
+            "## 🏁 Checkpoints de Projeto",
+        ]
+        for c in chks:
+            md_lines.extend(
+                [
+                    f"### 📂 [[Workspace {c['workspace']}]] — {c.get('project', c['workspace'])}",
+                    f"- **Status**: `{c.get('status', '')}`",
+                    f"- **Objetivo**: {c.get('goal', '')}",
+                    f"- **Ficheiros-Chave**: `{c.get('key_files', '')}`",
+                    f"- **Última Ação**: {c.get('last_completed', '')}",
+                    "",
+                ]
+            )
+
+        md_lines.append("## ⚡ Memórias & Sinapses (`[[WikiLinks]]`)")
+        # Mapear tags para criar [[WikiLinks]] automáticos
+        tag_map: Dict[str, List[str]] = {}
+        for m in mems:
+            for t in str(m.get("tags", "")).split():
+                if len(t) >= 3 and t not in ("file", "edit", "explicit", "global"):
+                    tag_map.setdefault(t.lower(), []).append(m["topic"])
+
+        for m in mems:
+            pin_icon = "📌 " if "pinned" in str(m.get("tags", "")).lower() else ""
+            tags_formatted = " ".join(f"#{t}" for t in str(m.get("tags", "")).split() if t)
+            related: List[str] = []
+            for t in str(m.get("tags", "")).split():
+                for other_topic in tag_map.get(t.lower(), []):
+                    if other_topic != m["topic"] and other_topic not in related:
+                        related.append(other_topic)
+            wikilinks = ", ".join(f"[[{rt}]]" for rt in related[:4])
+
+            md_lines.extend(
+                [
+                    f"### {pin_icon}{m['topic']}",
+                    f"- **Workspace**: [[Workspace {m['workspace']}]] | **Categoria**: `{m.get('category', 'general')}` | **Importância**: {'⭐' * int(m.get('importance', 3))}",
+                    f"- **Facto**: {m['fact']}",
+                    f"- **Tags**: {tags_formatted or '#general'}",
+                    f"- **Ligações Sinápticas**: {wikilinks or '*(Nó Independente)*'}",
+                    "",
+                ]
+            )
+
+        return {
+            "version": "2.8",
+            "workspace_filter": ws_clean,
+            "exported_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "memories_count": len(mems),
+            "checkpoints_count": len(chks),
+            "brainpack": {
+                "version": "2.8",
+                "memories": mems,
+                "checkpoints": chks,
+            },
+            "obsidian_markdown": "\n".join(md_lines),
+        }
+
+    def import_brain_pack(self, pack_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Importa um ficheiro .brainpack.json para o brain.db sem duplicar factos existentes."""
+        inner = pack_data.get("brainpack") if isinstance(pack_data.get("brainpack"), dict) else pack_data
+        mems = inner.get("memories") or []
+        chks = inner.get("checkpoints") or []
+        imported_mems = 0
+        updated_mems = 0
+        imported_chks = 0
+
+        for m in mems:
+            topic = str(m.get("topic", "")).strip()
+            fact = str(m.get("fact", "")).strip()
+            if not topic or not fact:
+                continue
+            _, is_new = self.store_fact(
+                topic=topic,
+                fact=fact,
+                workspace=str(m.get("workspace", "global")),
+                category=str(m.get("category", "general")),
+                tags=str(m.get("tags", "")),
+                importance=int(m.get("importance", 4) or 4),
+            )
+            if is_new:
+                imported_mems += 1
+            else:
+                updated_mems += 1
+
+        for c in chks:
+            ws = str(c.get("workspace", "")).strip()
+            if not ws:
+                continue
+            self.save_checkpoint(
+                workspace=ws,
+                project=str(c.get("project", ws)),
+                goal=str(c.get("goal", "")),
+                status=str(c.get("status", "")),
+                stack=str(c.get("stack", "")),
+                last_completed=str(c.get("last_completed", "")),
+                next_tasks=str(c.get("next_tasks", "")),
+                key_files=str(c.get("key_files", "")),
+                notes=str(c.get("notes", "")),
+            )
+            imported_chks += 1
+
+        return {
+            "ok": True,
+            "imported_memories": imported_mems,
+            "updated_memories": updated_mems,
+            "imported_checkpoints": imported_chks,
+        }
+
 
 def seed_initial_memories(db: BrainDB) -> int:
     """Popula o Brain com o contexto base da arquitetura Antigravity Brain v2."""

@@ -1059,6 +1059,7 @@ class SwarmEngine:
             "run": run_dict,
             "lanes": lanes,
             "tasks": all_tasks,
+            "heatmap": self.get_codebase_heatmap(),
             "logs": [dict(l) for l in reversed(logs_rows)],
             "recent_runs": [dict(rr) for rr in recent_runs],
         }
@@ -1612,10 +1613,13 @@ class SwarmEngine:
             "tokens_saved_est": 148500,
         }
 
+        heatmap_list = self.get_codebase_heatmap()
+
         return {
             "agents": agents,
             "mcp_servers": mcp_list,
             "board": board_info,
+            "heatmap": heatmap_list,
             "summary": {
                 "total_agents": len(agents),
                 "working": working_count,
@@ -1624,6 +1628,125 @@ class SwarmEngine:
                 "new_spawns": new_spawns,
             },
         }
+
+    def get_codebase_heatmap(self) -> List[Dict[str, Any]]:
+        """
+        Codebase Heatmap (v2.8): Calcula o índice de calor (0.15 a 1.0) de cada ficheiro do projeto
+        com base no tamanho (linhas), frequência de edição em memórias e bugfixes registados.
+        """
+        with self.db._connect() as conn:
+            run_row = conn.execute(
+                "SELECT scout_files_json FROM swarm_runs ORDER BY id DESC LIMIT 1;"
+            ).fetchone()
+            mem_rows = conn.execute(
+                "SELECT topic, fact, category, access_count FROM memories WHERE workspace = 'brain_mcp';"
+            ).fetchall()
+
+        scout_files: List[Dict[str, Any]] = []
+        if run_row and run_row["scout_files_json"]:
+            try:
+                scout_files = json.loads(run_row["scout_files_json"])
+            except Exception:
+                scout_files = []
+
+        edit_counts: Dict[str, int] = {}
+        bug_counts: Dict[str, int] = {}
+        for m in mem_rows:
+            t_low = str(m["topic"] or "").lower()
+            f_low = str(m["fact"] or "").lower()
+            acc = int(m["access_count"] or 0)
+            for sf in scout_files:
+                fname = os.path.basename(sf["path"]).lower()
+                if fname in t_low or fname in f_low:
+                    edit_counts[fname] = edit_counts.get(fname, 0) + 1 + min(5, acc)
+                    if "bug" in t_low or "fix" in t_low or m["category"] == "optimization":
+                        bug_counts[fname] = bug_counts.get(fname, 0) + 1
+
+        heatmap: List[Dict[str, Any]] = []
+        for sf in scout_files:
+            fname = os.path.basename(sf["path"])
+            f_key = fname.lower()
+            lines = int(sf.get("lines") or 100)
+            edits = edit_counts.get(f_key, 1)
+            bugs = bug_counts.get(f_key, 0)
+            raw_score = min(1.0, 0.18 + (lines / 4800.0) * 0.42 + min(edits, 12) * 0.03 + bugs * 0.08)
+            heat_score = round(raw_score, 2)
+            heat_pct = int(round(heat_score * 100))
+            level = "hot" if heat_score >= 0.72 else ("warm" if heat_score >= 0.42 else "cool")
+            heatmap.append(
+                {
+                    "path": sf["path"],
+                    "name": fname,
+                    "lane": sf.get("lane", "API"),
+                    "lines": lines,
+                    "edits": edits,
+                    "bugs_fixed": bugs,
+                    "heat_score": heat_score,
+                    "heat_pct": heat_pct,
+                    "level": level,
+                }
+            )
+        heatmap.sort(key=lambda x: x["heat_score"], reverse=True)
+        return heatmap
+
+    def assign_office_agent_directive(
+        self, agent_id: str, directive: str, workspace: str = "brain_mcp"
+    ) -> Dict[str, Any]:
+        """
+        Envia uma ordem/instrução direta a qualquer Boneco 3D no Escritório (#office):
+        1. O boneco passa imediatamente para 'working', caminha para a secretária e mostra a tarefa no balão 3D.
+        2. Guarda uma memória prioritária Fixada (Pinned Directive) no brain.db para ser injetada no Antigravity.
+        """
+        now = time.time()
+        clean_msg = (directive or "").strip()[:180]
+        if not clean_msg:
+            return self.get_office_state()
+
+        agent_name = agent_id
+        agent_ws = workspace
+        with self.db._connect() as conn:
+            self._ensure_core_office_agents(conn)
+            row = conn.execute(
+                "SELECT name, workspace FROM office_agents WHERE agent_id = ?;",
+                (agent_id,),
+            ).fetchone()
+            if row:
+                agent_name = str(row["name"] or agent_id)
+                agent_ws = str(row["workspace"] or workspace)
+
+            conn.execute(
+                """
+                UPDATE office_agents
+                SET status = 'working',
+                    current_task = ?,
+                    manual_override = 1,
+                    updated_at = ?
+                WHERE agent_id = ?;
+                """,
+                (f"💬 Ordem Direta: {clean_msg}", now, agent_id),
+            )
+
+            run_row = conn.execute(
+                "SELECT id FROM swarm_runs ORDER BY id DESC LIMIT 1;"
+            ).fetchone()
+            if run_row:
+                self._log_event(
+                    conn,
+                    int(run_row["id"]),
+                    "directive",
+                    f"💬 Ordem direta enviada a {agent_name}: {clean_msg}",
+                )
+
+        # Guardar como Diretiva Fixada (Pinned) no brain.db para o próximo turno do Antigravity
+        self.db.store_fact(
+            topic=f"Diretiva 3D -> {agent_name}",
+            fact=f"Instrução prioritária atribuída no Escritório 3D a {agent_name}: {clean_msg}",
+            workspace=agent_ws if agent_ws != "default" else "brain_mcp",
+            category="directive",
+            tags=f"pinned directive office {agent_id} {agent_ws}",
+            importance=5,
+        )
+        return self.get_office_state()
 
     def spawn_custom_office_agent(
         self,

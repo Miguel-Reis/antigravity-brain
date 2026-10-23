@@ -438,6 +438,23 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(swarm.get_office_state())
             return
 
+        if parsed.path == "/api/inspector":
+            from brain_inject import generate_inspector_preview
+
+            qs = urllib.parse.parse_qs(parsed.query)
+            ws = qs.get("workspace", ["brain_mcp"])[0]
+            q = qs.get("q", [""])[0]
+            db = BrainDB()
+            self._send_json(generate_inspector_preview(db=db, workspace=ws, query=q))
+            return
+
+        if parsed.path == "/api/export":
+            qs = urllib.parse.parse_qs(parsed.query)
+            ws = qs.get("workspace", ["all"])[0]
+            db = BrainDB()
+            self._send_json(db.export_brain_pack(workspace_filter=ws))
+            return
+
         if parsed.path == "/api/update":
             self._send_json(get_git_status())
             return
@@ -557,6 +574,33 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             swarm = SwarmEngine(db)
             state = swarm.toggle_office_agent_status(agent_id=agent_id, target_status=target_status)
             self._send_json({"ok": True, **state})
+            return
+
+        if parsed.path == "/api/office/command":
+            agent_id = str(body.get("agent_id", "")).strip()
+            directive = str(body.get("directive", "")).strip()
+            workspace = str(body.get("workspace", "brain_mcp")).strip()
+            swarm = SwarmEngine(db)
+            state = swarm.assign_office_agent_directive(
+                agent_id=agent_id, directive=directive, workspace=workspace
+            )
+            self._send_json({"ok": True, **state})
+            return
+
+        if parsed.path == "/api/memories/pin":
+            mem_id = int(body.get("id", 0) or 0)
+            res = db.toggle_pin_memory(mem_id)
+            self._send_json(res)
+            return
+
+        if parsed.path == "/api/doctor":
+            res = db.run_memory_doctor()
+            self._send_json(res)
+            return
+
+        if parsed.path == "/api/import":
+            res = db.import_brain_pack(body)
+            self._send_json(res)
             return
 
         if parsed.path == "/api/mcp/toggle":

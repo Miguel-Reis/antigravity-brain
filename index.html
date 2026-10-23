@@ -1421,7 +1421,7 @@
     <div class="brand">
       <span class="brand-dot"></span>
       <span>Antigravity Brain</span>
-      <span class="brand-badge">v2.7 • Graph + Swarm + 3D Office</span>
+      <span class="brand-badge">v2.8 • Graph + Swarm + 3D Office</span>
       <div class="view-tabs">
         <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
           🕸️ Graph View
@@ -1456,13 +1456,16 @@
 
     <div class="top-actions">
       <button class="btn" id="btnGitUpdate" onclick="triggerGitUpdate()" title="Verifica no GitHub se há atualizações e faz git pull + auto-sync dos hooks">
-        📦 Git: <span id="lblGitSha">v2.4</span>
+        📦 Git: <span id="lblGitSha">v2.8</span>
       </button>
       <button class="btn" id="btnDietToggle" onclick="toggleDietMode()" title="Alternar entre Modo Lean (económico) e Modo Full">
         ⚡ Modo Quota: Carregando...
       </button>
+      <button class="btn" onclick="openInspectorModal()" title="Ver exatamente o bloco [BRAIN_MEMORY] injetado, executar Memory Doctor e Exportar/Importar Obsidian Vault">
+        🛡️ Inspector &amp; Doctor
+      </button>
       <button class="btn" onclick="syncSessions()" title="Extrair memórias de todas as conversas e projetos no scratch">
-        🔄 Sincronizar Sessões
+        🔄 Sincronizar
       </button>
       <button class="btn btn-primary" onclick="openMemoryModal()">
         ➕ Nova Memória
@@ -1513,6 +1516,11 @@
         <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;">
           🧭 Centrar Câmara
         </button>
+        <div class="hud-pill" style="display:flex; align-items:center; gap:8px;" title="Time-Travel: Recue no tempo para ver como o Grafo de Memórias cresceu cronologicamente">
+          <span>⏪ Time-Travel: <strong id="lblTimeTravel" style="color:#ec4899;">100% (Ao Vivo)</strong></span>
+          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:90px; accent-color:#ec4899; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
+          <button onclick="replayGraphTimeline()" style="background:#ec4899; color:#fff; border:none; border-radius:4px; padding:2px 7px; font-size:10px; font-weight:700; cursor:pointer;">▶ Replay</button>
+        </div>
       </div>
 
       <div class="graph-settings-panel">
@@ -1820,6 +1828,15 @@
           <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
             🔄 Orbit 360°
           </button>
+          <button class="office-btn" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor de Ficheiros (Codebase Heatmap)">
+            🔥 Heatmap 3D: ON
+          </button>
+          <button class="office-btn" id="btnOfficeSound" onclick="toggleOfficeSound3D()" title="Ativa/Desativa Sintetizador WebAudio 3D (som de teclado, café espresso e portal quântico)">
+            🔇 Som 3D: OFF
+          </button>
+          <button class="office-btn" onclick="replayOfficeTimeline()" title="Time-Travel 3D: Faz replay da chegada cronológica de todos os agentes pelo Portal Quântico 3D">
+            ⏪ Replay 3D
+          </button>
           <button class="office-btn emerald" onclick="spawnNewOfficeConversationAgent()" title="Simula a criação de um novo agente de conversa (entra pelo Portal Quântico 3D e caminha até à secretária)">
             ➕ Novo Agente 3D
           </button>
@@ -1862,6 +1879,29 @@
         <div style="font-size:11px; color:#cbd5e1; background:#0b0e17; padding:7px 9px; border-radius:6px; border:1px solid rgba(255,255,255,0.07); font-family:var(--font-mono);" id="offSelTask">
           Selecione qualquer boneco no escritório 3D ou na lista abaixo para seguir a câmara ou alternar entre Trabalho e Pausa.
         </div>
+
+        <!-- Chat / Comando Direto ao Boneco 3D -->
+        <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.07);">
+          <div style="font-size:10px; color:#f472b6; font-weight:700; text-transform:uppercase;">💬 Falar / Enviar Ordem Direta ao Agente</div>
+          <div style="display:flex; gap:5px;">
+            <input
+              type="text"
+              id="offDirectCmdInput"
+              placeholder="Ex: Audita bugs em swarm_engine.py..."
+              style="flex:1; background:#0b0e17; border:1px solid rgba(236,72,153,0.35); border-radius:6px; padding:5px 8px; color:#fff; font-size:11px; outline:none;"
+              onkeydown="if(event.key==='Enter') sendDirectOrderToAgent()"
+            />
+            <button class="office-btn primary" onclick="sendDirectOrderToAgent()" title="Envia a instrução ao boneco 3D (vai para a secretária trabalhar e fixa a diretiva no Antigravity)">
+              Enviar
+            </button>
+          </div>
+          <div style="display:flex; gap:4px; flex-wrap:wrap;">
+            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')">⚡ Auditar Bugs</button>
+            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')">🔍 Scan AST</button>
+            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')">✅ Correr QA</button>
+          </div>
+        </div>
+
         <div style="display:flex; gap:8px; margin-top:2px;">
           <button class="office-btn" style="flex:1; justify-content:center;" id="btnOffToggleState" onclick="toggleSelectedOfficeAgent()">
             ☕ Alternar Trabalho / Pausa
@@ -1937,6 +1977,59 @@
       </div>
       <div id="diffModalSymbols" style="font-size:11px; color:#6ee7b7; background:#0b0f19; padding:8px 10px; border-radius:6px; border:1px solid rgba(16,185,129,0.3); font-family:var(--font-mono); margin-bottom:10px;"></div>
       <pre id="diffModalBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:420px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+    </div>
+  </div>
+
+  <!-- MODAL PROMPT & RULE INSPECTOR + MEMORY DOCTOR + EXPORT/IMPORT OBSIDIAN VAULT -->
+  <div class="modal-backdrop" id="inspectorModal">
+    <div class="modal" style="width: 820px; max-width: 95vw;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 style="margin:0;">🛡️ Prompt &amp; Rule Inspector • Memory Doctor • Obsidian Vault</h3>
+        <button class="btn" onclick="closeInspectorModal()">✖ Fechar</button>
+      </div>
+
+      <!-- Barra de Ações Rápidas: Memory Doctor + Export/Import -->
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; padding:10px; background:#0b0e17; border-radius:8px; border:1px solid rgba(255,255,255,0.08);">
+        <button class="btn btn-primary" onclick="runMemoryDoctorUI()" title="Funde memórias duplicadas, remove ficheiros obsoletos e otimiza o índice FTS5 BM25">
+          🩺 Executar Memory Doctor
+        </button>
+        <button class="btn" onclick="exportBrainVault('obsidian')" title="Descarrega ficheiro Markdown (.md) com [[WikiLinks]] e Frontmatter YAML para abrir no Obsidian">
+          📦 Exportar Obsidian Vault (.md)
+        </button>
+        <button class="btn" onclick="exportBrainVault('json')" title="Descarrega pacote portátil .brainpack.json com todas as memórias e checkpoints">
+          💾 Exportar .brainpack.json
+        </button>
+        <label class="btn" style="cursor:pointer;" title="Importa um ficheiro .brainpack.json para o Brain">
+          📥 Importar .brainpack.json
+          <input type="file" accept=".json" style="display:none;" onchange="importBrainPackFile(this)" />
+        </label>
+        <span id="doctorStatusMsg" style="font-size:11px; color:#6ee7b7; align-self:center; font-family:var(--font-mono);"></span>
+      </div>
+
+      <!-- Controlos de Simulação do PreInvocation Hook -->
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <select id="inspWsSelect" class="select-sm" style="width:170px;" onchange="refreshInspectorPreview()">
+          <option value="brain_mcp">📂 brain_mcp</option>
+          <option value="global">📂 global</option>
+        </select>
+        <input
+          type="text"
+          id="inspQueryInput"
+          class="search-input"
+          style="flex:1;"
+          placeholder="Simular pergunta ao Antigravity (testar orçamento adaptativo 255 / 340 / 420 tok e sinónimos)..."
+          oninput="refreshInspectorPreview()"
+        />
+      </div>
+
+      <div id="inspMetaStrip" style="font-size:11px; color:#38bdf8; background:#0b0f19; padding:7px 10px; border-radius:6px; border:1px solid rgba(56,189,248,0.25); font-family:var(--font-mono); margin-bottom:8px;">
+        A carregar bloco [BRAIN_MEMORY]...
+      </div>
+
+      <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; font-weight:700;">
+        ⚡ Bloco Exato Injetado no Antigravity (`ephemeralMessage` + `[SCOUT_SHARED_MAP]` + Memórias Fixadas `📌[PIN]`):
+      </div>
+      <pre id="inspPreviewBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:330px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
     </div>
   </div>
 
@@ -2046,9 +2139,53 @@
       }
     }
 
+    let timeTravelPct = 100;
+    let timeTravelTimer = null;
+
+    function onTimeTravelChange(val) {
+      timeTravelPct = parseInt(val, 10) || 100;
+      const lbl = document.getElementById('lblTimeTravel');
+      if (lbl) {
+        lbl.textContent = timeTravelPct >= 100 ? '100% (Ao Vivo)' : `${timeTravelPct}% Histórico`;
+      }
+      const oldPos = {};
+      for (const n of activeNodes) oldPos[n.id] = { x: n.x, y: n.y };
+      rebuildSimulationGraph(oldPos);
+      renderVaultTree();
+    }
+
+    function replayGraphTimeline() {
+      if (timeTravelTimer) clearInterval(timeTravelTimer);
+      timeTravelPct = 12;
+      const rng = document.getElementById('rngTimeTravel');
+      if (rng) rng.value = 12;
+      onTimeTravelChange(12);
+      showToast('⏪ A reproduzir evolução cronológica do Grafo de Memórias...');
+      timeTravelTimer = setInterval(() => {
+        timeTravelPct = Math.min(100, timeTravelPct + 8);
+        if (rng) rng.value = timeTravelPct;
+        onTimeTravelChange(timeTravelPct);
+        if (timeTravelPct >= 100) {
+          clearInterval(timeTravelTimer);
+          timeTravelTimer = null;
+          showToast('✅ Replay concluído (100% Ao Vivo)!');
+        }
+      }, 220);
+    }
+
     function rebuildSimulationGraph(oldPos = {}) {
       let rawNodes = graphData.nodes.map(n => ({ ...n }));
       let links = graphData.links.map(l => ({ ...l }));
+
+      // Filtro Time-Travel Cronológico (10% a 100% da linha temporal de memórias)
+      if (timeTravelPct < 100) {
+        const memNodes = rawNodes.filter(n => n.node_type === 'memory').sort((a, b) => (a.db_id || 0) - (b.db_id || 0));
+        const keepCount = Math.max(1, Math.ceil((memNodes.length * timeTravelPct) / 100));
+        const allowedMemIds = new Set(memNodes.slice(0, keepCount).map(n => n.id));
+        rawNodes = rawNodes.filter(n => n.node_type !== 'memory' || allowedMemIds.has(n.id));
+        const validSet = new Set(rawNodes.map(n => n.id));
+        links = links.filter(l => validSet.has(l.source) && validSet.has(l.target));
+      }
 
       if (graphMode === 'local' && selectedNode) {
         const keepIds = new Set([selectedNode.id]);
@@ -2285,12 +2422,14 @@
       document.getElementById('fmTime').textContent = node.created_at || node.updated_at || 'Ativo';
       document.getElementById('inspBody').textContent = node.fact || '';
 
-      // Botões de editar/apagar se for uma memória da BD
+      // Botões de fixar (Pin), editar e apagar se for uma memória da BD
       const actDiv = document.getElementById('inspActions');
       if (node.node_type === 'memory' && node.db_id) {
+        const isPinned = String(node.tags || '').toLowerCase().includes('pinned') || node.category === 'directive';
         actDiv.innerHTML = `
-          <button class="btn" style="padding:4px 8px;" onclick="openEditModal()">✏️</button>
-          <button class="btn" style="padding:4px 8px; color:var(--red);" onclick="deleteCurrentMemory(${node.db_id})">🗑️</button>
+          <button class="btn" style="padding:4px 8px; ${isPinned ? 'border-color:#ec4899; color:#f472b6;' : ''}" onclick="togglePinCurrentMemory(${node.db_id})" title="${isPinned ? 'Desafixar do topo do [BRAIN_MEMORY]' : 'Fixar (Pin) sempre no topo do [BRAIN_MEMORY]'}">📌 ${isPinned ? 'Fixada' : 'Pin'}</button>
+          <button class="btn" style="padding:4px 8px;" onclick="openEditModal()" title="Editar memória">✏️</button>
+          <button class="btn" style="padding:4px 8px; color:var(--red);" onclick="deleteCurrentMemory(${node.db_id})" title="Apagar memória">🗑️</button>
         `;
       } else {
         actDiv.innerHTML = '';
@@ -3051,13 +3190,18 @@
       document.getElementById('pillVerify').classList.toggle('active', st === 'verifying' || st === 'done');
       document.getElementById('pillVerify').textContent = `3. VERIFY (${run.verify_passed || 0}/${run.verify_total || 48})`;
 
-      // Scout shared file list
+      // Scout shared file list + Codebase Heatmap Badges (v2.8)
       const scoutFiles = run.scout_files || [];
+      const heatMapByPath = {};
+      (data.heatmap || []).forEach(h => { heatMapByPath[h.path] = h; });
       const scoutListEl = document.getElementById('swScoutFileList');
       scoutListEl.innerHTML = scoutFiles.map(f => {
         const syms = (f.symbols || []).slice(0, 2).join(', ');
-        return `<div class="scout-file-row" style="cursor:pointer;" onclick="openFileDiffModal('${escapeHtml(f.path)}')" title="Clique para ver Git Diff & Símbolos AST de ${escapeHtml(f.path)}">
-          <span><strong>[${escapeHtml(f.lane)}]</strong> ${escapeHtml(f.path)} (${f.lines}L)</span>
+        const hm = heatMapByPath[f.path] || { heat_pct: 35, level: 'cool' };
+        const heatColor = hm.level === 'hot' ? '#ef4444' : (hm.level === 'warm' ? '#f59e0b' : '#38bdf8');
+        const heatIcon = hm.level === 'hot' ? '🔥' : (hm.level === 'warm' ? '🌡️' : '❄️');
+        return `<div class="scout-file-row" style="cursor:pointer;" onclick="openFileDiffModal('${escapeHtml(f.path)}')" title="Clique para ver Git Diff & Símbolos AST de ${escapeHtml(f.path)} (Calor: ${hm.heat_pct}%)">
+          <span><strong>[${escapeHtml(f.lane)}]</strong> ${escapeHtml(f.path)} (${f.lines}L) <strong style="color:${heatColor}; font-size:9.5px; margin-left:4px;">${heatIcon}${hm.heat_pct}%</strong></span>
           <span class="sym" title="${escapeHtml((f.symbols || []).join(', '))}">🔍 ${escapeHtml(syms)}</span>
         </div>`;
       }).join('') || '<div style="color:var(--text-dim);">Nenhum ficheiro indexado.</div>';
@@ -3272,11 +3416,60 @@
     let officeAgentsData = [];
     let officeMcpServers = [];
     let officeBoardData = {};
+    let officeHeatmapData = [];
+    let showOfficeHeatmap3D = true;
+    let officeSoundEnabled = false;
     let officeMcpHitboxes = [];
     let hoveredOfficeMcpName = null;
     let officeSimAgents = {};
     let selectedOfficeAgentId = 'arch-01';
     let hoveredOfficeAgentId = null;
+
+    // Sintetizador WebAudio 3D Procedural (Zero ficheiros externos)
+    const OfficeAudio3D = {
+      ctx: null,
+      lastTickMs: 0,
+      ensure() {
+        if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+      },
+      playTone(freq, dur = 0.06, type = 'sine', gainVal = 0.025) {
+        if (!officeSoundEnabled) return;
+        try {
+          this.ensure();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+          gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0008, this.ctx.currentTime + dur);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + dur);
+        } catch (e) {}
+      },
+      playKeyTick(nowMs) {
+        if (!officeSoundEnabled || nowMs - this.lastTickMs < 140) return;
+        this.lastTickMs = nowMs;
+        this.playTone(680 + Math.random() * 280, 0.022, 'triangle', 0.012);
+      },
+      playPortalChord() {
+        if (!officeSoundEnabled) return;
+        [440, 554.37, 659.25, 880].forEach((f, i) => {
+          setTimeout(() => this.playTone(f, 0.16, 'sine', 0.03), i * 55);
+        });
+      },
+      playOrderBeep() {
+        if (!officeSoundEnabled) return;
+        this.playTone(587.33, 0.08, 'sine', 0.03);
+        setTimeout(() => this.playTone(880, 0.12, 'sine', 0.035), 70);
+      }
+    };
 
     const officeCanvas = document.getElementById('office3DCanvas');
     const officeCtx = officeCanvas.getContext('2d');
@@ -3407,6 +3600,7 @@
         if (data && Array.isArray(data.agents)) {
           officeMcpServers = data.mcp_servers || [];
           officeBoardData = data.board || {};
+          officeHeatmapData = data.heatmap || [];
           syncOfficeAgentsToSim(data.agents, data.summary || {});
         }
       } catch (err) {
@@ -3625,6 +3819,7 @@
     }
 
     async function triggerSwarmFromOffice() {
+      OfficeAudio3D.playPortalChord();
       showToast('⚡ Equipa ativada! Todos os especialistas estão a ir do Lounge para as Secretárias 3D!');
       const res = await fetch('/api/swarm/start', {
         method: 'POST',
@@ -3633,6 +3828,190 @@
       });
       await res.json();
       await fetchOfficeState(true);
+    }
+
+    function toggleOfficeHeatmap3D() {
+      showOfficeHeatmap3D = !showOfficeHeatmap3D;
+      const btn = document.getElementById('btnOfficeHeatmap');
+      if (btn) {
+        btn.textContent = showOfficeHeatmap3D ? '🔥 Heatmap 3D: ON' : '🔥 Heatmap 3D: OFF';
+        btn.classList.toggle('primary', showOfficeHeatmap3D);
+      }
+      showToast(showOfficeHeatmap3D
+        ? '🔥 Torres Holográficas 3D do Mapa de Calor de Ficheiros ATIVADAS!'
+        : '🔥 Mapa de Calor 3D ocultado.');
+    }
+
+    function toggleOfficeSound3D() {
+      officeSoundEnabled = !officeSoundEnabled;
+      const btn = document.getElementById('btnOfficeSound');
+      if (btn) {
+        btn.textContent = officeSoundEnabled ? '🔊 Som 3D: ON' : '🔇 Som 3D: OFF';
+        btn.classList.toggle('emerald', officeSoundEnabled);
+      }
+      if (officeSoundEnabled) {
+        OfficeAudio3D.ensure();
+        OfficeAudio3D.playPortalChord();
+        showToast('🔊 Sintetizador WebAudio 3D ativado (teclado mecânico, café e portal)!');
+      } else {
+        showToast('🔇 Som 3D silenciado.');
+      }
+    }
+
+    function replayOfficeTimeline() {
+      const sims = Object.values(officeSimAgents);
+      sims.forEach((sim, idx) => {
+        sim.x = PORTAL_POS.x + (Math.random() * 24 - 12);
+        sim.z = PORTAL_POS.z + (Math.random() * 24 - 12);
+        sim.portalTimer = 90 + idx * 18;
+      });
+      OfficeAudio3D.playPortalChord();
+      showToast('⏪ Replay 3D: A reproduzir a entrada cronológica de todos os agentes pelo Portal Quântico!');
+    }
+
+    function quickOrderAgent(orderText) {
+      const inp = document.getElementById('offDirectCmdInput');
+      if (inp) inp.value = orderText;
+      sendDirectOrderToAgent();
+    }
+
+    async function sendDirectOrderToAgent() {
+      const inp = document.getElementById('offDirectCmdInput');
+      if (!inp || !selectedOfficeAgentId) return;
+      const directive = inp.value.trim();
+      if (!directive) {
+        showToast('⚠️ Escreve uma instrução para enviar ao boneco 3D.');
+        return;
+      }
+      inp.value = '';
+      OfficeAudio3D.playOrderBeep();
+      const res = await fetch('/api/office/command', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agent_id: selectedOfficeAgentId,
+          directive,
+          workspace: 'brain_mcp'
+        })
+      });
+      const out = await res.json();
+      if (out.ok && out.agents) {
+        syncOfficeAgentsToSim(out.agents, out.summary || {});
+        const ag = out.agents.find(x => x.agent_id === selectedOfficeAgentId);
+        showToast(`💬 Ordem enviada a ${ag ? ag.name : selectedOfficeAgentId}! Foi para a secretária trabalhar e a diretiva foi fixada (📌[PIN]) no Brain.`);
+        fetchGraph();
+      }
+    }
+
+    async function togglePinCurrentMemory(dbId) {
+      if (!dbId) return;
+      const res = await fetch('/api/memories/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: dbId })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        showToast(out.pinned
+          ? `📌 Memória "${out.topic}" FIXADA sempre no topo do [BRAIN_MEMORY]!`
+          : `📌 Memória "${out.topic}" desafixada do topo.`);
+        await fetchGraph();
+      }
+    }
+
+    async function openInspectorModal() {
+      document.getElementById('inspectorModal').classList.add('open');
+      await refreshInspectorPreview();
+    }
+
+    function closeInspectorModal() {
+      document.getElementById('inspectorModal').classList.remove('open');
+    }
+
+    async function refreshInspectorPreview() {
+      const ws = (document.getElementById('inspWsSelect') || {}).value || 'brain_mcp';
+      const q = (document.getElementById('inspQueryInput') || {}).value || '';
+      try {
+        const res = await fetch(`/api/inspector?workspace=${encodeURIComponent(ws)}&q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const metaEl = document.getElementById('inspMetaStrip');
+        const bodyEl = document.getElementById('inspPreviewBody');
+        if (metaEl) {
+          metaEl.innerHTML = `Workspace: <strong>${escapeHtml(data.workspace)}</strong> &nbsp;|&nbsp; Orçamento Adaptativo: <strong>${data.actual_chars} / ${data.budget_chars} chars (~${data.estimated_tokens} tokens)</strong> &nbsp;|&nbsp; Fixadas (📌PIN): <strong>${data.pinned_count}</strong> &nbsp;|&nbsp; Matches BM25: <strong>${data.matched_count}</strong>`;
+        }
+        if (bodyEl) {
+          bodyEl.textContent = data.ephemeral_block || '';
+        }
+      } catch (e) {
+        console.error('Erro no Inspector Preview:', e);
+      }
+    }
+
+    async function runMemoryDoctorUI() {
+      const stEl = document.getElementById('doctorStatusMsg');
+      if (stEl) stEl.textContent = '🩺 A diagnosticar...';
+      const res = await fetch('/api/doctor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const out = await res.json();
+      if (out.ok) {
+        const msg = `✅ Diagnóstico OK: ${out.merged_duplicates} duplicados fundidos • ${out.stale_removed} obsoletos limpos • ${out.healthy_memories} memórias saudáveis (FTS5 otimizado)`;
+        if (stEl) stEl.textContent = msg;
+        showToast(msg);
+        await refreshInspectorPreview();
+        await fetchGraph();
+      }
+    }
+
+    async function exportBrainVault(fmt = 'obsidian') {
+      const ws = (document.getElementById('inspWsSelect') || {}).value || 'all';
+      const res = await fetch(`/api/export?workspace=${encodeURIComponent(ws)}`);
+      const data = await res.json();
+      if (fmt === 'obsidian') {
+        const blob = new Blob([data.obsidian_markdown || ''], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Antigravity_Brain_Vault_${ws}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`📦 Exportado Obsidian Vault (${data.memories_count} notas com [[WikiLinks]])!`);
+      } else {
+        const blob = new Blob([JSON.stringify(data.brainpack || data, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `antigravity_${ws}.brainpack.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(`💾 Exportado pacote portátil antigravity_${ws}.brainpack.json!`);
+      }
+    }
+
+    async function importBrainPackFile(inputEl) {
+      const file = inputEl && inputEl.files && inputEl.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        const res = await fetch('/api/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const out = await res.json();
+        if (out.ok) {
+          showToast(`📥 Importado! +${out.imported_memories} novas memórias, ${out.updated_memories} atualizadas, ${out.imported_checkpoints} checkpoints.`);
+          await refreshInspectorPreview();
+          await fetchGraph();
+        }
+      } catch (e) {
+        showToast('❌ Ficheiro .brainpack.json inválido.');
+      } finally {
+        inputEl.value = '';
+      }
     }
 
     // Projeção 3D Isométrica / Perspetiva com Rotação Yaw + Pitch + Zoom
@@ -3998,6 +4377,33 @@
         });
       });
 
+      // Torres Holográficas 3D do Mapa de Calor de Ficheiros (Codebase Heatmap v2.8)
+      if (showOfficeHeatmap3D && officeHeatmapData && officeHeatmapData.length) {
+        officeHeatmapData.slice(0, 6).forEach((hm, idx) => {
+          const hx = 165;
+          const hz = -155 + idx * 64;
+          const hHeight = Math.max(14, Math.round((hm.heat_score || 0.35) * 52));
+          const isHot = hm.level === 'hot';
+          const isWarm = hm.level === 'warm';
+          const topC = isHot ? '#ef4444' : (isWarm ? '#f59e0b' : '#06b6d4');
+          const sideA = isHot ? '#dc2626' : (isWarm ? '#d97706' : '#0891b2');
+          const sideB = isHot ? '#991b1b' : (isWarm ? '#b45309' : '#0e7490');
+          renderables.push({
+            depth: projectOffice3D(hx, hHeight * 0.5, hz).depth,
+            draw: () => {
+              drawBox3D(hx, 1, hz, 22, hHeight, 22, topC, sideA, sideB, 'rgba(255,255,255,0.28)');
+              const pTop = projectOffice3D(hx, hHeight + 8, hz);
+              officeCtx.save();
+              officeCtx.font = `700 ${Math.max(7, Math.round(8 * officeCam.zoom))}px "JetBrains Mono", monospace`;
+              officeCtx.textAlign = 'center';
+              officeCtx.fillStyle = isHot ? '#fca5a5' : (isWarm ? '#fde68a' : '#a5f3fc');
+              officeCtx.fillText(`🔥${hm.heat_pct}% ${String(hm.name || '').slice(0, 11)}`, pTop.x, pTop.y);
+              officeCtx.restore();
+            }
+          });
+        });
+      }
+
       // Portal Quântico 3D (Noroeste)
       renderables.push({
         depth: projectOffice3D(PORTAL_POS.x, 20, PORTAL_POS.z).depth,
@@ -4063,6 +4469,9 @@
           workingDeskSet.add(s.deskIdx);
         }
       });
+      if (workingDeskSet.size > 0 && Math.random() < 0.25) {
+        OfficeAudio3D.playKeyTick(nowMs);
+      }
 
       DESK_SLOTS.forEach((dSlot, idx) => {
         const isBusy = workingDeskSet.has(idx);

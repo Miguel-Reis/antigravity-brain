@@ -158,7 +158,17 @@ def build_ephemeral_context(
         parts.append(scout_map[:480])
 
     seen_topics: set[str] = set()
-    for m in memories:
+    # Priorizar memórias Fixadas (Pinned) ou Diretivas Diretas do Escritório 3D no topo!
+    sorted_memories = sorted(
+        memories,
+        key=lambda x: (
+            1
+            if ("pinned" in str(x.get("tags", "")).lower() or x.get("category") == "directive")
+            else 0
+        ),
+        reverse=True,
+    )
+    for m in sorted_memories:
         topic = (m.get("topic") or "Fact").strip()
         if topic.startswith("Scout Shared Codebase Map") and scout_map:
             continue
@@ -167,13 +177,69 @@ def build_ephemeral_context(
             continue
         seen_topics.add(norm_topic)
         fact = (m.get("fact") or "").strip()
+        is_pin = "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
+        pin_prefix = "📌[PIN] " if is_pin else ""
         ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
-        entry = f"- {ws_tag}{topic}: {fact}"
+        entry = f"- {pin_prefix}{ws_tag}{topic}: {fact}"
         if sum(len(p) for p in parts) + len(entry) + 2 > max_chars:
             break
         parts.append(entry)
 
     return "\n".join(parts)
+
+
+def generate_inspector_preview(
+    db: BrainDB, workspace: str = "brain_mcp", query: str = ""
+) -> Dict[str, Any]:
+    """Gera a pré-visualização exata do bloco [BRAIN_MEMORY] + [SCOUT_SHARED_MAP] para o Prompt Inspector."""
+    ws = db.normalize_workspace(workspace) if workspace and workspace != "all" else "brain_mcp"
+    effective_query = (query or "").strip() or f"workspace {ws} architecture environment"
+    budget_chars = compute_adaptive_budget(effective_query)
+
+    # Garantir que memórias Pinned/Diretivas entram sempre mesmo que não façam match léxico
+    with db._connect() as conn:
+        pinned_rows = [
+            dict(r)
+            for r in conn.execute(
+                """
+                SELECT * FROM memories
+                WHERE (tags LIKE '%pinned%' OR category = 'directive')
+                  AND (workspace = ? OR workspace = 'global')
+                ORDER BY id DESC LIMIT 6;
+                """,
+                (ws,),
+            ).fetchall()
+        ]
+
+    searched = db.search_memories(
+        query=effective_query, workspace=ws, n_results=8, update_stats=False
+    )
+    combined = pinned_rows + searched
+    checkpoint = db.get_checkpoint(ws)
+    scout_map = ""
+    try:
+        scout_map = SwarmEngine(db).get_latest_scout_map(ws)
+    except Exception:
+        scout_map = ""
+
+    ephemeral_text = build_ephemeral_context(
+        combined, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars
+    )
+    est_tokens = max(1, len(ephemeral_text) // 4)
+    return {
+        "workspace": ws,
+        "query": effective_query,
+        "budget_chars": budget_chars,
+        "actual_chars": len(ephemeral_text),
+        "estimated_tokens": est_tokens,
+        "pinned_count": len(pinned_rows),
+        "matched_count": len(searched),
+        "ephemeral_block": ephemeral_text,
+        "pinned_memories": [
+            {"id": p["id"], "topic": p["topic"], "fact": p["fact"], "workspace": p["workspace"]}
+            for p in pinned_rows
+        ],
+    }
 
 
 def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
@@ -217,7 +283,20 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     except Exception:
         pass
 
-    memories = db.search_memories(query=user_query, workspace=ws, n_results=8)
+    with db._connect() as conn:
+        pinned_rows = [
+            dict(r)
+            for r in conn.execute(
+                """
+                SELECT * FROM memories
+                WHERE (tags LIKE '%pinned%' OR category = 'directive')
+                  AND (workspace = ? OR workspace = 'global')
+                ORDER BY id DESC LIMIT 4;
+                """,
+                (ws,),
+            ).fetchall()
+        ]
+    memories = pinned_rows + db.search_memories(query=user_query, workspace=ws, n_results=8)
     checkpoint = db.get_checkpoint(ws)
     scout_map = ""
     try:
