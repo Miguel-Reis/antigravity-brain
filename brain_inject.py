@@ -187,13 +187,13 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     if not db.mark_turn_injected(conv_id, user_query):
         try:
             real_actions = extract_latest_tool_actions(transcript_path)
-            swarm_eng.on_turn_step(inv_num, real_actions)
+            swarm_eng.on_turn_step(inv_num, real_actions, conversation_id=conv_id, workspace=ws)
         except Exception:
             pass
         return {}
 
     try:
-        swarm_eng.on_turn_start(user_query, raw_ws)
+        swarm_eng.on_turn_start(user_query, raw_ws, conversation_id=conv_id)
     except Exception:
         pass
 

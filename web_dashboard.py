@@ -405,6 +405,12 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(swarm.get_swarm_dashboard(run_id))
             return
 
+        if parsed.path == "/api/office":
+            db = BrainDB()
+            swarm = SwarmEngine(db)
+            self._send_json(swarm.get_office_state())
+            return
+
         if parsed.path == "/api/update":
             self._send_json(get_git_status())
             return
@@ -497,6 +503,33 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             swarm = SwarmEngine(db)
             dash = swarm.update_task_status(task_code=task_code, status=status, progress=progress, summary=summary)
             self._send_json({"ok": True, **dash})
+            return
+
+        if parsed.path == "/api/office/spawn":
+            name = str(body.get("name", "")).strip()
+            role = str(body.get("role", "Agente de Conversa")).strip()
+            model = str(body.get("model", "Gemini 4 Argon")).strip()
+            workspace = str(body.get("workspace", "brain_mcp")).strip()
+            task = str(body.get("task", "Nova conversa iniciada no Antigravity")).strip()
+            status = str(body.get("status", "working")).strip()
+            swarm = SwarmEngine(db)
+            state = swarm.spawn_custom_office_agent(
+                name=name,
+                role=role,
+                model=model,
+                workspace=workspace,
+                task=task,
+                status=status,
+            )
+            self._send_json({"ok": True, **state})
+            return
+
+        if parsed.path == "/api/office/toggle":
+            agent_id = str(body.get("agent_id", "")).strip()
+            target_status = body.get("status")
+            swarm = SwarmEngine(db)
+            state = swarm.toggle_office_agent_status(agent_id=agent_id, target_status=target_status)
+            self._send_json({"ok": True, **state})
             return
 
         if parsed.path == "/api/update":

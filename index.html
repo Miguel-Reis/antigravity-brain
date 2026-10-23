@@ -1155,6 +1155,263 @@
       color: #fff;
       letter-spacing: -0.03em;
     }
+
+    /* =========================================================================
+       3D AGENT OFFICE VIEW (#office)
+       ========================================================================= */
+    .office-workspace {
+      flex: 1;
+      display: none;
+      overflow: hidden;
+      background: radial-gradient(circle at 45% 40%, #131829 0%, #090b12 75%);
+      position: relative;
+    }
+
+    .office-workspace.active {
+      display: flex;
+    }
+
+    .office-stage {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #office3DCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+
+    #office3DCanvas:active {
+      cursor: grabbing;
+    }
+
+    .office-hud-top {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      pointer-events: none;
+      z-index: 15;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .office-stat-bar, .office-cam-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      flex-wrap: wrap;
+    }
+
+    .office-badge {
+      background: rgba(15, 19, 31, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    }
+
+    .office-badge strong {
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .office-btn {
+      background: rgba(18, 23, 38, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .office-btn:hover {
+      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.16);
+      color: #fff;
+    }
+
+    .office-btn.primary {
+      background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+      border-color: #f472b6;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.35);
+    }
+
+    .office-btn.emerald {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: rgba(16, 185, 129, 0.55);
+      color: #6ee7b7;
+    }
+
+    .office-hud-bottom {
+      position: absolute;
+      bottom: 14px;
+      left: 16px;
+      background: rgba(13, 17, 28, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      z-index: 15;
+      pointer-events: auto;
+    }
+
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+    }
+
+    .office-sidebar {
+      width: 345px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      z-index: 20;
+    }
+
+    .office-side-head {
+      padding: 13px 15px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .office-selected-card {
+      margin: 12px;
+      padding: 12px;
+      background: #141927;
+      border: 1px solid rgba(236, 72, 153, 0.4);
+      border-radius: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .office-roster-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .roster-section-lbl {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin: 8px 2px 3px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .roster-card {
+      background: #131722;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 9px 11px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .roster-card:hover {
+      border-color: rgba(236, 72, 153, 0.5);
+      transform: translateX(2px);
+    }
+
+    .roster-card.selected {
+      border-color: #ec4899;
+      background: rgba(236, 72, 153, 0.1);
+    }
+
+    .roster-card.working {
+      border-left: 3px solid #10b981;
+    }
+
+    .roster-card.paused {
+      border-left: 3px solid #f59e0b;
+    }
+
+    .rc-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .rc-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 99px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .rc-badge.working {
+      background: rgba(16, 185, 129, 0.18);
+      color: #6ee7b7;
+    }
+
+    .rc-badge.paused {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fcd34d;
+    }
+
+    .rc-meta {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .rc-task {
+      font-size: 11px;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: var(--font-mono);
+    }
   </style>
 </head>
 <body>
@@ -1164,7 +1421,7 @@
     <div class="brand">
       <span class="brand-dot"></span>
       <span>Antigravity Brain</span>
-      <span class="brand-badge">v2.4 • Obsidian + Swarm</span>
+      <span class="brand-badge">v2.5 • Graph + Swarm + 3D Office</span>
       <div class="view-tabs">
         <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
           🕸️ Graph View
@@ -1172,6 +1429,9 @@
         <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')">
           <span class="pulse-dot"></span>
           ⚡ Swarm Monitor
+        </button>
+        <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')">
+          🏢 Escritório 3D
         </button>
       </div>
     </div>
@@ -1518,6 +1778,100 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- 3D AGENT OFFICE LIVE VIEW -->
+  <div class="office-workspace" id="officeWorkspace">
+    <div class="office-stage" id="officeStageWrap">
+      <!-- Top HUD -->
+      <div class="office-hud-top">
+        <div class="office-stat-bar">
+          <div class="office-badge" title="Total de Bonecos/Agentes no Escritório 3D">
+            🏢 Equipa Total: <strong id="offStatTotal" style="color:#fff;">0</strong>
+          </div>
+          <div class="office-badge" title="Agentes sentados nas secretárias 3D a programar/executar ferramentas">
+            <span class="pulse-dot"></span>
+            💻 A Trabalhar: <strong id="offStatWorking" style="color:#10b981;">0</strong>
+          </div>
+          <div class="office-badge" title="Agentes em pausa no Lounge / Máquina de Café / Sofá">
+            ☕ Em Pausa (Lounge): <strong id="offStatPaused" style="color:#f59e0b;">0</strong>
+          </div>
+          <div class="office-badge" title="Conversas reais e Subagentes detetados em ~/.gemini/antigravity/brain">
+            💬 Conversas & Subagentes: <strong id="offStatConvs" style="color:#38bdf8;">0</strong>
+          </div>
+        </div>
+
+        <div class="office-cam-bar">
+          <button class="office-btn" onclick="setOfficeCameraPreset('overview')" title="Visão isométrica 3D de todo o escritório">
+            🎥 Visão Geral
+          </button>
+          <button class="office-btn" onclick="setOfficeCameraPreset('command')" title="Focar na Mesa de Comando do Gemini 4 Argon + Scout">
+            👑 Comando Argon
+          </button>
+          <button class="office-btn" onclick="setOfficeCameraPreset('desks')" title="Focar nas Secretárias de Trabalho">
+            💻 Secretárias
+          </button>
+          <button class="office-btn" onclick="setOfficeCameraPreset('lounge')" title="Focar na Zona de Pausa, Sofá e Café">
+            ☕ Zona de Pausa
+          </button>
+          <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
+            🔄 Orbit 360°
+          </button>
+          <button class="office-btn emerald" onclick="spawnNewOfficeConversationAgent()" title="Simula a criação de um novo agente de conversa (entra pelo Portal Quântico 3D e caminha até à secretária)">
+            ➕ Novo Agente 3D
+          </button>
+          <button class="office-btn primary" onclick="triggerSwarmFromOffice()" title="Coloca toda a equipa a trabalhar em paralelo">
+            ⚡ Ativar Equipa
+          </button>
+        </div>
+      </div>
+
+      <!-- 3D Viewport Canvas -->
+      <canvas id="office3DCanvas"></canvas>
+
+      <!-- Bottom Legend HUD -->
+      <div class="office-hud-bottom">
+        <span><i class="legend-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></i><strong>A Trabalhar:</strong> Na secretária a teclar + código em tempo real</span>
+        <span><i class="legend-dot" style="background:#f59e0b; box-shadow:0 0 8px #f59e0b;"></i><strong>Em Pausa:</strong> Caminha para o Lounge / Café / Sofá</span>
+        <span><i class="legend-dot" style="background:#06b6d4; box-shadow:0 0 8px #06b6d4;"></i><strong>Novo Agente:</strong> Entra pelo Portal Quântico 3D</span>
+        <span style="color:var(--text-dim);">🖱️ Arraste para rodar 3D • Roda do rato para Zoom • Clique num boneco para inspecionar</span>
+      </div>
+    </div>
+
+    <!-- Right Roster & Selected Agent Inspector -->
+    <aside class="office-sidebar">
+      <div class="office-side-head">
+        <div>
+          <div style="font-size:10.5px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">MONITORIZAÇÃO AO VIVO</div>
+          <div style="font-size:14px; font-weight:700; color:#fff;">🧑💻 Bonecos no Escritório 3D</div>
+        </div>
+        <button class="office-btn" onclick="fetchOfficeState(true)" title="Atualizar estado agora">🔄</button>
+      </div>
+
+      <!-- Selected 3D Character Card -->
+      <div class="office-selected-card" id="officeSelectedCard">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:10.5px; color:#f472b6; font-weight:700; text-transform:uppercase;" id="offSelDept">AGENTE SELECIONADO</span>
+          <span class="rc-badge working" id="offSelStatus">A TRABALHAR</span>
+        </div>
+        <div style="font-size:14px; font-weight:700; color:#fff;" id="offSelName">Clique num boneco 3D</div>
+        <div style="font-size:11.5px; color:var(--text-muted);" id="offSelRole">Modelo: Gemini 4 Argon</div>
+        <div style="font-size:11px; color:#cbd5e1; background:#0b0e17; padding:7px 9px; border-radius:6px; border:1px solid rgba(255,255,255,0.07); font-family:var(--font-mono);" id="offSelTask">
+          Selecione qualquer boneco no escritório 3D ou na lista abaixo para seguir a câmara ou alternar entre Trabalho e Pausa.
+        </div>
+        <div style="display:flex; gap:8px; margin-top:2px;">
+          <button class="office-btn" style="flex:1; justify-content:center;" id="btnOffToggleState" onclick="toggleSelectedOfficeAgent()">
+            ☕ Alternar Trabalho / Pausa
+          </button>
+          <button class="office-btn" onclick="focusCameraOnSelectedAgent()" title="Centrar câmara 3D neste boneco">
+            🎯 Focar
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Roster -->
+      <div class="office-roster-list" id="officeRosterList"></div>
+    </aside>
   </div>
 
   <!-- MODAL CRIAR / EDITAR MEMÓRIA -->
@@ -2580,33 +2934,50 @@
     let lastSwarmHash = '';
 
     function switchMainView(viewName) {
-      activeMainView = viewName === 'swarm' ? 'swarm' : 'graph';
+      if (viewName === 'swarm') activeMainView = 'swarm';
+      else if (viewName === 'office') activeMainView = 'office';
+      else activeMainView = 'graph';
+
       const gWs = document.getElementById('graphWorkspace');
       const sWs = document.getElementById('swarmWorkspace');
+      const oWs = document.getElementById('officeWorkspace');
       const btnG = document.getElementById('tabBtnGraph');
       const btnS = document.getElementById('tabBtnSwarm');
+      const btnO = document.getElementById('tabBtnOffice');
+
+      gWs.style.display = activeMainView === 'graph' ? 'flex' : 'none';
+      sWs.classList.toggle('active', activeMainView === 'swarm');
+      oWs.classList.toggle('active', activeMainView === 'office');
+
+      btnG.classList.toggle('active', activeMainView === 'graph');
+      btnS.classList.toggle('active', activeMainView === 'swarm');
+      if (btnO) btnO.classList.toggle('active', activeMainView === 'office');
+
+      if (swarmPollTimer) {
+        clearInterval(swarmPollTimer);
+        swarmPollTimer = null;
+      }
+      if (officePollTimer) {
+        clearInterval(officePollTimer);
+        officePollTimer = null;
+      }
 
       if (activeMainView === 'swarm') {
-        gWs.style.display = 'none';
-        sWs.classList.add('active');
-        btnG.classList.remove('active');
-        btnS.classList.add('active');
         window.location.hash = 'swarm';
         lastSwarmHash = '';
         fetchSwarmDashboard(true);
-        if (!swarmPollTimer) {
-          swarmPollTimer = setInterval(() => fetchSwarmDashboard(false), 1600);
+        swarmPollTimer = setInterval(() => fetchSwarmDashboard(false), 1600);
+      } else if (activeMainView === 'office') {
+        window.location.hash = 'office';
+        resizeOfficeCanvas();
+        fetchOfficeState(true);
+        officePollTimer = setInterval(() => fetchOfficeState(false), 1600);
+        if (!officeAnimRunning) {
+          officeAnimRunning = true;
+          requestAnimationFrame(renderOffice3DLoop);
         }
       } else {
-        sWs.classList.remove('active');
-        gWs.style.display = 'flex';
-        btnS.classList.remove('active');
-        btnG.classList.add('active');
         window.location.hash = 'graph';
-        if (swarmPollTimer) {
-          clearInterval(swarmPollTimer);
-          swarmPollTimer = null;
-        }
         resizeCanvas();
         graphDirty = true;
       }
@@ -2850,12 +3221,814 @@
       }
     }
 
-    // Iniciar aplicação (respeita #swarm na URL)
+    // =========================================================================
+    // 3D AGENT OFFICE ENGINE (ISOMETRIC/PERSPECTIVE 3D + ARTICULATED BONECOS)
+    // =========================================================================
+    let officePollTimer = null;
+    let officeFetchInFlight = false;
+    let officeAnimRunning = false;
+    let officeInitialized = false;
+    let officeAgentsData = [];
+    let officeSimAgents = {};
+    let selectedOfficeAgentId = 'arch-01';
+    let hoveredOfficeAgentId = null;
+
+    const officeCanvas = document.getElementById('office3DCanvas');
+    const officeCtx = officeCanvas.getContext('2d');
+
+    const officeCam = {
+      yaw: -0.68,
+      pitch: 0.56,
+      zoom: 1.02,
+      targetX: 0,
+      targetZ: 0,
+      autoRotate: false,
+      dragging: false,
+      dragStartX: 0,
+      dragStartY: 0,
+      moved: false
+    };
+
+    // Coordenadas 3D do Portal Quântico de Entrada (onde nascem novos agentes de conversa)
+    const PORTAL_POS = { x: -395, z: -245 };
+
+    // Coordenadas 3D das 18 Secretárias de Trabalho (Comando + Equipa Swarm + Conversas Reais)
+    const DESK_SLOTS = [
+      // 0: ARCH-01 (Mesa de Comando Central Argon)
+      { x: -65, z: -235, label: 'COMMAND · ARGON', color: '#ec4899' },
+      // 1: SCOUT-01 (Estação Radar AST)
+      { x: 85, z: -235, label: 'SCOUT · AST MAP', color: '#10b981' },
+      // 2..7: Especialistas Swarm (UI, API, TESTS, DOCS)
+      { x: -330, z: -85, label: 'UI-01', color: '#06b6d4' },
+      { x: -200, z: -85, label: 'UI-02', color: '#38bdf8' },
+      { x: -70, z: -85, label: 'API-01', color: '#8b5cf6' },
+      { x: 60, z: -85, label: 'API-02', color: '#a855f7' },
+      { x: -330, z: 35, label: 'TEST-01', color: '#f59e0b' },
+      { x: -200, z: 35, label: 'DOC-01', color: '#3b82f6' },
+      // 8..17: Wing de Conversas & Subagentes Ativos no Antigravity
+      { x: -70, z: 35, label: 'CONV-01', color: '#06b6d4' },
+      { x: 60, z: 35, label: 'CONV-02', color: '#f43f5e' },
+      { x: -330, z: 155, label: 'CONV-03', color: '#10b981' },
+      { x: -200, z: 155, label: 'CONV-04', color: '#f59e0b' },
+      { x: -70, z: 155, label: 'CONV-05', color: '#8b5cf6' },
+      { x: 60, z: 155, label: 'CONV-06', color: '#ec4899' },
+      { x: -330, z: 265, label: 'CONV-07', color: '#3b82f6' },
+      { x: -200, z: 265, label: 'CONV-08', color: '#14b8a6' },
+      { x: -70, z: 265, label: 'CONV-09', color: '#a855f7' },
+      { x: 60, z: 265, label: 'CONV-10', color: '#f97316' }
+    ];
+
+    // Coordenadas 3D da Zona de Pausa (Lounge, Máquina de Café, Sofás, Arcade, Watercooler)
+    const LOUNGE_SLOTS = [
+      { x: 315, z: -135, activity: 'coffee', label: 'A tomar Espresso ☕' },
+      { x: 375, z: -130, activity: 'coffee', label: 'Máquina de Café ☕' },
+      { x: 255, z: -130, activity: 'arcade', label: 'A jogar AGY Arcade 🕹️' },
+      { x: 420, z: -55, activity: 'water', label: 'Pausa Watercooler 💧' },
+      { x: 295, z: 35, activity: 'sofa', label: 'A relaxar no Sofá 🛋️' },
+      { x: 345, z: 35, activity: 'sofa', label: 'Conversa no Lounge 💬' },
+      { x: 395, z: 45, activity: 'sofa', label: 'Descanso no Sofá 💤' },
+      { x: 410, z: 105, activity: 'sofa', label: 'Pausa c/ Café ☕' },
+      { x: 410, z: 160, activity: 'sofa', label: 'Em Pausa · Standby 💤' },
+      { x: 305, z: 140, activity: 'table', label: 'Mesa de Café ☕' },
+      { x: 355, z: 195, activity: 'chat', label: 'Bate-papo de Equipa 💬' },
+      { x: 265, z: 225, activity: 'coffee', label: 'Pausa Latte ☕' },
+      { x: 330, z: 255, activity: 'chat', label: 'Relaxamento Lounge ✨' },
+      { x: 400, z: 245, activity: 'coffee', label: 'Pausa Espresso ☕' }
+    ];
+
+    function resizeOfficeCanvas() {
+      const wrap = document.getElementById('officeStageWrap');
+      if (!wrap || !officeCanvas) return;
+      officeCanvas.width = wrap.clientWidth || 960;
+      officeCanvas.height = wrap.clientHeight || 680;
+    }
+
+    window.addEventListener('resize', () => {
+      if (activeMainView === 'office') resizeOfficeCanvas();
+    });
+
+    function setOfficeCameraPreset(preset) {
+      officeCam.autoRotate = false;
+      const btnRot = document.getElementById('btnOfficeAutoRotate');
+      if (btnRot) btnRot.classList.remove('primary');
+
+      if (preset === 'command') {
+        officeCam.yaw = -0.35;
+        officeCam.pitch = 0.52;
+        officeCam.zoom = 1.38;
+        officeCam.targetX = 10;
+        officeCam.targetZ = -215;
+      } else if (preset === 'desks') {
+        officeCam.yaw = -0.68;
+        officeCam.pitch = 0.58;
+        officeCam.zoom = 1.18;
+        officeCam.targetX = -135;
+        officeCam.targetZ = 75;
+      } else if (preset === 'lounge') {
+        officeCam.yaw = -0.85;
+        officeCam.pitch = 0.52;
+        officeCam.zoom = 1.32;
+        officeCam.targetX = 345;
+        officeCam.targetZ = 45;
+      } else {
+        officeCam.yaw = -0.68;
+        officeCam.pitch = 0.56;
+        officeCam.zoom = 1.02;
+        officeCam.targetX = 0;
+        officeCam.targetZ = 10;
+      }
+    }
+
+    function toggleOfficeAutoRotate() {
+      officeCam.autoRotate = !officeCam.autoRotate;
+      const btnRot = document.getElementById('btnOfficeAutoRotate');
+      if (btnRot) btnRot.classList.toggle('primary', officeCam.autoRotate);
+    }
+
+    function focusCameraOnSelectedAgent() {
+      const sim = officeSimAgents[selectedOfficeAgentId];
+      if (!sim) return;
+      officeCam.targetX = sim.x;
+      officeCam.targetZ = sim.z;
+      officeCam.zoom = 1.42;
+    }
+
+    async function fetchOfficeState(force = false) {
+      if (officeFetchInFlight) return;
+      officeFetchInFlight = true;
+      try {
+        const res = await fetch('/api/office');
+        const data = await res.json();
+        if (data && Array.isArray(data.agents)) {
+          syncOfficeAgentsToSim(data.agents, data.summary || {});
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar Escritório 3D:', err);
+      } finally {
+        officeFetchInFlight = false;
+      }
+    }
+
+    function syncOfficeAgentsToSim(agents, summary) {
+      officeAgentsData = agents;
+      document.getElementById('offStatTotal').textContent = summary.total_agents || agents.length;
+      document.getElementById('offStatWorking').textContent = summary.working || 0;
+      document.getElementById('offStatPaused').textContent = summary.paused || 0;
+      document.getElementById('offStatConvs').textContent = summary.conversations_and_subagents || 0;
+
+      agents.forEach((ag, idx) => {
+        const deskIdx = Math.min(DESK_SLOTS.length - 1, Math.max(0, ag.desk_index ?? idx));
+        const desk = DESK_SLOTS[deskIdx];
+        const lounge = LOUNGE_SLOTS[idx % LOUNGE_SLOTS.length];
+        const target = ag.status === 'working'
+          ? { x: desk.x, z: desk.z + 24 }
+          : { x: lounge.x, z: lounge.z };
+
+        let sim = officeSimAgents[ag.agent_id];
+        if (!sim) {
+          // Se o agente acabou de ser criado ou se o escritório já estava aberto quando nasceu, entra pelo Portal 3D!
+          const spawnFromPortal = ag.is_new || officeInitialized;
+          const startX = spawnFromPortal ? PORTAL_POS.x + (Math.random() * 20 - 10) : target.x;
+          const startZ = spawnFromPortal ? PORTAL_POS.z + (Math.random() * 20 - 10) : target.z;
+          sim = {
+            agent_id: ag.agent_id,
+            x: startX,
+            y: 0,
+            z: startZ,
+            targetX: target.x,
+            targetZ: target.z,
+            deskIdx,
+            loungeAct: lounge.activity,
+            loungeLabel: lounge.label,
+            walkPhase: Math.random() * 6.28,
+            typePhase: Math.random() * 6.28,
+            portalTimer: spawnFromPortal ? 210 : 0,
+            screenX: 0,
+            screenY: 0,
+            data: ag
+          };
+          officeSimAgents[ag.agent_id] = sim;
+          if (spawnFromPortal && officeInitialized) {
+            showToast(`🆕 Novo Agente entrou no Escritório 3D: ${ag.name}`);
+          }
+        } else {
+          sim.targetX = target.x;
+          sim.targetZ = target.z;
+          sim.deskIdx = deskIdx;
+          sim.loungeAct = lounge.activity;
+          sim.loungeLabel = lounge.label;
+          sim.data = ag;
+        }
+      });
+
+      officeInitialized = true;
+      renderOfficeSidebar();
+    }
+
+    function renderOfficeSidebar() {
+      const listEl = document.getElementById('officeRosterList');
+      if (!listEl) return;
+
+      const selAg = officeAgentsData.find(a => a.agent_id === selectedOfficeAgentId) || officeAgentsData[0];
+      if (selAg) {
+        selectedOfficeAgentId = selAg.agent_id;
+        document.getElementById('offSelDept').textContent = `${selAg.department} • ${selAg.kind.toUpperCase()}`;
+        const stBadge = document.getElementById('offSelStatus');
+        stBadge.textContent = selAg.status === 'working' ? '⚡ A TRABALHAR' : '☕ EM PAUSA';
+        stBadge.className = `rc-badge ${selAg.status}`;
+        document.getElementById('offSelName').textContent = selAg.name;
+        document.getElementById('offSelRole').textContent = `${selAg.role} • ${selAg.model}`;
+        document.getElementById('offSelTask').textContent = selAg.current_task || 'Pronto no escritório.';
+        const btnToggle = document.getElementById('btnOffToggleState');
+        if (btnToggle) {
+          btnToggle.textContent = selAg.status === 'working'
+            ? '☕ Mandar para Pausa (Lounge)'
+            : '💻 Mandar Trabalhar (Secretária)';
+        }
+      }
+
+      const workingAgents = officeAgentsData.filter(a => a.status === 'working');
+      const pausedAgents = officeAgentsData.filter(a => a.status !== 'working');
+
+      const renderCard = (a) => {
+        const isSel = a.agent_id === selectedOfficeAgentId ? 'selected' : '';
+        const newTag = a.is_new ? '<span style="color:#06b6d4; font-size:10px; margin-left:4px;">🆕 NOVO</span>' : '';
+        return `
+          <div class="roster-card ${escapeHtml(a.status)} ${isSel}" onclick="selectOfficeAgent('${escapeHtml(a.agent_id)}')">
+            <div class="rc-top">
+              <span><i class="legend-dot" style="background:${escapeHtml(a.avatar_color)};"></i>${escapeHtml(a.name)}${newTag}</span>
+              <span class="rc-badge ${escapeHtml(a.status)}">${a.status === 'working' ? '💻 TRABALHO' : '☕ PAUSA'}</span>
+            </div>
+            <div class="rc-meta">
+              <span>${escapeHtml(a.model)}</span>
+              <span>📂 ${escapeHtml(a.workspace)}</span>
+            </div>
+            <div class="rc-task">${escapeHtml(a.current_task)}</div>
+          </div>
+        `;
+      };
+
+      listEl.innerHTML = `
+        <div class="roster-section-lbl">
+          <span>🟢 A Trabalhar nas Secretárias (${workingAgents.length})</span>
+        </div>
+        ${workingAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Todos os agentes estão em pausa no Lounge.</div>'}
+        <div class="roster-section-lbl" style="margin-top:12px;">
+          <span>☕ Em Pausa no Lounge (${pausedAgents.length})</span>
+        </div>
+        ${pausedAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Nenhum agente em pausa.</div>'}
+      `;
+    }
+
+    function selectOfficeAgent(agentId) {
+      selectedOfficeAgentId = agentId;
+      renderOfficeSidebar();
+    }
+
+    async function toggleSelectedOfficeAgent() {
+      if (!selectedOfficeAgentId) return;
+      const res = await fetch('/api/office/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: selectedOfficeAgentId })
+      });
+      const out = await res.json();
+      if (out.ok && out.agents) {
+        syncOfficeAgentsToSim(out.agents, out.summary || {});
+        const ag = out.agents.find(x => x.agent_id === selectedOfficeAgentId);
+        if (ag) {
+          showToast(ag.status === 'working'
+            ? `💻 ${ag.name} caminhou para a secretária e começou a trabalhar!`
+            : `☕ ${ag.name} foi fazer uma pausa para café no Lounge!`);
+        }
+      }
+    }
+
+    async function spawnNewOfficeConversationAgent() {
+      const roles = [
+        { role: 'Conversa Antigravity', model: 'Gemini 4 Argon', task: '⚡ A analisar pedido do utilizador + Scout Map' },
+        { role: 'Subagente Code Researcher', model: 'flash_lite · research', task: '⚡ A inspecionar árvore AST e dependências' },
+        { role: 'Subagente UI Architect', model: 'Gemini 4 Argon', task: '⚡ A desenhar componentes 3D e shaders' },
+        { role: 'Subagente Test Engineer', model: 'flash · test-engineer', task: '⚡ A validar 48/48 checks automáticos' }
+      ];
+      const pick = roles[Math.floor(Math.random() * roles.length)];
+      const res = await fetch('/api/office/spawn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: pick.role,
+          model: pick.model,
+          workspace: 'brain_mcp',
+          task: pick.task,
+          status: 'working'
+        })
+      });
+      const out = await res.json();
+      if (out.ok && out.agents) {
+        syncOfficeAgentsToSim(out.agents, out.summary || {});
+        const newest = out.agents[out.agents.length - 1];
+        if (newest) {
+          selectedOfficeAgentId = newest.agent_id;
+          renderOfficeSidebar();
+        }
+      }
+    }
+
+    async function triggerSwarmFromOffice() {
+      showToast('⚡ Equipa ativada! Todos os especialistas estão a ir do Lounge para as Secretárias 3D!');
+      const res = await fetch('/api/swarm/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ goal: 'Execução Paralela no Escritório 3D (Gemini 4 Argon + Flash)', animate_live: true })
+      });
+      await res.json();
+      await fetchOfficeState(true);
+    }
+
+    // Projeção 3D Isométrica / Perspetiva com Rotação Yaw + Pitch + Zoom
+    function projectOffice3D(x, y, z) {
+      const dx = x - officeCam.targetX;
+      const dz = z - officeCam.targetZ;
+      const cosY = Math.cos(officeCam.yaw);
+      const sinY = Math.sin(officeCam.yaw);
+      const cosP = Math.cos(officeCam.pitch);
+      const sinP = Math.sin(officeCam.pitch);
+
+      const rx = dx * cosY - dz * sinY;
+      const rz = dx * sinY + dz * cosY;
+
+      const sx = officeCanvas.width * 0.5 + rx * officeCam.zoom;
+      const sy = officeCanvas.height * 0.54 + (rz * sinP - y * cosP) * officeCam.zoom;
+      const depth = rz * cosP + y * sinP;
+      return { x: sx, y: sy, depth };
+    }
+
+    function drawPoly3D(pts, fill, stroke, lineWidth = 0.8) {
+      officeCtx.beginPath();
+      officeCtx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        officeCtx.lineTo(pts[i].x, pts[i].y);
+      }
+      officeCtx.closePath();
+      if (fill) {
+        officeCtx.fillStyle = fill;
+        officeCtx.fill();
+      }
+      if (stroke) {
+        officeCtx.strokeStyle = stroke;
+        officeCtx.lineWidth = lineWidth;
+        officeCtx.stroke();
+      }
+    }
+
+    // Desenha um Cuboide 3D sombreado (x, z centrados; y = base até y + h)
+    function drawBox3D(x, y, z, w, h, d, colorTop, colorSideA, colorSideB, strokeColor = 'rgba(255,255,255,0.08)') {
+      const hw = w * 0.5;
+      const hd = d * 0.5;
+      const p000 = projectOffice3D(x - hw, y, z - hd);
+      const p100 = projectOffice3D(x + hw, y, z - hd);
+      const p101 = projectOffice3D(x + hw, y, z + hd);
+      const p001 = projectOffice3D(x - hw, y, z + hd);
+
+      const p010 = projectOffice3D(x - hw, y + h, z - hd);
+      const p110 = projectOffice3D(x + hw, y + h, z - hd);
+      const p111 = projectOffice3D(x + hw, y + h, z + hd);
+      const p011 = projectOffice3D(x - hw, y + h, z + hd);
+
+      const cosY = Math.cos(officeCam.yaw);
+      const sinY = Math.sin(officeCam.yaw);
+
+      // Face Z (+hd vs -hd) visível para a câmara
+      if (cosY >= 0) {
+        drawPoly3D([p001, p101, p111, p011], colorSideA, strokeColor);
+      } else {
+        drawPoly3D([p100, p000, p010, p110], colorSideA, strokeColor);
+      }
+
+      // Face X (+hw vs -hw) visível para a câmara
+      if (sinY >= 0) {
+        drawPoly3D([p000, p001, p011, p010], colorSideB, strokeColor);
+      } else {
+        drawPoly3D([p101, p100, p110, p111], colorSideB, strokeColor);
+      }
+
+      // Face de Topo
+      drawPoly3D([p010, p110, p111, p011], colorTop, strokeColor);
+    }
+
+    function drawFloorCarpet3D(x, z, w, d, fill, borderColor, labelText = '') {
+      const hw = w * 0.5;
+      const hd = d * 0.5;
+      const c0 = projectOffice3D(x - hw, 1, z - hd);
+      const c1 = projectOffice3D(x + hw, 1, z - hd);
+      const c2 = projectOffice3D(x + hw, 1, z + hd);
+      const c3 = projectOffice3D(x - hw, 1, z + hd);
+      drawPoly3D([c0, c1, c2, c3], fill, borderColor, 1.5);
+      if (labelText) {
+        const lblPos = projectOffice3D(x, 2, z - hd + 18);
+        officeCtx.font = '700 10px "JetBrains Mono", monospace';
+        officeCtx.fillStyle = borderColor;
+        officeCtx.textAlign = 'center';
+        officeCtx.fillText(labelText, lblPos.x, lblPos.y);
+      }
+    }
+
+    // Desenha um Boneco 3D Articulado (Cabeça + Visor + Tronco + Braços + Pernas + Caneca/Teclado)
+    function drawBoneco3D(sim, nowMs) {
+      const ag = sim.data;
+      const x = sim.x;
+      const z = sim.z;
+      const dx = sim.targetX - x;
+      const dz = sim.targetZ - z;
+      const dist = Math.hypot(dx, dz);
+      const isWalking = dist > 2.5;
+      const isWorking = ag.status === 'working' && !isWalking;
+      const isPaused = ag.status !== 'working' && !isWalking;
+      const isSelected = ag.agent_id === selectedOfficeAgentId;
+      const isHovered = ag.agent_id === hoveredOfficeAgentId;
+
+      // Sombra no chão + Anel de seleção
+      const groundPt = projectOffice3D(x, 2, z);
+      officeCtx.beginPath();
+      officeCtx.ellipse(groundPt.x, groundPt.y, 13 * officeCam.zoom, 7 * officeCam.zoom, 0, 0, Math.PI * 2);
+      officeCtx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      officeCtx.fill();
+
+      if (isSelected || isHovered) {
+        officeCtx.beginPath();
+        officeCtx.ellipse(groundPt.x, groundPt.y, 20 * officeCam.zoom, 11 * officeCam.zoom, 0, 0, Math.PI * 2);
+        officeCtx.strokeStyle = isSelected ? '#ec4899' : '#38bdf8';
+        officeCtx.lineWidth = 2.2;
+        officeCtx.stroke();
+      }
+
+      // Ciclo de caminhada e animação de braços
+      const walkSwing = isWalking ? Math.sin(nowMs * 0.014 + sim.walkPhase) * 5.5 : 0;
+      const bobY = isWalking ? Math.abs(Math.sin(nowMs * 0.014 + sim.walkPhase)) * 3.2 : (isWorking ? Math.sin(nowMs * 0.01 + sim.typePhase) * 0.8 : 0);
+
+      // 1. PERNAS 3D (Esquerda e Direita)
+      drawBox3D(x - 4, 2, z + walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
+      drawBox3D(x + 4, 2, z - walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
+
+      // 2. TRONCO 3D (Cor do Agente / Departamento)
+      const baseColor = ag.avatar_color || '#ec4899';
+      drawBox3D(x, 15 + bobY, z, 15, 17, 9, baseColor, baseColor, '#1e293b', 'rgba(255,255,255,0.22)');
+
+      // Mochila / Core LED nas costas/peito
+      const ledColor = isWorking ? '#10b981' : '#f59e0b';
+      drawBox3D(x, 20 + bobY, z - 5, 7, 7, 3, ledColor, ledColor, ledColor);
+
+      // 3. BRAÇOS 3D (A teclar se estiver na secretária, ou com Caneca de Café se estiver em pausa)
+      const typeLeft = isWorking ? Math.sin(nowMs * 0.028 + sim.typePhase) * 3.5 : 0;
+      const typeRight = isWorking ? Math.cos(nowMs * 0.028 + sim.typePhase) * 3.5 : 0;
+      const armZOffset = isWorking ? -6 : 0;
+
+      drawBox3D(x - 10, 17 + bobY + typeLeft, z + armZOffset - walkSwing * 0.5, 4.5, 13, 5, baseColor, '#334155', '#1e293b');
+      drawBox3D(x + 10, 17 + bobY + typeRight, z + armZOffset + walkSwing * 0.5, 4.5, 13, 5, baseColor, '#334155', '#1e293b');
+
+      // Se estiver em pausa no Lounge, desenha uma Caneca de Café 3D na mão direita + vapor!
+      if (isPaused) {
+        drawBox3D(x + 12, 22 + bobY, z - 5, 5, 6, 5, '#ffffff', '#e2e8f0', '#cbd5e1');
+        const steamPt = projectOffice3D(x + 12, 31 + bobY + ((nowMs * 0.015) % 8), z - 5);
+        officeCtx.fillStyle = 'rgba(255,255,255,0.45)';
+        officeCtx.beginPath();
+        officeCtx.arc(steamPt.x, steamPt.y, 2.2 * officeCam.zoom, 0, Math.PI * 2);
+        officeCtx.fill();
+      }
+
+      // 4. CABEÇA 3D + VISOR CYBERPUNK
+      const headLookX = isWorking ? Math.sin(nowMs * 0.005 + sim.typePhase) * 1.5 : 0;
+      drawBox3D(x + headLookX, 33 + bobY, z, 13, 12, 12, '#fde68a', '#fcd34d', '#f59e0b', 'rgba(255,255,255,0.2)');
+      // Capacete / Cabelo Topo
+      drawBox3D(x + headLookX, 43 + bobY, z, 13.6, 3.5, 12.6, '#1e293b', '#0f172a', '#090d16');
+      // Visor Luminoso Neon (Olhos)
+      const visorCol = isWorking ? '#6ee7b7' : (ag.kind === 'architect' ? '#f472b6' : '#38bdf8');
+      drawBox3D(x + headLookX, 37 + bobY, z - 5.8, 10, 3.2, 2, visorCol, visorCol, visorCol);
+
+      // Coroa 3D Dourada para o Arquiteto Gemini 4 Argon (ARCH-01)
+      if (ag.kind === 'architect') {
+        drawBox3D(x + headLookX, 46.5 + bobY, z, 9, 4.5, 9, '#fbbf24', '#f59e0b', '#d97706');
+      } else if (ag.kind === 'scout') {
+        // Antena Radar para o SCOUT-01
+        drawBox3D(x + headLookX, 46.5 + bobY, z, 2.5, 7, 2.5, '#10b981', '#059669', '#047857');
+      }
+
+      // Feixe de Teletransporte se acabou de nascer no Portal
+      if (sim.portalTimer > 0) {
+        const pTop = projectOffice3D(x, 95, z);
+        const grad = officeCtx.createLinearGradient(groundPt.x, pTop.y, groundPt.x, groundPt.y);
+        grad.addColorStop(0, 'rgba(6, 182, 212, 0)');
+        grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.35)');
+        grad.addColorStop(1, 'rgba(236, 72, 153, 0.55)');
+        officeCtx.fillStyle = grad;
+        officeCtx.fillRect(groundPt.x - 16 * officeCam.zoom, pTop.y, 32 * officeCam.zoom, groundPt.y - pTop.y);
+      }
+
+      // Guardar posição 2D no ecrã para clique com o rato e etiqueta flutuante
+      const headScreen = projectOffice3D(x, 54 + bobY, z);
+      sim.screenX = headScreen.x;
+      sim.screenY = headScreen.y + 18 * officeCam.zoom;
+    }
+
+    function drawBonecoLabel2D(sim) {
+      const ag = sim.data;
+      const headPt = projectOffice3D(sim.x, 55, sim.z);
+      const isSelected = ag.agent_id === selectedOfficeAgentId;
+      const isHovered = ag.agent_id === hoveredOfficeAgentId;
+      const isWorking = ag.status === 'working';
+
+      const statusIcon = sim.portalTimer > 0 ? '🆕' : (isWorking ? '⚡' : '☕');
+      const labelTxt = `${statusIcon} ${ag.name}`;
+
+      officeCtx.font = isSelected ? '700 11px Inter, sans-serif' : '600 10.2px Inter, sans-serif';
+      const w = officeCtx.measureText(labelTxt).width + 14;
+      const h = 19;
+      const bx = headPt.x - w * 0.5;
+      const by = headPt.y - h;
+
+      officeCtx.fillStyle = isSelected
+        ? 'rgba(236, 72, 153, 0.92)'
+        : (isWorking ? 'rgba(15, 23, 42, 0.88)' : 'rgba(30, 27, 38, 0.82)');
+      officeCtx.strokeStyle = isSelected
+        ? '#fff'
+        : (isWorking ? '#10b981' : 'rgba(245, 158, 11, 0.65)');
+      officeCtx.lineWidth = isSelected ? 1.6 : 1.1;
+
+      officeCtx.beginPath();
+      officeCtx.roundRect(bx, by, w, h, 6);
+      officeCtx.fill();
+      officeCtx.stroke();
+
+      officeCtx.fillStyle = '#ffffff';
+      officeCtx.textAlign = 'center';
+      officeCtx.fillText(labelTxt, headPt.x, by + 13);
+
+      // Balão de pensamento / tarefa ao vivo se estiver selecionado, hovered ou a trabalhar numa conversa
+      if (isSelected || isHovered || (isWorking && ag.kind !== 'lane_worker')) {
+        const taskShort = (ag.current_task || '').slice(0, 36);
+        if (taskShort) {
+          officeCtx.font = '500 9.5px "JetBrains Mono", monospace';
+          const tw = officeCtx.measureText(taskShort).width + 12;
+          const tx = headPt.x - tw * 0.5;
+          const ty = by - 19;
+          officeCtx.fillStyle = 'rgba(9, 13, 22, 0.92)';
+          officeCtx.strokeStyle = ag.avatar_color || '#ec4899';
+          officeCtx.lineWidth = 1;
+          officeCtx.beginPath();
+          officeCtx.roundRect(tx, ty, tw, 16, 4);
+          officeCtx.fill();
+          officeCtx.stroke();
+          officeCtx.fillStyle = '#e2e8f0';
+          officeCtx.fillText(taskShort, headPt.x, ty + 11.5);
+        }
+      }
+    }
+
+    function renderOffice3DLoop(nowMs) {
+      if (activeMainView !== 'office') {
+        officeAnimRunning = false;
+        return;
+      }
+
+      if (officeCam.autoRotate && !officeCam.dragging) {
+        officeCam.yaw += 0.0035;
+      }
+
+      // 1. Limpar Canvas 3D
+      officeCtx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
+
+      // 2. Desenhar a Base / Chão do Escritório 3D
+      drawBox3D(0, -10, 10, 960, 10, 680, '#0f1422', '#090c15', '#06080f', 'rgba(236,72,153,0.28)');
+
+      // Grelha de Piso 3D
+      officeCtx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      officeCtx.lineWidth = 1;
+      for (let gx = -440; gx <= 440; gx += 80) {
+        const p1 = projectOffice3D(gx, 0.5, -310);
+        const p2 = projectOffice3D(gx, 0.5, 330);
+        officeCtx.beginPath();
+        officeCtx.moveTo(p1.x, p1.y);
+        officeCtx.lineTo(p2.x, p2.y);
+        officeCtx.stroke();
+      }
+      for (let gz = -310; gz <= 330; gz += 80) {
+        const p1 = projectOffice3D(-460, 0.5, gz);
+        const p2 = projectOffice3D(460, 0.5, gz);
+        officeCtx.beginPath();
+        officeCtx.moveTo(p1.x, p1.y);
+        officeCtx.lineTo(p2.x, p2.y);
+        officeCtx.stroke();
+      }
+
+      // Tapetes das 4 Zonas do Escritório
+      drawFloorCarpet3D(-395, -245, 125, 105, 'rgba(6, 182, 212, 0.10)', '#06b6d4', '🚪 PORTAL NOVOS AGENTES');
+      drawFloorCarpet3D(10, -235, 330, 115, 'rgba(236, 72, 153, 0.09)', '#ec4899', '👑 COMANDO ARGON & SCOUT MAP');
+      drawFloorCarpet3D(-135, 95, 480, 460, 'rgba(59, 130, 246, 0.05)', '#38bdf8', '💻 ZONA DE SECRETÁRIAS (WORKSTATIONS)');
+      drawFloorCarpet3D(345, 45, 235, 560, 'rgba(245, 158, 11, 0.07)', '#f59e0b', '☕ ZONA DE PAUSA · LOUNGE & CAFÉ');
+
+      // 3. Construir Lista de Objetos 3D (Mobiliário + Secretárias + Bonecos) e ordenar por profundidade (Z-Buffer Painter)
+      const renderables = [];
+
+      // Portal Quântico 3D (Noroeste)
+      renderables.push({
+        depth: projectOffice3D(PORTAL_POS.x, 20, PORTAL_POS.z).depth,
+        draw: () => {
+          drawBox3D(PORTAL_POS.x, 1, PORTAL_POS.z, 66, 4, 66, '#0891b2', '#0e7490', '#155e75');
+          drawBox3D(PORTAL_POS.x - 28, 5, PORTAL_POS.z - 20, 8, 58, 8, '#22d3ee', '#06b6d4', '#0891b2');
+          drawBox3D(PORTAL_POS.x + 28, 5, PORTAL_POS.z - 20, 8, 58, 8, '#22d3ee', '#06b6d4', '#0891b2');
+          drawBox3D(PORTAL_POS.x, 60, PORTAL_POS.z - 20, 68, 7, 10, '#ec4899', '#db2777', '#be185d');
+        }
+      });
+
+      // Mobiliário da Zona de Pausa (Máquina de Café, Balcão, Sofás, Arcade, Watercooler)
+      renderables.push({
+        depth: projectOffice3D(355, 15, -185).depth,
+        draw: () => {
+          // Balcão de Café Espresso
+          drawBox3D(355, 1, -185, 115, 22, 34, '#78350f', '#451a03', '#290f02');
+          // Máquina de Espresso 3D
+          drawBox3D(375, 23, -185, 28, 20, 20, '#ef4444', '#dc2626', '#991b1b');
+          drawBox3D(330, 23, -185, 14, 12, 14, '#e2e8f0', '#94a3b8', '#64748b');
+        }
+      });
+
+      renderables.push({
+        depth: projectOffice3D(255, 25, -185).depth,
+        draw: () => {
+          // Máquina AGY Arcade 3D
+          drawBox3D(255, 1, -185, 32, 52, 28, '#8b5cf6', '#6d28d9', '#4c1d95');
+          drawBox3D(255, 26, -170, 24, 16, 4, '#38bdf8', '#0284c7', '#0369a1');
+        }
+      });
+
+      renderables.push({
+        depth: projectOffice3D(345, 12, 15).depth,
+        draw: () => {
+          // Sofá Lounge Norte
+          drawBox3D(345, 1, 5, 110, 12, 36, '#4f46e5', '#4338ca', '#3730a3');
+          drawBox3D(345, 13, -10, 110, 14, 10, '#6366f1', '#4f46e5', '#3730a3');
+        }
+      });
+
+      renderables.push({
+        depth: projectOffice3D(345, 10, 95).depth,
+        draw: () => {
+          // Mesa de Centro do Lounge
+          drawBox3D(345, 1, 95, 65, 10, 38, '#b45309', '#92400e', '#78350f');
+        }
+      });
+
+      renderables.push({
+        depth: projectOffice3D(435, 18, 125).depth,
+        draw: () => {
+          // Sofá Lateral Este
+          drawBox3D(435, 1, 125, 34, 12, 120, '#4f46e5', '#4338ca', '#3730a3');
+          drawBox3D(447, 13, 125, 10, 14, 120, '#6366f1', '#4f46e5', '#3730a3');
+        }
+      });
+
+      // Secretárias 3D (Workstations)
+      const workingDeskSet = new Set();
+      Object.values(officeSimAgents).forEach(s => {
+        if (s.data && s.data.status === 'working' && Math.hypot(s.targetX - s.x, s.targetZ - s.z) < 12) {
+          workingDeskSet.add(s.deskIdx);
+        }
+      });
+
+      DESK_SLOTS.forEach((dSlot, idx) => {
+        const isBusy = workingDeskSet.has(idx);
+        const dDepth = projectOffice3D(dSlot.x, 14, dSlot.z).depth;
+        renderables.push({
+          depth: dDepth,
+          draw: () => {
+            // Tampo da Secretária 3D
+            const deskTopCol = idx <= 1 ? '#1e1b4b' : '#1e293b';
+            drawBox3D(dSlot.x, 14, dSlot.z, 64, 4, 34, deskTopCol, '#0f172a', '#090d16');
+            // Pernas da Secretária
+            drawBox3D(dSlot.x - 26, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
+            drawBox3D(dSlot.x + 26, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
+
+            // Monitor 3D Duplo / Holográfico em cima da secretária
+            const screenCol = isBusy ? (dSlot.color || '#10b981') : '#1e293b';
+            drawBox3D(dSlot.x, 18, dSlot.z - 8, 34, 18, 4, screenCol, '#0f172a', '#334155');
+            // Teclado 3D
+            drawBox3D(dSlot.x, 18, dSlot.z + 6, 18, 1.5, 7, isBusy ? '#e2e8f0' : '#475569', '#334155', '#1e293b');
+
+            // Cadeira 3D
+            drawBox3D(dSlot.x, 1, dSlot.z + 24, 18, 11, 18, '#1e293b', '#0f172a', '#090d16');
+
+            // Se o agente está a trabalhar nesta secretária, emitir feixe de dados para a Mesa de Comando!
+            if (isBusy && idx > 0) {
+              const pFrom = projectOffice3D(dSlot.x, 34, dSlot.z - 8);
+              const pTo = projectOffice3D(DESK_SLOTS[0].x, 38, DESK_SLOTS[0].z);
+              const tProg = ((nowMs * 0.0012 + idx * 0.17) % 1);
+              const px = pFrom.x + (pTo.x - pFrom.x) * tProg;
+              const py = pFrom.y + (pTo.y - pFrom.y) * tProg - Math.sin(tProg * Math.PI) * 28;
+              officeCtx.beginPath();
+              officeCtx.arc(px, py, 3 * officeCam.zoom, 0, Math.PI * 2);
+              officeCtx.fillStyle = dSlot.color || '#ec4899';
+              officeCtx.fill();
+            }
+          }
+        });
+      });
+
+      // Atualizar física de caminhada de cada Boneco 3D e adicionar à fila de renderização
+      const sims = Object.values(officeSimAgents);
+      sims.forEach(sim => {
+        const dx = sim.targetX - sim.x;
+        const dz = sim.targetZ - sim.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist > 2.0) {
+          const step = Math.min(dist, 3.4);
+          sim.x += (dx / dist) * step;
+          sim.z += (dz / dist) * step;
+        } else {
+          sim.x = sim.targetX;
+          sim.z = sim.targetZ;
+        }
+        if (sim.portalTimer > 0) sim.portalTimer--;
+
+        const bDepth = projectOffice3D(sim.x, 22, sim.z).depth;
+        renderables.push({
+          depth: bDepth,
+          draw: () => drawBoneco3D(sim, nowMs)
+        });
+      });
+
+      // Ordenar de trás para a frente (menor depth primeiro)
+      renderables.sort((a, b) => a.depth - b.depth);
+      for (let i = 0; i < renderables.length; i++) {
+        renderables[i].draw();
+      }
+
+      // 4. Desenhar Etiquetas e Balões de Tarefa em cima dos Bonecos
+      for (let i = 0; i < sims.length; i++) {
+        drawBonecoLabel2D(sims[i]);
+      }
+
+      requestAnimationFrame(renderOffice3DLoop);
+    }
+
+    // Controlos de Rato no Escritório 3D (Arrastar para Rodar 360°, Roda para Zoom, Clique para Selecionar Boneco)
+    officeCanvas.addEventListener('mousedown', (e) => {
+      officeCam.dragging = true;
+      officeCam.moved = false;
+      officeCam.dragStartX = e.clientX;
+      officeCam.dragStartY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (activeMainView !== 'office') return;
+      const rect = officeCanvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      if (officeCam.dragging) {
+        const dx = e.clientX - officeCam.dragStartX;
+        const dy = e.clientY - officeCam.dragStartY;
+        if (Math.abs(dx) > 2 || Math.abs(dy) > 2) officeCam.moved = true;
+        officeCam.yaw += dx * 0.0065;
+        officeCam.pitch = Math.max(0.28, Math.min(1.15, officeCam.pitch + dy * 0.005));
+        officeCam.dragStartX = e.clientX;
+        officeCam.dragStartY = e.clientY;
+        return;
+      }
+
+      // Hit-test para hover em cima de um boneco 3D
+      let foundId = null;
+      for (const sim of Object.values(officeSimAgents)) {
+        if (Math.hypot(mx - sim.screenX, my - sim.screenY) < 28 * officeCam.zoom) {
+          foundId = sim.agent_id;
+          break;
+        }
+      }
+      hoveredOfficeAgentId = foundId;
+      officeCanvas.style.cursor = foundId ? 'pointer' : (officeCam.dragging ? 'grabbing' : 'grab');
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (activeMainView !== 'office') return;
+      if (officeCam.dragging && !officeCam.moved && hoveredOfficeAgentId) {
+        selectOfficeAgent(hoveredOfficeAgentId);
+      }
+      officeCam.dragging = false;
+    });
+
+    officeCanvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.09 : 0.92;
+      officeCam.zoom = Math.max(0.55, Math.min(2.2, officeCam.zoom * factor));
+    }, { passive: false });
+
+    // Iniciar aplicação (respeita #swarm ou #office na URL)
     fetchGraph().then(() => {
       requestAnimationFrame(renderGraph);
       loadGitStatus();
       if (window.location.hash === '#swarm') {
         switchMainView('swarm');
+      } else if (window.location.hash === '#office') {
+        switchMainView('office');
       }
     });
   </script>

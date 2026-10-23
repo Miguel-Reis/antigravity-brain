@@ -40,6 +40,7 @@ CODE_EXTENSIONS = {
 
 _INITIALIZED_SWARM_DBS: set[str] = set()
 _DEFAULT_RUN_CACHED: Dict[str, int] = {}
+_OFFICE_SCAN_CACHE: Dict[str, Any] = {"ts": 0.0, "mtime_map": {}, "meta_cache": {}}
 
 
 class SwarmEngine:
@@ -135,6 +136,28 @@ class SwarmEngine:
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_swarm_logs_run ON swarm_logs(run_id);"
+            )
+
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS office_agents (
+                    agent_id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    kind TEXT NOT NULL,
+                    department TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    conversation_id TEXT DEFAULT '',
+                    status TEXT DEFAULT 'paused',
+                    current_task TEXT DEFAULT '',
+                    desk_index INTEGER DEFAULT 0,
+                    avatar_color TEXT DEFAULT '#ec4899',
+                    manual_override INTEGER DEFAULT 0,
+                    spawned_at REAL DEFAULT 0.0,
+                    updated_at REAL DEFAULT 0.0
+                );
+                """
             )
 
             # Migrar registos antigos para a nomenclatura nativa de modelos do Antigravity (incluindo Gemini 4 Argon)
@@ -762,7 +785,12 @@ class SwarmEngine:
                 return str(row["scout_shared_map"])
         return ""
 
-    def on_turn_start(self, user_goal: str, workspace_path: str = "") -> None:
+    def on_turn_start(
+        self,
+        user_goal: str,
+        workspace_path: str = "",
+        conversation_id: str = "",
+    ) -> None:
         """Chamado automaticamente pelo PreInvocation hook quando o utilizador envia mensagem no chat."""
         run_id = self.ensure_default_run()
         clean_goal = " ".join((user_goal or "Active Antigravity Task").split())[:95]
@@ -798,8 +826,22 @@ class SwarmEngine:
                 "plan",
                 f"Chat Turn iniciado (Gemini 4 Argon): \"{clean_goal[:55]}\" -> Scout Map injetado",
             )
+        if conversation_id:
+            ws_norm = BrainDB.normalize_workspace(workspace_path or "brain_mcp")
+            self.register_conversation_activity(
+                conversation_id=conversation_id,
+                workspace=ws_norm,
+                status="working",
+                current_task=clean_goal,
+            )
 
-    def on_turn_step(self, step_num: int, real_actions: Optional[List[str]] = None) -> None:
+    def on_turn_step(
+        self,
+        step_num: int,
+        real_actions: Optional[List[str]] = None,
+        conversation_id: str = "",
+        workspace: str = "brain_mcp",
+    ) -> None:
         """Avança o progresso visual no Swarm Monitor a cada passo de tool call do Antigravity."""
         run_id = self.ensure_default_run()
         actions_str = ", ".join(real_actions[:4]) if real_actions else "Workers paralelos em execução + validação AST"
@@ -820,8 +862,20 @@ class SwarmEngine:
                 "work",
                 f"Step #{step_num}: {actions_str}",
             )
+        if conversation_id:
+            self.register_conversation_activity(
+                conversation_id=conversation_id,
+                workspace=workspace or "brain_mcp",
+                status="working",
+                current_task=f"Step #{step_num}: {actions_str[:70]}",
+            )
 
-    def on_turn_complete(self, modified_files: List[str], actions: List[str]) -> None:
+    def on_turn_complete(
+        self,
+        modified_files: List[str],
+        actions: List[str],
+        conversation_id: str = "",
+    ) -> None:
         """Chamado automaticamente pelo Stop hook quando o Antigravity termina a resposta no chat."""
         run_id = self.ensure_default_run()
         with self.db._connect() as conn:
@@ -859,6 +913,23 @@ class SwarmEngine:
                 "done",
                 f"Turno concluído em {elapsed}s{files_info} · {total*2}/{total*2} verify checks PASS",
             )
+            if conversation_id and conversation_id != "default":
+                short_id = conversation_id[:8]
+                conn.execute(
+                    """
+                    UPDATE office_agents
+                    SET status = 'paused',
+                        current_task = ?,
+                        manual_override = 0,
+                        updated_at = ?
+                    WHERE agent_id = ?;
+                    """,
+                    (
+                        f"Concluído{files_info} · Em pausa no Lounge",
+                        time.time(),
+                        f"conv-{short_id}",
+                    ),
+                )
 
     def get_swarm_dashboard(self, run_id: Optional[int] = None) -> Dict[str, Any]:
         """Devolve o estado completo para renderizar a página PLAN -> SWARM -> VERIFY."""
@@ -914,6 +985,574 @@ class SwarmEngine:
             "logs": [dict(l) for l in reversed(logs_rows)],
             "recent_runs": [dict(rr) for rr in recent_runs],
         }
+
+    # =========================================================================
+    # 3D AGENT OFFICE ENGINE (WORKSTATIONS, BREAK LOUNGE & LIVE CONVERSATIONS)
+    # =========================================================================
+
+    def _ensure_core_office_agents(self, conn: sqlite3.Connection) -> None:
+        """Garante que os bonecos principais da equipa (Arquiteto Argon, Scout e Especialistas) existem no escritório 3D."""
+        now = time.time()
+        core_roster = [
+            (
+                "arch-01",
+                "ARCH-01 · Argon",
+                "Principal Architect",
+                "architect",
+                "COMMAND",
+                "Gemini 4 Argon (inherit)",
+                "brain_mcp",
+                0,
+                "#ec4899",
+                "Coordenação de Arquitetura & Plano Assimétrico",
+            ),
+            (
+                "scout-01",
+                "SCOUT-01 · Batedor",
+                "Codebase AST Scout",
+                "scout",
+                "SCOUT",
+                "flash_lite · research",
+                "brain_mcp",
+                1,
+                "#10b981",
+                "Leitura Única AST -> Partilha de Mapa [SCOUT_SHARED_MAP]",
+            ),
+            (
+                "ui-01",
+                "UI-01 · 3D & Canvas",
+                "Frontend & WebGL/Canvas",
+                "lane_worker",
+                "UI",
+                "Gemini 4 Argon",
+                "brain_mcp",
+                2,
+                "#06b6d4",
+                "Renderização 60 FPS do Grafo Obsidian + Escritório 3D",
+            ),
+            (
+                "ui-02",
+                "UI-02 · HUD & Layout",
+                "UI & Reactive Controls",
+                "lane_worker",
+                "UI",
+                "flash · self",
+                "brain_mcp",
+                3,
+                "#38bdf8",
+                "Painéis Interativos, Filtros e Telemetria Visual",
+            ),
+            (
+                "api-01",
+                "API-01 · Core DB",
+                "SQLite WAL + FTS5 Engine",
+                "lane_worker",
+                "API",
+                "Gemini 4 Argon",
+                "brain_mcp",
+                4,
+                "#8b5cf6",
+                "Indexação BM25 + API REST /api/graph, /api/swarm, /api/office",
+            ),
+            (
+                "api-02",
+                "API-02 · Hook Bridge",
+                "PreInvocation & Stop Hooks",
+                "lane_worker",
+                "API",
+                "flash · self",
+                "brain_mcp",
+                5,
+                "#a855f7",
+                "Interceção em Tempo Real de Conversas e Subagentes",
+            ),
+            (
+                "test-01",
+                "TEST-01 · Verify QA",
+                "Automated Gate Auditor",
+                "lane_worker",
+                "TESTS",
+                "flash · test-engineer",
+                "brain_mcp",
+                6,
+                "#f59e0b",
+                "Auditoria 48/48 Checks (AST + Sintaxe JS + SQLite)",
+            ),
+            (
+                "doc-01",
+                "DOC-01 · Git Keeper",
+                "Auto-Updater & Docs",
+                "lane_worker",
+                "DOCS",
+                "flash_lite · self",
+                "brain_mcp",
+                7,
+                "#3b82f6",
+                "Sincronização GitHub origin/main & Regras Globais",
+            ),
+        ]
+        for aid, name, role, kind, dept, model, ws, desk_idx, color, task in core_roster:
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO office_agents
+                (agent_id, name, role, kind, department, model, workspace, conversation_id,
+                 status, current_task, desk_index, avatar_color, manual_override, spawned_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, '', 'paused', ?, ?, ?, 0, ?, ?);
+                """,
+                (aid, name, role, kind, dept, model, ws, task, desk_idx, color, now - 120.0, now),
+            )
+
+    def register_conversation_activity(
+        self,
+        conversation_id: str,
+        workspace: str,
+        status: str = "working",
+        current_task: str = "",
+        role: str = "Agente de Conversa",
+        kind: str = "conversation",
+        model: str = "Gemini 4 Argon",
+    ) -> None:
+        """Regista ou atualiza imediatamente no Escritório 3D um agente de conversa/subagente ativo."""
+        if not conversation_id or conversation_id == "default":
+            return
+        short_id = conversation_id[:8]
+        aid = f"sub-{short_id}" if kind == "subagent" else f"conv-{short_id}"
+        now = time.time()
+        ws_clean = BrainDB.normalize_workspace(workspace or "global")
+        palette = ["#f43f5e", "#06b6d4", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#14b8a6"]
+        color = palette[sum(ord(c) for c in short_id) % len(palette)]
+        label_prefix = "Subagente" if kind == "subagent" else "Conv"
+        agent_name = f"{label_prefix} #{short_id[:6]} ({ws_clean})"
+        task_clean = " ".join((current_task or "Em execução no Antigravity").split())[:85]
+
+        with self.db._connect() as conn:
+            self._ensure_core_office_agents(conn)
+            existing = conn.execute(
+                "SELECT agent_id, desk_index FROM office_agents WHERE agent_id = ?;",
+                (aid,),
+            ).fetchone()
+            if existing:
+                conn.execute(
+                    """
+                    UPDATE office_agents
+                    SET workspace = ?, status = ?, current_task = ?,
+                        manual_override = 0, updated_at = ?
+                    WHERE agent_id = ?;
+                    """,
+                    (ws_clean, status, task_clean, now, aid),
+                )
+            else:
+                max_row = conn.execute(
+                    "SELECT COALESCE(MAX(desk_index), 7) as m FROM office_agents WHERE desk_index >= 8;"
+                ).fetchone()
+                next_desk = max(8, int(max_row["m"] or 7) + 1)
+                conn.execute(
+                    """
+                    INSERT INTO office_agents
+                    (agent_id, name, role, kind, department, model, workspace, conversation_id,
+                     status, current_task, desk_index, avatar_color, manual_override, spawned_at, updated_at)
+                    VALUES (?, ?, ?, ?, 'CONVERSATIONS', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?);
+                    """,
+                    (
+                        aid,
+                        agent_name,
+                        f"{role} · {ws_clean}",
+                        kind,
+                        model,
+                        ws_clean,
+                        conversation_id,
+                        status,
+                        task_clean,
+                        next_desk,
+                        color,
+                        now,
+                        now,
+                    ),
+                )
+
+    @staticmethod
+    def _inspect_transcript_meta(transcript_path: str, conv_id: str) -> Dict[str, Any]:
+        """Extrai workspace, tipo (conversa vs subagente), tarefa atual e subagentes invocados de um transcript."""
+        mtime = os.path.getmtime(transcript_path)
+        size = os.path.getsize(transcript_path)
+        cache_key = f"{conv_id}:{mtime:.1f}:{size}"
+        cached = _OFFICE_SCAN_CACHE["meta_cache"].get(cache_key)
+        if cached:
+            return cached
+
+        workspace = "global"
+        is_subagent = False
+        first_prompt = ""
+        latest_action = ""
+        last_step_type = ""
+        has_pending_tools = False
+        spawned_subagents: List[Dict[str, str]] = []
+
+        try:
+            with open(transcript_path, "rb") as f:
+                head_bytes = f.read(min(size, 16384))
+                if size > 24576:
+                    f.seek(size - 24576)
+                    tail_bytes = f.read()
+                else:
+                    tail_bytes = head_bytes
+
+            head_text = head_bytes.decode("utf-8", errors="ignore")
+            tail_text = tail_bytes.decode("utf-8", errors="ignore")
+
+            ws_match = re.search(r"\[BRAIN_MEMORY\s*\|\s*ws=([A-Za-z0-9_.-]+)", head_text)
+            if ws_match:
+                workspace = ws_match.group(1).strip()
+
+            req_matches = re.findall(
+                r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", tail_text, flags=re.DOTALL
+            )
+            if not req_matches:
+                req_matches = re.findall(
+                    r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", head_text, flags=re.DOTALL
+                )
+
+            if req_matches:
+                first_prompt = " ".join(req_matches[-1].split())[:80]
+            else:
+                # Se não tem tags <USER_REQUEST>, é tipicamente um subagente invocado por invoke_subagent
+                for line in head_text.splitlines()[:6]:
+                    line = line.strip()
+                    if not line.startswith("{"):
+                        continue
+                    try:
+                        obj = json.loads(line)
+                        if obj.get("type") == "USER_INPUT":
+                            raw_c = " ".join(str(obj.get("content", "")).split())
+                            if raw_c and "<USER_REQUEST>" not in raw_c:
+                                is_subagent = True
+                                first_prompt = raw_c[:80]
+                                break
+                    except Exception:
+                        pass
+
+            # Analisar as últimas linhas para saber se está ativamente em tool_calls ou se já terminou
+            tail_lines = [ln.strip() for ln in tail_text.splitlines() if ln.strip().startswith("{")]
+            for ln in reversed(tail_lines):
+                try:
+                    step = json.loads(ln)
+                except Exception:
+                    continue
+                st_type = step.get("type", "")
+                if not last_step_type and st_type in ("USER_INPUT", "PLANNER_RESPONSE", "TOOL_RESPONSE"):
+                    last_step_type = st_type
+                    if st_type == "PLANNER_RESPONSE" and step.get("tool_calls"):
+                        has_pending_tools = True
+                if st_type == "PLANNER_RESPONSE" and step.get("tool_calls"):
+                    t_calls = step.get("tool_calls") or []
+                    for tc in t_calls:
+                        t_name = tc.get("name", "tool")
+                        t_args = tc.get("args") or {}
+                        if t_name == "invoke_subagent":
+                            sub_role = str(t_args.get("Role") or t_args.get("TypeName") or "Subagente")
+                            sub_model = str(t_args.get("Model") or "inherit")
+                            sub_prompt = " ".join(str(t_args.get("Prompt") or "").split())[:75]
+                            spawned_subagents.append(
+                                {
+                                    "role": sub_role,
+                                    "model": sub_model,
+                                    "prompt": sub_prompt,
+                                }
+                            )
+                        if not latest_action:
+                            target = (
+                                t_args.get("Path")
+                                or t_args.get("Role")
+                                or t_args.get("toolSummary")
+                                or t_args.get("CommandLine", "")[:30]
+                            )
+                            if target and ("/" in str(target) or "\\" in str(target)):
+                                target = os.path.basename(str(target).rstrip("/\\"))
+                            latest_action = f"{t_name}({target})" if target else t_name
+        except Exception:
+            pass
+
+        meta = {
+            "workspace": workspace,
+            "is_subagent": is_subagent,
+            "prompt": first_prompt or "Sessão Antigravity ativa",
+            "latest_action": latest_action,
+            "last_step_type": last_step_type,
+            "has_pending_tools": has_pending_tools,
+            "spawned_subagents": spawned_subagents[-3:],
+            "mtime": mtime,
+        }
+        if len(_OFFICE_SCAN_CACHE["meta_cache"]) > 80:
+            _OFFICE_SCAN_CACHE["meta_cache"].clear()
+        _OFFICE_SCAN_CACHE["meta_cache"][cache_key] = meta
+        return meta
+
+    def _sync_live_conversations_to_office(self) -> None:
+        """
+        Descobre automaticamente conversas novas e subagentes em ~/.gemini/antigravity/brain
+        e sincroniza o estado dos bonecos no Escritório 3D (a trabalhar vs em pausa).
+        """
+        now = time.time()
+        if now - float(_OFFICE_SCAN_CACHE.get("ts", 0.0)) < 1.4:
+            return
+        _OFFICE_SCAN_CACHE["ts"] = now
+
+        brain_root = os.path.expanduser("~/.gemini/antigravity/brain")
+        recent_convs: List[Tuple[float, str, str]] = []
+        if os.path.isdir(brain_root):
+            try:
+                for entry in os.scandir(brain_root):
+                    if not entry.is_dir() or entry.name.startswith("."):
+                        continue
+                    tp = os.path.join(entry.path, ".system_generated", "logs", "transcript.jsonl")
+                    if os.path.isfile(tp):
+                        try:
+                            recent_convs.append((os.path.getmtime(tp), entry.name, tp))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
+        recent_convs.sort(reverse=True)
+        top_convs = recent_convs[:8]
+
+        palette = ["#06b6d4", "#f43f5e", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#14b8a6"]
+
+        with self.db._connect() as conn:
+            self._ensure_core_office_agents(conn)
+
+            # 1. Atualizar estado da equipa principal Swarm consoante a run atual
+            run_row = conn.execute(
+                "SELECT status, goal, started_at FROM swarm_runs ORDER BY id DESC LIMIT 1;"
+            ).fetchone()
+            swarm_active = False
+            swarm_goal = "Monitorização contínua do Brain"
+            if run_row:
+                swarm_goal = str(run_row["goal"] or swarm_goal)
+                r_stat = str(run_row["status"] or "done")
+                r_start = float(run_row["started_at"] or 0.0)
+                swarm_active = r_stat in ("swarming", "verifying") and (now - r_start < 180.0)
+
+            # Verificar também se alguma conversa esteve ativa nos últimos 35s
+            any_conv_working = any((now - mtime) < 35.0 for mtime, _, _ in top_convs)
+            core_working = swarm_active or any_conv_working
+
+            conn.execute(
+                """
+                UPDATE office_agents
+                SET status = CASE WHEN ? THEN 'working' ELSE 'paused' END,
+                    current_task = CASE
+                        WHEN ? THEN 'A coordenar: ' || ?
+                        ELSE 'Em pausa no Lounge · Plano bloqueado'
+                    END,
+                    updated_at = ?
+                WHERE kind IN ('architect', 'scout', 'lane_worker') AND manual_override = 0;
+                """,
+                (1 if core_working else 0, 1 if core_working else 0, swarm_goal[:55], now),
+            )
+
+            # 2. Sincronizar conversas e subagentes reais do Antigravity
+            existing_rows = {
+                r["agent_id"]: dict(r)
+                for r in conn.execute("SELECT * FROM office_agents;").fetchall()
+            }
+            known_before = bool(_OFFICE_SCAN_CACHE["mtime_map"])
+
+            for idx, (mtime, conv_id, tp) in enumerate(top_convs):
+                meta = self._inspect_transcript_meta(tp, conv_id)
+                short_id = conv_id[:8]
+                is_sub = bool(meta["is_subagent"])
+                kind = "subagent" if is_sub else "conversation"
+                aid = f"sub-{short_id}" if is_sub else f"conv-{short_id}"
+                ws = meta["workspace"] or "global"
+                age_sec = now - mtime
+
+                # Está a trabalhar se o transcript foi modificado há menos de 38s
+                is_working = (age_sec < 38.0) and (
+                    meta["has_pending_tools"]
+                    or meta["last_step_type"] in ("USER_INPUT", "TOOL_RESPONSE")
+                    or age_sec < 18.0
+                )
+                status = "working" if is_working else "paused"
+
+                if is_working and meta["latest_action"]:
+                    task_txt = f"⚡ {meta['latest_action']} · {meta['prompt'][:48]}"
+                elif is_working:
+                    task_txt = f"⚡ {meta['prompt'][:68]}"
+                else:
+                    task_txt = f"☕ Em pausa · Última tarefa: {meta['prompt'][:52]}"
+
+                prefix = "🤖 Subagente" if is_sub else "💬 Conversa"
+                name = f"{prefix} #{short_id[:6]}"
+                role = f"{'Subagent Worker' if is_sub else 'Session Agent'} ({ws})"
+                model = "flash · subagent" if is_sub else "Gemini 4 Argon"
+                color = palette[sum(ord(c) for c in short_id) % len(palette)]
+
+                if aid in existing_rows:
+                    cur = existing_rows[aid]
+                    if not cur.get("manual_override"):
+                        conn.execute(
+                            """
+                            UPDATE office_agents
+                            SET name = ?, role = ?, workspace = ?, status = ?,
+                                current_task = ?, updated_at = ?
+                            WHERE agent_id = ?;
+                            """,
+                            (name, role, ws, status, task_txt, mtime, aid),
+                        )
+                else:
+                    # Se já tínhamos carregado o mapa antes, então esta conversa/subagente acabou de nascer!
+                    spawn_ts = now if (known_before or age_sec < 45.0) else mtime
+                    desk_idx = 8 + idx
+                    conn.execute(
+                        """
+                        INSERT INTO office_agents
+                        (agent_id, name, role, kind, department, model, workspace, conversation_id,
+                         status, current_task, desk_index, avatar_color, manual_override, spawned_at, updated_at)
+                        VALUES (?, ?, ?, ?, 'CONVERSATIONS', ?, ?, ?, ?, ?, ?, ?, 0, ?, ?);
+                        """,
+                        (
+                            aid,
+                            name,
+                            role,
+                            kind,
+                            model,
+                            ws,
+                            conv_id,
+                            status,
+                            task_txt,
+                            desk_idx,
+                            color,
+                            spawn_ts,
+                            mtime,
+                        ),
+                    )
+                _OFFICE_SCAN_CACHE["mtime_map"][conv_id] = mtime
+
+    def get_office_state(self) -> Dict[str, Any]:
+        """Devolve todos os agentes (bonecos 3D) e métricas do Escritório 3D."""
+        self._sync_live_conversations_to_office()
+        now = time.time()
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT * FROM office_agents
+                ORDER BY
+                    CASE WHEN kind = 'architect' THEN 0
+                         WHEN kind = 'scout' THEN 1
+                         WHEN kind IN ('conversation', 'subagent') THEN 2
+                         ELSE 3 END,
+                    desk_index ASC;
+                """
+            ).fetchall()
+
+        agents: List[Dict[str, Any]] = []
+        working_count = 0
+        paused_count = 0
+        conv_count = 0
+        new_spawns = 0
+
+        for r in rows:
+            d = dict(r)
+            spawn_age = max(0.0, now - float(d.get("spawned_at") or 0.0))
+            d["spawn_age_sec"] = round(spawn_age, 1)
+            d["is_new"] = spawn_age < 25.0
+            if d["is_new"]:
+                new_spawns += 1
+            if d.get("status") == "working":
+                working_count += 1
+            else:
+                paused_count += 1
+            if d.get("kind") in ("conversation", "subagent"):
+                conv_count += 1
+            agents.append(d)
+
+        return {
+            "agents": agents,
+            "summary": {
+                "total_agents": len(agents),
+                "working": working_count,
+                "paused": paused_count,
+                "conversations_and_subagents": conv_count,
+                "new_spawns": new_spawns,
+                "timestamp": now,
+            },
+        }
+
+    def spawn_custom_office_agent(
+        self,
+        name: str = "",
+        role: str = "Subagente de Conversa",
+        model: str = "Gemini 4 Argon",
+        workspace: str = "brain_mcp",
+        task: str = "Nova conversa iniciada no Antigravity",
+        status: str = "working",
+    ) -> Dict[str, Any]:
+        """Cria um novo boneco de agente no Escritório 3D (entra pelo Portal 3D e caminha até à secretária)."""
+        now = time.time()
+        short_hash = hex(int(now * 1000))[-6:]
+        aid = f"conv-{short_hash}"
+        clean_name = name.strip() or f"💬 Agente #{short_hash[:4].upper()}"
+        palette = ["#06b6d4", "#ec4899", "#10b981", "#f59e0b", "#8b5cf6", "#3b82f6"]
+        color = palette[int(now) % len(palette)]
+
+        with self.db._connect() as conn:
+            self._ensure_core_office_agents(conn)
+            max_row = conn.execute(
+                "SELECT COALESCE(MAX(desk_index), 7) as m FROM office_agents WHERE desk_index >= 8;"
+            ).fetchone()
+            next_desk = max(8, int(max_row["m"] or 7) + 1)
+            conn.execute(
+                """
+                INSERT INTO office_agents
+                (agent_id, name, role, kind, department, model, workspace, conversation_id,
+                 status, current_task, desk_index, avatar_color, manual_override, spawned_at, updated_at)
+                VALUES (?, ?, ?, 'conversation', 'CONVERSATIONS', ?, ?, ?, ?, ?, ?, ?, 1, ?, ?);
+                """,
+                (
+                    aid,
+                    clean_name,
+                    f"{role} ({workspace})",
+                    model,
+                    workspace,
+                    short_hash,
+                    status,
+                    task,
+                    next_desk,
+                    color,
+                    now,
+                    now,
+                ),
+            )
+        return self.get_office_state()
+
+    def toggle_office_agent_status(self, agent_id: str, target_status: Optional[str] = None) -> Dict[str, Any]:
+        """Alterna um boneco entre 'working' (Secretária) e 'paused' (Zona de Pausa / Café)."""
+        now = time.time()
+        with self.db._connect() as conn:
+            row = conn.execute(
+                "SELECT status, current_task FROM office_agents WHERE agent_id = ?;",
+                (agent_id,),
+            ).fetchone()
+            if row:
+                cur_st = str(row["status"] or "paused")
+                new_st = target_status if target_status in ("working", "paused") else (
+                    "paused" if cur_st == "working" else "working"
+                )
+                cur_task = str(row["current_task"] or "")
+                if new_st == "working" and cur_task.startswith("☕"):
+                    cur_task = "⚡ Retomou trabalho na secretária 3D"
+                elif new_st == "paused" and not cur_task.startswith("☕"):
+                    cur_task = f"☕ Em pausa no Lounge · {cur_task.lstrip('⚡ ')[:48]}"
+                conn.execute(
+                    """
+                    UPDATE office_agents
+                    SET status = ?, current_task = ?, manual_override = 1, updated_at = ?
+                    WHERE agent_id = ?;
+                    """,
+                    (new_st, cur_task, now, agent_id),
+                )
+        return self.get_office_state()
 
 
 if __name__ == "__main__":
