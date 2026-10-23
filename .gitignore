@@ -1,10 +1,16 @@
-# Base de dados privada de memórias locais (NUNCA enviar para o Git)
+# Base de dados privada de memórias locais e backups (NUNCA enviar para o GitHub)
 brain.db
 brain.db-wal
 brain.db-shm
 *.db
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
+*.brainpack.json
+*_Vault_*.md
+.brain_workspaces.json
+*.jsonl
 
 # Dados legados ChromaDB e cache Python
 chroma_data/

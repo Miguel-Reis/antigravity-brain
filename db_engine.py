@@ -279,47 +279,26 @@ class BrainDB:
         if "/antigravity/brain/" in low or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", os.path.basename(low)):
             return "global"
 
-        # 3. Detetar projetos conhecidos em qualquer parte do caminho
-        known_roots = (
-            "brain_mcp",
-            "mike-freelance",
-            "00_automation",
-            "troveauto",
-            "shadowmeter",
-            "cgclima-site",
-            "project-jarvis",
-            "aion2",
-            "strix",
-            "antigravity-backup",
-            "03-web-micro-saas",
-            "02-desktop-utility",
-            "01-resilient-scraper",
-            "mvp-factory",
-        )
+        # 3. Carregar mapeamento local privado (.brain_workspaces.json, ignorado pelo Git) se existir
+        local_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".brain_workspaces.json")
+        known_roots: List[str] = ["brain_mcp"]
+        aliases: Dict[str, List[str]] = {}
+        if os.path.isfile(local_cfg_path):
+            try:
+                with open(local_cfg_path, "r", encoding="utf-8") as f:
+                    wcfg = json.load(f)
+                known_roots = [str(x).lower() for x in (wcfg.get("known_roots") or ["brain_mcp"])]
+                aliases = wcfg.get("aliases") or {}
+            except Exception:
+                pass
+
         for kr in known_roots:
             if f"/{kr}/" in f"/{low}/":
                 return kr
 
-        if any(
-            k in f"/{low}/"
-            for k in (
-                "/mt2/",
-                "/n2-mt2/",
-                "/metin2/",
-                "/userinterface/",
-                "/eterlib/",
-                "/mileslib/",
-                "/uiscript/",
-                "/gamelib/",
-                "/eterbase/",
-                "/etergrnlib/",
-                "/effectlib/",
-                "/scriptlib/",
-                "/dumpproto/",
-                "/n2pacher/",
-            )
-        ):
-            return "mt2"
+        for target_ws, patterns in aliases.items():
+            if any(pat in f"/{low}/" for pat in patterns):
+                return str(target_ws).lower()
 
         # 4. Subir na árvore se a pasta folha for genérica (src, components, pages, scripts, app, etc.)
         generic_folders = {
@@ -334,11 +313,13 @@ class BrainDB:
             "languages", "mcp", "modules", "net", "nginx", "presentation", "rules",
             "schemes", "shared", "skills", "toolchain", "use"
         }
+        home_user = os.path.basename(os.path.expanduser("~")).lower()
+        ignored_sys = {"users", home_user, ".gemini", "antigravity", "scratch", "documents", "desktop"}
         parts = [p for p in low.split("/") if p and not p.endswith(":")]
         for part in reversed(parts):
             if re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", part):
                 continue
-            if part not in generic_folders and part not in ("users", "guels", ".gemini", "antigravity", "scratch", "documents", "desktop"):
+            if part not in generic_folders and part not in ignored_sys:
                 return part
 
         base = os.path.basename(low)

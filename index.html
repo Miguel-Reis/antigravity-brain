@@ -1213,17 +1213,24 @@
     }
 
     .office-badge {
-      background: rgba(15, 19, 31, 0.88);
-      backdrop-filter: blur(10px);
+      background: rgba(13, 18, 30, 0.78);
+      backdrop-filter: blur(18px) saturate(165%);
+      -webkit-backdrop-filter: blur(18px) saturate(165%);
       border: 1px solid rgba(255, 255, 255, 0.14);
-      padding: 6px 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      padding: 6px 13px;
       border-radius: 999px;
       font-size: 12px;
       color: var(--text-main);
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease;
+    }
+
+    .office-badge:hover {
+      border-color: rgba(236, 72, 153, 0.45);
+      transform: translateY(-1px);
     }
 
     .office-badge strong {
@@ -1232,16 +1239,18 @@
     }
 
     .office-btn {
-      background: rgba(18, 23, 38, 0.9);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(16, 22, 36, 0.82);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       color: var(--text-main);
       padding: 6px 12px;
-      border-radius: 8px;
+      border-radius: 9px;
       font-size: 11.5px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.18s cubic-bezier(0.22, 1, 0.36, 1);
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -1249,32 +1258,37 @@
 
     .office-btn:hover {
       border-color: #ec4899;
-      background: rgba(236, 72, 153, 0.16);
+      background: rgba(236, 72, 153, 0.18);
       color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(236, 72, 153, 0.25);
     }
 
     .office-btn.primary {
       background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
       border-color: #f472b6;
       color: #fff;
-      box-shadow: 0 0 14px rgba(236, 72, 153, 0.35);
+      box-shadow: 0 0 16px rgba(236, 72, 153, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.25);
     }
 
     .office-btn.emerald {
       background: rgba(16, 185, 129, 0.18);
       border-color: rgba(16, 185, 129, 0.55);
       color: #6ee7b7;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.2);
     }
 
     .office-hud-bottom {
       position: absolute;
       bottom: 14px;
       left: 16px;
-      background: rgba(13, 17, 28, 0.88);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 10px;
-      padding: 8px 14px;
+      background: rgba(11, 15, 26, 0.8);
+      backdrop-filter: blur(18px) saturate(165%);
+      -webkit-backdrop-filter: blur(18px) saturate(165%);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 8px 15px;
       display: flex;
       align-items: center;
       gap: 16px;
@@ -1293,9 +1307,9 @@
     }
 
     .office-sidebar {
-      width: 345px;
-      background: var(--bg-panel);
-      border-left: 1px solid var(--border);
+      width: 355px;
+      background: linear-gradient(180deg, rgba(16, 20, 32, 0.96) 0%, rgba(11, 14, 23, 0.98) 100%);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       flex-direction: column;
       z-index: 20;
@@ -1310,14 +1324,49 @@
     }
 
     .office-selected-card {
-      margin: 12px;
+      margin: 10px 12px 8px;
       padding: 12px;
-      background: #141927;
-      border: 1px solid rgba(236, 72, 153, 0.4);
-      border-radius: 9px;
+      background: linear-gradient(145deg, rgba(22, 28, 45, 0.95) 0%, rgba(15, 19, 31, 0.95) 100%);
+      border: 1px solid rgba(236, 72, 153, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border-radius: 11px;
       display: flex;
       flex-direction: column;
       gap: 7px;
+    }
+
+    .roster-filter-bar {
+      display: flex;
+      gap: 5px;
+      padding: 0 12px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      margin-bottom: 4px;
+    }
+
+    .roster-filter-pill {
+      flex: 1;
+      background: rgba(19, 24, 38, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      color: var(--text-muted);
+      border-radius: 7px;
+      padding: 5px 6px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .roster-filter-pill:hover {
+      color: #fff;
+      border-color: rgba(236, 72, 153, 0.4);
+    }
+
+    .roster-filter-pill.active {
+      background: rgba(236, 72, 153, 0.18);
+      border-color: #ec4899;
+      color: #fff;
+      box-shadow: 0 0 10px rgba(236, 72, 153, 0.22);
     }
 
     .office-roster-list {
@@ -1341,25 +1390,27 @@
     }
 
     .roster-card {
-      background: #131722;
+      background: linear-gradient(135deg, rgba(20, 25, 39, 0.92) 0%, rgba(15, 19, 30, 0.92) 100%);
       border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
+      border-radius: 9px;
       padding: 9px 11px;
       cursor: pointer;
-      transition: all 0.14s ease;
+      transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
 
     .roster-card:hover {
-      border-color: rgba(236, 72, 153, 0.5);
-      transform: translateX(2px);
+      border-color: rgba(236, 72, 153, 0.55);
+      transform: translateX(3px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     }
 
     .roster-card.selected {
       border-color: #ec4899;
-      background: rgba(236, 72, 153, 0.1);
+      background: linear-gradient(135deg, rgba(236, 72, 153, 0.16) 0%, rgba(139, 92, 246, 0.1) 100%);
+      box-shadow: 0 0 16px rgba(236, 72, 153, 0.2);
     }
 
     .roster-card.working {
@@ -1810,6 +1861,9 @@
           <div class="office-badge" title="Conversas reais e Subagentes detetados em ~/.gemini/antigravity/brain">
             💬 Conversas & Subagentes: <strong id="offStatConvs" style="color:#38bdf8;">0</strong>
           </div>
+          <div class="office-badge" title="Performance de renderização isométrica 3D em tempo real">
+            🎞️ Engine 3D: <strong id="offStatFps" style="color:#a78bfa;">60 FPS</strong>
+          </div>
         </div>
 
         <div class="office-cam-bar">
@@ -1912,6 +1966,14 @@
         </div>
       </div>
 
+      <!-- Roster Filter Tabs (HIG Quick Filter) -->
+      <div class="roster-filter-bar">
+        <button class="roster-filter-pill active" id="rfBtn_all" onclick="setOfficeRosterFilter('all')">Todos</button>
+        <button class="roster-filter-pill" id="rfBtn_working" onclick="setOfficeRosterFilter('working')">⚡ Trabalho</button>
+        <button class="roster-filter-pill" id="rfBtn_paused" onclick="setOfficeRosterFilter('paused')">☕ Pausa</button>
+        <button class="roster-filter-pill" id="rfBtn_mcp" onclick="setOfficeRosterFilter('mcp')">🖥️ MCPs</button>
+      </div>
+
       <!-- Live Roster -->
       <div class="office-roster-list" id="officeRosterList"></div>
     </aside>
@@ -1929,7 +1991,7 @@
       <div class="form-field" style="display:flex; gap:10px;">
         <div style="flex:1;">
           <label>Workspace / Projeto</label>
-          <input type="text" id="memWs" value="global" placeholder="global, brain_mcp, troveauto..." />
+          <input type="text" id="memWs" value="global" placeholder="global, brain_mcp, app-frontend..." />
         </div>
         <div style="flex:1;">
           <label>Categoria</label>
@@ -3666,6 +3728,19 @@
       renderOfficeSidebar();
     }
 
+    let officeRosterFilter = 'all';
+    let officeFpsLastTime = performance.now();
+    let officeFpsFrames = 0;
+
+    function setOfficeRosterFilter(mode) {
+      officeRosterFilter = mode || 'all';
+      ['all', 'working', 'paused', 'mcp'].forEach(k => {
+        const btn = document.getElementById(`rfBtn_${k}`);
+        if (btn) btn.classList.toggle('active', k === officeRosterFilter);
+      });
+      renderOfficeSidebar();
+    }
+
     function renderOfficeSidebar() {
       const listEl = document.getElementById('officeRosterList');
       if (!listEl) return;
@@ -3711,10 +3786,11 @@
 
       const renderMcpCard = (m) => {
         const isOn = m.enabled !== false;
+        const srv = m.server || m.name || 'mcp';
         return `
-          <div class="roster-card ${isOn ? 'working' : 'paused'}" onclick="toggleMcpServer3D('${escapeHtml(m.server)}')" title="Clique para ${isOn ? 'PAUSAR' : 'ATIVAR'} o servidor MCP ${escapeHtml(m.server)}">
+          <div class="roster-card ${isOn ? 'working' : 'paused'}" onclick="toggleMcpServer3D('${escapeHtml(srv)}')" title="Clique para ${isOn ? 'PAUSAR' : 'ATIVAR'} o servidor MCP ${escapeHtml(srv)}">
             <div class="rc-top">
-              <span>🖥️ ${escapeHtml(m.server)}</span>
+              <span>🖥️ ${escapeHtml(srv)}</span>
               <span class="rc-badge ${isOn ? 'working' : 'paused'}">${isOn ? '🟢 ON' : '💤 OFF'}</span>
             </div>
             <div class="rc-meta">
@@ -3725,20 +3801,32 @@
         `;
       };
 
-      listEl.innerHTML = `
-        <div class="roster-section-lbl">
-          <span>🟢 A Trabalhar nas Secretárias (${workingAgents.length})</span>
-        </div>
-        ${workingAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Todos os agentes estão em pausa no Lounge.</div>'}
-        <div class="roster-section-lbl" style="margin-top:12px;">
-          <span>☕ Em Pausa no Lounge (${pausedAgents.length})</span>
-        </div>
-        ${pausedAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Nenhum agente em pausa.</div>'}
-        <div class="roster-section-lbl" style="margin-top:14px;">
-          <span>🖥️ Sala de Servidores MCP 3D (${officeMcpServers.filter(x => x.enabled !== false).length}/${officeMcpServers.length} ON)</span>
-        </div>
-        ${officeMcpServers.map(renderMcpCard).join('')}
-      `;
+      let htmlParts = [];
+      if (officeRosterFilter === 'all' || officeRosterFilter === 'working') {
+        htmlParts.push(`
+          <div class="roster-section-lbl">
+            <span>🟢 A Trabalhar nas Secretárias (${workingAgents.length})</span>
+          </div>
+          ${workingAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Todos os agentes estão em pausa no Lounge.</div>'}
+        `);
+      }
+      if (officeRosterFilter === 'all' || officeRosterFilter === 'paused') {
+        htmlParts.push(`
+          <div class="roster-section-lbl" style="margin-top:10px;">
+            <span>☕ Em Pausa no Lounge (${pausedAgents.length})</span>
+          </div>
+          ${pausedAgents.map(renderCard).join('') || '<div style="font-size:11px; color:var(--text-dim); padding:4px;">Nenhum agente em pausa.</div>'}
+        `);
+      }
+      if (officeRosterFilter === 'all' || officeRosterFilter === 'mcp') {
+        htmlParts.push(`
+          <div class="roster-section-lbl" style="margin-top:12px;">
+            <span>🖥️ Sala de Servidores MCP 3D (${officeMcpServers.filter(x => x.enabled !== false).length}/${officeMcpServers.length} ON)</span>
+          </div>
+          ${officeMcpServers.map(renderMcpCard).join('')}
+        `);
+      }
+      listEl.innerHTML = htmlParts.join('');
     }
 
     async function toggleMcpServer3D(serverName) {
@@ -4108,7 +4196,21 @@
       }
     }
 
-    // Desenha um Boneco 3D Articulado (Cabeça + Visor + Tronco + Braços + Pernas + Caneca/Teclado)
+    // Desenha uma Planta 3D Orgânica em Vaso de Cerâmica com Folhagem em Camadas
+    function drawPlant3D(x, z, nowMs) {
+      const sway = Math.sin(nowMs * 0.0022 + x * 0.05) * 1.4;
+      // Vaso cerâmico moderno + Terra
+      drawBox3D(x, 1, z, 15, 11, 15, '#e2e8f0', '#cbd5e1', '#94a3b8', 'rgba(255,255,255,0.2)');
+      drawBox3D(x, 11.5, z, 12.5, 2, 12.5, '#451a03', '#290f02', '#290f02');
+      // Caule central
+      drawBox3D(x + sway * 0.2, 13, z, 3.2, 9, 3.2, '#047857', '#065f46', '#064e3b');
+      // 3 Copas de Folhagem Esmeralda 3D
+      drawBox3D(x + sway * 0.4, 19, z, 19, 7, 19, '#10b981', '#059669', '#047857', 'rgba(110,231,183,0.35)');
+      drawBox3D(x + sway * 0.7, 25.5, z, 14, 6.5, 14, '#34d399', '#10b981', '#059669', 'rgba(167,243,208,0.4)');
+      drawBox3D(x + sway, 31.5, z, 8.5, 5, 8.5, '#6ee7b7', '#34d399', '#10b981');
+    }
+
+    // Desenha um Boneco 3D Articulado (Cabeça + Headphones Cyberpunk + Visor + Tronco + Braços + Pernas + Caneca/Teclado)
     function drawBoneco3D(sim, nowMs) {
       const ag = sim.data;
       const x = sim.x;
@@ -4141,7 +4243,7 @@
       const walkSwing = isWalking ? Math.sin(nowMs * 0.014 + sim.walkPhase) * 5.5 : 0;
       const bobY = isWalking ? Math.abs(Math.sin(nowMs * 0.014 + sim.walkPhase)) * 3.2 : (isWorking ? Math.sin(nowMs * 0.01 + sim.typePhase) * 0.8 : 0);
 
-      // 1. PERNAS 3D (Esquerda e Direita)
+      // 1. PERNAS 3D (Esquerda e Direita) + Sapatos c/ Sola Neon
       drawBox3D(x - 4, 2, z + walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
       drawBox3D(x + 4, 2, z - walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
 
@@ -4171,11 +4273,15 @@
         officeCtx.fill();
       }
 
-      // 4. CABEÇA 3D + VISOR CYBERPUNK
+      // 4. CABEÇA 3D + VISOR CYBERPUNK + HEADPHONES 3D
       const headLookX = isWorking ? Math.sin(nowMs * 0.005 + sim.typePhase) * 1.5 : 0;
       drawBox3D(x + headLookX, 33 + bobY, z, 13, 12, 12, '#fde68a', '#fcd34d', '#f59e0b', 'rgba(255,255,255,0.2)');
-      // Capacete / Cabelo Topo
-      drawBox3D(x + headLookX, 43 + bobY, z, 13.6, 3.5, 12.6, '#1e293b', '#0f172a', '#090d16');
+      // Capacete / Cabelo Topo + Arco dos Headphones
+      drawBox3D(x + headLookX, 43 + bobY, z, 13.8, 3.5, 12.6, '#1e293b', '#0f172a', '#090d16');
+      // Earcups 3D dos Headphones (Brilham quando está em Deep Focus / A Trabalhar)
+      const hpCol = isWorking ? '#06b6d4' : '#475569';
+      drawBox3D(x + headLookX - 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#0891b2', '#0f172a');
+      drawBox3D(x + headLookX + 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#0891b2', '#0f172a');
       // Visor Luminoso Neon (Olhos)
       const visorCol = isWorking ? '#6ee7b7' : (ag.kind === 'architect' ? '#f472b6' : '#38bdf8');
       drawBox3D(x + headLookX, 37 + bobY, z - 5.8, 10, 3.2, 2, visorCol, visorCol, visorCol);
@@ -4186,6 +4292,20 @@
       } else if (ag.kind === 'scout') {
         // Antena Radar para o SCOUT-01
         drawBox3D(x + headLookX, 46.5 + bobY, z, 2.5, 7, 2.5, '#10b981', '#059669', '#047857');
+      }
+
+      // Glifos de Código Flutuantes 3D quando o Boneco está a programar na secretária
+      if (isWorking) {
+        const glyphs = ['</>', '{ }', 'fn()', 'AST', 'SQL'];
+        const gIdx = Math.floor((nowMs * 0.002 + sim.deskIdx) % glyphs.length);
+        const floatH = 42 + ((nowMs * 0.022 + sim.deskIdx * 7) % 16);
+        const gPt = projectOffice3D(x + Math.sin(nowMs * 0.004 + sim.deskIdx) * 8, floatH, z - 12);
+        officeCtx.save();
+        officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * officeCam.zoom))}px "JetBrains Mono", monospace`;
+        officeCtx.fillStyle = ag.avatar_color || '#6ee7b7';
+        officeCtx.textAlign = 'center';
+        officeCtx.fillText(glyphs[gIdx], gPt.x, gPt.y);
+        officeCtx.restore();
       }
 
       // Feixe de Teletransporte se acabou de nascer no Portal
@@ -4279,6 +4399,16 @@
       }
 
       try {
+      // Atualizar contador FPS ao vivo no HUD
+      officeFpsFrames++;
+      if (nowMs - officeFpsLastTime >= 650) {
+        const fpsVal = Math.min(60, Math.max(24, Math.round((officeFpsFrames * 1000) / (nowMs - officeFpsLastTime))));
+        const fpsEl = document.getElementById('offStatFps');
+        if (fpsEl) fpsEl.textContent = `${fpsVal} FPS`;
+        officeFpsFrames = 0;
+        officeFpsLastTime = nowMs;
+      }
+
       if (officeCam.autoRotate && !officeCam.dragging) {
         officeCam.yaw += 0.0035;
       }
@@ -4286,11 +4416,11 @@
       // 1. Limpar Canvas 3D
       officeCtx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
 
-      // 2. Desenhar a Base / Chão do Escritório 3D
-      drawBox3D(0, -10, 10, 960, 10, 680, '#0f1422', '#090c15', '#06080f', 'rgba(236,72,153,0.28)');
+      // 2. Desenhar a Base / Chão do Escritório 3D + Rodapé Neon
+      drawBox3D(0, -10, 10, 960, 10, 680, '#0f1422', '#090c15', '#06080f', 'rgba(236,72,153,0.32)');
 
       // Grelha de Piso 3D
-      officeCtx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+      officeCtx.strokeStyle = 'rgba(255, 255, 255, 0.038)';
       officeCtx.lineWidth = 1;
       for (let gx = -440; gx <= 440; gx += 80) {
         const p1 = projectOffice3D(gx, 0.5, -310);
@@ -4309,16 +4439,60 @@
         officeCtx.stroke();
       }
 
-      // Tapetes das 4 Zonas do Escritório
+      // Tapetes das 5 Zonas do Escritório
       drawFloorCarpet3D(-395, -245, 125, 105, 'rgba(6, 182, 212, 0.10)', '#06b6d4', '🚪 PORTAL NOVOS AGENTES');
       drawFloorCarpet3D(10, -235, 330, 115, 'rgba(236, 72, 153, 0.09)', '#ec4899', '👑 COMANDO ARGON & SCOUT MAP');
       drawFloorCarpet3D(-135, 95, 480, 460, 'rgba(59, 130, 246, 0.05)', '#38bdf8', '💻 ZONA DE SECRETÁRIAS (WORKSTATIONS)');
       drawFloorCarpet3D(345, 45, 235, 560, 'rgba(245, 158, 11, 0.07)', '#f59e0b', '☕ ZONA DE PAUSA · LOUNGE & CAFÉ');
       drawFloorCarpet3D(-365, 25, 165, 210, 'rgba(56, 189, 248, 0.07)', '#38bdf8', '🖥 SALA DE SERVIDORES MCP 3D');
 
-      // 3. Construir Lista de Objetos 3D (Mobiliário + Secretárias + Racks MCP + Quadro Holográfico + Bonecos)
+      // 3. Construir Lista de Objetos 3D (Paredes Cutaway + Plantas + Mobiliário + Secretárias + Racks MCP + Bonecos)
       const renderables = [];
       officeMcpHitboxes = [];
+
+      // Paredes Arquitetónicas Cutaway 3D (Norte e Oeste) com Janelas Panorâmicas Cyberpunk & Friso LED
+      renderables.push({
+        depth: projectOffice3D(0, 42, -325).depth,
+        draw: () => {
+          // Parede Norte Principal + Friso Superior Neon Magenta
+          drawBox3D(0, 0, -328, 956, 76, 8, '#131a2e', '#0c1120', '#090d18', 'rgba(236,72,153,0.22)');
+          drawBox3D(0, 76, -328, 956, 3, 9, '#ec4899', '#db2777', '#be185d');
+          // 2 Janelas Panorâmicas Cyberpunk na Parede Norte (Vista Noturna)
+          drawBox3D(-255, 20, -323, 150, 42, 3, '#0284c7', '#0f172a', '#1e293b', 'rgba(56,189,248,0.45)');
+          drawBox3D(245, 20, -323, 185, 42, 3, '#0284c7', '#0f172a', '#1e293b', 'rgba(56,189,248,0.45)');
+          // Prédios da Skyline Cyberpunk lá fora
+          drawBox3D(215, 20, -321, 18, 28, 2, '#1e1b4b', '#1e1b4b', '#312e81');
+          drawBox3D(250, 20, -321, 22, 36, 2, '#0f172a', '#1e293b', '#38bdf8');
+          drawBox3D(285, 20, -321, 16, 22, 2, '#312e81', '#1e1b4b', '#ec4899');
+        }
+      });
+
+      renderables.push({
+        depth: projectOffice3D(-475, 42, 10).depth,
+        draw: () => {
+          // Parede Oeste Cutaway + Friso Superior Neon Cyan
+          drawBox3D(-476, 0, 10, 8, 76, 676, '#131a2e', '#090d18', '#0c1120', 'rgba(6,182,212,0.22)');
+          drawBox3D(-476, 76, 10, 9, 3, 676, '#06b6d4', '#0891b2', '#0e7490');
+          // Janela Lateral sobre a Sala de Servidores MCP
+          drawBox3D(-471, 22, 25, 3, 38, 150, '#0284c7', '#0f172a', '#0369a1', 'rgba(56,189,248,0.4)');
+        }
+      });
+
+      // Plantas 3D Orgânicas nos Cantos e Divisórias de Zona
+      const PLANT_COORDS = [
+        { x: -245, z: -295 },
+        { x: 195, z: -295 },
+        { x: 215, z: -65 },
+        { x: 215, z: 165 },
+        { x: 435, z: -275 },
+        { x: -435, z: 305 }
+      ];
+      PLANT_COORDS.forEach(pl => {
+        renderables.push({
+          depth: projectOffice3D(pl.x, 16, pl.z).depth,
+          draw: () => drawPlant3D(pl.x, pl.z, nowMs)
+        });
+      });
 
       // Quadro Holográfico 3D na Parede Norte (atrás da Mesa de Comando do Gemini 4 Argon)
       renderables.push({
@@ -4421,15 +4595,29 @@
         }
       });
 
-      // Mobiliário da Zona de Pausa (Máquina de Café, Balcão, Sofás, Arcade, Watercooler)
+      // Mobiliário da Zona de Pausa (Máquina de Café + Vapor Volumétrico, Balcão, Sofás, Arcade)
       renderables.push({
         depth: projectOffice3D(355, 15, -185).depth,
         draw: () => {
-          // Balcão de Café Espresso
-          drawBox3D(355, 1, -185, 115, 22, 34, '#78350f', '#451a03', '#290f02');
-          // Máquina de Espresso 3D
-          drawBox3D(375, 23, -185, 28, 20, 20, '#ef4444', '#dc2626', '#991b1b');
-          drawBox3D(330, 23, -185, 14, 12, 14, '#e2e8f0', '#94a3b8', '#64748b');
+          // Balcão de Café Espresso com Tampo Mármore Escuro
+          drawBox3D(355, 1, -185, 118, 22, 34, '#78350f', '#451a03', '#290f02');
+          drawBox3D(355, 22, -185, 122, 2.5, 36, '#334155', '#1e293b', '#0f172a');
+          // Máquina de Espresso Italiana 3D
+          drawBox3D(375, 24.5, -185, 28, 20, 20, '#ef4444', '#dc2626', '#991b1b');
+          drawBox3D(330, 24.5, -185, 14, 12, 14, '#e2e8f0', '#94a3b8', '#64748b');
+          // Vapor Volumétrico Contínuo a sair da Máquina de Espresso
+          for (let sp = 0; sp < 3; sp++) {
+            const prog = ((nowMs * 0.0014 + sp * 0.33) % 1);
+            const stPos = projectOffice3D(
+              375 + Math.sin(nowMs * 0.004 + sp * 2) * 4,
+              46 + prog * 22,
+              -185
+            );
+            officeCtx.beginPath();
+            officeCtx.arc(stPos.x, stPos.y, (2.2 + prog * 3.2) * officeCam.zoom, 0, Math.PI * 2);
+            officeCtx.fillStyle = `rgba(226, 232, 240, ${(1 - prog) * 0.38})`;
+            officeCtx.fill();
+          }
         }
       });
 
@@ -4445,17 +4633,21 @@
       renderables.push({
         depth: projectOffice3D(345, 12, 15).depth,
         draw: () => {
-          // Sofá Lounge Norte
+          // Sofá Lounge Norte c/ Almofadas
           drawBox3D(345, 1, 5, 110, 12, 36, '#4f46e5', '#4338ca', '#3730a3');
           drawBox3D(345, 13, -10, 110, 14, 10, '#6366f1', '#4f46e5', '#3730a3');
+          drawBox3D(312, 13, 8, 16, 6, 16, '#ec4899', '#db2777', '#be185d');
+          drawBox3D(378, 13, 8, 16, 6, 16, '#06b6d4', '#0891b2', '#0e7490');
         }
       });
 
       renderables.push({
         depth: projectOffice3D(345, 10, 95).depth,
         draw: () => {
-          // Mesa de Centro do Lounge
+          // Mesa de Centro do Lounge + Canecas
           drawBox3D(345, 1, 95, 65, 10, 38, '#b45309', '#92400e', '#78350f');
+          drawBox3D(335, 11, 92, 5, 5, 5, '#f8fafc', '#cbd5e1', '#94a3b8');
+          drawBox3D(355, 11, 98, 7, 2, 9, '#38bdf8', '#0284c7', '#0369a1');
         }
       });
 
@@ -4468,7 +4660,7 @@
         }
       });
 
-      // Secretárias 3D (Workstations)
+      // Secretárias 3D (Workstations c/ Torre PC RGB, Monitor c/ Código Sintático e Cadeira Gaming Ergonómica)
       const workingDeskSet = new Set();
       Object.values(officeSimAgents).forEach(s => {
         if (s.data && s.data.status === 'working' && Math.hypot(s.targetX - s.x, s.targetZ - s.z) < 12) {
@@ -4487,19 +4679,51 @@
           draw: () => {
             // Tampo da Secretária 3D
             const deskTopCol = idx <= 1 ? '#1e1b4b' : '#1e293b';
-            drawBox3D(dSlot.x, 14, dSlot.z, 64, 4, 34, deskTopCol, '#0f172a', '#090d16');
-            // Pernas da Secretária
-            drawBox3D(dSlot.x - 26, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
-            drawBox3D(dSlot.x + 26, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
+            const accentCol = dSlot.color || '#10b981';
+            drawBox3D(dSlot.x, 14, dSlot.z, 66, 4, 34, deskTopCol, '#0f172a', '#090d16', isBusy ? accentCol : 'rgba(255,255,255,0.09)');
+            // Pernas Metálicas da Secretária
+            drawBox3D(dSlot.x - 27, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
+            drawBox3D(dSlot.x + 27, 1, dSlot.z, 4, 13, 28, '#334155', '#1e293b', '#0f172a');
 
-            // Monitor 3D Duplo / Holográfico em cima da secretária
-            const screenCol = isBusy ? (dSlot.color || '#10b981') : '#1e293b';
-            drawBox3D(dSlot.x, 18, dSlot.z - 8, 34, 18, 4, screenCol, '#0f172a', '#334155');
-            // Teclado 3D
-            drawBox3D(dSlot.x, 18, dSlot.z + 6, 18, 1.5, 7, isBusy ? '#e2e8f0' : '#475569', '#334155', '#1e293b');
+            // Torre PC Workstation c/ Painel Lateral RGB
+            drawBox3D(dSlot.x + 23, 18, dSlot.z - 5, 9, 15, 16, '#0f172a', '#1e293b', isBusy ? accentCol : '#334155');
 
-            // Cadeira 3D
-            drawBox3D(dSlot.x, 1, dSlot.z + 24, 18, 11, 18, '#1e293b', '#0f172a', '#090d16');
+            // Suporte + Monitor Curvo Ultrawide 3D
+            drawBox3D(dSlot.x - 3, 18, dSlot.z - 9, 6, 4, 4, '#475569', '#334155', '#1e293b');
+            const screenCol = isBusy ? '#0b1324' : '#111827';
+            drawBox3D(dSlot.x - 3, 21, dSlot.z - 8, 38, 18, 3.5, accentCol, screenCol, '#1e293b', isBusy ? accentCol : 'rgba(255,255,255,0.12)');
+
+            // Linhas de Código com Syntax Highlighting animadas no Ecrã 3D quando o Agente está a trabalhar
+            if (isBusy) {
+              const synCols = ['#f43f5e', '#38bdf8', '#10b981', '#f59e0b'];
+              for (let ln = 0; ln < 4; ln++) {
+                const lineY = 24 + ln * 3.4;
+                const pulseW = 10 + ((Math.floor(nowMs * 0.01 + idx * 3 + ln * 5)) % 18);
+                const pL = projectOffice3D(dSlot.x - 18, lineY, dSlot.z - 6);
+                const pR = projectOffice3D(dSlot.x - 18 + pulseW, lineY, dSlot.z - 6);
+                officeCtx.strokeStyle = synCols[(ln + idx) % synCols.length];
+                officeCtx.lineWidth = Math.max(1.2, 2.1 * officeCam.zoom);
+                officeCtx.beginPath();
+                officeCtx.moveTo(pL.x, pL.y);
+                officeCtx.lineTo(pR.x, pR.y);
+                officeCtx.stroke();
+              }
+            }
+
+            // Tapete Deskmat + Teclado Mecânico 3D + Rato
+            drawBox3D(dSlot.x - 3, 18, dSlot.z + 6, 20, 1.5, 7, isBusy ? '#e2e8f0' : '#475569', '#334155', '#1e293b');
+            drawBox3D(dSlot.x + 12, 18, dSlot.z + 6, 4, 1.4, 5.5, accentCol, '#1e293b', '#0f172a');
+
+            // Cadeira Gaming / Executiva Ergonómica 3D (Base + Pistão + Assento + Encosto Alto c/ Lombar Neon + Apoios de Braço)
+            const chZ = dSlot.z + 25;
+            drawBox3D(dSlot.x, 1, chZ, 16, 2.5, 16, '#334155', '#1e293b', '#0f172a');
+            drawBox3D(dSlot.x, 3.5, chZ, 4, 6.5, 4, '#64748b', '#475569', '#334155');
+            drawBox3D(dSlot.x, 10, chZ, 18, 3.5, 18, '#1e293b', '#0f172a', '#090d16', 'rgba(255,255,255,0.12)');
+            // Encosto Alto da Cadeira + Faixa Neon
+            drawBox3D(dSlot.x, 13.5, chZ + 7.5, 16, 18, 3.5, accentCol, '#1e293b', '#0f172a');
+            // Apoios de Braço
+            drawBox3D(dSlot.x - 9.5, 13.5, chZ + 1, 2.5, 5.5, 12, '#334155', '#1e293b', '#0f172a');
+            drawBox3D(dSlot.x + 9.5, 13.5, chZ + 1, 2.5, 5.5, 12, '#334155', '#1e293b', '#0f172a');
 
             // Se o agente está a trabalhar nesta secretária, emitir feixe de dados para a Mesa de Comando!
             if (isBusy && idx > 0) {
@@ -4510,7 +4734,7 @@
               const py = pFrom.y + (pTo.y - pFrom.y) * tProg - Math.sin(tProg * Math.PI) * 28;
               officeCtx.beginPath();
               officeCtx.arc(px, py, 3 * officeCam.zoom, 0, Math.PI * 2);
-              officeCtx.fillStyle = dSlot.color || '#ec4899';
+              officeCtx.fillStyle = accentCol;
               officeCtx.fill();
             }
           }
