@@ -1,53 +1,58 @@
-# 🧠 Antigravity Brain v2.4 — Obsidian Graph + Scout-First Asymmetric Swarm
+# ⚡ Antigravity Brain v4.0 — Tech Revolution
 
-Motor local de memória persistente (**SQLite WAL + FTS5 BM25**), otimização da quota de **5 horas / tokens** e monitor em tempo real **Scout-First Asymmetric Swarm** para o **Antigravity**.
-
----
-
-## ✨ Funcionalidades Principais
-
-1. **Injeção Efémera Zero-Round-Trip (`PreInvocation` Hook — ~15ms)**:
-   - Antes de cada resposta do modelo, [`brain_inject.py`](./brain_inject.py) pesquisa na base de dados local (`brain.db`) e injeta apenas os factos relevantes + o mapa partilhado da codebase (`<320 tokens`), poupando milhares de tokens em buscas repetidas.
-2. **Auto-Harvester a Custo Zero (`Stop` Hook)**:
-   - No fim de cada resposta, [`brain_harvest.py`](./brain_harvest.py) extrai automaticamente os ficheiros editados, checkpoints e notas `<!-- brain: Tópico | Facto -->` sem gastar 1 único token de LLM.
-3. **Obsidian Neural Graph View (`http://127.0.0.1:8765/#graph`)**:
-   - Grafo interativo com formas geométricas vetoriais por categoria, física pré-aquecida sem *jitter* no `F5`, pesquisa FTS5 em tempo real e inspetor de ligações sinápticas.
-4. **Scout-First Asymmetric Swarm Monitor (`http://127.0.0.1:8765/#swarm`)**:
-   - **0. `SCOUT-01` (Leitura Única AST)**: Lê a codebase **1 única vez** e partilha o `[SCOUT_SHARED_MAP]` com todos os subagentes para nenhum worker gastar tokens a reler ficheiros.
-   - **1. `ARCHITECT` ➔ 2. `SWARM (4 Lanes: UI, API, TESTS, DOCS)` ➔ 3. `VERIFY (48/48 Checks)`**: Painel visual em tempo real para acompanhar o progresso dos subagentes.
-5. **Token Diet (`Lean` vs `Full`) & Auto-Updater Git**:
-   - Alterna entre perfil económico (`lean`) e completo (`full`) com 1 clique.
-   - **Auto-Update Integrado**: Verifica automaticamente no GitHub (`origin/main`) ao iniciar e a cada 30 minutos (ou através do botão **`📦 Git`** no topo do dashboard).
+Motor local de memória persistente (**SQLite WAL + FTS5 BM25**), planeamento cognitivo **JEV-Mem System-1 (`<0.05ms`)**, grafo causal **Ruflo** e interface **Tech Revolution HUD** (`http://127.0.0.1:8765`) para o **Antigravity**.
 
 ---
 
-## 🚀 Instalação Rápida num Novo PC (1 Comando no PowerShell)
+## 🧠 Como Funciona (100% Automático em Cada Mensagem)
 
-Basta abrir o **PowerShell** e colar este comando:
+| Fase | Hook / Script | O que executa automaticamente |
+| :--- | :--- | :--- |
+| **Antes da Resposta** | `PreInvocation` ➔ [`brain_inject.py`](./brain_inject.py) | • **JEV-S1 Router**: classifica a intenção em `<0.05ms` e pondera as 3 camadas (`[W] Working`, `[S] Semantic`, `[E] Episodic`).<br>• **Adaptive Stopping**: injeta apenas memórias com ganho marginal real + arestas causais (`fixed_by`, `evolves`, `supersedes`).<br>• **Scout Shared Map**: injeta a árvore AST (`[SCOUT_SHARED_MAP]`) para evitar leituras repetidas da codebase. |
+| **Durante a Execução** | `Tool Loop` ➔ [`swarm_engine.py`](./swarm_engine.py) | • Sincroniza em tempo real as ferramentas usadas (`edit_file`, `run_command`, subagentes) com o **Swarm Matrix** e move os agentes ativos para as secretárias no **Escritório 3D**. |
+| **Fim da Resposta** | `Stop` ➔ [`brain_harvest.py`](./brain_harvest.py) | • Extrai notas `<!-- brain: Tópico \| Facto -->` e ficheiros editados a **custo zero de tokens**.<br>• **AI-Defence**: filtra chaves/segredos (`AIza...`, `ghp_...`, `sk-...`) antes de gravar.<br>• **Memory Doctor**: funde duplicados, cria ligações causais e atualiza o checkpoint. |
+
+---
+
+## 🖥️ Vistas do Dashboard (`http://127.0.0.1:8765`)
+
+1. **`01 // NEURAL CORTEX` (`/#graph`)**
+   - Grafo de memória com anéis de sonar quântico, nós holográficos por camada (`[HUB]`, `[W]`, `[S]`, `[E]`, `[CP]`) e arestas causais direcionadas.
+   - Lâminas laterais **JEV-S1 Neural Router**, **5h Quota Reactor**, **Causal Lineage Inspector** e stream ao vivo do bloco `[BRAIN_MEMORY]`.
+2. **`02 // SWARM MATRIX` (`/#swarm`)**
+   - Pipeline **Scout-First Asymmetric Swarm** (`STAGE 01 SCOUT` ➔ `STAGE 02 ARCHITECT` ➔ `STAGE 03 24 WORKERS` ➔ `STAGE 04 48/48 VERIFY`).
+   - 4 Lanes paralelas (`UI`, `API`, `TESTS`, `DOCS`) com fitness **Ruflo Pheromone EMA** e Work-Stealing automático.
+3. **`03 // HOLOGRAPHIC 3D` (`/#office`)**
+   - Escritório isométrico 3D a 60 FPS com 6 zonas dedicadas (Portal Quântico, Servidores MCP, Ponte de Comando Argon, Ala Swarm, Subagentes e Lounge), minimapa radar orbital e consola de ordens diretas (`[CONSOLE] NEURAL DIRECTIVE`).
+
+> **Atalho Global**: Pressiona **`Ctrl+K`** em qualquer vista para abrir a **Command Palette**.
+
+---
+
+## 🚀 Instalação Rápida (PowerShell)
 
 ```powershell
 git clone https://github.com/Miguel-Reis/antigravity-brain.git "$HOME\.gemini\antigravity\scratch\brain_mcp"; python "$HOME\.gemini\antigravity\scratch\brain_mcp\install.py"
 ```
 
-*(Ou fazer duplo-clique em `install.bat` depois de clonar!)*
-
-O instalador [`install.py`](./install.py) configura tudo sozinho para o utilizador atual:
-- Regista os hooks globais em `~/.gemini/config/hooks.json`
-- Instala o plugin global em `~/.gemini/config/plugins/antigravity-brain`
-- Regista o servidor MCP `antigravity-brain` em `~/.gemini/config/mcp_config.json`
-- Adiciona o arranque silencioso (`pythonw.exe`) ao iniciar o Windows
-- Abre o servidor local em **`http://127.0.0.1:8765`**
+O instalador [`install.py`](./install.py) regista automaticamente:
+- Hooks globais em `~/.gemini/config/hooks.json`
+- Plugin e regras em `~/.gemini/config/plugins/antigravity-brain`
+- Servidor MCP `antigravity-brain` em `~/.gemini/config/mcp_config.json`
+- Arranque em background de [`web_dashboard.py`](./web_dashboard.py) em `http://127.0.0.1:8765`
 
 ---
 
-## 🔄 Como Atualizar (Auto-Update ou Manual)
+## 🔄 Atualização
 
-O projeto já inclui **Auto-Update automático** em background (verifica novos commits em `origin/main` sempre que o servidor inicia e a cada 30 minutos).
+O serviço verifica atualizações automaticamente em `origin/main`. Para atualizar manualmente:
+- Clica em **`📦 Git`** no topo do dashboard (`http://127.0.0.1:8765`), ou executa:
+  ```powershell
+  python "$HOME\.gemini\antigravity\scratch\brain_mcp\auto_updater.py"
+  ```
 
-Se quiseres forçar uma atualização imediata a qualquer momento, tens 3 opções:
-1. **No Browser (`http://127.0.0.1:8765`)**: Clica no botão **`📦 Git: <sha> (Auto)`** no canto superior direito.
-2. **Duplo-clique**: Executa o ficheiro `update.bat`.
-3. **Via Terminal**:
-   ```powershell
-   python "$HOME\.gemini\antigravity\scratch\brain_mcp\auto_updater.py"
-   ```
+---
+
+## 🔒 Privacidade
+
+A base de dados local (`brain.db*`) e o mapeamento privado de projetos (`.brain_workspaces.json`) estão bloqueados no [`.gitignore`](./.gitignore) e **nunca** são enviados para o GitHub.
