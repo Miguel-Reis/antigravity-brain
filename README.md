@@ -51,8 +51,3 @@ The background service automatically checks `origin/main` for updates. To update
   python "$HOME\.gemini\antigravity\scratch\brain_mcp\auto_updater.py"
   ```
 
----
-
-## 🔒 Privacy
-
-Your local database (`brain.db*`) and private workspace mapping (`.brain_workspaces.json`) are excluded via [`.gitignore`](./.gitignore) and are **never** pushed to GitHub.
