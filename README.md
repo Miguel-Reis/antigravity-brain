@@ -1,58 +1,58 @@
 # ⚡ Antigravity Brain v4.0 — Tech Revolution
 
-Motor local de memória persistente (**SQLite WAL + FTS5 BM25**), planeamento cognitivo **JEV-Mem System-1 (`<0.05ms`)**, grafo causal **Ruflo** e interface **Tech Revolution HUD** (`http://127.0.0.1:8765`) para o **Antigravity**.
+Local persistent memory engine (**SQLite WAL + FTS5 BM25**), **JEV-Mem System-1 cognitive router (`<0.05ms`)**, **Ruflo causal graph**, and **Tech Revolution HUD** (`http://127.0.0.1:8765`) for **Antigravity**.
 
 ---
 
-## 🧠 Como Funciona (100% Automático em Cada Mensagem)
+## 🧠 How It Works (100% Automatic on Every Chat Message)
 
-| Fase | Hook / Script | O que executa automaticamente |
+| Stage | Hook / Script | What Runs Automatically |
 | :--- | :--- | :--- |
-| **Antes da Resposta** | `PreInvocation` ➔ [`brain_inject.py`](./brain_inject.py) | • **JEV-S1 Router**: classifica a intenção em `<0.05ms` e pondera as 3 camadas (`[W] Working`, `[S] Semantic`, `[E] Episodic`).<br>• **Adaptive Stopping**: injeta apenas memórias com ganho marginal real + arestas causais (`fixed_by`, `evolves`, `supersedes`).<br>• **Scout Shared Map**: injeta a árvore AST (`[SCOUT_SHARED_MAP]`) para evitar leituras repetidas da codebase. |
-| **Durante a Execução** | `Tool Loop` ➔ [`swarm_engine.py`](./swarm_engine.py) | • Sincroniza em tempo real as ferramentas usadas (`edit_file`, `run_command`, subagentes) com o **Swarm Matrix** e move os agentes ativos para as secretárias no **Escritório 3D**. |
-| **Fim da Resposta** | `Stop` ➔ [`brain_harvest.py`](./brain_harvest.py) | • Extrai notas `<!-- brain: Tópico \| Facto -->` e ficheiros editados a **custo zero de tokens**.<br>• **AI-Defence**: filtra chaves/segredos (`AIza...`, `ghp_...`, `sk-...`) antes de gravar.<br>• **Memory Doctor**: funde duplicados, cria ligações causais e atualiza o checkpoint. |
+| **Before Response** | `PreInvocation` ➔ [`brain_inject.py`](./brain_inject.py) | • **JEV-S1 Router**: classifies intent in `<0.05ms` and weights the 3 memory tiers (`[W] Working`, `[S] Semantic`, `[E] Episodic`).<br>• **Adaptive Stopping**: injects only high-gain memories + causal edges (`fixed_by`, `evolves`, `supersedes`).<br>• **Scout Shared Map**: injects the AST symbol map (`[SCOUT_SHARED_MAP]`) to eliminate redundant codebase reads. |
+| **During Execution** | `Tool Loop` ➔ [`swarm_engine.py`](./swarm_engine.py) | • Syncs live tool calls (`edit_file`, `run_command`, subagents) with the **Swarm Matrix** and moves active agents to their workstations in the **3D Office**. |
+| **After Response** | `Stop` ➔ [`brain_harvest.py`](./brain_harvest.py) | • Harvests `<!-- brain: Topic \| Fact -->` notes and edited files at **zero LLM token cost**.<br>• **AI-Defence**: redacts secrets/tokens (`AIza...`, `ghp_...`, `sk-...`) before SQLite storage.<br>• **Memory Doctor**: merges duplicates, builds causal links, and updates the workspace checkpoint. |
 
 ---
 
-## 🖥️ Vistas do Dashboard (`http://127.0.0.1:8765`)
+## 🖥️ Dashboard Views (`http://127.0.0.1:8765`)
 
 1. **`01 // NEURAL CORTEX` (`/#graph`)**
-   - Grafo de memória com anéis de sonar quântico, nós holográficos por camada (`[HUB]`, `[W]`, `[S]`, `[E]`, `[CP]`) e arestas causais direcionadas.
-   - Lâminas laterais **JEV-S1 Neural Router**, **5h Quota Reactor**, **Causal Lineage Inspector** e stream ao vivo do bloco `[BRAIN_MEMORY]`.
+   - Quantum sonar memory graph with double-ring holographic nodes by tier (`[HUB]`, `[W]`, `[S]`, `[E]`, `[CP]`) and directed causal edges.
+   - Side blades for **JEV-S1 Neural Router**, **5h Quota Reactor**, **Causal Lineage Inspector**, and live `[BRAIN_MEMORY]` stream.
 2. **`02 // SWARM MATRIX` (`/#swarm`)**
-   - Pipeline **Scout-First Asymmetric Swarm** (`STAGE 01 SCOUT` ➔ `STAGE 02 ARCHITECT` ➔ `STAGE 03 24 WORKERS` ➔ `STAGE 04 48/48 VERIFY`).
-   - 4 Lanes paralelas (`UI`, `API`, `TESTS`, `DOCS`) com fitness **Ruflo Pheromone EMA** e Work-Stealing automático.
+   - **Scout-First Asymmetric Swarm** pipeline (`STAGE 01 SCOUT` ➔ `STAGE 02 ARCHITECT` ➔ `STAGE 03 24 WORKERS` ➔ `STAGE 04 48/48 VERIFY`).
+   - 4 parallel lanes (`UI`, `API`, `TESTS`, `DOCS`) with **Ruflo Pheromone EMA** fitness and automatic Work-Stealing.
 3. **`03 // HOLOGRAPHIC 3D` (`/#office`)**
-   - Escritório isométrico 3D a 60 FPS com 6 zonas dedicadas (Portal Quântico, Servidores MCP, Ponte de Comando Argon, Ala Swarm, Subagentes e Lounge), minimapa radar orbital e consola de ordens diretas (`[CONSOLE] NEURAL DIRECTIVE`).
+   - 60 FPS isometric 3D office with 6 dedicated zones (Quantum Portal, MCP Server Room, Argon Command Bridge, Swarm Engineering Wing, Subagents Wing, and Espresso & Arcade Lounge), orbital radar minimap, and direct `[CONSOLE] NEURAL DIRECTIVE` bar.
 
-> **Atalho Global**: Pressiona **`Ctrl+K`** em qualquer vista para abrir a **Command Palette**.
+> **Global Shortcut**: Press **`Ctrl+K`** in any view to open the **Command Palette**.
 
 ---
 
-## 🚀 Instalação Rápida (PowerShell)
+## 🚀 Quick Install (PowerShell)
 
 ```powershell
 git clone https://github.com/Miguel-Reis/antigravity-brain.git "$HOME\.gemini\antigravity\scratch\brain_mcp"; python "$HOME\.gemini\antigravity\scratch\brain_mcp\install.py"
 ```
 
-O instalador [`install.py`](./install.py) regista automaticamente:
-- Hooks globais em `~/.gemini/config/hooks.json`
-- Plugin e regras em `~/.gemini/config/plugins/antigravity-brain`
-- Servidor MCP `antigravity-brain` em `~/.gemini/config/mcp_config.json`
-- Arranque em background de [`web_dashboard.py`](./web_dashboard.py) em `http://127.0.0.1:8765`
+[`install.py`](./install.py) automatically configures:
+- Global hooks in `~/.gemini/config/hooks.json`
+- Plugin and rules in `~/.gemini/config/plugins/antigravity-brain`
+- `antigravity-brain` MCP server in `~/.gemini/config/mcp_config.json`
+- Background dashboard service ([`web_dashboard.py`](./web_dashboard.py)) at `http://127.0.0.1:8765`
 
 ---
 
-## 🔄 Atualização
+## 🔄 Updating
 
-O serviço verifica atualizações automaticamente em `origin/main`. Para atualizar manualmente:
-- Clica em **`📦 Git`** no topo do dashboard (`http://127.0.0.1:8765`), ou executa:
+The background service automatically checks `origin/main` for updates. To update manually:
+- Click **`📦 Git`** in the top bar of `http://127.0.0.1:8765`, or run:
   ```powershell
   python "$HOME\.gemini\antigravity\scratch\brain_mcp\auto_updater.py"
   ```
 
 ---
 
-## 🔒 Privacidade
+## 🔒 Privacy
 
-A base de dados local (`brain.db*`) e o mapeamento privado de projetos (`.brain_workspaces.json`) estão bloqueados no [`.gitignore`](./.gitignore) e **nunca** são enviados para o GitHub.
+Your local database (`brain.db*`) and private workspace mapping (`.brain_workspaces.json`) are excluded via [`.gitignore`](./.gitignore) and are **never** pushed to GitHub.
