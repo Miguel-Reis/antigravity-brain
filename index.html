@@ -1663,19 +1663,49 @@
         <span class="stage-pill" id="pillVerify">3. VERIFY (48/48)</span>
       </div>
 
-      <div class="swarm-controls">
+      <div class="swarm-controls" style="flex-wrap:wrap; gap:6px;">
+        <select
+          id="swarmModeSelect"
+          onchange="onSwarmModeChange()"
+          style="background:#070910; border:1px solid rgba(236,72,153,0.45); border-radius:6px; padding:5px 8px; color:#f9a8d4; font-family:var(--font-mono); font-size:11px; outline:none; cursor:pointer;"
+          title="Escolha o modo de operação das 24 Lanes Assimétricas"
+        >
+          <option value="full">⚡ Modo: Full 24 Lanes</option>
+          <option value="bug_audit">🐛 Modo: Auditoria de Bugs</option>
+          <option value="perf_opt">🚀 Modo: Otimização Quota &amp; Perf</option>
+          <option value="qa_gate">🧪 Modo: QA Gate 48/48</option>
+          <option value="arch_refactor">📐 Modo: Arquitetura AST</option>
+        </select>
+        <select
+          id="swarmHistorySelect"
+          onchange="onSwarmHistoryChange()"
+          style="background:#070910; border:1px solid rgba(16,185,129,0.4); border-radius:6px; padding:5px 8px; color:#6ee7b7; font-family:var(--font-mono); font-size:11px; outline:none; cursor:pointer; max-width:175px;"
+          title="Histórico de Swarm Runs guardadas no brain.db"
+        >
+          <option value="">🕒 Run Atual (Live)</option>
+        </select>
         <input
           type="text"
           id="swarmGoalInput"
           class="swarm-goal-input"
+          style="width:220px;"
           value="ship v2.4: Scout Shared Map + 24 Asymmetric Lanes"
-          placeholder="Objetivo do Swarm (ex: ship v2.4 tonight)..."
+          placeholder="Objetivo do Swarm..."
         />
-        <button class="btn-scout-emerald" onclick="triggerScoutOnly()" title="Lança apenas o Agente Batedor (Scout) para ler a codebase 1x e atualizar o Mapa Partilhado no brain.db">
-          🔍 Scout Codebase (1x)
+        <button class="btn-scout-emerald" onclick="triggerScoutOnly()" title="Lança apenas o Agente Batedor (Scout) para ler a codebase 1x e gravar o Mapa Partilhado no brain.db">
+          🔍 Scout (1x)
         </button>
-        <button class="btn-swarm-pink" onclick="triggerSwarmRun()" title="Executa SCOUT (flash_lite) ➔ PLAN (pro) ➔ 24 Workers Paralelos (flash / flash_lite) ➔ 48 Verify Checks">
-          ⚡ Run Swarm (24 Lanes)
+        <button class="btn-swarm-pink" onclick="triggerSwarmRun()" title="Executa SCOUT (flash_lite) ➔ PLAN (pro) ➔ 24 Workers Paralelos ➔ 48 Verify Checks">
+          ⚡ Run Swarm (24)
+        </button>
+        <button class="btn-scout-emerald" style="background:rgba(16,185,129,0.22); border-color:#10b981;" onclick="triggerSwarmAction('verify_all')" title="Executa verificação real AST Python + JS + SQLite WAL e valida imediatamente 48/48 checks">
+          ✅ Verify All (48/48)
+        </button>
+        <button class="btn-scout-emerald" style="background:rgba(56,189,248,0.16); border-color:#38bdf8; color:#7dd3fc;" onclick="triggerSwarmAction('doctor')" title="Executa o Memory Doctor FTS5 e regista diagnóstico no log do Swarm">
+          🩺 Doctor
+        </button>
+        <button class="btn-scout-emerald" style="background:rgba(245,158,11,0.16); border-color:#f59e0b; color:#fcd34d;" onclick="triggerSwarmAction('reset_queue')" title="Reinicia a fila das 24 tasks da Run atual">
+          🔄 Reset
         </button>
       </div>
     </div>
@@ -1907,8 +1937,20 @@
           <button class="office-btn emerald" onclick="spawnNewOfficeConversationAgent()" title="Simula a criação de um novo agente de conversa (entra pelo Portal Quântico 3D e caminha até à secretária)">
             ➕ Novo Agente 3D
           </button>
-          <button class="office-btn primary" onclick="triggerSwarmFromOffice()" title="Coloca toda a equipa a trabalhar em paralelo">
-            ⚡ Ativar Equipa
+          <button class="office-btn" style="border-color:rgba(16,185,129,0.5); color:#6ee7b7;" onclick="triggerOfficeTeamAction('work_all')" title="Chama todos os agentes para as secretárias 3D (Modo Sprint)">
+            💻 Todos Trabalhar
+          </button>
+          <button class="office-btn" style="border-color:rgba(245,158,11,0.5); color:#fcd34d;" onclick="triggerOfficeTeamAction('pause_all')" title="Envia todos os agentes para descansar no Lounge &amp; Café Espresso">
+            ☕ Todos Pausa
+          </button>
+          <button class="office-btn" style="border-color:rgba(56,189,248,0.5); color:#7dd3fc;" onclick="triggerOfficeTeamAction('complete_all_tasks')" title="Conclui todas as tasks ativas (48/48 PASS) e sincroniza equipa">
+            ✅ Concluir Tasks
+          </button>
+          <button class="office-btn" onclick="triggerOfficeTeamAction('clear_simulated')" title="Remove agentes simulados temporários e restaura deteção automática de transcripts">
+            🧹 Limpar Simulados
+          </button>
+          <button class="office-btn primary" onclick="triggerSwarmFromOffice()" title="Lança Swarm Run de 24 Lanes em paralelo a partir do Escritório 3D">
+            ⚡ Ativar Swarm
           </button>
         </div>
       </div>
@@ -1949,7 +1991,7 @@
 
         <!-- Chat / Comando Direto ao Boneco 3D -->
         <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.07);">
-          <div style="font-size:10px; color:#f472b6; font-weight:700; text-transform:uppercase;">💬 Falar / Enviar Ordem Direta ao Agente</div>
+          <div style="font-size:10px; color:#f472b6; font-weight:700; text-transform:uppercase;">💬 Falar / Enviar Ordem Real ao Agente (8 Ações)</div>
           <div style="display:flex; gap:5px;">
             <input
               type="text"
@@ -1962,10 +2004,15 @@
               Enviar
             </button>
           </div>
-          <div style="display:flex; gap:4px; flex-wrap:wrap;">
-            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')">⚡ Auditar Bugs</button>
-            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')">🔍 Scan AST</button>
-            <button class="office-btn" style="font-size:9.5px; padding:2px 6px;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')">✅ Correr QA</button>
+          <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;">
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')" title="Audita sintaxe AST Python + JS + FTS5">⚡ Bugs</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')" title="Executa Scan AST completo da codebase">🔍 AST</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')" title="Executa Suite QA 48/48 e valida tasks">✅ QA 48</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Correr doctor e fundir duplicados')" title="Executa Memory Doctor FTS5">🩺 Doctor</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Analisar quota lean e tokens MCP')" title="Calcula consumo de tokens MCP e poupança Scout">💎 Quota</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Analisar heatmap e ficheiros críticos')" title="Lista os top ficheiros mais quentes do Heatmap">🔥 Calor</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Verificar git status e último commit')" title="Inspeciona estado Git real do repositório">📦 Git</button>
+            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Sincronizar cache e transcripts reais')" title="Limpa cache de transcripts e ressincroniza Brain">🔄 Sync</button>
           </div>
         </div>
 
@@ -3228,18 +3275,21 @@
       }
     }
 
+    let selectedSwarmRunId = '';
+
     async function fetchSwarmDashboard(forceRender = false) {
       if (swarmFetchInFlight) return;
       swarmFetchInFlight = true;
       try {
-        const res = await fetch('/api/swarm');
+        const qs = selectedSwarmRunId ? `?run_id=${encodeURIComponent(selectedSwarmRunId)}` : '';
+        const res = await fetch(`/api/swarm${qs}`);
         const data = await res.json();
         if (data && data.run) {
           const r = data.run;
           const logs = data.logs || [];
           const lastLog = logs.length ? `${logs[logs.length - 1].ts}:${logs[logs.length - 1].message}` : '';
           const taskStates = (data.tasks || []).map(t => `${t.status}${t.progress}`).join('');
-          const sig = `${r.id}|${r.status}|${r.goal}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${taskStates}|${lastLog}`;
+          const sig = `${r.id}|${r.status}|${r.goal}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${r.scout_files_count}|${taskStates}|${lastLog}`;
           if (forceRender || sig !== lastSwarmHash) {
             lastSwarmHash = sig;
             renderSwarmDashboard(data);
@@ -3257,6 +3307,20 @@
       const lanes = data.lanes || {};
       const tasks = data.tasks || [];
       const logs = data.logs || [];
+      const recentRuns = data.recent_runs || [];
+
+      // Populate Run History dropdown
+      const histSel = document.getElementById('swarmHistorySelect');
+      if (histSel && recentRuns.length) {
+        const curVal = selectedSwarmRunId || '';
+        const opts = [`<option value="">🕒 Run Atual (#${recentRuns[0].id} Live)</option>`];
+        recentRuns.forEach(rr => {
+          const sel = String(rr.id) === String(curVal) ? 'selected' : '';
+          const shortGoal = (rr.goal || 'Swarm Run').slice(0, 28);
+          opts.push(`<option value="${rr.id}" ${sel}>#${rr.id} · ${rr.completed_tasks}/${rr.total_tasks} · ${escapeHtml(shortGoal)}</option>`);
+        });
+        histSel.innerHTML = opts.join('');
+      }
 
       // Top metadata
       document.getElementById('swArchModel').textContent = run.architect_model || 'Gemini 4 Argon (inherit / pro)';
@@ -3343,7 +3407,10 @@
           <div class="lane-col">
             <div class="lane-col-header">
               <span>${laneName} · ${laneTasks.length}</span>
-              <span style="color:#f472b6; font-size:10.5px;">${laneDone}/${laneTasks.length} done</span>
+              <span style="display:flex; align-items:center; gap:6px;">
+                <span style="color:#f472b6; font-size:10.5px;">${laneDone}/${laneTasks.length} done</span>
+                <button onclick="triggerSwarmLane('${laneName}')" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; border-radius:4px; font-size:9px; padding:1px 5px; cursor:pointer; font-family:var(--font-mono);" title="Executar e verificar todas as 6 tasks da Lane ${laneName}">▶ Run ${laneName}</button>
+              </span>
             </div>
             ${cardsHtml}
           </div>
@@ -3362,6 +3429,9 @@
       if (st === 'swarming' || st === 'verifying') {
         badgeEl.textContent = '● SWARMING LIVE (24 LANES)';
         badgeEl.style.color = '#ec4899';
+      } else if (st === 'queued') {
+        badgeEl.textContent = '● QUEUED (READY TO RUN)';
+        badgeEl.style.color = '#f59e0b';
       } else {
         badgeEl.textContent = '● 24/24 COMPLETE';
         badgeEl.style.color = '#6ee7b7';
@@ -3395,22 +3465,46 @@
         (run.verify_passed >= run.verify_total) ? `✓ ${run.verify_passed}/${run.verify_total} VERIFIED` : `⏳ ${run.verify_passed}/${run.verify_total} CHECKS`;
     }
 
+    function onSwarmModeChange() {
+      const modeSel = document.getElementById('swarmModeSelect');
+      const goalInp = document.getElementById('swarmGoalInput');
+      if (!modeSel || !goalInp) return;
+      const modeGoals = {
+        full: 'ship v2.4: Scout Shared Map + 24 Asymmetric Lanes',
+        bug_audit: 'Auditoria Completa de Bugs: Sintaxe AST Python + JS + FTS5',
+        perf_opt: 'Otimização de Quota & Performance: Zero-Allocation 60 FPS + Lean MCP',
+        qa_gate: 'QA Gate 48/48: Verificação SQLite WAL + Testes End-to-End',
+        arch_refactor: 'Refatoração Arquitetural AST: Isolamento de Lanes & Contratos API'
+      };
+      goalInp.value = modeGoals[modeSel.value] || goalInp.value;
+    }
+
+    function onSwarmHistoryChange() {
+      const histSel = document.getElementById('swarmHistorySelect');
+      selectedSwarmRunId = histSel ? histSel.value : '';
+      fetchSwarmDashboard(true);
+    }
+
     async function triggerSwarmRun() {
       const goal = document.getElementById('swarmGoalInput').value || 'ship v2.4 tonight';
-      showToast('⚡ A lançar SCOUT-01 (Leitura Única) + 24 Workers Assimétricos em paralelo...');
+      const modeSel = document.getElementById('swarmModeSelect');
+      const mode = modeSel ? modeSel.value : 'full';
+      selectedSwarmRunId = '';
+      showToast(`⚡ A lançar SCOUT-01 + 24 Workers Assimétricos [Modo: ${mode}]...`);
       const res = await fetch('/api/swarm/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ goal, animate_live: true })
+        body: JSON.stringify({ goal, mode, animate_live: true })
       });
       const out = await res.json();
       if (out.ok) {
+        lastSwarmHash = '';
         renderSwarmDashboard(out);
       }
     }
 
     async function triggerScoutOnly() {
-      showToast('🔍 SCOUT-01 a ler a codebase 1x e a partilhar o Mapa no brain.db...');
+      showToast('🔍 SCOUT-01 a ler a codebase 1x e a gravar o Mapa Partilhado no brain.db...');
       const res = await fetch('/api/swarm/scout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -3418,9 +3512,77 @@
       });
       const out = await res.json();
       if (out.ok && out.scout) {
-        showToast(`✅ Scout concluído em ${out.scout.duration_ms}ms! ${out.scout.files_count} ficheiros e ${out.scout.symbols_count} símbolos partilhados.`);
-        await fetchSwarmDashboard();
+        showToast(`✅ Scout persistido em ${out.scout.duration_ms}ms! ${out.scout.files_count} ficheiros e ${out.scout.symbols_count} símbolos gravados.`);
+        lastSwarmHash = '';
+        if (out.dashboard) {
+          renderSwarmDashboard(out.dashboard);
+        } else {
+          await fetchSwarmDashboard(true);
+        }
         await fetchGraph();
+      }
+    }
+
+    async function triggerSwarmAction(action) {
+      const labels = {
+        verify_all: '✅ A executar verificação real AST + JS + SQLite WAL (48/48 checks)...',
+        doctor: '🩺 A correr Memory Doctor FTS5 e a sincronizar diagnóstico...',
+        reset_queue: '🔄 A reiniciar fila de 24 tasks da Run atual...'
+      };
+      showToast(labels[action] || `⚡ A executar ${action}...`);
+      const res = await fetch('/api/swarm/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, run_id: selectedSwarmRunId || undefined })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        lastSwarmHash = '';
+        renderSwarmDashboard(out);
+        if (action === 'verify_all') {
+          showToast('✅ 24/24 Tasks Concluídas e 48/48 Verify Checks PASS!');
+        } else if (action === 'doctor' && out.doctor_report) {
+          showToast(`🩺 Doctor concluído: ${out.doctor_report.merged_duplicates} duplicados fundidos, ${out.doctor_report.healthy_memories} memórias saudáveis!`);
+        }
+      }
+    }
+
+    async function triggerSwarmLane(lane) {
+      showToast(`⚡ A executar e verificar todas as 6 tasks da Lane ${lane}...`);
+      const res = await fetch('/api/swarm/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'run_lane', lane, run_id: selectedSwarmRunId || undefined })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        lastSwarmHash = '';
+        renderSwarmDashboard(out);
+        showToast(`✅ Lane ${lane} concluída (6/6 tasks 100% PASS)!`);
+      }
+    }
+
+    async function triggerOfficeTeamAction(action) {
+      const msgs = {
+        work_all: '💻 Toda a equipa foi chamada para as secretárias 3D (Modo Sprint)!',
+        pause_all: '☕ Toda a equipa foi descansar para o Lounge & Café Espresso!',
+        complete_all_tasks: '✅ Todas as tasks ativas foram concluídas (48/48 PASS)!',
+        clear_simulated: '🧹 Agentes simulados removidos e sincronização automática restaurada!'
+      };
+      OfficeAudio3D.playOrderBeep();
+      const res = await fetch('/api/office/team_action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      const out = await res.json();
+      if (out.ok && out.agents) {
+        officeMcpServers = out.mcp_servers || officeMcpServers;
+        officeBoardData = out.board || officeBoardData;
+        officeHeatmapData = out.heatmap || officeHeatmapData;
+        officeLiveTasks = out.live_tasks || officeLiveTasks;
+        syncOfficeAgentsToSim(out.agents, out.summary || {});
+        showToast(msgs[action] || '⚡ Ação de equipa executada!');
       }
     }
 

@@ -625,16 +625,33 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             goal = str(body.get("goal", "")).strip() or "ship v2.4: Scout Shared Map + Asymmetric Swarm Run"
             ws_path = str(body.get("workspace_path", "")).strip() or CURRENT_DIR
             animate = bool(body.get("animate_live", True))
+            mode = str(body.get("mode", "full")).strip() or "full"
             swarm = SwarmEngine(db)
-            dash = swarm.start_live_swarm_run(goal=goal, workspace_path=ws_path, animate_live=animate)
+            dash = swarm.start_live_swarm_run(
+                goal=goal, workspace_path=ws_path, animate_live=animate, mode=mode
+            )
             self._send_json({"ok": True, **dash})
             return
 
         if parsed.path == "/api/swarm/scout":
             ws_path = str(body.get("workspace_path", "")).strip() or CURRENT_DIR
             swarm = SwarmEngine(db)
-            scout_res = swarm.run_codebase_scout(ws_path)
-            self._send_json({"ok": True, "scout": scout_res})
+            scout_res = swarm.run_codebase_scout_and_persist(ws_path)
+            self._send_json({"ok": True, "scout": scout_res, "dashboard": swarm.get_swarm_dashboard()})
+            return
+
+        if parsed.path == "/api/swarm/action":
+            action = str(body.get("action", "verify_all")).strip()
+            lane = str(body.get("lane", "")).strip()
+            run_id_raw = body.get("run_id")
+            run_id = int(run_id_raw) if str(run_id_raw or "").isdigit() else None
+            ws_path = str(body.get("workspace_path", "")).strip() or CURRENT_DIR
+            mode = str(body.get("mode", "full")).strip()
+            swarm = SwarmEngine(db)
+            dash = swarm.execute_swarm_action(
+                action=action, lane=lane, run_id=run_id, workspace_path=ws_path, mode=mode
+            )
+            self._send_json({"ok": True, **dash})
             return
 
         if parsed.path == "/api/swarm/task":
@@ -645,6 +662,13 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             swarm = SwarmEngine(db)
             dash = swarm.update_task_status(task_code=task_code, status=status, progress=progress, summary=summary)
             self._send_json({"ok": True, **dash})
+            return
+
+        if parsed.path == "/api/office/team_action":
+            action = str(body.get("action", "work_all")).strip()
+            swarm = SwarmEngine(db)
+            state = swarm.execute_office_team_action(action=action)
+            self._send_json({"ok": True, **state})
             return
 
         if parsed.path == "/api/office/spawn":
