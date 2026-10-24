@@ -162,6 +162,12 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         except Exception:
             pass
 
+    if harvested_count > 0:
+        try:
+            db.consolidate_brain_doctor()
+        except Exception:
+            pass
+
     # 4. Regista telemetria real do turno
     db.log_telemetry(
         event_type="stop_harvest",

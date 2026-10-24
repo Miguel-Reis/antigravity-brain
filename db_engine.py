@@ -488,6 +488,8 @@ class BrainDB:
         """
         topic = topic.strip()
         fact = fact.strip()
+        # Ruflo AI-Defence Zero-Trust Redaction automática antes de gravar no SQLite
+        fact = re.sub(r"\b(AIza[0-9A-Za-z\-_]{20,}|ghp_[0-9A-Za-z]{20,}|sk-[0-9A-Za-z]{20,})\b", "[REDACTED_SECRET]", fact)
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
         resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
