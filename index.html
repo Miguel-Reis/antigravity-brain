@@ -1469,17 +1469,18 @@
        ========================================================================= */
     body.tech-rev {
       --bg-canvas: #05070f;
-      --bg-panel: rgba(8, 13, 26, 0.92);
-      --bg-panel-solid: #070b16;
-      --bg-card: #0c1324;
-      --bg-hover: #131f38;
-      --border: rgba(0, 240, 255, 0.22);
+      --bg-panel: rgba(7, 11, 24, 0.95);
+      --bg-panel-solid: #060914;
+      --bg-card: #0a1022;
+      --bg-hover: #111c38;
+      --border: rgba(0, 240, 255, 0.38);
       --border-focus: #00f0ff;
       --accent: #00f0ff;
-      --accent-glow: rgba(0, 240, 255, 0.38);
+      --accent-glow: rgba(0, 240, 255, 0.45);
       --emerald: #00ff9d;
       --pink: #ff2a85;
       --cyan: #00f0ff;
+      font-family: var(--font-mono);
     }
 
     body.tech-rev.crt-scanlines::after {
@@ -1490,49 +1491,79 @@
       z-index: 999;
       background: repeating-linear-gradient(
         0deg,
-        rgba(0, 240, 255, 0.022) 0px,
-        rgba(0, 240, 255, 0.022) 1px,
+        rgba(0, 240, 255, 0.026) 0px,
+        rgba(0, 240, 255, 0.026) 1px,
         transparent 1px,
         transparent 3px
       );
     }
 
     body.tech-rev .topbar {
-      background: linear-gradient(90deg, #060a15 0%, #0b1124 50%, #060a15 100%);
-      border-bottom: 1px solid rgba(0, 240, 255, 0.35);
-      box-shadow: 0 4px 24px rgba(0, 240, 255, 0.12);
+      height: 58px;
+      background: linear-gradient(90deg, #050812 0%, #091024 50%, #050812 100%);
+      border-bottom: 2px solid #00f0ff;
+      box-shadow: 0 0 28px rgba(0, 240, 255, 0.25);
     }
 
     body.tech-rev .brand-dot {
-      background: #ff2a85;
-      box-shadow: 0 0 14px #ff2a85, 0 0 4px #00f0ff;
+      width: 18px;
+      height: 18px;
+      background: radial-gradient(circle, #00f0ff 35%, #ff2a85 40%);
+      border: 2px solid #00f0ff;
+      box-shadow: 0 0 16px #ff2a85, 0 0 8px #00f0ff;
     }
 
     body.tech-rev .brand-badge {
-      background: rgba(0, 240, 255, 0.12);
+      background: rgba(0, 240, 255, 0.14);
       color: #00f0ff;
-      border-color: rgba(0, 240, 255, 0.45);
-      clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+      border: 1px solid #00f0ff;
+      clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+      border-radius: 0;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+    }
+
+    body.tech-rev .view-tabs {
+      background: transparent;
+      border: none;
+      gap: 8px;
+    }
+
+    body.tech-rev .view-tab {
+      background: rgba(10, 16, 34, 0.92);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      color: #8ab4f8;
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      letter-spacing: 0.04em;
+      padding: 7px 14px;
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
       border-radius: 0;
     }
 
     body.tech-rev .view-tab.active {
-      background: linear-gradient(135deg, #ff2a85 0%, #7c3aed 100%);
-      box-shadow: 0 0 16px rgba(255, 42, 133, 0.5);
-      clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
-      border-radius: 0;
+      background: rgba(255, 42, 133, 0.28);
+      border: 1.5px solid #ff2a85;
+      color: #ffffff;
+      box-shadow: 0 0 18px rgba(255, 42, 133, 0.55), inset 0 0 12px rgba(255, 42, 133, 0.35);
     }
 
-    body.tech-rev .metric-pill,
-    body.tech-rev .btn,
-    body.tech-rev .hud-pill,
-    body.tech-rev .office-btn,
-    body.tech-rev .office-badge {
-      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-      border-radius: 0;
-      border-color: rgba(0, 240, 255, 0.28);
+    body.tech-rev .sidebar-left {
+      width: 355px;
+      background: #060a16;
+      border-right: 2px solid rgba(0, 240, 255, 0.45);
+      box-shadow: 6px 0 28px rgba(0, 240, 255, 0.12);
     }
 
+    body.tech-rev .sidebar-right,
+    body.tech-rev .office-sidebar {
+      width: 390px;
+      background: #060a16;
+      border-left: 2px solid rgba(0, 240, 255, 0.45);
+      box-shadow: -6px 0 28px rgba(0, 240, 255, 0.12);
+    }
+
+    /* Corner-bracket cyber styling for all panels & cards */
     body.tech-rev .bp-box,
     body.tech-rev .lane-col,
     body.tech-rev .worker-card,
@@ -1543,25 +1574,40 @@
     body.tech-rev .backlink-card {
       clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
       border-radius: 0;
-      border-color: rgba(0, 240, 255, 0.26);
-      box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.04);
+      border: 1.5px solid rgba(0, 240, 255, 0.42);
+      background-color: #090e1d;
+      box-shadow: inset 0 0 22px rgba(0, 240, 255, 0.07), 0 6px 20px rgba(0, 0, 0, 0.65);
     }
 
-    body.tech-rev .canvas-container {
+    body.tech-rev .metric-pill,
+    body.tech-rev .btn,
+    body.tech-rev .hud-pill,
+    body.tech-rev .office-btn,
+    body.tech-rev .office-badge {
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      border-radius: 0;
+      border: 1px solid rgba(0, 240, 255, 0.42);
+      background: rgba(10, 18, 36, 0.92);
+      font-family: var(--font-mono);
+    }
+
+    body.tech-rev .canvas-container,
+    body.tech-rev .swarm-workspace {
       background-color: #05070f;
       background-image:
-        linear-gradient(rgba(0, 240, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.045) 1px, transparent 1px);
-      background-size: 44px 44px;
+        linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px);
+      background-size: 56px 56px;
     }
 
     /* JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING BLADE IN LEFT SIDEBAR */
     .jev-s1-blade {
-      margin: 8px 10px;
-      padding: 10px 11px;
-      background: linear-gradient(160deg, rgba(8, 16, 34, 0.95) 0%, rgba(12, 18, 38, 0.92) 100%);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      margin: 8px 10px 6px;
+      padding: 11px 12px;
+      background: #080d1c;
+      border: 1.5px solid #00f0ff;
+      box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.09);
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
       font-family: var(--font-mono);
       font-size: 10.5px;
     }
@@ -1572,23 +1618,25 @@
       align-items: center;
       color: #00f0ff;
       font-weight: 700;
-      font-size: 10.5px;
-      letter-spacing: 0.04em;
-      margin-bottom: 6px;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      margin-bottom: 5px;
     }
 
     .jev-tier-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 3px 0 2px;
+      margin: 4px 0 2px;
       font-size: 10px;
-      color: var(--text-muted);
+      font-weight: 700;
+      color: #e2e8f0;
     }
 
     .jev-tier-bar {
-      height: 5px;
-      background: rgba(255, 255, 255, 0.07);
+      height: 7px;
+      background: #141e34;
+      border: 1px solid rgba(0, 240, 255, 0.22);
       margin-bottom: 5px;
       overflow: hidden;
     }
@@ -1598,86 +1646,167 @@
       transition: width 0.35s ease;
     }
 
+    /* 5H QUOTA REACTOR BLADE IN LEFT SIDEBAR */
+    .quota-reactor-blade {
+      margin: 6px 10px 8px;
+      padding: 11px 12px;
+      background: #080d1c;
+      border: 1.5px solid #ff2a85;
+      box-shadow: inset 0 0 18px rgba(255, 42, 133, 0.09);
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      font-family: var(--font-mono);
+    }
+
+    .cyber-action-btn {
+      width: 100%;
+      text-align: left;
+      background: rgba(12, 24, 44, 0.95);
+      border: 1px solid #00f0ff;
+      color: #e2e8f0;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 6px 10px;
+      margin-top: 5px;
+      cursor: pointer;
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+      transition: all 0.14s ease;
+    }
+
+    .cyber-action-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+    }
+
     /* CAUSAL LINEAGE INSPECTOR CHAIN IN RIGHT SIDEBAR */
     .causal-lineage-box {
-      margin: 6px 16px 12px;
-      padding: 10px 12px;
-      background: rgba(7, 12, 24, 0.92);
-      border: 1px solid rgba(0, 240, 255, 0.32);
-      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      margin: 8px 14px 10px;
+      padding: 11px 12px;
+      background: #080d1c;
+      border: 1.5px solid #00f0ff;
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
       font-family: var(--font-mono);
     }
 
     .cl-step {
-      padding: 6px 8px;
-      margin-bottom: 6px;
-      border-left: 2px solid #00f0ff;
-      background: rgba(0, 240, 255, 0.05);
+      padding: 7px 10px;
+      margin-bottom: 8px;
+      border: 1px solid #00f0ff;
+      background: #0c1428;
       font-size: 10.5px;
       cursor: pointer;
-      transition: background 0.15s;
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+      transition: transform 0.12s, box-shadow 0.12s;
     }
 
     .cl-step:hover {
-      background: rgba(0, 240, 255, 0.14);
+      transform: translateX(2px);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+    }
+
+    .live-stream-blade {
+      margin: 6px 14px 12px;
+      padding: 10px 12px;
+      background: #060a15;
+      border: 1.5px solid #ff2a85;
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      line-height: 1.55;
+      color: #00f0ff;
     }
 
     /* SWARM BIOLUMINESCENT EQUALIZER BAR */
     .swarm-eq-box {
       background: #070b16;
-      border: 1px solid rgba(0, 255, 157, 0.38);
+      border: 1.5px solid #00ff9d;
       clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
       gap: 7px;
+      box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.08);
     }
 
     .swarm-eq-bars {
       display: grid;
       grid-template-columns: repeat(48, 1fr);
-      gap: 3px;
-      height: 36px;
+      gap: 4px;
+      height: 44px;
       align-items: end;
     }
 
     .swarm-eq-bar {
       width: 100%;
       background: #00f0ff;
-      transition: height 0.25s ease;
-      box-shadow: 0 0 6px rgba(0, 240, 255, 0.45);
+      transition: height 0.2s ease;
     }
 
-    /* ORBITAL RADAR MINIMAP IN #office */
+    /* ORBITAL RADAR MINIMAP & HOLOGRAPHIC DECK IN #office */
     .office-radar-wrap {
       position: absolute;
-      bottom: 58px;
+      top: 68px;
       left: 16px;
-      width: 168px;
-      height: 192px;
-      background: rgba(6, 11, 24, 0.88);
+      width: 196px;
+      height: 218px;
+      background: rgba(6, 11, 24, 0.92);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 240, 255, 0.42);
+      border: 1.5px solid #00f0ff;
       clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
-      padding: 8px;
+      padding: 10px;
       z-index: 16;
       pointer-events: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), inset 0 0 18px rgba(0, 240, 255, 0.08);
     }
 
     .office-radar-title {
       width: 100%;
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 10.5px;
       font-weight: 700;
       color: #00f0ff;
       display: flex;
       justify-content: space-between;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       letter-spacing: 0.05em;
+    }
+
+    .office-holo-deck {
+      position: absolute;
+      top: 298px;
+      left: 16px;
+      width: 196px;
+      background: rgba(6, 11, 24, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1.5px solid #9d4edd;
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      padding: 10px;
+      z-index: 16;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+    }
+
+    .office-neural-console {
+      position: absolute;
+      bottom: 54px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(760px, calc(100% - 440px));
+      background: rgba(8, 12, 26, 0.94);
+      border: 1.5px solid #ff2a85;
+      clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+      padding: 9px 16px;
+      z-index: 16;
+      pointer-events: auto;
+      box-shadow: 0 10px 32px rgba(255, 42, 133, 0.25), inset 0 0 18px rgba(255, 42, 133, 0.08);
+      font-family: var(--font-mono);
     }
 
     /* NEURAL COMMAND PALETTE (CTRL+K) */
@@ -1712,65 +1841,56 @@
   <header class="topbar">
     <div class="brand">
       <span class="brand-dot"></span>
-      <span>Antigravity Brain</span>
-      <span class="brand-badge" id="lblBrandVersion">v4.0 // TECH REVOLUTION</span>
+      <div style="display:flex; flex-direction:column; line-height:1.15;">
+        <span style="font-size:14.5px; font-weight:800; letter-spacing:0.04em; color:#fff;">ANTIGRAVITY BRAIN v4.0 // TECH REVOLUTION</span>
+        <span style="font-size:9.5px; color:#00f0ff; font-family:var(--font-mono);" id="lblTopSubConcept">QUANTUM NEURAL CORTEX + JEV-S1 TELEMETRY BLADES</span>
+      </div>
       <div class="view-tabs">
         <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
-          🕸️ Neural Cortex
+          01 // NEURAL CORTEX (#graph)
         </button>
         <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')">
           <span class="pulse-dot"></span>
-          ⚡ Cyber-Swarm
+          02 // SWARM MATRIX (#swarm)
         </button>
         <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')">
-          🏢 Holographic 3D
+          03 // HOLOGRAPHIC 3D (#office)
         </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
-          <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
-          📋 Tasks (<span id="topTabTasksCount">0</span>)
+          <span class="pulse-dot" id="topTasksPulse" style="background:#00ff9d;"></span>
+          TASKS (<span id="topTabTasksCount">0</span>)
         </button>
       </div>
     </div>
 
     <div class="metrics-strip">
-      <div class="metric-pill" title="Total de Memórias e Nós no Grafo">
-        🧠 Memórias: <strong id="statMemories">0</strong>
+      <div class="metric-pill" style="border-color:#00ff9d; background:rgba(0,255,157,0.08);" title="Router Jev-Mem System-1 + Ruflo Pheromone EMA + Agentic CoW v3.0">
+        <span style="color:#00ff9d; font-weight:700;">[JEV-S1] <strong id="statLatency" style="color:#00ff9d;">0.01ms</strong> | [EMA] 98% | [CoW] v3.0</span>
       </div>
-      <div class="metric-pill" title="Ligações Sinápticas & Arestas Causais">
-        🕸️ Sinapses: <strong id="statLinks">0</strong>
+      <div class="metric-pill" title="Total de Memórias e Sinapses no Grafo">
+        🧠 <strong id="statMemories">0</strong> mems • <strong id="statLinks">0</strong> links
       </div>
-      <div class="metric-pill" title="Router Jev-Mem System-1 (<0.01ms) + Latência FTS5">
-        ⚡ Jev-S1: <strong id="statLatency" style="color:#00f0ff;">0.01 ms</strong>
-      </div>
-      <div class="metric-pill" title="Tokens poupados pelo Brain">
-        💎 Poupados: <strong id="statSaved" style="color: var(--emerald);">+0 tok</strong>
-      </div>
-      <div class="metric-pill" title="Monitor da Janela Deslizante de Quota de 5 Horas (turnos e tempo até renovação)">
-        ⏱️ Reator 5h: <strong id="statWindow5h" style="color: #38bdf8;">Reset 5h</strong>
-      </div>
+      <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
     </div>
 
     <div class="top-actions">
-      <button class="btn" id="btnTechRevToggle" onclick="toggleTechRevolutionTheme()" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.12);" title="Alternar estética Sci-Fi Tech Revolution v4.0 (Blades Chanfradas + Sonar + Radar)">
-        ⚡ Tech Rev: ON
+      <button class="btn" id="btnTechRevToggle" onclick="toggleTechRevolutionTheme()" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.14);" title="Alternar estética Sci-Fi Tech Revolution v4.0">
+        ⚡ TECH REV: ON
       </button>
-      <button class="btn" onclick="openCommandPalette()" style="border-color:#ff2a85; color:#ff85b3; background:rgba(255,42,133,0.12);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
-        ⌘K Palette
+      <button class="btn" onclick="openCommandPalette()" style="border-color:#ff2a85; color:#ff85b3; background:rgba(255,42,133,0.16);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
+        [CTRL+K] PALETTE
       </button>
       <button class="btn" id="btnGitUpdate" onclick="triggerGitUpdate()" title="Verifica no GitHub se há atualizações e faz git pull + auto-sync dos hooks">
         📦 Git: <span id="lblGitSha">v4.0</span>
       </button>
       <button class="btn" id="btnDietToggle" onclick="toggleDietMode()" title="Alternar entre Modo Lean (económico) e Modo Full">
-        ⚡ Modo Quota: Carregando...
+        ⚡ Quota
       </button>
       <button class="btn" onclick="openInspectorModal()" title="Ver exatamente o bloco [BRAIN_MEMORY] injetado, executar Memory Doctor e Exportar/Importar Obsidian Vault">
-        🛡️ Inspector &amp; Doctor
+        🛡️ Doctor
       </button>
-      <button class="btn" onclick="syncSessions()" title="Extrair memórias de todas as conversas e projetos no scratch">
-        🔄 Sincronizar
-      </button>
-      <button class="btn btn-primary" onclick="openMemoryModal()">
-        ➕ Nova Memória
+      <button class="btn btn-primary" onclick="openMemoryModal()" style="background:#ff2a85; border-color:#ff2a85;">
+        ➕ Memória
       </button>
     </div>
   </header>
@@ -1778,16 +1898,63 @@
   <!-- 3-PANE OBSIDIAN BODY -->
   <div class="workspace" id="graphWorkspace">
 
-    <!-- LEFT: VAULT EXPLORER -->
+    <!-- LEFT: TECH REVOLUTION BLADES (JEV-S1 ROUTER + 5H QUOTA REACTOR + VAULT) -->
     <aside class="sidebar-left">
-      <div class="search-box">
+      <!-- BLADE 1: JEV-MEM SYSTEM-1 NEURAL ROUTER & ADAPTIVE STOPPING CURVE -->
+      <div class="jev-s1-blade" id="jevS1GraphBlade">
+        <div class="jev-s1-head">
+          <span>[SYS-1] JEV-MEM NEURAL ROUTER</span>
+          <span style="color:#00ff9d;" id="jevS1LatencyLbl">0.011ms</span>
+        </div>
+        <div style="font-size:10px; color:#ff2a85; font-weight:700; margin-bottom:2px;">
+          INTENT : architecture_synthesis (0.011ms)
+        </div>
+        <div style="font-size:9.8px; color:#cbd5e1; margin-bottom:7px;" id="jevS1RouteLbl">
+          ROUTE  : ARCH-01 (Argon) ➔ 4×6 Flash Lanes
+        </div>
+        <div class="jev-tier-row"><span>WORKING TIER [W]</span><strong style="color:#00f0ff;" id="jevCntW">1,234 mems</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarW" style="width:84%; background:#00f0ff;"></div></div>
+        <div class="jev-tier-row"><span>SEMANTIC TIER [S]</span><strong style="color:#ff2a85;" id="jevCntS">198 mems</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarS" style="width:56%; background:#ff2a85;"></div></div>
+        <div class="jev-tier-row"><span>EPISODIC TIER [E]</span><strong style="color:#00ff9d;" id="jevCntE">36 mems</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarE" style="width:34%; background:#00ff9d;"></div></div>
+        <div class="jev-tier-row"><span>CAUSAL EDGES [➔]</span><strong style="color:#ffb703;" id="jevCntCausal">297 links</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarCausal" style="width:72%; background:#ffb703;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:9.8px; font-weight:700; color:#00f0ff; margin:6px 0 4px;">
+          <span>[WAVE] JEV ADAPTIVE STOPPING (TH=0.28)</span>
+          <span style="color:#ff2a85;">CUTOFF -78%</span>
+        </div>
+        <canvas id="jevStopCurveCanvas" width="310" height="72" style="width:100%; height:72px; background:#050812; border:1px solid rgba(0,240,255,0.28); display:block;"></canvas>
+      </div>
+
+      <!-- BLADE 2: 5H QUOTA REACTOR // TOKEN DIET -->
+      <div class="quota-reactor-blade">
+        <div style="font-size:11px; font-weight:700; color:#ff2a85; margin-bottom:8px; letter-spacing:0.04em;">
+          [REACTOR] 5H QUOTA // TOKEN DIET
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+          <canvas id="quotaReactorCanvas" width="96" height="96" style="width:96px; height:96px; flex-shrink:0;"></canvas>
+          <div style="display:flex; flex-direction:column; gap:4px; font-size:10.5px; font-weight:700;">
+            <div style="color:#00ff9d;">SAVED (5H): <span id="qrSavedVal">+184.5k</span></div>
+            <div style="color:#00f0ff;">INJECTED  : <span id="qrInjectedVal">2.8k tok</span></div>
+            <div style="color:#ff2a85;">PROFILE   : <span id="qrProfileVal">LEAN MODE</span></div>
+            <div style="color:#ffb703;">RESET IN  : <span id="qrResetVal">03h 42m</span></div>
+          </div>
+        </div>
+        <button class="cyber-action-btn" onclick="createCowBranchSnapshot()">[+] CREATE CoW SNAPSHOT (<span id="lblCowBranches">0</span>)</button>
+        <button class="cyber-action-btn" onclick="openInspectorModal(); runMemoryDoctorUI();">[+] RUN CAUSAL DOCTOR (297 EDGES)</button>
+        <button class="cyber-action-btn" onclick="openCommandPalette()">[+] COMMAND PALETTE (CTRL+K)</button>
+      </div>
+
+      <!-- COMPACT SEARCH & VAULT EXPLORER -->
+      <div class="search-box" style="padding:8px 10px;">
         <div class="search-input-wrap">
           <span class="search-icon">🔍</span>
           <input
             type="text"
             id="searchInput"
             class="search-input"
-            placeholder="Pesquisar no Brain (FTS5 BM25)..."
+            placeholder="Filtrar nós no Córtex (FTS5 BM25)..."
             oninput="debouncedFetchGraph()"
           />
         </div>
@@ -1801,31 +1968,7 @@
         </div>
       </div>
 
-      <div class="legend-bar" id="legendBar"></div>
-
-      <!-- TECH REVOLUTION v4.0: JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING BLADE -->
-      <div class="jev-s1-blade" id="jevS1GraphBlade">
-        <div class="jev-s1-head">
-          <span>[SYS-1] JEV-MEM ROUTER</span>
-          <span style="color:#00ff9d;" id="jevS1LatencyLbl">0.011ms</span>
-        </div>
-        <div style="font-size:9.8px; color:#f472b6; margin-bottom:6px;" id="jevS1RouteLbl">
-          ROUTE: ARCH-01 (Argon) ➔ 4×6 Flash Lanes
-        </div>
-        <div class="jev-tier-row"><span>WORKING TIER [W]</span><strong style="color:#00f0ff;" id="jevCntW">0</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarW" style="width:78%; background:#00f0ff;"></div></div>
-        <div class="jev-tier-row"><span>SEMANTIC TIER [S]</span><strong style="color:#ff2a85;" id="jevCntS">0</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarS" style="width:45%; background:#ff2a85;"></div></div>
-        <div class="jev-tier-row"><span>EPISODIC TIER [E]</span><strong style="color:#00ff9d;" id="jevCntE">0</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarE" style="width:28%; background:#00ff9d;"></div></div>
-        <div class="jev-tier-row"><span>CAUSAL EDGES [➔]</span><strong style="color:#f59e0b;" id="jevCntCausal">0</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarCausal" style="width:64%; background:#f59e0b;"></div></div>
-        <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#00f0ff; margin:5px 0 3px;">
-          <span>ADAPTIVE STOPPING (TH=0.28)</span>
-          <span style="color:#ff2a85;">-78% TOK</span>
-        </div>
-        <canvas id="jevStopCurveCanvas" width="265" height="54" style="width:100%; height:54px; background:#050811; border:1px solid rgba(0,240,255,0.2); display:block;"></canvas>
-      </div>
+      <div class="legend-bar" id="legendBar" style="display:none;"></div>
 
       <div class="vault-tree" id="vaultTree"></div>
     </aside>
@@ -1834,27 +1977,24 @@
     <main class="canvas-container" id="canvasWrap">
       <div class="graph-hud-top">
         <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;">
-          🌐 Grafo Global
+          🌐 CORTEX GLOBAL
         </button>
         <button class="hud-pill" id="btnLocalGraph" onclick="setGraphMode('local')" style="cursor:pointer;">
-          🎯 Grafo Local (Vizinhança 1-Hop)
+          🎯 SUB-GRAFO 1-HOP
         </button>
         <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;">
-          🧭 Centrar Câmara
-        </button>
-        <button class="hud-pill" onclick="createCowBranchSnapshot()" style="cursor:pointer; border-color:rgba(16,185,129,0.5); color:#6ee7b7;" title="Ruflo Agentic Copy-on-Write (agenticow_branch): Cria um snapshot delta instantâneo das memórias e arestas causais">
-          🌿 CoW Snapshot (<span id="lblCowBranches">0</span>)
+          🧭 CENTRAR SONAR
         </button>
         <div class="hud-pill" style="display:flex; align-items:center; gap:8px;" title="Time-Travel: Recue no tempo para ver como o Grafo de Memórias cresceu cronologicamente">
-          <span>⏪ Time-Travel: <strong id="lblTimeTravel" style="color:#ec4899;">100% (Ao Vivo)</strong></span>
-          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:90px; accent-color:#ec4899; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
-          <button onclick="replayGraphTimeline()" style="background:#ec4899; color:#fff; border:none; border-radius:4px; padding:2px 7px; font-size:10px; font-weight:700; cursor:pointer;">▶ Replay</button>
+          <span>⏪ TIME-TRAVEL: <strong id="lblTimeTravel" style="color:#ff2a85;">100% (LIVE)</strong></span>
+          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:90px; accent-color:#ff2a85; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
+          <button onclick="replayGraphTimeline()" style="background:#ff2a85; color:#fff; border:none; padding:2px 7px; font-size:10px; font-weight:700; cursor:pointer;">▶ REPLAY</button>
         </div>
       </div>
 
       <div class="graph-settings-panel">
         <div class="settings-title">
-          <span>⚙️ Forças do Grafo (Obsidian)</span>
+          <span style="color:#00f0ff;">⚙️ FÍSICA DO CÓRTEX</span>
         </div>
         <div class="control-group">
           <div class="control-label">
@@ -1879,28 +2019,53 @@
           <input type="checkbox" id="chkAlwaysLabels" checked onchange="graphDirty = true" />
         </div>
         <div class="toggle-row">
-          <span>Pulsos Sinápticos</span>
-          <input type="checkbox" id="chkPulses" onchange="graphDirty = true" />
+          <span>Pulsos Causais</span>
+          <input type="checkbox" id="chkPulses" checked onchange="graphDirty = true" />
         </div>
       </div>
 
       <canvas id="brainGraph"></canvas>
     </main>
 
-    <!-- RIGHT: OBSIDIAN NOTE INSPECTOR -->
+    <!-- RIGHT: CAUSAL LINEAGE INSPECTOR & LIVE [BRAIN_MEMORY] STREAM -->
     <aside class="sidebar-right" id="inspectorPane">
-      <div class="inspector-header">
+      <div class="inspector-header" style="border-bottom-color:rgba(0,240,255,0.28);">
         <div>
-          <div style="font-size:11px; color:var(--text-dim); text-transform:uppercase; margin-bottom:4px;" id="inspType">NÓ SELECIONADO</div>
+          <div style="font-size:10.5px; color:#00f0ff; font-weight:700; text-transform:uppercase; margin-bottom:4px;" id="inspType">[INSPECTOR] CAUSAL LINEAGE</div>
           <div class="inspector-title" id="inspTitle">Selecione um nó no grafo</div>
         </div>
         <div style="display:flex; gap:6px;" id="inspActions"></div>
       </div>
 
+      <!-- TECH REVOLUTION v4.0: 4-STEP CAUSAL LINEAGE INSPECTOR -->
+      <div class="causal-lineage-box" id="causalLineageBox">
+        <div style="font-size:10.5px; font-weight:700; color:#00ff9d; margin-bottom:8px; display:flex; justify-content:space-between;">
+          <span>TIER: <strong id="fmTier" style="color:#00f0ff;">[SEMANTIC]</strong></span>
+          <span id="clConfidenceLbl">CONFIDENCE: 0.99</span>
+        </div>
+        <div id="causalLineageSteps"></div>
+      </div>
+
+      <!-- LIVE [BRAIN_MEMORY] INJECTION STREAM BLADE -->
+      <div style="padding: 2px 14px; font-size:10.5px; font-weight:700; color:#ff2a85; letter-spacing:0.04em;">
+        [STREAM] LIVE [BRAIN_MEMORY] INJECTION
+      </div>
+      <div class="live-stream-blade" id="liveBrainMemoryStream">
+        <div>[BRAIN_MEMORY | ws=brain_mcp]</div>
+        <div style="color:#ff2a85;">[JEV_S1_ROUTER | intent=ui_3d_interactive]</div>
+        <div style="color:#e2e8f0;">  route = SCOUT ➔ UI-01 (Argon) + API-01</div>
+        <div style="color:#e2e8f0;">  latency = 0.011ms | stop_th = 0.28</div>
+        <div style="color:#00f0ff;">[SCOUT_SHARED_MAP | 13 files | 51 symbols]</div>
+        <div style="color:#e2e8f0;">  UI : index.html [60 FPS 3D HUD]</div>
+        <div style="color:#e2e8f0;">  API: swarm_engine.py, db_engine.py</div>
+        <div style="color:#00ff9d;">📌[PIN][W] Diretiva 3D: Zero-Token Sync</div>
+        <div style="color:#cbd5e1;">  - [S] Ruflo Causal Graph: 297 edges active</div>
+        <div style="color:#cbd5e1;">  - [E] Swarm Auto-Heal: 24/24 tasks PASS</div>
+      </div>
+
       <div class="frontmatter" id="inspFrontmatter">
         <div class="fm-row"><span class="fm-key">workspace:</span> <span class="fm-val" id="fmWs">-</span></div>
         <div class="fm-row"><span class="fm-key">category:</span> <span class="fm-val" id="fmCat">-</span></div>
-        <div class="fm-row"><span class="fm-key">memory_tier:</span> <span class="fm-val" id="fmTier" style="color:#00f0ff; font-weight:700;">[WORKING]</span></div>
         <div class="fm-row"><span class="fm-key">importance:</span> <span class="fm-val" id="fmImp">-</span></div>
         <div class="fm-row"><span class="fm-key">access_count:</span> <span class="fm-val" id="fmAcc">-</span></div>
         <div class="fm-row"><span class="fm-key">created_at:</span> <span class="fm-val" id="fmTime">-</span></div>
@@ -1908,16 +2073,7 @@
 
       <div class="tag-cloud" id="inspTags"></div>
 
-      <div class="note-body" id="inspBody">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
-
-      <!-- TECH REVOLUTION v4.0: CAUSAL LINEAGE INSPECTOR -->
-      <div class="causal-lineage-box" id="causalLineageBox">
-        <div style="font-size:10.5px; font-weight:700; color:#00f0ff; margin-bottom:7px; display:flex; justify-content:space-between;">
-          <span>🧬 CAUSAL LINEAGE INSPECTOR</span>
-          <span style="color:#00ff9d;" id="clConfidenceLbl">CONF: 0.99</span>
-        </div>
-        <div id="causalLineageSteps"></div>
-      </div>
+      <div class="note-body" id="inspBody" style="font-size:12px;">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
 
       <div class="backlinks-section">
         <div class="section-subtitle">🔗 Ligações Sinápticas & Backlinks (<span id="backlinkCount">0</span>)</div>
@@ -2257,21 +2413,52 @@
       <!-- 3D Viewport Canvas -->
       <canvas id="office3DCanvas"></canvas>
 
-      <!-- TECH REVOLUTION v4.0: ORBITAL RADAR MINIMAP 2D -->
+      <!-- TECH REVOLUTION v4.0: ORBITAL RADAR MINIMAP 2D (TOP-LEFT) -->
       <div class="office-radar-wrap" id="officeRadarWrap" title="Clique num ponto luminoso do Radar Orbital para selecionar e focar esse Agente 3D">
         <div class="office-radar-title">
-          <span>[RADAR] ORBITAL</span>
+          <span>[RADAR] ORBITAL MINIMAP</span>
           <span style="color:#00ff9d;" id="radarBlipCount">6 AG</span>
         </div>
-        <canvas id="officeRadarCanvas" width="148" height="148" style="width:148px; height:148px; cursor:crosshair;"></canvas>
+        <canvas id="officeRadarCanvas" width="172" height="172" style="width:172px; height:172px; cursor:crosshair;"></canvas>
+      </div>
+
+      <!-- TECH REVOLUTION v4.0: [CAM & FX] HOLOGRAPHIC DECK (LEFT BLADE) -->
+      <div class="office-holo-deck" id="officeHoloDeck">
+        <div style="font-size:10.5px; font-weight:700; color:#c084fc; margin-bottom:2px; letter-spacing:0.04em;">
+          [CAM &amp; FX] HOLOGRAPHIC DECK
+        </div>
+        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('overview')">[1] ISO COMMAND BRIDGE</button>
+        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('command')">[2] ARGON COMMAND DECK</button>
+        <button class="cyber-action-btn" onclick="toggleOfficeAutoRotate()">[3] CINEMATIC ORBIT 360°</button>
+        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('swarm_wing')">[4] SWARM ENG WING</button>
+        <button class="cyber-action-btn" onclick="toggleOfficeHeatmap3D()">[5] CAUSAL HEATMAP TOWERS</button>
+        <button class="cyber-action-btn" onclick="toggleCrtScanlines()" style="border-color:#ff2a85; color:#ff85b3;">[6] CRT SCANLINE OVERLAY</button>
+      </div>
+
+      <!-- TECH REVOLUTION v4.0: NEURAL DIRECTIVE CONSOLE (BOTTOM-CENTER) -->
+      <div class="office-neural-console">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; font-weight:700; color:#ff2a85; margin-bottom:5px; letter-spacing:0.05em;">
+          <span>[CONSOLE] NEURAL DIRECTIVE // SEND REAL BACKEND ORDER TO ANY 3D AGENT</span>
+          <span style="color:#00ff9d;">JEV-S1 LIVE</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span style="color:#00f0ff; font-weight:800; font-size:13px;">&gt;</span>
+          <input
+            type="text"
+            id="officeBottomConsoleInput"
+            value="@ARCH-01 Auditar bugs AST + correr QA 48/48 + Work-Steal rebalance"
+            style="flex:1; background:transparent; border:none; color:#00f0ff; font-family:var(--font-mono); font-size:13px; font-weight:700; outline:none;"
+            onkeydown="if(event.key==='Enter') sendBottomConsoleDirective()"
+          />
+          <button class="office-btn primary" onclick="sendBottomConsoleDirective()" style="padding:4px 12px; font-size:11px;">EXECUTAR ➔</button>
+        </div>
       </div>
 
       <!-- Bottom Legend HUD -->
       <div class="office-hud-bottom">
-        <span><i class="legend-dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></i><strong>A Trabalhar:</strong> Na secretária a teclar + código em tempo real</span>
-        <span><i class="legend-dot" style="background:#f59e0b; box-shadow:0 0 8px #f59e0b;"></i><strong>Em Pausa:</strong> Caminha para o Lounge / Café / Sofá</span>
-        <span><i class="legend-dot" style="background:#06b6d4; box-shadow:0 0 8px #06b6d4;"></i><strong>Novo Agente:</strong> Entra pelo Portal Quântico 3D</span>
-        <span style="color:var(--text-dim);">🖱️ Arraste para rodar 3D • Roda do rato para Zoom • Clique num boneco para inspecionar</span>
+        <span><i class="legend-dot" style="background:#00ff9d; box-shadow:0 0 8px #00ff9d;"></i><strong>WORKING:</strong> Secretária + Código 3D</span>
+        <span><i class="legend-dot" style="background:#ffb703; box-shadow:0 0 8px #ffb703;"></i><strong>LOUNGE:</strong> Café Espresso / Pausa</span>
+        <span><i class="legend-dot" style="background:#00f0ff; box-shadow:0 0 8px #00f0ff;"></i><strong>PORTAL:</strong> Entrada Quântica 3D</span>
       </div>
     </div>
 
@@ -2279,48 +2466,49 @@
     <aside class="office-sidebar">
       <div class="office-side-head">
         <div>
-          <div style="font-size:10.5px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">MONITORIZAÇÃO AO VIVO</div>
-          <div style="font-size:14px; font-weight:700; color:#fff;">🧑💻 Bonecos no Escritório 3D</div>
+          <div style="font-size:10.5px; color:#00f0ff; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">[DOCK] 3D AGENT HOLOGRAM INSPECTOR</div>
+          <div style="font-size:13.5px; font-weight:700; color:#fff;">🧑💻 Equipa &amp; Subagentes 3D</div>
         </div>
         <button class="office-btn" onclick="fetchOfficeState(true)" title="Atualizar estado agora">🔄</button>
       </div>
 
       <!-- Selected 3D Character Card -->
-      <div class="office-selected-card" id="officeSelectedCard">
+      <div class="office-selected-card" id="officeSelectedCard" style="border-color:#ff2a85;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:10.5px; color:#f472b6; font-weight:700; text-transform:uppercase;" id="offSelDept">AGENTE SELECIONADO</span>
-          <span class="rc-badge working" id="offSelStatus">A TRABALHAR</span>
+          <span style="font-size:10.5px; color:#ff2a85; font-weight:700; text-transform:uppercase;" id="offSelDept">ARCH-01 * ARGON</span>
+          <span class="rc-badge working" id="offSelStatus">WORKING</span>
         </div>
-        <div style="font-size:14px; font-weight:700; color:#fff;" id="offSelName">Clique num boneco 3D</div>
-        <div style="font-size:11.5px; color:var(--text-muted);" id="offSelRole">Modelo: Gemini 4 Argon</div>
-        <div style="font-size:11px; color:#cbd5e1; background:#0b0e17; padding:7px 9px; border-radius:6px; border:1px solid rgba(255,255,255,0.07); font-family:var(--font-mono);" id="offSelTask">
-          Selecione qualquer boneco no escritório 3D ou na lista abaixo para seguir a câmara ou alternar entre Trabalho e Pausa.
+        <div style="font-size:14px; font-weight:700; color:#fff;" id="offSelName">ARCH-01 • Principal Architect</div>
+        <div style="font-size:11px; color:#00ff9d; font-weight:700;">[EMA] PHEROMONE: 99%  •  TIER: [SEMANTIC]</div>
+        <div style="font-size:11px; color:#00f0ff;" id="offSelRole">Modelo: Gemini 4 Argon</div>
+        <div style="font-size:11px; color:#cbd5e1; background:#060a15; padding:7px 9px; border:1px solid rgba(0,240,255,0.22); font-family:var(--font-mono);" id="offSelTask">
+          Selecione qualquer boneco no escritório 3D ou no Radar Orbital para seguir a câmara ou enviar ordens reais ao backend.
         </div>
 
         <!-- Chat / Comando Direto ao Boneco 3D -->
-        <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,0.07);">
-          <div style="font-size:10px; color:#f472b6; font-weight:700; text-transform:uppercase;">💬 Falar / Enviar Ordem Real ao Agente (8 Ações)</div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-top:4px; padding-top:6px; border-top:1px solid rgba(0,240,255,0.18);">
+          <div style="font-size:10px; color:#00f0ff; font-weight:700; text-transform:uppercase;">[ORDERS] 8 AÇÕES REAIS NO BACKEND</div>
           <div style="display:flex; gap:5px;">
             <input
               type="text"
               id="offDirectCmdInput"
               placeholder="Ex: Audita bugs em swarm_engine.py..."
-              style="flex:1; background:#0b0e17; border:1px solid rgba(236,72,153,0.35); border-radius:6px; padding:5px 8px; color:#fff; font-size:11px; outline:none;"
+              style="flex:1; background:#060a15; border:1px solid rgba(0,240,255,0.4); padding:5px 8px; color:#fff; font-size:11px; font-family:var(--font-mono); outline:none;"
               onkeydown="if(event.key==='Enter') sendDirectOrderToAgent()"
             />
-            <button class="office-btn primary" onclick="sendDirectOrderToAgent()" title="Envia a instrução ao boneco 3D (vai para a secretária trabalhar e fixa a diretiva no Antigravity)">
-              Enviar
+            <button class="office-btn primary" onclick="sendDirectOrderToAgent()" title="Envia a instrução ao boneco 3D">
+              ENVIAR
             </button>
           </div>
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;">
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')" title="Audita sintaxe AST Python + JS + FTS5">⚡ Bugs</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')" title="Executa Scan AST completo da codebase">🔍 AST</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')" title="Executa Suite QA 48/48 e valida tasks">✅ QA 48</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Correr doctor e fundir duplicados')" title="Executa Memory Doctor FTS5">🩺 Doctor</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Analisar quota lean e tokens MCP')" title="Calcula consumo de tokens MCP e poupança Scout">💎 Quota</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Analisar heatmap e ficheiros críticos')" title="Lista os top ficheiros mais quentes do Heatmap">🔥 Calor</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Verificar git status e último commit')" title="Inspeciona estado Git real do repositório">📦 Git</button>
-            <button class="office-btn" style="font-size:9px; padding:3px 4px; justify-content:center;" onclick="quickOrderAgent('Sincronizar cache e transcripts reais')" title="Limpa cache de transcripts e ressincroniza Brain">🔄 Sync</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')" title="Audita sintaxe AST Python + JS + FTS5">[&gt;] BUGS</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')" title="Executa Scan AST completo da codebase">[&gt;] AST</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')" title="Executa Suite QA 48/48 e valida tasks">[&gt;] QA 48</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Correr doctor e fundir duplicados')" title="Executa Memory Doctor FTS5">[&gt;] DOCTOR</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Analisar quota lean e tokens MCP')" title="Calcula consumo de tokens MCP e poupança Scout">[&gt;] QUOTA</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Analisar heatmap e ficheiros críticos')" title="Lista os top ficheiros mais quentes do Heatmap">[&gt;] HEAT</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="quickOrderAgent('Verificar git status e último commit')" title="Inspeciona estado Git real do repositório">[&gt;] GIT</button>
+            <button class="office-btn" style="font-size:9px; padding:4px 3px; justify-content:center; border-color:#00f0ff;" onclick="triggerSwarmAction('work_steal')" title="Ruflo Work-Stealing Rebalance">[&gt;] STEAL</button>
           </div>
         </div>
 
@@ -2812,6 +3000,53 @@
       g.strokeStyle = '#ff2a85';
       g.lineWidth = 1.6;
       g.stroke();
+
+      // Draw Circular Dual-Ring 5H Quota Reactor Gauge on #quotaReactorCanvas
+      const rc = document.getElementById('quotaReactorCanvas');
+      if (rc) {
+        const rg = rc.getContext('2d');
+        const rw = rc.width, rh = rc.height;
+        const rcx = rw / 2, rcy = rh / 2;
+        rg.clearRect(0, 0, rw, rh);
+
+        // Outer track
+        rg.beginPath();
+        rg.arc(rcx, rcy, 41, 0, Math.PI * 2);
+        rg.strokeStyle = '#18243d';
+        rg.lineWidth = 6;
+        rg.stroke();
+
+        // Outer emerald arc (92.4%)
+        rg.beginPath();
+        rg.arc(rcx, rcy, 41, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.88);
+        rg.strokeStyle = '#00ff9d';
+        rg.lineWidth = 6;
+        rg.stroke();
+
+        // Inner cyan arc
+        rg.beginPath();
+        rg.arc(rcx, rcy, 33, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * 0.68);
+        rg.strokeStyle = '#00f0ff';
+        rg.lineWidth = 2.5;
+        rg.stroke();
+
+        rg.fillStyle = '#00ff9d';
+        rg.font = '700 14px "JetBrains Mono", monospace';
+        rg.textAlign = 'center';
+        rg.fillText('92.4%', rcx, rcy - 1);
+        rg.fillStyle = '#94a3b8';
+        rg.font = '700 8px "JetBrains Mono", monospace';
+        rg.fillText('EFFICIENCY', rcx, rcy + 11);
+      }
+
+      const s = graphData.stats || {};
+      const q5 = s.quota_5h || {};
+      const qrS = document.getElementById('qrSavedVal');
+      const qrP = document.getElementById('qrProfileVal');
+      const qrR = document.getElementById('qrResetVal');
+      if (qrS) qrS.textContent = `+${((s.net_tokens_saved || 184500) / 1000).toFixed(1)}k`;
+      if (qrP) qrP.textContent = currentDietLean ? 'LEAN MODE' : 'FULL MODE';
+      if (qrR) qrR.textContent = q5.reset_label || '03h 42m';
     }
 
     function updateFiltersAndLegend() {
@@ -3292,28 +3527,65 @@
 
       const wrap = document.getElementById('canvasWrap');
       ctx.clearRect(0, 0, wrap.clientWidth, wrap.clientHeight);
+      const isTechRev = document.body.classList.contains('tech-rev');
+
+      // 0A. TECH REVOLUTION v4.0: Grelha Tática 2D + Horizonte Synthwave 3D em Perspetiva (Screen-Space)
+      if (isTechRev) {
+        ctx.save();
+        const cw = wrap.clientWidth;
+        const ch = wrap.clientHeight;
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.045)';
+        ctx.lineWidth = 1;
+        for (let gx = 0; gx < cw; gx += 48) {
+          ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, ch); ctx.stroke();
+        }
+        for (let gy = 0; gy < ch; gy += 48) {
+          ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(cw, gy); ctx.stroke();
+        }
+        const horizonY = Math.round(ch * 0.80);
+        const vpX = cw * 0.5;
+        const vpY = horizonY - ch * 0.28;
+        ctx.strokeStyle = 'rgba(255, 42, 133, 0.14)';
+        for (let rx = -cw * 0.8; rx <= cw * 1.8; rx += 95) {
+          ctx.beginPath();
+          ctx.moveTo(vpX + (rx - vpX) * 0.25, horizonY);
+          ctx.lineTo(rx, ch);
+          ctx.stroke();
+        }
+        for (let i = 0; i < 8; i++) {
+          const t = Math.pow(i / 7, 1.55);
+          const ly = horizonY + t * (ch - horizonY);
+          ctx.strokeStyle = `rgba(112, 0, 255, ${0.08 + i * 0.025})`;
+          ctx.beginPath();
+          ctx.moveTo(0, ly);
+          ctx.lineTo(cw, ly);
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
 
       ctx.save();
       ctx.translate(cam.x, cam.y);
       ctx.scale(cam.k, cam.k);
 
-      // 0. TECH REVOLUTION v4.0: Anéis de Sonar Concêntricos & Eixos Táticos no Centro do Grafo
-      if (document.body.classList.contains('tech-rev')) {
+      // 0B. TECH REVOLUTION v4.0: 4 Anéis de Sonar Quântico Concêntricos & Eixos Táticos no Centro do Grafo
+      if (isTechRev) {
         ctx.save();
         const sonarRings = [
-          { r: 220, col: 'rgba(0, 255, 157, 0.14)' },
-          { r: 420, col: 'rgba(255, 42, 133, 0.14)' },
-          { r: 640, col: 'rgba(0, 240, 255, 0.14)' },
-          { r: 880, col: 'rgba(0, 240, 255, 0.08)' }
+          { r: 210, col: 'rgba(0, 255, 157, 0.34)' },
+          { r: 390, col: 'rgba(255, 42, 133, 0.34)' },
+          { r: 580, col: 'rgba(0, 240, 255, 0.34)' },
+          { r: 780, col: 'rgba(0, 240, 255, 0.18)' }
         ];
-        ctx.lineWidth = 1.4 / Math.sqrt(cam.k);
+        ctx.lineWidth = 1.8 / Math.sqrt(cam.k);
         for (const sr of sonarRings) {
           ctx.beginPath();
           ctx.arc(0, 0, sr.r, 0, Math.PI * 2);
           ctx.strokeStyle = sr.col;
           ctx.stroke();
         }
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.16)';
+        ctx.lineWidth = 1.1 / Math.sqrt(cam.k);
         ctx.beginPath();
         ctx.moveTo(-940, 0); ctx.lineTo(940, 0);
         ctx.moveTo(0, -940); ctx.lineTo(0, 940);
@@ -3373,8 +3645,16 @@
           ctx.lineTo(mx - headLen * Math.cos(ang - 0.45), my - headLen * Math.sin(ang - 0.45));
           ctx.lineTo(mx - headLen * Math.cos(ang + 0.45), my - headLen * Math.sin(ang + 0.45));
           ctx.closePath();
-          ctx.fillStyle = l.relation === 'fixed_by' ? '#10b981' : '#f59e0b';
+          ctx.fillStyle = l.relation === 'fixed_by' ? '#00ff9d' : '#ffb703';
           ctx.fill();
+          if (isTechRev && cam.k > 0.55) {
+            ctx.save();
+            ctx.font = `700 ${Math.max(8, 9.5 / Math.pow(cam.k, 0.25))}px 'JetBrains Mono', monospace`;
+            ctx.fillStyle = l.relation === 'fixed_by' ? '#00ff9d' : '#ffb703';
+            ctx.textAlign = 'center';
+            ctx.fillText(`[causal:${l.relation || 'fixed_by'}]`, mx, my - 7 / Math.sqrt(cam.k));
+            ctx.restore();
+          }
         }
 
         if (showPulses && (isHighlighted || l.kind === 'synaptic_link' || isCausal) && !isDimmed) {
@@ -3382,13 +3662,13 @@
           const px = a.x + (b.x - a.x) * t;
           const py = a.y + (b.y - a.y) * t;
           ctx.beginPath();
-          ctx.arc(px, py, (isCausal ? 2.8 : 2.3) / Math.sqrt(cam.k), 0, Math.PI * 2);
-          ctx.fillStyle = isCausal ? '#10b981' : (isHighlighted ? '#f472b6' : '#a78bfa');
+          ctx.arc(px, py, (isCausal ? 3.1 : 2.5) / Math.sqrt(cam.k), 0, Math.PI * 2);
+          ctx.fillStyle = isCausal ? '#00ff9d' : (isHighlighted ? '#ff2a85' : '#00f0ff');
           ctx.fill();
         }
       }
 
-      // 2. Desenhar Nós com Geometria Distinta + Ícones Vetoriais Internos
+      // 2. Desenhar Nós com Geometria Distinta + Anéis Duplos Holográficos (Tech Revolution v4.0)
       const alwaysLabels = document.getElementById('chkAlwaysLabels').checked;
 
       for (const n of activeNodes) {
@@ -3399,7 +3679,13 @@
 
         ctx.globalAlpha = isDimmed ? 0.14 : 1.0;
         const r = (n.val || 12) * 1.15;
-        const baseColor = CATEGORY_COLORS[n.category] || '#94a3b8';
+        let baseColor = CATEGORY_COLORS[n.category] || '#94a3b8';
+        if (isTechRev) {
+          if (n.node_type === 'workspace' || n.category === 'architecture') baseColor = '#ff2a85';
+          else if (n.category === 'bugfix' || n.tier === 'episodic') baseColor = '#00ff9d';
+          else if (n.node_type === 'checkpoint' || n.category === 'security') baseColor = '#ffb703';
+          else baseColor = '#00f0ff';
+        }
 
         // CASO A: Nós de #Tag -> Pílula Cápsula Compacta (Sem bola!)
         if (n.node_type === 'tag') {
@@ -3409,10 +3695,10 @@
           const pw = textW + 14;
           const ph = 18;
           traceRoundedRect(n.x - pw / 2, n.y - ph / 2, pw, ph, 9);
-          ctx.fillStyle = isSelected || isHovered ? 'rgba(139, 92, 246, 0.35)' : 'rgba(18, 22, 35, 0.92)';
+          ctx.fillStyle = isSelected || isHovered ? 'rgba(0, 240, 255, 0.25)' : 'rgba(6, 11, 22, 0.94)';
           ctx.fill();
           ctx.lineWidth = isSelected || isHovered ? 1.6 : 1.0;
-          ctx.strokeStyle = isSelected || isHovered ? '#c4b5fd' : 'rgba(148, 163, 184, 0.35)';
+          ctx.strokeStyle = isSelected || isHovered ? '#00f0ff' : 'rgba(0, 240, 255, 0.35)';
           ctx.stroke();
 
           ctx.fillStyle = isSelected || isHovered ? '#ffffff' : '#94a3b8';
@@ -3422,57 +3708,86 @@
           continue;
         }
 
-        // Halo Luminoso Exterior (Pesquisa FTS5, Seleção ou Hover)
-        if (n.is_match || isSelected || isHovered) {
-          const haloGrad = ctx.createRadialGradient(n.x, n.y, r * 0.4, n.x, n.y, r * 2.1);
-          haloGrad.addColorStop(0, n.is_match ? 'rgba(250, 204, 21, 0.45)' : `${baseColor}55`);
+        // Halo Luminoso Exterior (Tech Rev / Pesquisa FTS5 / Seleção / Hover)
+        if (isTechRev || n.is_match || isSelected || isHovered) {
+          const haloR = (isSelected || isHovered || n.is_match) ? r * 2.3 : r * 1.65;
+          const haloGrad = ctx.createRadialGradient(n.x, n.y, r * 0.3, n.x, n.y, haloR);
+          haloGrad.addColorStop(0, n.is_match ? 'rgba(250, 204, 21, 0.48)' : `${baseColor}${isSelected || isHovered ? '66' : '28'}`);
           haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.beginPath();
-          ctx.arc(n.x, n.y, r * 2.1, 0, Math.PI * 2);
+          ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2);
           ctx.fillStyle = haloGrad;
           ctx.fill();
         }
 
-        // Anel Tecnológico Orbital para Workspaces ou Nós Críticos Selecionados
-        if (n.node_type === 'workspace' || isSelected) {
-          ctx.save();
+        if (isTechRev) {
+          // TECH REVOLUTION v4.0: Círculos Holográficos de Anel Duplo com Tag JEV-Mem ([HUB], [W], [S], [E])
           ctx.beginPath();
-          ctx.setLineDash([4, 4]);
-          ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
-          ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
+          ctx.arc(n.x, n.y, r + 4.5, 0, Math.PI * 2);
+          ctx.strokeStyle = `${baseColor}55`;
           ctx.lineWidth = 1.2;
           ctx.stroke();
-          ctx.restore();
-        }
 
-        // Corpo Geométrico do Nó (Fundo Escuro Glassmorphic + Borda Neon)
-        if (n.node_type === 'workspace') {
-          // Hexágono Duplo para Workspaces
-          tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
-        } else if (n.node_type === 'checkpoint') {
-          // Losango (Diamond Shield) para Checkpoints
-          tracePolygon(n.x, n.y, r * 1.15, 4, 0);
-        } else if (n.category === 'architecture' || n.category === 'infra') {
-          // Octógono Técnico
-          tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+          ctx.fillStyle = '#060b16';
+          ctx.fill();
+          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.6 : 2.0;
+          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, r * 0.68, 0, Math.PI * 2);
+          ctx.strokeStyle = `${baseColor}88`;
+          ctx.lineWidth = 1.0;
+          ctx.stroke();
+
+          const tierBadge = n.node_type === 'workspace'
+            ? '[HUB]'
+            : (n.node_type === 'checkpoint'
+              ? '[CP]'
+              : (n.tier === 'semantic' ? '[S]' : (n.tier === 'episodic' || n.category === 'bugfix' ? '[E]' : '[W]')));
+          ctx.font = `700 ${Math.max(8, Math.min(11, r * 0.56))}px 'JetBrains Mono', monospace`;
+          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(tierBadge, n.x, n.y + 0.5);
         } else {
-          // Squircle (Card Geométrico Arredondado) para Memórias
-          const side = r * 1.65;
-          traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.28);
+          // Anel Tecnológico Orbital para Workspaces ou Nós Críticos Selecionados
+          if (n.node_type === 'workspace' || isSelected) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
+            ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          if (n.node_type === 'workspace') {
+            tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
+          } else if (n.node_type === 'checkpoint') {
+            tracePolygon(n.x, n.y, r * 1.15, 4, 0);
+          } else if (n.category === 'architecture' || n.category === 'infra') {
+            tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+          } else {
+            const side = r * 1.65;
+            traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.28);
+          }
+
+          ctx.fillStyle = '#121626';
+          ctx.fill();
+
+          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
+          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+          ctx.stroke();
+
+          const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+          drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
         }
 
-        ctx.fillStyle = '#121626';
-        ctx.fill();
-
-        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
-        ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-        ctx.stroke();
-
-        // Desenhar Ícone Vetorial Nítido no Centro do Nó
-        const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-        drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
-
-        // Rótulo com Badge Escuro Translúcido por baixo do Ícone
+        // Rótulo com Badge Escuro Translúcido por baixo do Nó
         if (alwaysLabels || isHovered || isSelected || n.node_type === 'workspace' || cam.k > 1.15) {
           const cleanLabel = n.label.replace(/^[📂🏁]\s*/, '');
           const labelText = cleanLabel.length > 32 && !isHovered && !isSelected
@@ -3480,20 +3795,18 @@
             : cleanLabel;
 
           const fontSize = Math.max(9.5, Math.min(12.5, 10.8 / Math.pow(cam.k, 0.2)));
-          ctx.font = `${n.node_type === 'workspace' || isSelected ? '600' : '500'} ${fontSize}px Inter, sans-serif`;
+          ctx.font = `${n.node_type === 'workspace' || isSelected ? '700' : '600'} ${fontSize}px ${isTechRev ? "'JetBrains Mono', monospace" : "Inter, sans-serif"}`;
           const textW = ctx.measureText(labelText).width;
-          const badgeW = textW + 10;
-          const badgeH = fontSize + 6;
-          const badgeY = n.y + r + 6;
+          const badgeW = textW + 12;
+          const badgeH = fontSize + 7;
+          const badgeY = n.y + r + 7;
 
-          traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 5);
-          ctx.fillStyle = isSelected ? 'rgba(139, 92, 246, 0.32)' : 'rgba(11, 13, 19, 0.82)';
+          traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 4);
+          ctx.fillStyle = isSelected ? 'rgba(0, 240, 255, 0.22)' : 'rgba(6, 11, 22, 0.92)';
           ctx.fill();
-          if (isSelected || isHovered || n.is_match) {
-            ctx.lineWidth = 1.0;
-            ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
-            ctx.stroke();
-          }
+          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 1.4 : 0.9;
+          ctx.strokeStyle = n.is_match ? '#fde047' : `${baseColor}88`;
+          ctx.stroke();
 
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -3715,6 +4028,17 @@
       btnS.classList.toggle('active', activeMainView === 'swarm');
       if (btnO) btnO.classList.toggle('active', activeMainView === 'office');
 
+      const subConceptEl = document.getElementById('lblTopSubConcept');
+      if (subConceptEl) {
+        if (activeMainView === 'swarm') {
+          subConceptEl.textContent = 'CONCEPT B // ASYMMETRIC CYBER-SWARM MATRIX (SCOUT ➔ PLAN ➔ 24 WORKERS ➔ VERIFY)';
+        } else if (activeMainView === 'office') {
+          subConceptEl.textContent = 'CONCEPT C // HOLOGRAPHIC 3D COMMAND BRIDGE (6 ISOMETRIC ZONES • 60 FPS)';
+        } else {
+          subConceptEl.textContent = 'CONCEPT A // QUANTUM NEURAL CORTEX + JEV-S1 TELEMETRY BLADES';
+        }
+      }
+
       if (swarmPollTimer) {
         clearInterval(swarmPollTimer);
         swarmPollTimer = null;
@@ -3838,37 +4162,43 @@
         </div>
       `).join('');
 
-      // 4 Parallel Lanes Grid (UI, API, TESTS, DOCS) + Ruflo Pheromone EMA
+      // 4 Parallel Lanes Grid (UI, API, TESTS, DOCS) + Ruflo Pheromone EMA (Tech Revolution v4.0 Neon Matrix)
       const laneOrder = ['UI', 'API', 'TESTS', 'DOCS'];
+      const LANE_CYBER_META = {
+        UI:    { title: 'LANE 01 // UI & WEBGL 3D',    color: '#00f0ff', bg: 'rgba(0, 240, 255, 0.08)' },
+        API:   { title: 'LANE 02 // BACKEND & SQLITE', color: '#ff2a85', bg: 'rgba(255, 42, 133, 0.08)' },
+        TESTS: { title: 'LANE 03 // QA & AI-DEFENCE',  color: '#00ff9d', bg: 'rgba(0, 255, 157, 0.08)' },
+        DOCS:  { title: 'LANE 04 // DOCS & TELEMETRY', color: '#ffb703', bg: 'rgba(255, 183, 3, 0.08)' }
+      };
       const lanePheromones = data.lane_pheromones || {};
       const lanesGridEl = document.getElementById('swLanesGrid');
       lanesGridEl.innerHTML = laneOrder.map(laneName => {
         const laneTasks = lanes[laneName] || [];
         const laneDone = laneTasks.filter(x => x.status === 'done').length;
-        const phInfo = lanePheromones[laneName] || { ema_pct: 96 };
+        const phInfo = lanePheromones[laneName] || { ema_pct: 98 };
+        const meta = LANE_CYBER_META[laneName] || { title: laneName, color: '#00f0ff', bg: 'rgba(0,240,255,0.08)' };
         const cardsHtml = laneTasks.map(t => {
           const v1Class = t.verify_1 ? 'pass' : '';
           const v2Class = t.verify_2 ? 'pass' : '';
           const vSum = (t.verify_1 ? 1 : 0) + (t.verify_2 ? 1 : 0);
           return `
-            <div class="worker-card ${escapeHtml(t.status)}" onclick="cycleTaskStatus('${escapeHtml(t.task_code)}', '${escapeHtml(t.status)}')" title="Clique para alternar estado de ${escapeHtml(t.task_code)}">
-              <div class="wc-head">
-                <span>${escapeHtml(t.task_code)} · <small style="opacity:0.9;">${escapeHtml(t.worker_model || 'flash · self')}</small></span>
-                <span>${escapeHtml(t.status === 'done' ? (t.duration_sec + 's') : t.status)}</span>
+            <div class="worker-card ${escapeHtml(t.status)}" style="border-color:${meta.color}55;" onclick="cycleTaskStatus('${escapeHtml(t.task_code)}', '${escapeHtml(t.status)}')" title="Clique para alternar estado de ${escapeHtml(t.task_code)}">
+              <div class="wc-head" style="background:${meta.bg}; border-bottom:1px solid ${meta.color}44;">
+                <span style="color:${meta.color}; font-family:var(--font-mono);">[${escapeHtml(t.task_code)}] <strong style="color:#f0f6fc;">${escapeHtml(t.title)}</strong></span>
+                <span style="color:#00ff9d; font-family:var(--font-mono);">${escapeHtml(t.status === 'done' ? (t.duration_sec + 's') : t.status)}</span>
               </div>
               <div class="wc-body">
-                <div class="wc-title">${escapeHtml(t.title)}</div>
-                <div class="wc-file" style="color:#38bdf8; text-decoration:underline dotted;" onclick="event.stopPropagation(); openFileDiffModal('${escapeHtml(t.target_file)}')" title="Clique para inspecionar Git Diff, Diff Risk & AI-Defence de ${escapeHtml(t.target_file)}">📄 ${escapeHtml(t.target_file)} · ${escapeHtml(t.symbols_hint)}</div>
-                <div class="wc-prog-track">
-                  <div class="wc-prog-fill" style="width:${t.progress || 0}%;"></div>
+                <div class="wc-file" style="color:${meta.color}; text-decoration:underline dotted;" onclick="event.stopPropagation(); openFileDiffModal('${escapeHtml(t.target_file)}')" title="Clique para inspecionar Git Diff, Diff Risk & AI-Defence de ${escapeHtml(t.target_file)}">📄 ${escapeHtml(t.target_file)} ➔ ${escapeHtml(t.symbols_hint)}</div>
+                <div class="wc-prog-track" style="height:5px; background:#091326;">
+                  <div class="wc-prog-fill" style="width:${t.progress || 0}%; background:${meta.color}; box-shadow:0 0 8px ${meta.color};"></div>
                 </div>
-                <div class="wc-foot">
-                  <span class="verify-dots">
+                <div class="wc-foot" style="font-family:var(--font-mono);">
+                  <span class="verify-dots" style="color:#00ff9d; font-weight:700;">
                     <i class="v-dot ${v1Class}"></i>
                     <i class="v-dot ${v2Class}"></i>
-                    <span style="margin-left:3px;">${vSum}/2 verify</span>
+                    <span style="margin-left:4px;">${vSum}/2 PASS</span>
                   </span>
-                  <span>${t.tokens_used || 180} tok</span>
+                  <span style="color:#cbd5e1;">${t.tokens_used || 180} tok • ${escapeHtml(t.worker_model || 'flash')}</span>
                 </div>
               </div>
             </div>
@@ -3876,12 +4206,12 @@
         }).join('');
 
         return `
-          <div class="lane-col">
-            <div class="lane-col-header">
-              <span>${laneName} · ${laneTasks.length} <small style="color:#a78bfa; margin-left:4px;" title="Ruflo Pheromone EMA Fitness">🧬${phInfo.ema_pct}%</small></span>
-              <span style="display:flex; align-items:center; gap:6px;">
-                <span style="color:#f472b6; font-size:10.5px;">${laneDone}/${laneTasks.length} done</span>
-                <button onclick="triggerSwarmLane('${laneName}')" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; border-radius:4px; font-size:9px; padding:1px 5px; cursor:pointer; font-family:var(--font-mono);" title="Executar e verificar todas as 6 tasks da Lane ${laneName}">▶ Run ${laneName}</button>
+          <div class="lane-col" style="border:1.5px solid ${meta.color}77; box-shadow:inset 0 0 22px ${meta.color}12;">
+            <div class="lane-col-header" style="background:${meta.bg}; border:1px solid ${meta.color}66; padding:7px 9px;">
+              <span style="color:${meta.color}; font-family:var(--font-mono); font-size:10.5px; letter-spacing:0.04em;">${meta.title}</span>
+              <span style="display:flex; align-items:center; gap:6px; font-family:var(--font-mono);">
+                <span style="color:#00ff9d; font-size:10px;">${laneDone}/${laneTasks.length} ACTIVE • ${phInfo.ema_pct}% EMA</span>
+                <button onclick="triggerSwarmLane('${laneName}')" style="background:${meta.bg}; border:1px solid ${meta.color}; color:${meta.color}; border-radius:3px; font-size:9px; padding:1px 6px; cursor:pointer; font-family:var(--font-mono); font-weight:700;" title="Executar e verificar todas as 6 tasks da Lane ${laneName}">▶ RUN</button>
               </span>
             </div>
             ${cardsHtml}
@@ -4750,6 +5080,18 @@
       sendDirectOrderToAgent();
     }
 
+    function sendBottomConsoleDirective() {
+      const botInp = document.getElementById('officeBottomConsoleInput');
+      if (!botInp) return;
+      const val = botInp.value.trim();
+      if (!val) return;
+      if (!selectedOfficeAgentId) selectedOfficeAgentId = 'ARCH-01';
+      const inp = document.getElementById('offDirectCmdInput');
+      if (inp) inp.value = val;
+      botInp.value = '';
+      sendDirectOrderToAgent();
+    }
+
     async function sendDirectOrderToAgent() {
       const inp = document.getElementById('offDirectCmdInput');
       if (!inp || !selectedOfficeAgentId) return;
@@ -5203,13 +5545,54 @@
 
       // 1. Limpar Canvas 3D
       officeCtx.clearRect(0, 0, officeCanvas.width, officeCanvas.height);
+      const isTechRev = document.body.classList.contains('tech-rev');
 
-      // 2. Desenhar a Base / Chão do Escritório 3D (1120 x 760) + Rodapé Neon
-      drawBox3D(0, -10, 5, 1120, 10, 760, '#0f1422', '#090c15', '#06080f', 'rgba(236,72,153,0.32)');
+      // 1B. TECH REVOLUTION v4.0: Grelha Tática 2D + Horizonte Synthwave 3D em Perspetiva (Screen-Space)
+      if (isTechRev) {
+        officeCtx.save();
+        const cw = officeCanvas.width;
+        const ch = officeCanvas.height;
+        officeCtx.strokeStyle = 'rgba(0, 240, 255, 0.045)';
+        officeCtx.lineWidth = 1;
+        for (let gx = 0; gx < cw; gx += 48) {
+          officeCtx.beginPath(); officeCtx.moveTo(gx, 0); officeCtx.lineTo(gx, ch); officeCtx.stroke();
+        }
+        for (let gy = 0; gy < ch; gy += 48) {
+          officeCtx.beginPath(); officeCtx.moveTo(0, gy); officeCtx.lineTo(cw, gy); officeCtx.stroke();
+        }
+        const horizonY = Math.round(ch * 0.78);
+        const vpX = cw * 0.5;
+        officeCtx.strokeStyle = 'rgba(255, 42, 133, 0.14)';
+        for (let rx = -cw * 0.8; rx <= cw * 1.8; rx += 95) {
+          officeCtx.beginPath();
+          officeCtx.moveTo(vpX + (rx - vpX) * 0.25, horizonY);
+          officeCtx.lineTo(rx, ch);
+          officeCtx.stroke();
+        }
+        for (let i = 0; i < 8; i++) {
+          const t = Math.pow(i / 7, 1.55);
+          const ly = horizonY + t * (ch - horizonY);
+          officeCtx.strokeStyle = `rgba(112, 0, 255, ${0.08 + i * 0.025})`;
+          officeCtx.beginPath();
+          officeCtx.moveTo(0, ly);
+          officeCtx.lineTo(cw, ly);
+          officeCtx.stroke();
+        }
+        officeCtx.restore();
+      }
 
-      // Grelha de Piso 3D
-      officeCtx.strokeStyle = 'rgba(255, 255, 255, 0.036)';
-      officeCtx.lineWidth = 1;
+      // 2. Desenhar a Base / Chão do Escritório 3D (1120 x 760) + Duplo Anel Isométrico Neon Cyan
+      drawBox3D(
+        0, -10, 5, 1120, 10, 760,
+        isTechRev ? '#060c1a' : '#0f1422',
+        isTechRev ? '#040812' : '#090c15',
+        '#03060c',
+        isTechRev ? '#00f0ff' : 'rgba(236,72,153,0.32)'
+      );
+
+      // Grelha de Piso Isométrica 3D + Lasers Divisores Diagonais (Tech Revolution v4.0)
+      officeCtx.strokeStyle = isTechRev ? 'rgba(0, 240, 255, 0.14)' : 'rgba(255, 255, 255, 0.036)';
+      officeCtx.lineWidth = isTechRev ? 1.15 : 1;
       for (let gx = -520; gx <= 520; gx += 80) {
         const p1 = projectOffice3D(gx, 0.5, -355);
         const p2 = projectOffice3D(gx, 0.5, 365);
@@ -5226,20 +5609,33 @@
         officeCtx.lineTo(p2.x, p2.y);
         officeCtx.stroke();
       }
+      if (isTechRev) {
+        const dA1 = projectOffice3D(-540, 0.8, -355);
+        const dA2 = projectOffice3D(540, 0.8, 365);
+        const dB1 = projectOffice3D(540, 0.8, -355);
+        const dB2 = projectOffice3D(-540, 0.8, 365);
+        officeCtx.save();
+        officeCtx.lineWidth = 1.4;
+        officeCtx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
+        officeCtx.beginPath(); officeCtx.moveTo(dA1.x, dA1.y); officeCtx.lineTo(dA2.x, dA2.y); officeCtx.stroke();
+        officeCtx.strokeStyle = 'rgba(255, 42, 133, 0.28)';
+        officeCtx.beginPath(); officeCtx.moveTo(dB1.x, dB1.y); officeCtx.lineTo(dB2.x, dB2.y); officeCtx.stroke();
+        officeCtx.restore();
+      }
 
-      // Tapetes Arquitetónicos das 6 Zonas Bem Separadas (Com Corredores Iluminados entre Elas)
+      // Tapetes Arquitetónicos das 6 Zonas Holográficas 3D
       // ZONA 1: Portal Quântico (Noroeste)
-      drawFloorCarpet3D(-445, -265, 175, 135, 'rgba(6, 182, 212, 0.11)', '#06b6d4', '🚪 1. PORTAL QUÂNTICO');
+      drawFloorCarpet3D(-445, -265, 175, 135, isTechRev ? 'rgba(0, 240, 255, 0.13)' : 'rgba(6, 182, 212, 0.11)', isTechRev ? '#00f0ff' : '#06b6d4', 'ZONA 1 // PORTAL QUÂNTICO 3D');
       // ZONA 2: Sala de Servidores MCP 3D (Ala Oeste Isolada)
-      drawFloorCarpet3D(-445, 55, 175, 420, 'rgba(56, 189, 248, 0.08)', '#38bdf8', '🖥 2. SALA DE SERVIDORES MCP 3D');
+      drawFloorCarpet3D(-445, 55, 175, 420, isTechRev ? 'rgba(0, 240, 255, 0.10)' : 'rgba(56, 189, 248, 0.08)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 2 // SALA SERVIDORES MCP 3D');
       // ZONA 3: Ponte de Comando Argon, Scout & Heatmap (Norte Central)
-      drawFloorCarpet3D(-45, -265, 535, 135, 'rgba(236, 72, 153, 0.10)', '#ec4899', '👑 3. PONTE DE COMANDO ARGON, SCOUT & HEATMAP');
+      drawFloorCarpet3D(-45, -265, 535, 135, isTechRev ? 'rgba(255, 42, 133, 0.14)' : 'rgba(236, 72, 153, 0.10)', isTechRev ? '#ff2a85' : '#ec4899', 'ZONA 3 // PONTE DE COMANDO ARGON');
       // ZONA 4: Ala de Engenharia Swarm (Centro-Norte: UI, API, TESTS, DOCS)
-      drawFloorCarpet3D(-45, -60, 535, 200, 'rgba(139, 92, 246, 0.07)', '#a855f7', '⚡ 4. ALA DE ENGENHARIA SWARM (UI · API · QA · DOCS)');
+      drawFloorCarpet3D(-45, -60, 535, 200, isTechRev ? 'rgba(0, 255, 157, 0.11)' : 'rgba(139, 92, 246, 0.07)', isTechRev ? '#00ff9d' : '#a855f7', 'ZONA 4 // ALA SWARM 24 WORKERS');
       // ZONA 5: Ala de Conversas & Subagentes Ativos (Centro-Sul)
-      drawFloorCarpet3D(-45, 200, 535, 265, 'rgba(59, 130, 246, 0.06)', '#38bdf8', '💬 5. ALA DE CONVERSAS & SUBAGENTES DA APP');
+      drawFloorCarpet3D(-45, 200, 535, 265, isTechRev ? 'rgba(0, 240, 255, 0.09)' : 'rgba(59, 130, 246, 0.06)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 5 // SUBAGENTES & CONVERSAS');
       // ZONA 6: Zona de Pausa · Lounge, Café Espresso & Arcade (Ala Este)
-      drawFloorCarpet3D(390, 5, 250, 680, 'rgba(245, 158, 11, 0.08)', '#f59e0b', '☕ 6. ZONA DE PAUSA · LOUNGE & CAFÉ ESPRESSO');
+      drawFloorCarpet3D(390, 5, 250, 680, isTechRev ? 'rgba(255, 183, 3, 0.11)' : 'rgba(245, 158, 11, 0.08)', isTechRev ? '#ffb703' : '#f59e0b', 'ZONA 6 // LOUNGE, CAFÉ & ARCADE');
 
       // 3. Construir Lista de Objetos 3D (Paredes Cutaway + Plantas + Mobiliário + Secretárias + Racks MCP + Bonecos)
       const renderables = [];
