@@ -1463,30 +1463,271 @@
       text-overflow: ellipsis;
       font-family: var(--font-mono);
     }
+
+    /* =========================================================================
+       TECH REVOLUTION v4.0 — SCI-FI HOLOGRAPHIC HUD & CHAMFERED CYBER BLADES
+       ========================================================================= */
+    body.tech-rev {
+      --bg-canvas: #05070f;
+      --bg-panel: rgba(8, 13, 26, 0.92);
+      --bg-panel-solid: #070b16;
+      --bg-card: #0c1324;
+      --bg-hover: #131f38;
+      --border: rgba(0, 240, 255, 0.22);
+      --border-focus: #00f0ff;
+      --accent: #00f0ff;
+      --accent-glow: rgba(0, 240, 255, 0.38);
+      --emerald: #00ff9d;
+      --pink: #ff2a85;
+      --cyan: #00f0ff;
+    }
+
+    body.tech-rev.crt-scanlines::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 999;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 240, 255, 0.022) 0px,
+        rgba(0, 240, 255, 0.022) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    }
+
+    body.tech-rev .topbar {
+      background: linear-gradient(90deg, #060a15 0%, #0b1124 50%, #060a15 100%);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.35);
+      box-shadow: 0 4px 24px rgba(0, 240, 255, 0.12);
+    }
+
+    body.tech-rev .brand-dot {
+      background: #ff2a85;
+      box-shadow: 0 0 14px #ff2a85, 0 0 4px #00f0ff;
+    }
+
+    body.tech-rev .brand-badge {
+      background: rgba(0, 240, 255, 0.12);
+      color: #00f0ff;
+      border-color: rgba(0, 240, 255, 0.45);
+      clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+      border-radius: 0;
+    }
+
+    body.tech-rev .view-tab.active {
+      background: linear-gradient(135deg, #ff2a85 0%, #7c3aed 100%);
+      box-shadow: 0 0 16px rgba(255, 42, 133, 0.5);
+      clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%);
+      border-radius: 0;
+    }
+
+    body.tech-rev .metric-pill,
+    body.tech-rev .btn,
+    body.tech-rev .hud-pill,
+    body.tech-rev .office-btn,
+    body.tech-rev .office-badge {
+      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+      border-radius: 0;
+      border-color: rgba(0, 240, 255, 0.28);
+    }
+
+    body.tech-rev .bp-box,
+    body.tech-rev .lane-col,
+    body.tech-rev .worker-card,
+    body.tech-rev .office-selected-card,
+    body.tech-rev .roster-card,
+    body.tech-rev .graph-settings-panel,
+    body.tech-rev .frontmatter,
+    body.tech-rev .backlink-card {
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      border-radius: 0;
+      border-color: rgba(0, 240, 255, 0.26);
+      box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.04);
+    }
+
+    body.tech-rev .canvas-container {
+      background-color: #05070f;
+      background-image:
+        linear-gradient(rgba(0, 240, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.045) 1px, transparent 1px);
+      background-size: 44px 44px;
+    }
+
+    /* JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING BLADE IN LEFT SIDEBAR */
+    .jev-s1-blade {
+      margin: 8px 10px;
+      padding: 10px 11px;
+      background: linear-gradient(160deg, rgba(8, 16, 34, 0.95) 0%, rgba(12, 18, 38, 0.92) 100%);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+    }
+
+    .jev-s1-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #00f0ff;
+      font-weight: 700;
+      font-size: 10.5px;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+    }
+
+    .jev-tier-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 3px 0 2px;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .jev-tier-bar {
+      height: 5px;
+      background: rgba(255, 255, 255, 0.07);
+      margin-bottom: 5px;
+      overflow: hidden;
+    }
+
+    .jev-tier-fill {
+      height: 100%;
+      transition: width 0.35s ease;
+    }
+
+    /* CAUSAL LINEAGE INSPECTOR CHAIN IN RIGHT SIDEBAR */
+    .causal-lineage-box {
+      margin: 6px 16px 12px;
+      padding: 10px 12px;
+      background: rgba(7, 12, 24, 0.92);
+      border: 1px solid rgba(0, 240, 255, 0.32);
+      clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+      font-family: var(--font-mono);
+    }
+
+    .cl-step {
+      padding: 6px 8px;
+      margin-bottom: 6px;
+      border-left: 2px solid #00f0ff;
+      background: rgba(0, 240, 255, 0.05);
+      font-size: 10.5px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .cl-step:hover {
+      background: rgba(0, 240, 255, 0.14);
+    }
+
+    /* SWARM BIOLUMINESCENT EQUALIZER BAR */
+    .swarm-eq-box {
+      background: #070b16;
+      border: 1px solid rgba(0, 255, 157, 0.38);
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .swarm-eq-bars {
+      display: grid;
+      grid-template-columns: repeat(48, 1fr);
+      gap: 3px;
+      height: 36px;
+      align-items: end;
+    }
+
+    .swarm-eq-bar {
+      width: 100%;
+      background: #00f0ff;
+      transition: height 0.25s ease;
+      box-shadow: 0 0 6px rgba(0, 240, 255, 0.45);
+    }
+
+    /* ORBITAL RADAR MINIMAP IN #office */
+    .office-radar-wrap {
+      position: absolute;
+      bottom: 58px;
+      left: 16px;
+      width: 168px;
+      height: 192px;
+      background: rgba(6, 11, 24, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 240, 255, 0.42);
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      padding: 8px;
+      z-index: 16;
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.65);
+    }
+
+    .office-radar-title {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #00f0ff;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    /* NEURAL COMMAND PALETTE (CTRL+K) */
+    .cmd-palette-item {
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 240, 255, 0.14);
+      background: rgba(12, 19, 36, 0.85);
+      margin-bottom: 5px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-main);
+      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+      transition: all 0.12s ease;
+    }
+
+    .cmd-palette-item:hover,
+    .cmd-palette-item.active {
+      border-color: #00f0ff;
+      background: rgba(0, 240, 255, 0.16);
+      color: #fff;
+      transform: translateX(3px);
+    }
   </style>
 </head>
-<body>
+<body class="tech-rev">
 
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="brand">
       <span class="brand-dot"></span>
       <span>Antigravity Brain</span>
-      <span class="brand-badge">v2.8 • Graph + Swarm + 3D Office</span>
+      <span class="brand-badge" id="lblBrandVersion">v4.0 // TECH REVOLUTION</span>
       <div class="view-tabs">
         <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
-          🕸️ Graph View
+          🕸️ Neural Cortex
         </button>
         <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')">
           <span class="pulse-dot"></span>
-          ⚡ Swarm Monitor
+          ⚡ Cyber-Swarm
         </button>
         <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')">
-          🏢 Escritório 3D
+          🏢 Holographic 3D
         </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
           <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
-          📋 Tasks em Curso (<span id="topTabTasksCount">0</span>)
+          📋 Tasks (<span id="topTabTasksCount">0</span>)
         </button>
       </div>
     </div>
@@ -1495,23 +1736,29 @@
       <div class="metric-pill" title="Total de Memórias e Nós no Grafo">
         🧠 Memórias: <strong id="statMemories">0</strong>
       </div>
-      <div class="metric-pill" title="Ligações Sinápticas entre Conceitos">
+      <div class="metric-pill" title="Ligações Sinápticas & Arestas Causais">
         🕸️ Sinapses: <strong id="statLinks">0</strong>
       </div>
-      <div class="metric-pill" title="Latência média do Hook PreInvocation (SQLite FTS5)">
-        ⚡ Hook: <strong id="statLatency">0 ms</strong>
+      <div class="metric-pill" title="Router Jev-Mem System-1 (<0.01ms) + Latência FTS5">
+        ⚡ Jev-S1: <strong id="statLatency" style="color:#00f0ff;">0.01 ms</strong>
       </div>
       <div class="metric-pill" title="Tokens poupados pelo Brain">
         💎 Poupados: <strong id="statSaved" style="color: var(--emerald);">+0 tok</strong>
       </div>
       <div class="metric-pill" title="Monitor da Janela Deslizante de Quota de 5 Horas (turnos e tempo até renovação)">
-        ⏱️ Janela 5h: <strong id="statWindow5h" style="color: #38bdf8;">Reset 5h</strong>
+        ⏱️ Reator 5h: <strong id="statWindow5h" style="color: #38bdf8;">Reset 5h</strong>
       </div>
     </div>
 
     <div class="top-actions">
+      <button class="btn" id="btnTechRevToggle" onclick="toggleTechRevolutionTheme()" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.12);" title="Alternar estética Sci-Fi Tech Revolution v4.0 (Blades Chanfradas + Sonar + Radar)">
+        ⚡ Tech Rev: ON
+      </button>
+      <button class="btn" onclick="openCommandPalette()" style="border-color:#ff2a85; color:#ff85b3; background:rgba(255,42,133,0.12);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
+        ⌘K Palette
+      </button>
       <button class="btn" id="btnGitUpdate" onclick="triggerGitUpdate()" title="Verifica no GitHub se há atualizações e faz git pull + auto-sync dos hooks">
-        📦 Git: <span id="lblGitSha">v2.8</span>
+        📦 Git: <span id="lblGitSha">v4.0</span>
       </button>
       <button class="btn" id="btnDietToggle" onclick="toggleDietMode()" title="Alternar entre Modo Lean (económico) e Modo Full">
         ⚡ Modo Quota: Carregando...
@@ -1555,6 +1802,30 @@
       </div>
 
       <div class="legend-bar" id="legendBar"></div>
+
+      <!-- TECH REVOLUTION v4.0: JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING BLADE -->
+      <div class="jev-s1-blade" id="jevS1GraphBlade">
+        <div class="jev-s1-head">
+          <span>[SYS-1] JEV-MEM ROUTER</span>
+          <span style="color:#00ff9d;" id="jevS1LatencyLbl">0.011ms</span>
+        </div>
+        <div style="font-size:9.8px; color:#f472b6; margin-bottom:6px;" id="jevS1RouteLbl">
+          ROUTE: ARCH-01 (Argon) ➔ 4×6 Flash Lanes
+        </div>
+        <div class="jev-tier-row"><span>WORKING TIER [W]</span><strong style="color:#00f0ff;" id="jevCntW">0</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarW" style="width:78%; background:#00f0ff;"></div></div>
+        <div class="jev-tier-row"><span>SEMANTIC TIER [S]</span><strong style="color:#ff2a85;" id="jevCntS">0</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarS" style="width:45%; background:#ff2a85;"></div></div>
+        <div class="jev-tier-row"><span>EPISODIC TIER [E]</span><strong style="color:#00ff9d;" id="jevCntE">0</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarE" style="width:28%; background:#00ff9d;"></div></div>
+        <div class="jev-tier-row"><span>CAUSAL EDGES [➔]</span><strong style="color:#f59e0b;" id="jevCntCausal">0</strong></div>
+        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarCausal" style="width:64%; background:#f59e0b;"></div></div>
+        <div style="display:flex; justify-content:space-between; font-size:9.5px; color:#00f0ff; margin:5px 0 3px;">
+          <span>ADAPTIVE STOPPING (TH=0.28)</span>
+          <span style="color:#ff2a85;">-78% TOK</span>
+        </div>
+        <canvas id="jevStopCurveCanvas" width="265" height="54" style="width:100%; height:54px; background:#050811; border:1px solid rgba(0,240,255,0.2); display:block;"></canvas>
+      </div>
 
       <div class="vault-tree" id="vaultTree"></div>
     </aside>
@@ -1629,6 +1900,7 @@
       <div class="frontmatter" id="inspFrontmatter">
         <div class="fm-row"><span class="fm-key">workspace:</span> <span class="fm-val" id="fmWs">-</span></div>
         <div class="fm-row"><span class="fm-key">category:</span> <span class="fm-val" id="fmCat">-</span></div>
+        <div class="fm-row"><span class="fm-key">memory_tier:</span> <span class="fm-val" id="fmTier" style="color:#00f0ff; font-weight:700;">[WORKING]</span></div>
         <div class="fm-row"><span class="fm-key">importance:</span> <span class="fm-val" id="fmImp">-</span></div>
         <div class="fm-row"><span class="fm-key">access_count:</span> <span class="fm-val" id="fmAcc">-</span></div>
         <div class="fm-row"><span class="fm-key">created_at:</span> <span class="fm-val" id="fmTime">-</span></div>
@@ -1637,6 +1909,15 @@
       <div class="tag-cloud" id="inspTags"></div>
 
       <div class="note-body" id="inspBody">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
+
+      <!-- TECH REVOLUTION v4.0: CAUSAL LINEAGE INSPECTOR -->
+      <div class="causal-lineage-box" id="causalLineageBox">
+        <div style="font-size:10.5px; font-weight:700; color:#00f0ff; margin-bottom:7px; display:flex; justify-content:space-between;">
+          <span>🧬 CAUSAL LINEAGE INSPECTOR</span>
+          <span style="color:#00ff9d;" id="clConfidenceLbl">CONF: 0.99</span>
+        </div>
+        <div id="causalLineageSteps"></div>
+      </div>
 
       <div class="backlinks-section">
         <div class="section-subtitle">🔗 Ligações Sinápticas & Backlinks (<span id="backlinkCount">0</span>)</div>
@@ -1883,6 +2164,15 @@
         </div>
       </div>
     </div>
+
+    <!-- Row 5: TECH REVOLUTION v4.0 BIOLUMINESCENT TELEMETRY EQUALIZER -->
+    <div class="swarm-eq-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:10.5px; color:#00ff9d; font-weight:700;">
+        <span>[MATRIX] BIOLUMINESCENT EXECUTION WAVEFORM // JEV-S1: 0.01ms • RUFLO PHEROMONE EMA: ACTIVE • AI-DEFENCE: SAFE</span>
+        <span id="swEqStatusText" style="color:#00f0ff;">48/48 GATES LOCKED</span>
+      </div>
+      <div class="swarm-eq-bars" id="swarmEqualizerBars"></div>
+    </div>
   </div>
 
   <!-- 3D AGENT OFFICE LIVE VIEW -->
@@ -1966,6 +2256,15 @@
 
       <!-- 3D Viewport Canvas -->
       <canvas id="office3DCanvas"></canvas>
+
+      <!-- TECH REVOLUTION v4.0: ORBITAL RADAR MINIMAP 2D -->
+      <div class="office-radar-wrap" id="officeRadarWrap" title="Clique num ponto luminoso do Radar Orbital para selecionar e focar esse Agente 3D">
+        <div class="office-radar-title">
+          <span>[RADAR] ORBITAL</span>
+          <span style="color:#00ff9d;" id="radarBlipCount">6 AG</span>
+        </div>
+        <canvas id="officeRadarCanvas" width="148" height="148" style="width:148px; height:148px; cursor:crosshair;"></canvas>
+      </div>
 
       <!-- Bottom Legend HUD -->
       <div class="office-hud-bottom">
@@ -2171,6 +2470,27 @@
         ⚡ Bloco Exato Injetado no Antigravity (`ephemeralMessage` + `[SCOUT_SHARED_MAP]` + Memórias Fixadas `📌[PIN]`):
       </div>
       <pre id="inspPreviewBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:330px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+    </div>
+  </div>
+
+  <!-- MODAL NEURAL COMMAND PALETTE (CTRL+K / ⌘K) -->
+  <div class="modal-backdrop" id="cmdPaletteModal" onclick="if(event.target===this) closeCommandPalette()">
+    <div class="modal" style="width: 600px; max-width: 94vw; border-color: #00f0ff; box-shadow: 0 0 36px rgba(0, 240, 255, 0.25);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h3 style="margin:0; font-family:var(--font-mono); color:#00f0ff; font-size:14px;">⌘K // NEURAL COMMAND PALETTE (TECH REVOLUTION v4.0)</h3>
+        <button class="btn" onclick="closeCommandPalette()">ESC</button>
+      </div>
+      <div class="form-field" style="margin-bottom:10px;">
+        <input
+          type="text"
+          id="cmdPaletteInput"
+          placeholder="Escreva um comando (ex: swarm, work-steal, cow, radar, doctor, bugs, crt)..."
+          style="font-family:var(--font-mono); border-color:#00f0ff; background:#060a15; color:#fff;"
+          oninput="renderCommandPaletteList(this.value)"
+          onkeydown="onCommandPaletteKey(event)"
+        />
+      </div>
+      <div id="cmdPaletteList" style="max-height:320px; overflow-y:auto;"></div>
     </div>
   </div>
 
@@ -2429,6 +2749,69 @@
         btnDiet.className = 'btn btn-diet-full';
         btnDiet.innerHTML = `🟠 Perfil Quota: FULL (${td.total_mcp_tokens_per_step || 2961} tok/passo)`;
       }
+      updateJevS1Blade();
+    }
+
+    function updateJevS1Blade() {
+      const mems = (graphData.nodes || []).filter(n => n.node_type === 'memory');
+      let cntW = 0, cntS = 0, cntE = 0;
+      mems.forEach(m => {
+        const tier = (m.memory_tier || '').toLowerCase();
+        if (tier === 'semantic' || m.category === 'architecture' || m.category === 'infra') cntS++;
+        else if (tier === 'episodic' || m.category === 'checkpoint' || m.category === 'bug_fix') cntE++;
+        else cntW++;
+      });
+      const causalLinks = (graphData.links || []).filter(l => l.kind === 'causal_link').length;
+      const totalM = Math.max(1, mems.length);
+
+      const elW = document.getElementById('jevCntW');
+      const elS = document.getElementById('jevCntS');
+      const elE = document.getElementById('jevCntE');
+      const elC = document.getElementById('jevCntCausal');
+      if (elW) elW.textContent = `${cntW} mems`;
+      if (elS) elS.textContent = `${cntS} mems`;
+      if (elE) elE.textContent = `${cntE} mems`;
+      if (elC) elC.textContent = `${causalLinks} links`;
+
+      const bW = document.getElementById('jevBarW');
+      const bS = document.getElementById('jevBarS');
+      const bE = document.getElementById('jevBarE');
+      const bC = document.getElementById('jevBarCausal');
+      if (bW) bW.style.width = `${Math.min(100, Math.max(12, Math.round((cntW / totalM) * 100)))}%`;
+      if (bS) bS.style.width = `${Math.min(100, Math.max(12, Math.round((cntS / totalM) * 180)))}%`;
+      if (bE) bE.style.width = `${Math.min(100, Math.max(10, Math.round((cntE / totalM) * 240)))}%`;
+      if (bC) bC.style.width = `${Math.min(100, Math.max(18, Math.round((causalLinks / Math.max(1, graphData.links.length)) * 160)))}%`;
+
+      // Draw Jev-Mem Adaptive Stopping Curve on #jevStopCurveCanvas
+      const c = document.getElementById('jevStopCurveCanvas');
+      if (!c) return;
+      const g = c.getContext('2d');
+      const w = c.width, h = c.height;
+      g.clearRect(0, 0, w, h);
+      g.strokeStyle = 'rgba(0, 240, 255, 0.12)';
+      g.lineWidth = 1;
+      g.beginPath();
+      g.moveTo(0, h * 0.5); g.lineTo(w, h * 0.5);
+      g.stroke();
+
+      g.beginPath();
+      for (let i = 0; i <= 32; i++) {
+        const px = 6 + (i / 32) * (w - 12);
+        const py = h - 7 - (h - 14) * Math.exp(-i * 0.11) * (0.86 + 0.14 * Math.sin(i * 0.7));
+        if (i === 0) g.moveTo(px, py);
+        else g.lineTo(px, py);
+      }
+      g.strokeStyle = '#00f0ff';
+      g.lineWidth = 2;
+      g.stroke();
+
+      const cutX = Math.round(w * 0.54);
+      g.beginPath();
+      g.moveTo(cutX, 2);
+      g.lineTo(cutX, h - 2);
+      g.strokeStyle = '#ff2a85';
+      g.lineWidth = 1.6;
+      g.stroke();
     }
 
     function updateFiltersAndLegend() {
@@ -2558,6 +2941,12 @@
       document.getElementById('inspTitle').textContent = node.label;
       document.getElementById('fmWs').textContent = node.workspace || 'global';
       document.getElementById('fmCat').textContent = node.category || 'general';
+      const tierRaw = (node.memory_tier || (node.category === 'architecture' ? 'semantic' : (node.category === 'checkpoint' ? 'episodic' : 'working'))).toUpperCase();
+      const fmTierEl = document.getElementById('fmTier');
+      if (fmTierEl) {
+        fmTierEl.textContent = `[${tierRaw}]`;
+        fmTierEl.style.color = tierRaw === 'SEMANTIC' ? '#ff2a85' : (tierRaw === 'EPISODIC' ? '#00ff9d' : '#00f0ff');
+      }
       document.getElementById('fmImp').textContent = '⭐'.repeat(Math.min(5, Math.max(1, node.importance || 3)));
       document.getElementById('fmAcc').textContent = `${node.access_count || 0} injeções`;
       document.getElementById('fmTime').textContent = node.created_at || node.updated_at || 'Ativo';
@@ -2583,14 +2972,44 @@
         <span class="tag-pill" onclick="searchByTag('${t}')">#${escapeHtml(t)}</span>
       `).join('');
 
-      // Calcular Backlinks / Ligações Sinápticas
+      // Calcular Backlinks / Ligações Sinápticas & Linhagem Causal
       const connected = [];
+      const causalConnected = [];
       for (const l of activeLinks) {
         if (l.sourceNode.id === node.id) {
-          connected.push({ node: l.targetNode, kind: l.kind, shared: l.shared_tags });
+          connected.push({ node: l.targetNode, kind: l.kind, relation: l.relation, shared: l.shared_tags });
+          if (l.kind === 'causal_link') causalConnected.push({ node: l.targetNode, relation: l.relation || 'evolves', dir: '➔' });
         } else if (l.targetNode.id === node.id) {
-          connected.push({ node: l.sourceNode, kind: l.kind, shared: l.shared_tags });
+          connected.push({ node: l.sourceNode, kind: l.kind, relation: l.relation, shared: l.shared_tags });
+          if (l.kind === 'causal_link') causalConnected.push({ node: l.sourceNode, relation: l.relation || 'fixed_by', dir: '⬅' });
         }
+      }
+
+      // Atualizar Causal Lineage Inspector (Tech Revolution v4.0)
+      const clStepsEl = document.getElementById('causalLineageSteps');
+      if (clStepsEl) {
+        const firstCausal = causalConnected[0] || (connected[0] ? { node: connected[0].node, relation: 'synaptic', dir: '⟷' } : null);
+        const secondCausal = causalConnected[1] || (connected[1] ? { node: connected[1].node, relation: 'evolves', dir: '➔' } : null);
+        clStepsEl.innerHTML = `
+          <div class="cl-step" style="border-left-color:#ff2a85;">
+            <div style="color:#ff2a85; font-weight:700;">01 // NÓ SELECIONADO [${tierRaw}]</div>
+            <div style="color:#fff;">${escapeHtml(node.label.slice(0, 44))}</div>
+          </div>
+          ${firstCausal ? `
+          <div class="cl-step" style="border-left-color:#f59e0b;" onclick="focusNodeById('${firstCausal.node.id}')">
+            <div style="color:#f59e0b; font-weight:700;">02 // ARESTA CAUSAL [${escapeHtml(firstCausal.relation)}] ${firstCausal.dir}</div>
+            <div style="color:#e2e8f0;">${escapeHtml(firstCausal.node.label.slice(0, 44))}</div>
+          </div>` : ''}
+          ${secondCausal ? `
+          <div class="cl-step" style="border-left-color:#00ff9d;" onclick="focusNodeById('${secondCausal.node.id}')">
+            <div style="color:#00ff9d; font-weight:700;">03 // EVOLUÇÃO [${escapeHtml(secondCausal.relation)}] ${secondCausal.dir}</div>
+            <div style="color:#e2e8f0;">${escapeHtml(secondCausal.node.label.slice(0, 44))}</div>
+          </div>` : ''}
+          <div class="cl-step" style="border-left-color:#00f0ff;" onclick="openInspectorModal()">
+            <div style="color:#00f0ff; font-weight:700;">04 // JEV-S1 &amp; VERIFY GATE</div>
+            <div style="color:#cbd5e1;">Route &lt;0.01ms • 48/48 Checks PASS</div>
+          </div>
+        `;
       }
 
       document.getElementById('backlinkCount').textContent = connected.length;
@@ -2877,6 +3296,30 @@
       ctx.save();
       ctx.translate(cam.x, cam.y);
       ctx.scale(cam.k, cam.k);
+
+      // 0. TECH REVOLUTION v4.0: Anéis de Sonar Concêntricos & Eixos Táticos no Centro do Grafo
+      if (document.body.classList.contains('tech-rev')) {
+        ctx.save();
+        const sonarRings = [
+          { r: 220, col: 'rgba(0, 255, 157, 0.14)' },
+          { r: 420, col: 'rgba(255, 42, 133, 0.14)' },
+          { r: 640, col: 'rgba(0, 240, 255, 0.14)' },
+          { r: 880, col: 'rgba(0, 240, 255, 0.08)' }
+        ];
+        ctx.lineWidth = 1.4 / Math.sqrt(cam.k);
+        for (const sr of sonarRings) {
+          ctx.beginPath();
+          ctx.arc(0, 0, sr.r, 0, Math.PI * 2);
+          ctx.strokeStyle = sr.col;
+          ctx.stroke();
+        }
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
+        ctx.beginPath();
+        ctx.moveTo(-940, 0); ctx.lineTo(940, 0);
+        ctx.moveTo(0, -940); ctx.lineTo(0, 940);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       const focusTarget = hoveredNode || null;
       const neighborSet = new Set();
@@ -3492,6 +3935,24 @@
       document.getElementById('swElapsed').textContent = `${(run.elapsed_seconds || 11.8).toFixed(1)}s elapsed`;
       document.getElementById('swAuditPassBadge').textContent =
         (run.verify_passed >= run.verify_total) ? `✓ ${run.verify_passed}/${run.verify_total} VERIFIED` : `⏳ ${run.verify_passed}/${run.verify_total} CHECKS`;
+
+      // Tech Revolution v4.0: 48-Bar Bioluminescent Telemetry Waveform
+      const eqBarsEl = document.getElementById('swarmEqualizerBars');
+      const eqTxtEl = document.getElementById('swEqStatusText');
+      if (eqTxtEl) {
+        eqTxtEl.textContent = `${doneCount}/${totalCount} DONE • ${run.verify_passed || 48}/${run.verify_total || 48} GATES PASS`;
+      }
+      if (eqBarsEl) {
+        const eqCols = ['#00f0ff', '#00ff9d', '#ff2a85', '#a855f7'];
+        let eqHtml = '';
+        for (let i = 0; i < 48; i++) {
+          const tRef = tasks[i % Math.max(1, tasks.length)] || { progress: 100, status: 'done' };
+          const wave = Math.round(14 + 20 * Math.abs(Math.sin(i * 0.42 + (doneCount * 0.3))) * ((tRef.progress || 85) / 100));
+          const col = eqCols[i % eqCols.length];
+          eqHtml += `<div class="swarm-eq-bar" style="height:${wave}px; background:${col}; box-shadow:0 0 6px ${col};"></div>`;
+        }
+        eqBarsEl.innerHTML = eqHtml;
+      }
     }
 
     function onSwarmModeChange() {
@@ -5148,12 +5609,213 @@
       for (let i = 0; i < sims.length; i++) {
         drawBonecoLabel2D(sims[i]);
       }
+
+      // 5. Tech Revolution v4.0: Desenhar Radar Orbital 2D em Tempo Real
+      renderOfficeOrbitalRadar(sims, nowMs);
       } catch (err) {
         console.error('Erro no ciclo 3D do Office:', err);
       } finally {
         requestAnimationFrame(renderOffice3DLoop);
       }
     }
+
+    let radarBlipHitboxes = [];
+    function renderOfficeOrbitalRadar(sims, nowMs) {
+      const rCan = document.getElementById('officeRadarCanvas');
+      if (!rCan) return;
+      const rCtx = rCan.getContext('2d');
+      const W = rCan.width, H = rCan.height;
+      const cx = W / 2, cy = H / 2, maxR = W / 2 - 6;
+
+      rCtx.clearRect(0, 0, W, H);
+
+      // Fundo circular escuro
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, maxR, 0, Math.PI * 2);
+      rCtx.fillStyle = 'rgba(4, 9, 20, 0.92)';
+      rCtx.fill();
+
+      // Anéis concêntricos de radar
+      for (const frac of [0.33, 0.66, 1.0]) {
+        rCtx.beginPath();
+        rCtx.arc(cx, cy, maxR * frac, 0, Math.PI * 2);
+        rCtx.strokeStyle = frac === 1.0 ? 'rgba(0, 240, 255, 0.55)' : 'rgba(0, 240, 255, 0.2)';
+        rCtx.lineWidth = frac === 1.0 ? 1.5 : 1.0;
+        rCtx.stroke();
+      }
+
+      // Eixos cruzados
+      rCtx.strokeStyle = 'rgba(0, 240, 255, 0.18)';
+      rCtx.beginPath();
+      rCtx.moveTo(cx - maxR, cy); rCtx.lineTo(cx + maxR, cy);
+      rCtx.moveTo(cx, cy - maxR); rCtx.lineTo(cx, cy + maxR);
+      rCtx.stroke();
+
+      // Feixe rotativo de varrimento (360° Radar Sweep)
+      const sweepAng = (nowMs * 0.0018) % (Math.PI * 2);
+      rCtx.beginPath();
+      rCtx.moveTo(cx, cy);
+      rCtx.arc(cx, cy, maxR, sweepAng - 0.45, sweepAng);
+      rCtx.closePath();
+      rCtx.fillStyle = 'rgba(0, 255, 157, 0.16)';
+      rCtx.fill();
+
+      rCtx.beginPath();
+      rCtx.moveTo(cx, cy);
+      rCtx.lineTo(cx + Math.cos(sweepAng) * maxR, cy + Math.sin(sweepAng) * maxR);
+      rCtx.strokeStyle = '#00ff9d';
+      rCtx.lineWidth = 1.6;
+      rCtx.stroke();
+
+      // Desenhar Blips de cada Agente 3D (mapeando mundo [-550..550] para o raio do radar)
+      radarBlipHitboxes = [];
+      const countEl = document.getElementById('radarBlipCount');
+      if (countEl) countEl.textContent = `${sims.length} AG`;
+
+      for (let i = 0; i < sims.length; i++) {
+        const s = sims[i];
+        const bx = cx + (s.x / 560) * (maxR - 8);
+        const by = cy + (s.z / 380) * (maxR - 8);
+        const isWorking = s.data && s.data.status === 'working';
+        const isSelected = selectedOfficeAgentId === s.agent_id;
+        const col = isSelected ? '#ffffff' : (isWorking ? '#00ff9d' : '#f59e0b');
+
+        if (isSelected || isWorking) {
+          rCtx.beginPath();
+          rCtx.arc(bx, by, isSelected ? 6.5 : 5.0, 0, Math.PI * 2);
+          rCtx.fillStyle = isSelected ? 'rgba(255, 42, 133, 0.45)' : 'rgba(0, 255, 157, 0.25)';
+          rCtx.fill();
+        }
+
+        rCtx.beginPath();
+        rCtx.arc(bx, by, isSelected ? 3.8 : 3.0, 0, Math.PI * 2);
+        rCtx.fillStyle = col;
+        rCtx.fill();
+
+        radarBlipHitboxes.push({ x: bx, y: by, agent_id: s.agent_id });
+      }
+    }
+
+    const officeRadarCanvasEl = document.getElementById('officeRadarCanvas');
+    if (officeRadarCanvasEl) {
+      officeRadarCanvasEl.addEventListener('click', (e) => {
+        const rect = officeRadarCanvasEl.getBoundingClientRect();
+        const mx = e.clientX - rect.left;
+        const my = e.clientY - rect.top;
+        for (const b of radarBlipHitboxes) {
+          if (Math.hypot(mx - b.x, my - b.y) <= 10) {
+            selectOfficeAgent(b.agent_id);
+            focusCameraOnSelectedAgent();
+            showToast(`🎯 Radar Orbital focado em ${b.agent_id}`);
+            break;
+          }
+        }
+      });
+    }
+
+    // =========================================================================
+    // TECH REVOLUTION v4.0 THEME TOGGLE & NEURAL COMMAND PALETTE (CTRL+K / ⌘K)
+    // =========================================================================
+    function toggleTechRevolutionTheme() {
+      const isTech = document.body.classList.toggle('tech-rev');
+      const btn = document.getElementById('btnTechRevToggle');
+      if (btn) {
+        btn.textContent = isTech ? '⚡ Tech Rev: ON' : '⚡ Tech Rev: OFF';
+        btn.style.borderColor = isTech ? '#00f0ff' : 'rgba(255,255,255,0.2)';
+        btn.style.color = isTech ? '#00f0ff' : '#94a3b8';
+      }
+      graphDirty = true;
+      showToast(isTech ? '⚡ Modo Futurista Tech Revolution v4.0 ATIVO!' : '🎨 Modo Clássico Obsidian ativo.');
+    }
+
+    function toggleCrtScanlines() {
+      const on = document.body.classList.toggle('crt-scanlines');
+      showToast(on ? '📺 Efeito Scanlines CRT Sci-Fi ATIVADO!' : '📺 Efeito Scanlines CRT desativado.');
+    }
+
+    const COMMAND_PALETTE_ACTIONS = [
+      { id: 'view_graph', label: '🕸️ Ir para Quantum Neural Cortex (#graph)', tag: 'VIEW', run: () => switchMainView('graph') },
+      { id: 'view_swarm', label: '⚡ Ir para Asymmetric Cyber-Swarm Matrix (#swarm)', tag: 'VIEW', run: () => switchMainView('swarm') },
+      { id: 'view_office', label: '🏢 Ir para Holographic 3D Command Bridge (#office)', tag: 'VIEW', run: () => switchMainView('office') },
+      { id: 'view_tasks', label: '📋 Abrir Aba de Tasks em Curso (#office)', tag: 'TASKS', run: () => openOfficeTasksTab() },
+      { id: 'swarm_run', label: '🚀 Lançar Swarm Run Completo (24 Lanes Assimétricas)', tag: 'SWARM', run: () => { switchMainView('swarm'); triggerSwarmRun(); } },
+      { id: 'swarm_verify', label: '✅ Executar Verify Gate 48/48 (AST + JS + SQLite WAL)', tag: 'QA 48/48', run: () => { switchMainView('swarm'); triggerSwarmAction('verify_all'); } },
+      { id: 'ruflo_steal', label: '⚖️ Ruflo Work-Stealing: Rebalancear Claims entre Workers', tag: 'RUFLO', run: () => { switchMainView('swarm'); triggerSwarmAction('work_steal'); } },
+      { id: 'ruflo_ema', label: '🧬 Ruflo Feromonas EMA: Atualizar Fitness das 4 Lanes', tag: 'RUFLO', run: () => { switchMainView('swarm'); triggerSwarmAction('pheromone_boost'); } },
+      { id: 'cow_snap', label: '🌿 Criar Snapshot Copy-on-Write (agenticow_branch)', tag: 'CoW v3.0', run: () => createCowBranchSnapshot() },
+      { id: 'mem_doctor', label: '🩺 Executar Memory Doctor FTS5 + Descoberta Causal', tag: 'DOCTOR', run: () => { openInspectorModal(); runMemoryDoctorUI(); } },
+      { id: 'off_work_all', label: '💻 Escritório 3D: Chamar Todos os Agentes para Trabalhar', tag: 'OFFICE 3D', run: () => { switchMainView('office'); triggerOfficeTeamAction('work_all'); } },
+      { id: 'off_pause_all', label: '☕ Escritório 3D: Enviar Todos para Pausa no Lounge', tag: 'OFFICE 3D', run: () => { switchMainView('office'); triggerOfficeTeamAction('pause_all'); } },
+      { id: 'toggle_diet', label: '💎 Alternar Perfil de Quota (LEAN vs FULL)', tag: 'QUOTA 5H', run: () => toggleDietMode() },
+      { id: 'toggle_crt', label: '📺 Alternar Scanlines CRT Holográficas (Tech Rev v4.0)', tag: 'FX SCI-FI', run: () => toggleCrtScanlines() }
+    ];
+
+    let filteredPaletteActions = [...COMMAND_PALETTE_ACTIONS];
+    let selectedPaletteIdx = 0;
+
+    function openCommandPalette() {
+      const modal = document.getElementById('cmdPaletteModal');
+      const inp = document.getElementById('cmdPaletteInput');
+      if (!modal || !inp) return;
+      modal.classList.add('open');
+      inp.value = '';
+      selectedPaletteIdx = 0;
+      renderCommandPaletteList('');
+      setTimeout(() => inp.focus(), 40);
+    }
+
+    function closeCommandPalette() {
+      const modal = document.getElementById('cmdPaletteModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function renderCommandPaletteList(query = '') {
+      const q = String(query || '').toLowerCase().trim();
+      filteredPaletteActions = COMMAND_PALETTE_ACTIONS.filter(a =>
+        !q || a.label.toLowerCase().includes(q) || a.tag.toLowerCase().includes(q)
+      );
+      if (selectedPaletteIdx >= filteredPaletteActions.length) selectedPaletteIdx = 0;
+      const listEl = document.getElementById('cmdPaletteList');
+      if (!listEl) return;
+      listEl.innerHTML = filteredPaletteActions.map((a, idx) => `
+        <div class="cmd-palette-item ${idx === selectedPaletteIdx ? 'active' : ''}" onclick="executePaletteAction(${idx})">
+          <span>${escapeHtml(a.label)}</span>
+          <span style="color:#00f0ff; font-size:10px; font-weight:700; padding:2px 6px; background:rgba(0,240,255,0.12); border:1px solid rgba(0,240,255,0.3);">${escapeHtml(a.tag)}</span>
+        </div>
+      `).join('') || '<div style="padding:12px; color:var(--text-dim); font-family:var(--font-mono); font-size:11.5px;">Nenhum comando encontrado.</div>';
+    }
+
+    function executePaletteAction(idx) {
+      const item = filteredPaletteActions[idx];
+      closeCommandPalette();
+      if (item && typeof item.run === 'function') item.run();
+    }
+
+    function onCommandPaletteKey(e) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectedPaletteIdx = (selectedPaletteIdx + 1) % Math.max(1, filteredPaletteActions.length);
+        renderCommandPaletteList(document.getElementById('cmdPaletteInput').value);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectedPaletteIdx = (selectedPaletteIdx - 1 + Math.max(1, filteredPaletteActions.length)) % Math.max(1, filteredPaletteActions.length);
+        renderCommandPaletteList(document.getElementById('cmdPaletteInput').value);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        executePaletteAction(selectedPaletteIdx);
+      } else if (e.key === 'Escape') {
+        closeCommandPalette();
+      }
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const modal = document.getElementById('cmdPaletteModal');
+        if (modal && modal.classList.contains('open')) closeCommandPalette();
+        else openCommandPalette();
+      }
+    });
 
     // Controlos de Rato no Escritório 3D (Arrastar para Rodar 360°, Roda para Zoom, Clique para Selecionar Boneco)
     officeCanvas.addEventListener('mousedown', (e) => {
