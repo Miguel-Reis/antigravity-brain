@@ -136,11 +136,17 @@ def build_ephemeral_context(
     workspace: str,
     scout_map: str = "",
     max_chars: int = MAX_EPHEMERAL_CHARS,
+    jev_route: Optional[Dict[str, Any]] = None,
 ) -> str:
-    """Formata um bloco ultra-compacto para injeção efémera + Scout Shared Map."""
+    """Formata um bloco ultra-compacto para injeção efémera + Jev-Mem System-1 Router + Scout Shared Map."""
     parts: List[str] = [
         f"[BRAIN_MEMORY | ws={workspace} | Use estes factos e o SCOUT_MAP para evitar buscas/leituras redundantes]"
     ]
+
+    if jev_route:
+        parts.append(
+            f"[JEV_S1_ROUTER | intent={jev_route.get('intent')} | route={jev_route.get('model_route')} | stop_th={jev_route.get('adaptive_stop_threshold')} | {jev_route.get('decision_latency_ms')}ms]"
+        )
 
     if checkpoint:
         c_goal = (checkpoint.get("goal") or checkpoint.get("last_completed") or "Sessão ativa").strip()
@@ -168,6 +174,7 @@ def build_ephemeral_context(
         ),
         reverse=True,
     )
+    tier_badges = {"working": "[W]", "episodic": "[E]", "semantic": "[S]"}
     for m in sorted_memories:
         topic = (m.get("topic") or "Fact").strip()
         if topic.startswith("Scout Shared Codebase Map") and scout_map:
@@ -179,8 +186,9 @@ def build_ephemeral_context(
         fact = (m.get("fact") or "").strip()
         is_pin = "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
         pin_prefix = "📌[PIN] " if is_pin else ""
+        t_badge = tier_badges.get(str(m.get("tier") or "semantic").lower(), "[S]")
         ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
-        entry = f"- {pin_prefix}{ws_tag}{topic}: {fact}"
+        entry = f"- {pin_prefix}{t_badge}{ws_tag}{topic}: {fact}"
         if sum(len(p) for p in parts) + len(entry) + 2 > max_chars:
             break
         parts.append(entry)
@@ -191,10 +199,11 @@ def build_ephemeral_context(
 def generate_inspector_preview(
     db: BrainDB, workspace: str = "brain_mcp", query: str = ""
 ) -> Dict[str, Any]:
-    """Gera a pré-visualização exata do bloco [BRAIN_MEMORY] + [SCOUT_SHARED_MAP] para o Prompt Inspector."""
+    """Gera a pré-visualização exata do bloco [BRAIN_MEMORY] + [JEV_S1_ROUTER] + [SCOUT_SHARED_MAP] para o Prompt Inspector."""
     ws = db.normalize_workspace(workspace) if workspace and workspace != "all" else "brain_mcp"
     effective_query = (query or "").strip() or f"workspace {ws} architecture environment"
     budget_chars = compute_adaptive_budget(effective_query)
+    jev_route = db.jev_system1_route(effective_query, ws)
 
     # Garantir que memórias Pinned/Diretivas entram sempre mesmo que não façam match léxico
     with db._connect() as conn:
@@ -223,7 +232,7 @@ def generate_inspector_preview(
         scout_map = ""
 
     ephemeral_text = build_ephemeral_context(
-        combined, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars
+        combined, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars, jev_route=jev_route
     )
     est_tokens = max(1, len(ephemeral_text) // 4)
     return {
@@ -234,6 +243,7 @@ def generate_inspector_preview(
         "estimated_tokens": est_tokens,
         "pinned_count": len(pinned_rows),
         "matched_count": len(searched),
+        "jev_router": jev_route,
         "ephemeral_block": ephemeral_text,
         "pinned_memories": [
             {"id": p["id"], "topic": p["topic"], "fact": p["fact"], "workspace": p["workspace"]}
@@ -308,8 +318,9 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         return {}
 
     budget_chars = compute_adaptive_budget(user_query)
+    jev_route = db.jev_system1_route(user_query, ws)
     ephemeral_msg = build_ephemeral_context(
-        memories, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars
+        memories, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars, jev_route=jev_route
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)

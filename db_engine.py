@@ -122,6 +122,9 @@ class BrainDB:
                 ("fact_hash", "TEXT"),
                 ("access_count", "INTEGER DEFAULT 0"),
                 ("last_accessed", "TIMESTAMP"),
+                ("tier", "TEXT DEFAULT 'semantic'"),
+                ("superseded_by", "INTEGER DEFAULT NULL"),
+                ("valid_until", "TIMESTAMP DEFAULT NULL"),
             ]
             for col_name, col_def in migrations:
                 if col_name not in existing_cols:
@@ -134,6 +137,36 @@ class BrainDB:
             )
             conn.execute(
                 "CREATE INDEX IF NOT EXISTS idx_memories_workspace ON memories(workspace);"
+            )
+
+            # 1b. Tabela Ruflo Causal Memory Graph (agentdb_causal-edge)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS memory_edges (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    source_id INTEGER NOT NULL,
+                    target_id INTEGER NOT NULL,
+                    relation TEXT DEFAULT 'evolves',
+                    weight REAL DEFAULT 0.85,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(source_id, target_id, relation)
+                );
+                """
+            )
+
+            # 1c. Tabela Ruflo Agentic Copy-on-Write Branches (agenticow_branch)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS brain_branches (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    label TEXT NOT NULL,
+                    workspace TEXT DEFAULT 'all',
+                    memories_count INTEGER DEFAULT 0,
+                    edges_count INTEGER DEFAULT 0,
+                    snapshot_json TEXT NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
             )
 
             # 2. Tabela FTS5 para pesquisa ultrarrápida BM25
@@ -327,6 +360,116 @@ class BrainDB:
             return "global"
         return base or "global"
 
+    @staticmethod
+    def classify_memory_tier(
+        category: str, topic: str = "", fact: str = "", tags: str = ""
+    ) -> str:
+        """
+        Ruflo + Jev-Mem Hierarchical Tier Classifier (System-1 Choice):
+        - 'working': Diretivas ativas, alterações de código recentes, sessão imediata.
+        - 'episodic': Bugfixes, harvests de turnos, eventos cronológicos.
+        - 'semantic': Arquitetura, regras permanentes, ambiente, segurança, otimizações.
+        """
+        cat = (category or "general").strip().lower()
+        blob = f"{topic} {fact} {tags}".lower()
+        if cat in ("directive", "code_change", "working") or "pinned" in blob or "diretiva" in blob:
+            return "working"
+        if cat in ("bugfix", "episodic", "harvest", "conversation") or any(
+            k in blob for k in ("fixed", "corrigido", "commit", "bug", "erro")
+        ):
+            return "episodic"
+        return "semantic"
+
+    @staticmethod
+    def jev_system1_route(query: str, workspace: str = "brain_mcp") -> Dict[str, Any]:
+        """
+        Jev System-1 Cognitive Control Plane (< 0.8ms non-autoregressive decision model):
+        Executa as 3 primitivas tipadas do Jev-Mem:
+        1. Choice(intent): Classifica a intenção estrutural do pedido.
+        2. Choice(model_route): Seleciona o tier ótimo de subagentes (flash_lite / flash / Argon pro).
+        3. Score(tier_weights) + Adaptive Stopping threshold.
+        """
+        t0 = time.perf_counter()
+        q = (query or "").strip().lower()
+
+        if any(k in q for k in ("bug", "erro", "fix", "corrigir", "nao funciona", "não funciona", "encravado", "problema")):
+            intent = "bugfix_diagnosis"
+            model_route = "SCOUT (flash_lite) ➔ DEBUGGER (Gemini 4 Argon) ➔ VERIFY (flash)"
+            tier_weights = {"working": 1.45, "episodic": 1.35, "semantic": 1.15}
+            stop_threshold = 0.28
+        elif any(k in q for k in ("3d", "office", "escritorio", "escritório", "canvas", "ui", "design", "grafo", "swarm", "aba", "opções", "opcoes")):
+            intent = "ui_3d_interactive"
+            model_route = "SCOUT (flash_lite) ➔ UI-01 (Gemini 4 Argon) + API-01 (flash)"
+            tier_weights = {"working": 1.40, "semantic": 1.30, "episodic": 1.15}
+            stop_threshold = 0.30
+        elif any(k in q for k in ("ruflo", "jev", "arquitetura", "architecture", "ultraplan", "analise", "análise", "melhoria", "sistema")):
+            intent = "architecture_synthesis"
+            model_route = "ARCH-01 (Gemini 4 Argon) ➔ 4 Lanes Paralelas (flash / flash_lite)"
+            tier_weights = {"semantic": 1.50, "episodic": 1.25, "working": 1.20}
+            stop_threshold = 0.24
+        elif any(k in q for k in ("quota", "token", "lean", "performance", "rapido", "rápido", "otimizar", "mcp")):
+            intent = "quota_performance"
+            model_route = "SCOUT (flash_lite · Read 1x) ➔ Lean Profile"
+            tier_weights = {"semantic": 1.40, "working": 1.30, "episodic": 1.10}
+            stop_threshold = 0.34
+        elif any(k in q for k in ("seguranca", "segurança", "github", "privacidade", "secret", "audit", "strix")):
+            intent = "security_privacy_gate"
+            model_route = "SECURITY-AUDITOR (pro) + AI-Defence Scan"
+            tier_weights = {"semantic": 1.45, "working": 1.35, "episodic": 1.20}
+            stop_threshold = 0.26
+        else:
+            intent = "general_engineering"
+            model_route = "Gemini 4 Argon (inherit) + Scout Shared Map"
+            tier_weights = {"working": 1.35, "semantic": 1.25, "episodic": 1.15}
+            stop_threshold = 0.32
+
+        elapsed_us = round((time.perf_counter() - t0) * 1000.0, 3)
+        return {
+            "engine": "Jev-Mem System-1 v2",
+            "workspace": workspace,
+            "intent": intent,
+            "model_route": model_route,
+            "tier_weights": tier_weights,
+            "adaptive_stop_threshold": stop_threshold,
+            "decision_latency_ms": elapsed_us,
+        }
+
+    def record_causal_edge(
+        self,
+        source_id: int,
+        target_id: int,
+        relation: str = "evolves",
+        weight: float = 0.85,
+    ) -> bool:
+        """Regista uma aresta causal explícita (Ruflo agentdb_causal-edge) entre duas memórias."""
+        if source_id == target_id or source_id <= 0 or target_id <= 0:
+            return False
+        with self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO memory_edges (source_id, target_id, relation, weight)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(source_id, target_id, relation) DO UPDATE SET
+                    weight = MAX(memory_edges.weight, excluded.weight);
+                """,
+                (int(source_id), int(target_id), relation.strip().lower(), round(float(weight), 2)),
+            )
+        return True
+
+    def get_causal_edges(self) -> List[Dict[str, Any]]:
+        """Devolve todas as arestas causais ativas entre memórias existentes."""
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT e.id, e.source_id, e.target_id, e.relation, e.weight, e.created_at
+                FROM memory_edges e
+                JOIN memories m1 ON m1.id = e.source_id
+                JOIN memories m2 ON m2.id = e.target_id
+                ORDER BY e.weight DESC, e.id DESC;
+                """
+            ).fetchall()
+            return [dict(r) for r in rows]
+
     def store_fact(
         self,
         topic: str,
@@ -335,12 +478,19 @@ class BrainDB:
         category: str = "general",
         tags: str = "",
         importance: int = 3,
+        tier: Optional[str] = None,
+        supersedes_id: Optional[int] = None,
     ) -> Tuple[int, bool]:
-        """Guarda ou atualiza um facto sem duplicar. Retorna (row_id, is_new)."""
+        """
+        Guarda ou atualiza um facto sem duplicar, classificando automaticamente a camada (tier)
+        e inferindo ligações causais / substituição temporal (Ruflo + Jev-Assert).
+        Retorna (row_id, is_new).
+        """
         topic = topic.strip()
         fact = fact.strip()
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
+        resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
         f_hash = self._compute_hash(topic, fact, ws)
 
         with self._connect() as conn:
@@ -354,21 +504,71 @@ class BrainDB:
                     UPDATE memories
                     SET importance = MAX(importance, ?),
                         tags = CASE WHEN ? != '' THEN ? ELSE tags END,
+                        tier = ?,
                         last_accessed = CURRENT_TIMESTAMP
                     WHERE id = ?;
                     """,
-                    (importance, tags, tags, row_id),
+                    (importance, tags, tags, resolved_tier, row_id),
                 )
                 return row_id, False
 
             cur = conn.execute(
                 """
-                INSERT INTO memories (topic, fact, workspace, category, tags, importance, fact_hash, last_accessed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
+                INSERT INTO memories (topic, fact, workspace, category, tags, importance, tier, fact_hash, last_accessed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
                 """,
-                (topic, fact, ws, category, tags, importance, f_hash),
+                (topic, fact, ws, category, tags, importance, resolved_tier, f_hash),
             )
-            return int(cur.lastrowid), True
+            new_id = int(cur.lastrowid)
+
+            # Jev-Assert & Ruflo Temporal Validity:
+            # 1) Se supersedes_id foi indicado explicitamente, invalidar a antiga e criar aresta 'supersedes'
+            if supersedes_id and int(supersedes_id) != new_id:
+                conn.execute(
+                    "UPDATE memories SET superseded_by = ?, valid_until = CURRENT_TIMESTAMP WHERE id = ?;",
+                    (new_id, int(supersedes_id)),
+                )
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO memory_edges (source_id, target_id, relation, weight)
+                    VALUES (?, ?, 'supersedes', 0.95);
+                    """,
+                    (new_id, int(supersedes_id)),
+                )
+
+            # 2) Inferir arestas causais automáticas com memórias do mesmo componente/ficheiro
+            file_refs = set(re.findall(r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|json|md))\b", f"{topic} {fact}"))
+            topic_words = [w.lower() for w in re.findall(r"[a-zA-Z0-9_]{4,}", topic) if w.lower() not in STOPWORDS]
+            prev_rows = conn.execute(
+                """
+                SELECT id, topic, fact, category FROM memories
+                WHERE workspace = ? AND id != ?
+                ORDER BY id DESC LIMIT 25;
+                """,
+                (ws, new_id),
+            ).fetchall()
+            edges_added = 0
+            for pr in prev_rows:
+                if edges_added >= 3:
+                    break
+                pid = int(pr["id"])
+                p_blob = f"{pr['topic']} {pr['fact']}"
+                p_files = set(re.findall(r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|json|md))\b", p_blob))
+                shared_files = file_refs & p_files
+                shared_words = sum(1 for w in topic_words if w in pr["topic"].lower())
+                if shared_files or shared_words >= 2:
+                    rel = "fixed_by" if ("fix" in fact.lower() or "corrig" in fact.lower()) else "evolves"
+                    w_edge = 0.92 if shared_files else 0.78
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO memory_edges (source_id, target_id, relation, weight)
+                        VALUES (?, ?, ?, ?);
+                        """,
+                        (pid, new_id, rel, w_edge),
+                    )
+                    edges_added += 1
+
+            return new_id, True
 
     def forget_fact(self, fact_id: str | int) -> bool:
         """Remove um facto pelo ID."""
@@ -377,6 +577,7 @@ class BrainDB:
         except ValueError:
             return False
         with self._connect() as conn:
+            conn.execute("DELETE FROM memory_edges WHERE source_id = ? OR target_id = ?;", (fid, fid))
             cur = conn.execute("DELETE FROM memories WHERE id = ?;", (fid,))
             return cur.rowcount > 0
 
@@ -405,15 +606,30 @@ class BrainDB:
         workspace: Optional[str] = None,
         n_results: int = 5,
         update_stats: bool = True,
+        include_superseded: bool = False,
     ) -> List[Dict[str, Any]]:
-        """Pesquisa híbrida: FTS5 BM25 + Token Overlap + Afinidade de Workspace + Importância."""
+        """
+        Pesquisa Híbrida Jev-Mem System-1 + Ruflo Causal Graph:
+        FTS5 BM25 + Token Overlap + Tier Weight (working/episodic/semantic) +
+        Centralidade Causal (memory_edges) + Adaptive Stopping por Confiança Marginal.
+        """
         ws = self.normalize_workspace(workspace)
         tokens = self.extract_search_tokens(query)
+        jev_plan = self.jev_system1_route(query, ws)
+        tier_weights = jev_plan["tier_weights"]
+        stop_threshold = float(jev_plan["adaptive_stop_threshold"])
 
         with self._connect() as conn:
             total = conn.execute("SELECT COUNT(*) as c FROM memories;").fetchone()["c"]
             if total == 0:
                 return []
+
+            # Mapa de grau causal (Ruflo Causal Graph Centrality)
+            causal_deg: Dict[int, int] = {}
+            for er in conn.execute("SELECT source_id, target_id FROM memory_edges;").fetchall():
+                s_id, t_id = int(er["source_id"]), int(er["target_id"])
+                causal_deg[s_id] = causal_deg.get(s_id, 0) + 1
+                causal_deg[t_id] = causal_deg.get(t_id, 0) + 1
 
             candidates: Dict[int, Dict[str, Any]] = {}
 
@@ -441,7 +657,8 @@ class BrainDB:
                         ).fetchall()
                         for r in rows:
                             d = dict(r)
-                            # bm25() em SQLite FTS5 retorna valores negativos (mais negativo = melhor)
+                            if not include_superseded and d.get("superseded_by"):
+                                continue
                             d["score"] = abs(float(d.get("bm25_raw", 0.0))) * 2.0
                             candidates[d["id"]] = d
                     except sqlite3.OperationalError:
@@ -458,22 +675,21 @@ class BrainDB:
                 (ws,),
             ).fetchall()
 
-            query_lower = query.lower()
             for r in fallback_rows:
                 rid = r["id"]
                 if rid not in candidates:
                     d = dict(r)
+                    if not include_superseded and d.get("superseded_by"):
+                        continue
                     d["score"] = 0.0
                     candidates[rid] = d
 
-            # 3. Re-ranking Híbrido (Overlap léxico + Workspace Boost + Importância)
+            # 3. Re-ranking Híbrido Jev-Mem (Overlap + Workspace + Tier Weight + Causal Centrality + Recency)
             scored_list: List[Dict[str, Any]] = []
             for rid, item in candidates.items():
                 text_blob = f"{item['topic']} {item['fact']} {item.get('tags', '')}".lower()
                 overlap = sum(1 for tok in tokens if tok in text_blob)
 
-                # Se a query tinha tokens específicos e este candidato não teve FTS match nem overlap,
-                # só entra se for do mesmo workspace específico (não global genérico)
                 if tokens and item["score"] == 0.0 and overlap == 0:
                     if item["workspace"] != ws or ws == "global":
                         continue
@@ -481,14 +697,18 @@ class BrainDB:
                 ws_boost = 2.5 if (ws != "global" and item["workspace"] == ws) else 0.0
                 imp_boost = float(item.get("importance", 3)) * 0.4
                 overlap_boost = overlap * 1.8
+                c_boost = min(2.0, causal_deg.get(int(rid), 0) * 0.45)
+                mem_tier = str(item.get("tier") or self.classify_memory_tier(
+                    str(item.get("category", "")), str(item.get("topic", "")), str(item.get("fact", "")), str(item.get("tags", ""))
+                ))
+                item["tier"] = mem_tier
+                tier_mult = float(tier_weights.get(mem_tier, 1.15))
 
-                # Substring exata para IPs ou identificadores técnicos
                 exact_tech_boost = 0.0
                 for tok in tokens:
                     if ("." in tok or "_" in tok or any(c.isdigit() for c in tok)) and tok in text_blob:
                         exact_tech_boost += 3.0
 
-                # Recency Time-Decay: privilegia memórias criadas ou acedidas recentemente
                 recency_mult = 1.0
                 ts_str = str(item.get("last_accessed") or item.get("created_at") or "")
                 if ts_str:
@@ -501,19 +721,35 @@ class BrainDB:
                         recency_mult = 1.1
 
                 raw_final = (
-                    item["score"] + overlap_boost + ws_boost + imp_boost + exact_tech_boost
+                    item["score"] + overlap_boost + ws_boost + imp_boost + exact_tech_boost + c_boost
                 )
-                item["final_score"] = round(raw_final * recency_mult, 3)
+                item["final_score"] = round(raw_final * recency_mult * tier_mult, 3)
+                item["causal_degree"] = causal_deg.get(int(rid), 0)
                 scored_list.append(item)
 
             if not scored_list:
                 for item in candidates.values():
                     if int(item.get("importance", 3)) >= 5:
                         item["final_score"] = float(item.get("importance", 5)) * 0.4
+                        item["jev_confidence"] = 0.55
                         scored_list.append(item)
 
             scored_list.sort(key=lambda x: x["final_score"], reverse=True)
-            top_results = scored_list[:n_results]
+
+            # 4. Jev-Mem Adaptive Stopping: normaliza confiança [0..1] e corta cauda de baixo ganho marginal
+            max_sc = max((x["final_score"] for x in scored_list), default=1.0) or 1.0
+            filtered_top: List[Dict[str, Any]] = []
+            for idx, item in enumerate(scored_list):
+                conf = round(min(0.99, max(0.15, item["final_score"] / max(max_sc, 4.0))), 2)
+                item["jev_confidence"] = conf
+                # Garantir pelo menos 2 resultados, e depois aplicar Adaptive Stopping
+                if idx >= 2 and conf < stop_threshold and len(filtered_top) >= 2:
+                    break
+                filtered_top.append(item)
+                if len(filtered_top) >= n_results:
+                    break
+
+            top_results = filtered_top[:n_results]
 
             if update_stats and top_results:
                 ids = [r["id"] for r in top_results]
@@ -617,6 +853,8 @@ class BrainDB:
         with self._connect() as conn:
             mem_count = conn.execute("SELECT COUNT(*) as c FROM memories;").fetchone()["c"]
             chk_count = conn.execute("SELECT COUNT(*) as c FROM checkpoints;").fetchone()["c"]
+            edges_count = conn.execute("SELECT COUNT(*) as c FROM memory_edges;").fetchone()["c"]
+            branches_count = conn.execute("SELECT COUNT(*) as c FROM brain_branches;").fetchone()["c"]
             tel = conn.execute(
                 """
                 SELECT COUNT(*) as total_events,
@@ -632,6 +870,9 @@ class BrainDB:
             ).fetchone()["c"]
             by_cat = conn.execute(
                 "SELECT category, COUNT(*) as c FROM memories GROUP BY category ORDER BY c DESC;"
+            ).fetchall()
+            by_tier = conn.execute(
+                "SELECT COALESCE(tier, 'semantic') as t, COUNT(*) as c FROM memories GROUP BY t;"
             ).fetchall()
 
             # Métricas da Janela Deslizante de 5 Horas (5h Quota Window)
@@ -666,6 +907,8 @@ class BrainDB:
             return {
                 "total_memories": mem_count,
                 "total_checkpoints": chk_count,
+                "causal_edges_count": int(edges_count),
+                "cow_branches_count": int(branches_count),
                 "injections_count": tel["total_events"],
                 "harvests_count": harvest_count,
                 "avg_inject_latency_ms": round(float(tel["avg_latency_ms"]), 2),
@@ -673,6 +916,7 @@ class BrainDB:
                 "estimated_saved_tokens": int(tel["total_saved_tokens"]),
                 "net_tokens_saved": int(tel["total_saved_tokens"]) - int(tel["total_injected_tokens"]),
                 "categories": {r["category"]: r["c"] for r in by_cat},
+                "tiers": {r["t"]: r["c"] for r in by_tier},
                 "quota_5h": {
                     "turns_5h": turns_5h,
                     "saved_5h": saved_5h,
@@ -714,17 +958,20 @@ class BrainDB:
 
     def run_memory_doctor(self) -> Dict[str, Any]:
         """
-        Memory Doctor (v2.8): Analisa todas as memórias para fundir tópicos duplicados,
-        remover referências a ficheiros apagados e otimizar o índice FTS5 BM25.
+        Memory Doctor (v3.0 Ruflo + Jev-Mem):
+        1. Funde tópicos duplicados e limpa referências temporárias.
+        2. Reclassifica automaticamente as camadas hierárquicas (working, episodic, semantic).
+        3. Constrói Arestas Causais (memory_edges: evolves, fixed_by, depends_on) entre memórias do mesmo ficheiro/módulo.
+        4. Otimiza o índice FTS5 BM25.
         """
-        repo_dir = os.path.dirname(os.path.abspath(__file__))
         merged_count = 0
         stale_removed = 0
         upgraded_pins = 0
+        causal_discovered = 0
 
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT id, workspace, category, topic, fact, tags, importance, access_count FROM memories ORDER BY id ASC;"
+                "SELECT id, workspace, category, topic, fact, tags, importance, access_count, tier FROM memories ORDER BY id ASC;"
             ).fetchall()
 
             by_key: Dict[Tuple[str, str], Dict[str, Any]] = {}
@@ -745,10 +992,16 @@ class BrainDB:
                     stale_removed += 1
                     continue
 
+                # 2. Normalizar Tier Hierárquico (Jev-Mem)
+                computed_tier = self.classify_memory_tier(
+                    str(d.get("category", "")), topic, str(d.get("fact", "")), str(d.get("tags", ""))
+                )
+                if d.get("tier") != computed_tier:
+                    conn.execute("UPDATE memories SET tier = ? WHERE id = ?;", (computed_tier, mid))
+
                 key = (ws, norm_topic)
                 if key in by_key:
                     primary = by_key[key]
-                    # Fundir tags, access_count e importância na memória principal
                     p_tags = set(str(primary["tags"] or "").split()) | set(str(d["tags"] or "").split())
                     new_tags = " ".join(sorted(p_tags))
                     new_imp = max(int(primary["importance"] or 3), int(d["importance"] or 3))
@@ -756,8 +1009,8 @@ class BrainDB:
                     new_fact = d["fact"] if len(str(d["fact"])) >= len(str(primary["fact"])) else primary["fact"]
 
                     conn.execute(
-                        "UPDATE memories SET fact = ?, tags = ?, importance = ?, access_count = ? WHERE id = ?;",
-                        (new_fact, new_tags, new_imp, new_acc, int(primary["id"])),
+                        "UPDATE memories SET fact = ?, tags = ?, importance = ?, access_count = ?, tier = ? WHERE id = ?;",
+                        (new_fact, new_tags, new_imp, new_acc, computed_tier, int(primary["id"])),
                     )
                     primary["fact"] = new_fact
                     primary["tags"] = new_tags
@@ -768,7 +1021,6 @@ class BrainDB:
                 else:
                     by_key[key] = d
 
-                # Garantir que memórias com tag 'pinned' ou 'directive' têm importância 5
                 if ("pinned" in str(d["tags"]).lower() or d["category"] == "directive") and int(d["importance"] or 3) < 5:
                     conn.execute("UPDATE memories SET importance = 5 WHERE id = ?;", (mid,))
                     upgraded_pins += 1
@@ -776,6 +1028,40 @@ class BrainDB:
             if to_delete:
                 placeholders = ",".join("?" for _ in to_delete)
                 conn.execute(f"DELETE FROM memories WHERE id IN ({placeholders});", to_delete)
+                conn.execute(
+                    f"DELETE FROM memory_edges WHERE source_id IN ({placeholders}) OR target_id IN ({placeholders});",
+                    to_delete + to_delete,
+                )
+
+            # 3. Ruflo Causal Graph Discovery: ligar memórias que partilham ficheiros-chave ou cadeias bug -> fix
+            active_mems = [
+                dict(r)
+                for r in conn.execute(
+                    "SELECT id, workspace, category, topic, fact, tags FROM memories ORDER BY id ASC;"
+                ).fetchall()
+            ]
+            file_to_mems: Dict[str, List[Dict[str, Any]]] = {}
+            for m in active_mems:
+                blob = f"{m['topic']} {m['fact']}"
+                for f_match in set(re.findall(r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|json|md))\b", blob)):
+                    file_to_mems.setdefault(f_match.lower(), []).append(m)
+
+            for fname, m_list in file_to_mems.items():
+                if len(m_list) < 2:
+                    continue
+                for idx in range(len(m_list) - 1):
+                    src_m = m_list[idx]
+                    dst_m = m_list[idx + 1]
+                    rel = "fixed_by" if ("fix" in dst_m["fact"].lower() or "corrig" in dst_m["fact"].lower()) else "evolves"
+                    cur_e = conn.execute(
+                        """
+                        INSERT OR IGNORE INTO memory_edges (source_id, target_id, relation, weight)
+                        VALUES (?, ?, ?, 0.90);
+                        """,
+                        (int(src_m["id"]), int(dst_m["id"]), rel),
+                    )
+                    if cur_e.rowcount > 0:
+                        causal_discovered += 1
 
             # Otimizar índice FTS5 BM25
             try:
@@ -784,15 +1070,52 @@ class BrainDB:
                 pass
 
             healthy_total = conn.execute("SELECT COUNT(*) as c FROM memories;").fetchone()["c"]
+            total_edges = conn.execute("SELECT COUNT(*) as c FROM memory_edges;").fetchone()["c"]
 
         return {
             "ok": True,
             "merged_duplicates": merged_count,
             "stale_removed": stale_removed,
             "upgraded_pins": upgraded_pins,
+            "causal_edges_discovered": causal_discovered,
+            "total_causal_edges": int(total_edges),
             "healthy_memories": int(healthy_total),
             "fts5_optimized": True,
         }
+
+    def create_cow_branch(self, label: str = "", workspace: str = "all") -> Dict[str, Any]:
+        """
+        Ruflo Agentic Copy-on-Write Branch (agenticow_branch):
+        Cria um snapshot instantâneo delta-compacto das memórias, arestas causais e checkpoints.
+        """
+        clean_lbl = (label or "").strip() or f"cow-branch-{int(time.time())}"
+        with self._connect() as conn:
+            mems = [dict(r) for r in conn.execute("SELECT * FROM memories ORDER BY id ASC;").fetchall()]
+            edges = [dict(r) for r in conn.execute("SELECT * FROM memory_edges ORDER BY id ASC;").fetchall()]
+            chks = [dict(r) for r in conn.execute("SELECT * FROM checkpoints ORDER BY workspace ASC;").fetchall()]
+            snap = json.dumps({"memories": mems, "edges": edges, "checkpoints": chks}, ensure_ascii=False)
+            cur = conn.execute(
+                """
+                INSERT INTO brain_branches (label, workspace, memories_count, edges_count, snapshot_json)
+                VALUES (?, ?, ?, ?, ?);
+                """,
+                (clean_lbl, workspace, len(mems), len(edges), snap),
+            )
+            bid = int(cur.lastrowid)
+        return {
+            "ok": True,
+            "branch_id": bid,
+            "label": clean_lbl,
+            "memories_count": len(mems),
+            "edges_count": len(edges),
+        }
+
+    def list_cow_branches(self) -> List[Dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, label, workspace, memories_count, edges_count, created_at FROM brain_branches ORDER BY id DESC LIMIT 12;"
+            ).fetchall()
+            return [dict(r) for r in rows]
 
     def export_brain_pack(self, workspace_filter: str = "all") -> Dict[str, Any]:
         """Exporta o cérebro em formato .brainpack.json e em formato Markdown Obsidian Vault com [[WikiLinks]]."""

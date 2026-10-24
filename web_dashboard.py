@@ -328,6 +328,9 @@ def build_obsidian_graph_payload(
                 "node_type": "memory",
                 "workspace": ws,
                 "category": m.get("category", "general") or "general",
+                "tier": m.get("tier") or db.classify_memory_tier(
+                    str(m.get("category", "")), str(m.get("topic", "")), str(m.get("fact", "")), str(m.get("tags", ""))
+                ),
                 "importance": imp,
                 "access_count": acc,
                 "val": 8 + imp * 2.2 + min(acc, 10) * 0.6,
@@ -355,6 +358,21 @@ def build_obsidian_graph_payload(
 
         for t in raw_tags:
             tag_to_mem_ids.setdefault(t, []).append(m_id)
+
+    # 3b. Ligações Causais Explícitas (Ruflo CausalMemoryGraph: fixed_by, evolves, supersedes)
+    for ce in db.get_causal_edges():
+        s_node = f"mem:{ce['source_id']}"
+        t_node = f"mem:{ce['target_id']}"
+        if s_node in node_ids and t_node in node_ids:
+            links.append(
+                {
+                    "source": s_node,
+                    "target": t_node,
+                    "kind": "causal_link",
+                    "relation": ce.get("relation", "evolves"),
+                    "weight": float(ce.get("weight", 0.9)) * 2.4,
+                }
+            )
 
     # 4. Criar Ligações Sinápticas entre Memórias que partilham Tags/Conceitos específicos
     ignored_synapse_tags = {"file", "edit", "explicit", "auto_harvested", "global", "scratch", "brain_mcp"} | set(workspaces)
@@ -425,6 +443,8 @@ def build_obsidian_graph_payload(
         "nodes": nodes,
         "links": links,
         "stats": db.get_stats(),
+        "jev_router": db.jev_system1_route(query or "architecture", workspace_filter),
+        "cow_branches": db.list_cow_branches(),
         "token_diet": {
             "is_lean": is_lean,
             "mcp_servers": mcp_audit,
@@ -717,6 +737,13 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/doctor":
             res = db.run_memory_doctor()
+            self._send_json(res)
+            return
+
+        if parsed.path == "/api/cow_branch":
+            lbl = str(body.get("label", "")).strip()
+            ws_b = str(body.get("workspace", "all")).strip() or "all"
+            res = db.create_cow_branch(label=lbl, workspace=ws_b)
             self._send_json(res)
             return
 
