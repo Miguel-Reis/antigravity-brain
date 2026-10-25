@@ -36,10 +36,10 @@ def resolve_transcript_path(payload: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def extract_latest_user_request(transcript_path: Optional[str]) -> Optional[str]:
-    """Lê o último USER_INPUT do transcript.jsonl de forma eficiente."""
+def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optional[str], bool]:
+    """Lê o último USER_INPUT do transcript.jsonl e deteta se é um subagente (sem tags <USER_REQUEST>)."""
     if not transcript_path or not os.path.isfile(transcript_path):
-        return None
+        return None, False
 
     try:
         # Lê apenas os últimos 64KB para ser instantâneo mesmo em conversas grandes
@@ -68,11 +68,12 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> Optional[str]
                      flags=re.DOTALL,
                 )
                 if match:
-                    return match.group(1).strip()
-                return content.strip()[:1000]
+                    return match.group(1).strip(), False
+                clean_sub = content.strip()[:1000]
+                return clean_sub, bool(clean_sub)
     except Exception:
-        return None
-    return None
+        return None, False
+    return None, False
 
 
 def extract_latest_tool_actions(transcript_path: Optional[str]) -> List[str]:
@@ -267,7 +268,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     ws = db.normalize_workspace(raw_ws)
 
     transcript_path = resolve_transcript_path(payload)
-    user_query = extract_latest_user_request(transcript_path)
+    user_query, is_subagent = extract_latest_user_request(transcript_path)
 
     # Se não conseguirmos ler o transcript (ex.: primeiro passo absoluto ainda não gravado em disco),
     # apenas injetamos se invocationNum <= 1 usando o contexto do workspace.
@@ -289,7 +290,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         return {}
 
     try:
-        swarm_eng.on_turn_start(user_query, raw_ws, conversation_id=conv_id)
+        swarm_eng.on_turn_start(user_query, raw_ws, conversation_id=conv_id, is_subagent=is_subagent)
     except Exception:
         pass
 

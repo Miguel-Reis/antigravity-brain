@@ -938,8 +938,9 @@ class SwarmEngine:
         user_goal: str,
         workspace_path: str = "",
         conversation_id: str = "",
+        is_subagent: bool = False,
     ) -> None:
-        """Chamado automaticamente pelo PreInvocation hook quando o utilizador envia mensagem no chat."""
+        """Chamado automaticamente pelo PreInvocation hook quando o utilizador envia mensagem ou um subagente inicia."""
         run_id = self.ensure_default_run()
         clean_goal = " ".join((user_goal or "Active Antigravity Task").split())[:95]
         ws_norm = BrainDB.normalize_workspace(workspace_path or "brain_mcp")
@@ -974,8 +975,8 @@ class SwarmEngine:
                 WHERE id = ?;
                 """,
                 (
-                    clean_goal,
-                    f"JEV-S1 ({jev_route.get('intent', 'general')}) · Argon + Flash",
+                    f"[SUBAGENT] {clean_goal[:80]}" if is_subagent else clean_goal,
+                    f"JEV-S1 ({jev_route.get('intent', 'general')}) · {'Subagent Worker' if is_subagent else 'Argon + Flash'}",
                     now,
                     run_id,
                 ),
@@ -1006,13 +1007,13 @@ class SwarmEngine:
                 conn,
                 run_id,
                 "scout",
-                f"SCOUT-01 (flash_lite) injetou [SCOUT_SHARED_MAP] para '{ws_norm}' em {jev_route.get('decision_latency_ms', 0.02)}ms",
+                f"SCOUT-01 (flash_lite) injetou [SCOUT_SHARED_MAP] no {'Subagente' if is_subagent else 'Agente Principal'} ('{ws_norm}') em {jev_route.get('decision_latency_ms', 0.02)}ms",
             )
             self._log_event(
                 conn,
                 run_id,
-                "plan",
-                f"JEV-S1 ({jev_route.get('intent')}): \"{clean_goal[:52]}\" -> 4 Lanes (UI, API, TESTS, DOCS) ativadas",
+                "sub" if is_subagent else "plan",
+                f"{'🤖 SUBAGENTE SPAWNED' if is_subagent else 'JEV-S1 (' + str(jev_route.get('intent')) + ')'}: \"{clean_goal[:52]}\" -> 4 Lanes ativadas",
             )
         if conversation_id:
             self.register_conversation_activity(
@@ -1020,6 +1021,9 @@ class SwarmEngine:
                 workspace=ws_norm,
                 status="working",
                 current_task=clean_goal,
+                role="Subagent Worker" if is_subagent else "Agente de Conversa",
+                kind="subagent" if is_subagent else "conversation",
+                model="flash · subagent" if is_subagent else "Gemini 4 Argon",
             )
 
     def on_turn_step(
@@ -1156,12 +1160,13 @@ class SwarmEngine:
                         current_task = ?,
                         manual_override = 0,
                         updated_at = ?
-                    WHERE agent_id = ?;
+                    WHERE agent_id IN (?, ?);
                     """,
                     (
                         f"Concluído{files_info} · Em pausa no Lounge",
                         now,
                         f"conv-{short_id}",
+                        f"sub-{short_id}",
                     ),
                 )
 
