@@ -4052,7 +4052,7 @@
         window.location.hash = 'swarm';
         lastSwarmHash = '';
         fetchSwarmDashboard(true);
-        swarmPollTimer = setInterval(() => fetchSwarmDashboard(false), 1600);
+        swarmPollTimer = setInterval(() => fetchSwarmDashboard(false), 850);
       } else if (activeMainView === 'office') {
         window.location.hash = 'office';
         resizeOfficeCanvas();
@@ -4082,8 +4082,8 @@
           const r = data.run;
           const logs = data.logs || [];
           const lastLog = logs.length ? `${logs[logs.length - 1].ts}:${logs[logs.length - 1].message}` : '';
-          const taskStates = (data.tasks || []).map(t => `${t.status}${t.progress}`).join('');
-          const sig = `${r.id}|${r.status}|${r.goal}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${r.scout_files_count}|${taskStates}|${lastLog}`;
+          const taskStates = (data.tasks || []).map(t => `${t.status}${t.progress}${t.title}`).join('');
+          const sig = `${r.id}|${r.status}|${r.goal}|${r.elapsed_seconds}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${r.scout_files_count}|${taskStates}|${lastLog}`;
           if (forceRender || sig !== lastSwarmHash) {
             lastSwarmHash = sig;
             renderSwarmDashboard(data);

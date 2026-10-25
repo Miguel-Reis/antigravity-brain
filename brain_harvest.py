@@ -183,6 +183,10 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
             f"out_tok={turn_output_tokens}"
         ),
     )
+    try:
+        SwarmEngine(db).on_turn_complete(modified_files, completed_actions, conversation_id=conv_id)
+    except Exception:
+        pass
     return harvested_count
 
 
@@ -199,10 +203,11 @@ def handle_stop(raw_stdin: str) -> Dict[str, Any]:
         transcript_path = resolve_transcript_path(payload)
         if transcript_path:
             harvest_latest_turn(transcript_path, ws, conv_id, db)
-        try:
-            SwarmEngine(db).on_turn_complete([], [], conversation_id=conv_id)
-        except Exception:
-            pass
+        else:
+            try:
+                SwarmEngine(db).on_turn_complete([], [], conversation_id=conv_id)
+            except Exception:
+                pass
 
     # Devolve "allow" (qualquer valor diferente de "continue" permite terminar normalmente)
     return {"decision": "allow"}
