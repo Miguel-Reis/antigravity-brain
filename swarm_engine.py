@@ -1373,12 +1373,64 @@ class SwarmEngine:
             str(run_dict.get("workspace") or "brain_mcp"),
         )
 
+        # Sincronizar e devolver TODAS as Conversas e Subagentes reais (de todos os projetos/workspaces)
+        try:
+            self._sync_live_conversations_to_office()
+        except Exception:
+            pass
+
+        sessions_and_subagents: List[Dict[str, Any]] = []
+        ws_set: set[str] = {"brain_mcp", "global"}
+        with self.db._connect() as conn:
+            ag_rows = conn.execute(
+                """
+                SELECT agent_id, name, role, kind, department, model, workspace,
+                       conversation_id, status, current_task, avatar_color, updated_at
+                FROM office_agents
+                ORDER BY
+                    CASE WHEN status = 'working' THEN 0 ELSE 1 END,
+                    CASE WHEN kind = 'subagent' THEN 0 WHEN kind = 'conversation' THEN 1 ELSE 2 END,
+                    updated_at DESC;
+                """
+            ).fetchall()
+            for ar in ag_rows:
+                ad = dict(ar)
+                ws_val = str(ad.get("workspace") or "global").strip() or "global"
+                ws_set.add(ws_val)
+                sessions_and_subagents.append(ad)
+
+            # Incluir também subagentes invocados via invoke_subagent detetados nos transcripts
+            for c_key, meta in list(_OFFICE_SCAN_CACHE.get("meta_cache", {}).items())[:15]:
+                c_ws = str(meta.get("workspace") or "global")
+                ws_set.add(c_ws)
+                for idx_s, sp in enumerate(meta.get("spawned_subagents") or []):
+                    sub_id = f"invoked-{c_key.split(':')[0][:6]}-{idx_s+1}"
+                    if not any(x.get("agent_id") == sub_id for x in sessions_and_subagents):
+                        sessions_and_subagents.append(
+                            {
+                                "agent_id": sub_id,
+                                "name": f"🤖 {sp.get('role', 'Subagent')[:22]}",
+                                "role": f"invoke_subagent · {c_ws}",
+                                "kind": "subagent",
+                                "department": "SUBAGENT",
+                                "model": f"{sp.get('model', 'inherit')} · subagent",
+                                "workspace": c_ws,
+                                "conversation_id": c_key.split(":")[0],
+                                "status": "working" if meta.get("is_mid_turn") else "paused",
+                                "current_task": sp.get("prompt") or "Tarefa delegada via invoke_subagent",
+                                "avatar_color": "#ff2a85",
+                                "updated_at": float(meta.get("mtime") or now),
+                            }
+                        )
+
         return {
             "run": run_dict,
             "lanes": lanes,
             "lane_pheromones": lane_pheromones,
             "jev_router": jev_router,
             "tasks": all_tasks,
+            "sessions_and_subagents": sessions_and_subagents,
+            "workspaces": sorted(ws_set),
             "heatmap": self.get_codebase_heatmap(),
             "logs": [dict(l) for l in reversed(logs_rows)],
             "recent_runs": [dict(rr) for rr in recent_runs],
@@ -1863,21 +1915,43 @@ class SwarmEngine:
                 raw_req = re.sub(r"^/ultraplan\s*", "", raw_req.strip(), flags=re.IGNORECASE)
                 first_prompt = " ".join(raw_req.split())[:80]
             else:
-                # Se não tem tags <USER_REQUEST>, é tipicamente um subagente invocado por invoke_subagent
-                for line in head_text.splitlines()[:6]:
-                    line = line.strip()
-                    if not line.startswith("{"):
-                        continue
-                    try:
-                        obj = json.loads(line)
-                        if obj.get("type") == "USER_INPUT":
-                            raw_c = " ".join(str(obj.get("content", "")).split())
-                            if raw_c and "<USER_REQUEST>" not in raw_c:
-                                is_subagent = True
-                                first_prompt = raw_c[:80]
-                                break
-                    except Exception:
-                        pass
+                # No Antigravity, subagentes invocados via invoke_subagent não têm <USER_REQUEST>:
+                # recebem a tarefa num passo SYSTEM_MESSAGE com "sender=<parent_uuid> priority=... content=..."
+                m_sys_sub = re.search(
+                    r"sender=[0-9a-fA-F-]{8,}\s+priority=\S+\s+content=(.*?)(?:</SYSTEM_MESSAGE>|\\n</SYSTEM_MESSAGE>|$)",
+                    head_text,
+                    flags=re.DOTALL,
+                )
+                if m_sys_sub:
+                    is_subagent = True
+                    raw_sub = m_sys_sub.group(1).replace("\\n", " ").replace("\\r", " ")
+                    first_prompt = " ".join(raw_sub.split())[:80]
+                else:
+                    for line in head_text.splitlines()[:8]:
+                        line = line.strip()
+                        if not line.startswith("{"):
+                            continue
+                        try:
+                            obj = json.loads(line)
+                            if obj.get("type") == "SYSTEM_MESSAGE":
+                                raw_c = str(obj.get("content", ""))
+                                m_inner = re.search(
+                                    r"sender=[0-9a-fA-F-]{8,}\s+priority=\S+\s+content=(.*?)(?:</SYSTEM_MESSAGE>|$)",
+                                    raw_c,
+                                    flags=re.DOTALL,
+                                )
+                                if m_inner:
+                                    is_subagent = True
+                                    first_prompt = " ".join(m_inner.group(1).split())[:80]
+                                    break
+                            elif obj.get("type") == "USER_INPUT":
+                                raw_c = " ".join(str(obj.get("content", "")).split())
+                                if raw_c and "<USER_REQUEST>" not in raw_c:
+                                    is_subagent = True
+                                    first_prompt = raw_c[:80]
+                                    break
+                        except Exception:
+                            pass
 
             # Analisar as últimas linhas para saber se está ativamente a executar um turno/tool_calls ou se já terminou
             tail_lines = [ln.strip() for ln in tail_text.splitlines() if ln.strip().startswith("{")]
@@ -2006,7 +2080,7 @@ class SwarmEngine:
                 pass
 
         recent_convs.sort(reverse=True)
-        top_convs = recent_convs[:10]
+        top_convs = recent_convs[:28]
 
         palette = ["#06b6d4", "#f43f5e", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#3b82f6", "#14b8a6"]
 
@@ -2030,6 +2104,9 @@ class SwarmEngine:
                 is_sub = bool(meta["is_subagent"])
                 kind = "subagent" if is_sub else "conversation"
                 aid = f"sub-{short_id}" if is_sub else f"conv-{short_id}"
+                if is_sub and f"conv-{short_id}" in existing_rows:
+                    conn.execute("DELETE FROM office_agents WHERE agent_id = ?;", (f"conv-{short_id}",))
+                    existing_rows.pop(f"conv-{short_id}", None)
                 ws = BrainDB.normalize_workspace(meta["workspace"] or "global")
                 age_sec = max(0.0, now - mtime)
 

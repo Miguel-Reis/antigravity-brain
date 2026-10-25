@@ -2241,6 +2241,27 @@
       </div>
     </div>
 
+    <!-- Row 1.5: MULTI-PROJECT SESSIONS & SUBAGENTS FLEET MATRIX -->
+    <div class="bp-box" style="margin-bottom:10px; border:1.5px solid rgba(0,240,255,0.45); background:rgba(6,11,22,0.92);">
+      <div class="bp-header" style="background:rgba(0,240,255,0.08); border-bottom:1px solid rgba(0,240,255,0.3); padding:7px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span style="color:#00f0ff; font-family:var(--font-mono); font-size:11px; letter-spacing:0.05em;">
+          [FLEET] TODOS OS AGENTES, CONVERSAS &amp; SUBAGENTES DA APP // <strong id="swFleetSummaryTxt" style="color:#00ff9d;">A carregar...</strong>
+        </span>
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <select id="swFleetWsFilter" class="select-ctrl" style="min-width:140px; height:24px; font-size:10px; padding:1px 6px;" onchange="setSwarmFleetFilter(swarmFleetKindFilter, this.value)">
+            <option value="all">🌐 Todos os Projetos</option>
+          </select>
+          <button id="btnSwFleetAll" class="btn-scout-emerald" style="height:24px; padding:0 8px; font-size:9.5px; border-color:#00f0ff; color:#00f0ff;" onclick="setSwarmFleetFilter('all')">TODOS</button>
+          <button id="btnSwFleetSub" class="btn-scout-emerald" style="height:24px; padding:0 8px; font-size:9.5px; border-color:#ff2a85; color:#ff2a85; background:rgba(255,42,133,0.12);" onclick="setSwarmFleetFilter('subagent')">🤖 SUBAGENTES</button>
+          <button id="btnSwFleetConv" class="btn-scout-emerald" style="height:24px; padding:0 8px; font-size:9.5px; border-color:#38bdf8; color:#7dd3fc; background:rgba(56,189,248,0.12);" onclick="setSwarmFleetFilter('conversation')">💬 CONVERSAS</button>
+          <button id="btnSwFleetWork" class="btn-scout-emerald" style="height:24px; padding:0 8px; font-size:9.5px; border-color:#00ff9d; color:#00ff9d; background:rgba(0,255,157,0.12);" onclick="setSwarmFleetFilter('working')">⚡ ATIVOS AGORA</button>
+        </div>
+      </div>
+      <div class="bp-body" style="padding:8px 10px;">
+        <div id="swFleetCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(245px, 1fr)); gap:8px; max-height:155px; overflow-y:auto;"></div>
+      </div>
+    </div>
+
     <!-- Row 2: 4 PARALLEL WORKER LANES (UI, API, TESTS, DOCS) -->
     <div class="swarm-lanes-grid" id="swLanesGrid"></div>
 
@@ -4070,6 +4091,23 @@
     }
 
     let selectedSwarmRunId = '';
+    let swarmFleetKindFilter = 'all';
+    let swarmFleetWsFilterVal = 'all';
+    let lastSwarmDashboardData = null;
+
+    function setSwarmFleetFilter(kindFilter, wsFilter) {
+      if (kindFilter) swarmFleetKindFilter = kindFilter;
+      if (wsFilter !== undefined) swarmFleetWsFilterVal = wsFilter;
+      if (lastSwarmDashboardData) {
+        renderSwarmDashboard(lastSwarmDashboardData);
+      }
+    }
+
+    function jumpToAgentInOffice(agentId) {
+      selectedOfficeAgentId = agentId;
+      switchMainView('office');
+      showToast(`🎯 Focado no agente ${agentId} no Escritório 3D!`);
+    }
 
     async function fetchSwarmDashboard(forceRender = false) {
       if (swarmFetchInFlight) return;
@@ -4079,11 +4117,13 @@
         const res = await fetch(`/api/swarm${qs}`);
         const data = await res.json();
         if (data && data.run) {
+          lastSwarmDashboardData = data;
           const r = data.run;
           const logs = data.logs || [];
           const lastLog = logs.length ? `${logs[logs.length - 1].ts}:${logs[logs.length - 1].message}` : '';
           const taskStates = (data.tasks || []).map(t => `${t.status}${t.progress}${t.title}`).join('');
-          const sig = `${r.id}|${r.status}|${r.goal}|${r.elapsed_seconds}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${r.scout_files_count}|${taskStates}|${lastLog}`;
+          const fleetStates = (data.sessions_and_subagents || []).map(a => `${a.agent_id}:${a.status}:${a.current_task}`).join('');
+          const sig = `${r.id}|${r.status}|${r.goal}|${r.elapsed_seconds}|${r.completed_tasks}|${r.active_tasks}|${r.verify_passed}|${r.scout_files_count}|${taskStates}|${fleetStates}|${lastLog}`;
           if (forceRender || sig !== lastSwarmHash) {
             lastSwarmHash = sig;
             renderSwarmDashboard(data);
@@ -4102,6 +4142,62 @@
       const tasks = data.tasks || [];
       const logs = data.logs || [];
       const recentRuns = data.recent_runs || [];
+      const fleetAll = data.sessions_and_subagents || [];
+      const wsList = data.workspaces || ['brain_mcp', 'global'];
+
+      // Populate Fleet Workspace filter + Fleet Cards Grid (All Sessions, Subagents & Core Agents)
+      const wsSelEl = document.getElementById('swFleetWsFilter');
+      if (wsSelEl) {
+        const curWs = swarmFleetWsFilterVal || 'all';
+        const wsOpts = [`<option value="all" ${curWs === 'all' ? 'selected' : ''}>🌐 Todos os Projetos (${wsList.length})</option>`];
+        wsList.forEach(w => {
+          wsOpts.push(`<option value="${escapeHtml(w)}" ${w === curWs ? 'selected' : ''}>📂 ${escapeHtml(w)}</option>`);
+        });
+        wsSelEl.innerHTML = wsOpts.join('');
+      }
+
+      const subCount = fleetAll.filter(a => a.kind === 'subagent').length;
+      const convCount = fleetAll.filter(a => a.kind === 'conversation').length;
+      const workCount = fleetAll.filter(a => a.status === 'working').length;
+      const sumTxtEl = document.getElementById('swFleetSummaryTxt');
+      if (sumTxtEl) {
+        sumTxtEl.textContent = `${fleetAll.length} TOTAL (${subCount} SUBAGENTES • ${convCount} CONVERSAS • ${workCount} A TRABALHAR AGORA)`;
+      }
+
+      const fleetFiltered = fleetAll.filter(a => {
+        if (swarmFleetWsFilterVal !== 'all' && a.workspace !== swarmFleetWsFilterVal) return false;
+        if (swarmFleetKindFilter === 'subagent') return a.kind === 'subagent';
+        if (swarmFleetKindFilter === 'conversation') return a.kind === 'conversation';
+        if (swarmFleetKindFilter === 'working') return a.status === 'working';
+        return true;
+      });
+
+      const fleetGridEl = document.getElementById('swFleetCardsGrid');
+      if (fleetGridEl) {
+        fleetGridEl.innerHTML = fleetFiltered.map(a => {
+          const isSub = a.kind === 'subagent';
+          const isConv = a.kind === 'conversation';
+          const isWork = a.status === 'working';
+          const borderCol = isSub ? '#ff2a85' : (isConv ? '#00f0ff' : '#a855f7');
+          const kindBadge = isSub ? '🤖 SUBAGENT' : (isConv ? '💬 SESSION' : `⚡ ${escapeHtml(a.department || 'CORE')}`);
+          const stCol = isWork ? '#00ff9d' : '#ffb703';
+          const stTxt = isWork ? '● WORKING' : '☕ STANDBY';
+          return `
+            <div onclick="jumpToAgentInOffice('${escapeHtml(a.agent_id)}')" style="cursor:pointer; background:rgba(9,16,32,0.92); border:1px solid ${borderCol}66; border-left:3px solid ${borderCol}; border-radius:4px; padding:6px 8px; display:flex; flex-direction:column; gap:3px;" title="Clique para focar este agente no Escritório 3D (#office)">
+              <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9.5px;">
+                <span style="color:${borderCol}; font-weight:700;">${kindBadge} · [${escapeHtml(a.workspace || 'global')}]</span>
+                <span style="color:${stCol}; font-weight:700;">${stTxt}</span>
+              </div>
+              <div style="font-size:11px; font-weight:700; color:#f0f6fc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(a.name)} <small style="color:#94a3b8; font-weight:400;">(${escapeHtml(a.model || 'flash')})</small>
+              </div>
+              <div style="font-size:9.5px; color:#cbd5e1; font-family:var(--font-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(a.current_task || 'Pronto')}
+              </div>
+            </div>
+          `;
+        }).join('') || `<div style="color:#94a3b8; font-size:11px; padding:6px;">Nenhum agente encontrado para este filtro.</div>`;
+      }
 
       // Populate Run History dropdown
       const histSel = document.getElementById('swarmHistorySelect');

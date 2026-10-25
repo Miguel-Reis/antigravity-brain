@@ -71,6 +71,17 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                     return match.group(1).strip(), False
                 clean_sub = content.strip()[:1000]
                 return clean_sub, bool(clean_sub)
+
+            if step.get("type") == "SYSTEM_MESSAGE":
+                content = step.get("content", "")
+                # Subagentes no Antigravity recebem o prompt inicial como SYSTEM_MESSAGE com sender=<parent_uuid>
+                m_sub = re.search(
+                    r"sender=[0-9a-fA-F-]{8,}\s+priority=\S+\s+content=(.*?)(?:</SYSTEM_MESSAGE>|$)",
+                    content,
+                    flags=re.DOTALL,
+                )
+                if m_sub:
+                    return " ".join(m_sub.group(1).strip().split())[:1000], True
     except Exception:
         return None, False
     return None, False
