@@ -2059,7 +2059,7 @@ class SwarmEngine:
         e sincroniza o estado dos bonecos no Escritório 3D (a trabalhar vs em pausa).
         """
         now = time.time()
-        if now - float(_OFFICE_SCAN_CACHE.get("ts", 0.0)) < 1.0:
+        if now - float(_OFFICE_SCAN_CACHE.get("ts", 0.0)) < 3.5:
             return
         _OFFICE_SCAN_CACHE["ts"] = now
 
@@ -2263,21 +2263,31 @@ class SwarmEngine:
                 )
 
     def get_office_state(self) -> Dict[str, Any]:
-        """Devolve todos os agentes (bonecos 3D), tasks em curso e métricas do Escritório 3D."""
+        """Devolve os agentes ativos do Escritório 3D (8 Core + Top 10 Sessões/Subagentes = máx 18 bonecos 3D para 60 FPS estáveis)."""
         self._sync_live_conversations_to_office()
         now = time.time()
         with self.db._connect() as conn:
-            rows = conn.execute(
+            core_rows = conn.execute(
                 """
                 SELECT * FROM office_agents
+                WHERE kind NOT IN ('conversation', 'subagent')
                 ORDER BY
-                    CASE WHEN kind = 'architect' THEN 0
-                         WHEN kind = 'scout' THEN 1
-                         WHEN kind IN ('conversation', 'subagent') THEN 2
-                         ELSE 3 END,
+                    CASE WHEN kind = 'architect' THEN 0 WHEN kind = 'scout' THEN 1 ELSE 2 END,
                     desk_index ASC;
                 """
             ).fetchall()
+            conv_rows = conn.execute(
+                """
+                SELECT * FROM office_agents
+                WHERE kind IN ('conversation', 'subagent')
+                ORDER BY
+                    CASE WHEN status = 'working' THEN 0 ELSE 1 END,
+                    CASE WHEN kind = 'subagent' THEN 0 ELSE 1 END,
+                    updated_at DESC
+                LIMIT 10;
+                """
+            ).fetchall()
+            rows = list(core_rows) + list(conv_rows)
             run_row = conn.execute(
                 """
                 SELECT id, goal, status, completed_tasks, total_tasks, verify_passed,
