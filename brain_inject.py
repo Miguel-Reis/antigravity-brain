@@ -131,6 +131,43 @@ def extract_latest_tool_actions(transcript_path: Optional[str]) -> List[str]:
     return []
 
 
+def extract_latest_tool_error(transcript_path: Optional[str]) -> Optional[str]:
+    """Deteta erros na última execução de ferramenta (TOOL_RESPONSE) para ativar o Reflexion Guard."""
+    if not transcript_path or not os.path.isfile(transcript_path):
+        return None
+    try:
+        file_size = os.path.getsize(transcript_path)
+        read_size = min(file_size, 32768)
+        with open(transcript_path, "rb") as f:
+            if file_size > read_size:
+                f.seek(file_size - read_size)
+            tail_bytes = f.read()
+        lines = tail_bytes.decode("utf-8", errors="ignore").splitlines()
+        for line in reversed(lines):
+            line = line.strip()
+            if not line.startswith("{"):
+                continue
+            try:
+                step = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if step.get("type") == "TOOL_RESPONSE":
+                content = str(step.get("content") or "")
+                m_err = re.search(
+                    r"((?:SyntaxError|TypeError|ValueError|KeyError|ModuleNotFoundError|FileNotFoundError|AssertionError|ImportError):\s*[^\n]+)",
+                    content,
+                )
+                if m_err:
+                    return m_err.group(1).strip()[:140]
+                return None
+            if step.get("type") == "USER_INPUT":
+                break
+    except Exception:
+        pass
+    return None
+
+
+
 def compute_adaptive_budget(user_query: str) -> int:
     """Ajusta dinamicamente o orçamento de caracteres conforme a complexidade do pedido."""
     q = (user_query or "").strip().lower()
@@ -156,8 +193,14 @@ def build_ephemeral_context(
     ]
 
     if jev_route:
+        intent_key = str(jev_route.get("intent") or "general_engineering")
+        try:
+            from token_diet import INTENT_TOOL_ROUTING
+            active_t = ",".join(INTENT_TOOL_ROUTING.get(intent_key, INTENT_TOOL_ROUTING["general_engineering"])["active_tools"])
+        except Exception:
+            active_t = "swarm_symbol_lookup,search_brain,store_fact"
         parts.append(
-            f"[JEV_S1_ROUTER | intent={jev_route.get('intent')} | route={jev_route.get('model_route')} | stop_th={jev_route.get('adaptive_stop_threshold')} | {jev_route.get('decision_latency_ms')}ms]"
+            f"[JEV_S1_ROUTER | intent={intent_key} | route={jev_route.get('model_route')} | tools={active_t} | stop_th={jev_route.get('adaptive_stop_threshold')} | {jev_route.get('decision_latency_ms')}ms]"
         )
 
     if checkpoint:
@@ -289,13 +332,28 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             return {}
         user_query = f"workspace {ws} architecture environment"
 
-    # Evita injetar novamente nos sub-passos de tool loop do mesmo pedido do utilizador,
-    # mas atualiza o progresso em tempo real no Swarm Monitor com as tools reais!
+    # Evita injetar novamente o bloco completo nos sub-passos de tool loop do mesmo pedido,
+    # mas sincroniza as tools reais no Swarm Monitor e ativa o Tool Reflexion Guardrail se detetar erro/loop!
     swarm_eng = SwarmEngine(db)
     if not db.mark_turn_injected(conv_id, user_query):
         try:
             real_actions = extract_latest_tool_actions(transcript_path)
             swarm_eng.on_turn_step(inv_num, real_actions, conversation_id=conv_id, workspace=ws)
+            err_sig = extract_latest_tool_error(transcript_path)
+            if err_sig and db.mark_turn_injected(conv_id, f"__err_reflexion__:{err_sig[:80]}"):
+                fixes = db.search_memories(query=err_sig, workspace=ws, n_results=2, update_stats=False)
+                fix_hint = (
+                    f" | Solução conhecida: {fixes[0]['topic']} -> {fixes[0]['fact'][:160]}"
+                    if fixes
+                    else " | Usa swarm_symbol_lookup / swarm_impact_graph antes de repetir a edição."
+                )
+                return {
+                    "injectSteps": [
+                        {
+                            "ephemeralMessage": f"[TOOL_REFLEXION_GUARD | Detectado erro no passo anterior: {err_sig[:110]}{fix_hint}]"
+                        }
+                    ]
+                }
         except Exception:
             pass
         return {}

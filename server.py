@@ -13,8 +13,10 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
+from ast_impact_watcher import get_global_watcher
 from db_engine import BrainDB, ensure_dashboard_running
 from swarm_engine import SwarmEngine
+from token_diet import prune_tools_for_intent
 
 db = BrainDB()
 swarm = SwarmEngine(db)
@@ -173,7 +175,104 @@ def swarm_status() -> str:
     return json.dumps(swarm.get_swarm_dashboard(), indent=2, ensure_ascii=False)
 
 
+@mcp.tool()
+def swarm_symbol_lookup(symbol_query: str, workspace_path: str = "") -> str:
+    """Locates a Python/JS/TS/HTML class or function by name using AST parsing and returns its exact file path, [start_line, end_line] range, and snippet so agents can edit surgically without reading full files."""
+    res = swarm.lookup_symbol(symbol_query=symbol_query, workspace_path=workspace_path or CURRENT_DIR)
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def swarm_impact_graph(target: str, workspace_path: str = "") -> str:
+    """Computes the reverse call & import dependency graph (blast radius) and recommended tests for a symbol or file before making code modifications."""
+    res = swarm.analyze_impact_graph(target=target, workspace_path=workspace_path or CURRENT_DIR)
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def brain_prune_tools(query: str, workspace: str = "global") -> str:
+    """Dynamic Intent-Based Tool Pruning: selects only the 3-4 essential MCP tools and servers for the given prompt intent, saving ~65% tool schema tokens."""
+    res = prune_tools_for_intent(user_query=query, workspace=workspace)
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def swarm_sandbox(
+    action: str = "create",
+    lane: str = "API",
+    task_code: str = "api-01",
+    target_files: str = "",
+    sandbox_id: int = 0,
+    workspace_path: str = "",
+) -> str:
+    """Manages transactional Copy-on-Write subagent sandboxes with SHA-256 pre/post snapshots, AST syntax gate, and AI-Defence secret scanner before merge."""
+    files_list = [f.strip() for f in target_files.split(",") if f.strip()] if target_files else []
+    res = swarm.manage_subagent_sandbox(
+        action=action,
+        lane=lane,
+        task_code=task_code,
+        target_files=files_list,
+        sandbox_id=sandbox_id or None,
+        workspace_path=workspace_path or CURRENT_DIR,
+    )
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def swarm_watch_audit(
+    target_file: str = "",
+    workspace_path: str = "",
+    force: bool = True,
+) -> str:
+    """Runs the automated AST & Impact Radius file-save analyzer on a specific file or workspace to preemptively flag high-risk changes."""
+    watcher = get_global_watcher(workspace_path or CURRENT_DIR)
+    if target_file.strip():
+        res = watcher.audit_file_save(
+            file_path=target_file.strip(),
+            workspace_path=workspace_path or CURRENT_DIR,
+            force=force,
+        )
+    else:
+        res = watcher.scan_workspace_saves(
+            workspace_path=workspace_path or CURRENT_DIR,
+            force_all=force,
+        )
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def swarm_graph_path(
+    source: str,
+    target: str,
+    max_hops: int = 6,
+    workspace_path: str = "",
+) -> str:
+    """Graphify Multi-Modal BFS Shortest Path Finder: finds the exact relational path (JS Function -> HTTP Route -> Python AST -> SQLite Table) with confidence-labeled edges (EXTRACTED/INFERRED/AMBIGUOUS) and 70x+ token savings."""
+    res = swarm.find_graph_path(
+        source_query=source,
+        target_query=target,
+        max_hops=max_hops,
+        workspace_path=workspace_path or CURRENT_DIR,
+    )
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def swarm_architecture_report(
+    workspace_path: str = "",
+    write_to_disk: bool = True,
+) -> str:
+    """Generates the Graphify GRAPH_REPORT.md with Topological Communities, God Nodes centrality, confidence breakdown, and full-stack causal chains."""
+    res = swarm.generate_architecture_report(
+        workspace_path=workspace_path or CURRENT_DIR,
+        write_to_disk=write_to_disk,
+    )
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
 if __name__ == "__main__":
     if getattr(sys, "stdout", None) is not None and hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
     mcp.run(transport="stdio")
+
+

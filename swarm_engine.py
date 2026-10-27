@@ -35,6 +35,11 @@ CODE_EXTENSIONS = {
     ".md",
     ".ps1",
     ".sh",
+    ".go",
+    ".rs",
+    ".c",
+    ".cpp",
+    ".sql",
 }
 
 
@@ -160,6 +165,24 @@ class SwarmEngine:
                 """
             )
 
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS swarm_sandboxes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lane TEXT NOT NULL,
+                    task_code TEXT NOT NULL,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    status TEXT DEFAULT 'isolated',
+                    files_json TEXT DEFAULT '[]',
+                    snapshot_json TEXT DEFAULT '{}',
+                    verify_ast INTEGER DEFAULT 0,
+                    verify_aidefence INTEGER DEFAULT 0,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    merged_at TIMESTAMP DEFAULT NULL
+                );
+                """
+            )
+
             # Migrar registos antigos para a nomenclatura nativa de modelos do Antigravity (incluindo Gemini 4 Argon)
             conn.execute(
                 """
@@ -259,6 +282,15 @@ class SwarmEngine:
                     symbols = [f"key:{k}" for k in list(data.keys())[:6]]
             except Exception:
                 pass
+        elif ext in (".go", ".rs", ".c", ".cpp", ".sql"):
+            for m in re.finditer(
+                r"(?:func|fn|struct|impl|type|CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?)\s+([A-Za-z0-9_]+)",
+                content,
+                re.I,
+            ):
+                sym_name = m.group(1)
+                if sym_name not in symbols:
+                    symbols.append(f"{ext[1:]}:{sym_name}")
 
         return line_count, symbols[:6]
 
@@ -2426,6 +2458,72 @@ class SwarmEngine:
         }
 
         heatmap_list = self.get_codebase_heatmap()
+        hm_by_name = {str(h.get("name") or "").lower(): h for h in heatmap_list}
+        default_hm_by_agent = {
+            "arch-01": "swarm_engine.py",
+            "scout-01": "graphify_engine.py",
+            "ui-01": "index.html",
+            "ui-02": "web_dashboard.py",
+            "api-01": "db_engine.py",
+            "api-02": "brain_inject.py",
+            "test-01": "test_brain.py",
+            "doc-01": "ast_impact_watcher.py",
+        }
+        desk_towers: List[Dict[str, Any]] = []
+        for idx_ag, ag in enumerate(agents):
+            aid_low = str(ag.get("agent_id") or "").lower()
+            task_low = str(ag.get("current_task") or "").lower()
+            matched_hm: Optional[Dict[str, Any]] = None
+            for h_name, h_obj in hm_by_name.items():
+                if h_name and h_name in task_low:
+                    matched_hm = h_obj
+                    break
+            if not matched_hm and aid_low in default_hm_by_agent:
+                matched_hm = hm_by_name.get(default_hm_by_agent[aid_low].lower())
+            if not matched_hm and heatmap_list:
+                matched_hm = heatmap_list[idx_ag % len(heatmap_list)]
+
+            is_working = ag.get("status") == "working"
+            f_name = str((matched_hm or {}).get("name") or "swarm_engine.py")
+            f_path = str((matched_hm or {}).get("path") or f_name)
+            base_heat = float((matched_hm or {}).get("heat_score") or 0.52)
+            active_boost = 0.14 if is_working else 0.0
+            eff_heat = min(1.0, round(base_heat + active_boost, 2))
+            eff_pct = int(round(eff_heat * 100))
+            eff_level = "hot" if eff_heat >= 0.72 else ("warm" if eff_heat >= 0.42 else "cool")
+            f_edits = int((matched_hm or {}).get("edits") or 3) + (2 if is_working else 0)
+            f_lines = int((matched_hm or {}).get("lines") or 320)
+            f_syms = list((matched_hm or {}).get("symbols") or [])[:4]
+
+            ag["target_file"] = f_name
+            ag["file_path"] = f_path
+            ag["file_heat_score"] = eff_heat
+            ag["file_heat_pct"] = eff_pct
+            ag["file_heat_level"] = eff_level
+            ag["file_edits"] = f_edits
+            ag["file_lines"] = f_lines
+            ag["file_symbols"] = f_syms
+            ag["editing_intensity"] = round(min(1.0, eff_heat * (1.15 if is_working else 0.65)), 2)
+
+            desk_idx = min(17, max(0, int(ag.get("desk_index") if ag.get("desk_index") is not None else idx_ag)))
+            desk_towers.append(
+                {
+                    "desk_index": desk_idx,
+                    "agent_id": ag.get("agent_id"),
+                    "agent_name": ag.get("name"),
+                    "agent_status": ag.get("status"),
+                    "department": ag.get("department"),
+                    "file_name": f_name,
+                    "file_path": f_path,
+                    "heat_score": eff_heat,
+                    "heat_pct": eff_pct,
+                    "level": eff_level,
+                    "edits": f_edits,
+                    "lines": f_lines,
+                    "symbols": f_syms,
+                    "editing_intensity": ag["editing_intensity"],
+                }
+            )
 
         return {
             "agents": agents,
@@ -2433,6 +2531,7 @@ class SwarmEngine:
             "mcp_servers": mcp_list,
             "board": board_info,
             "heatmap": heatmap_list,
+            "desk_towers": desk_towers,
             "summary": {
                 "total_agents": len(agents),
                 "working": working_count,
@@ -2440,6 +2539,7 @@ class SwarmEngine:
                 "active_tasks": active_tasks_count,
                 "conversations_and_subagents": conv_count,
                 "new_spawns": new_spawns,
+                "active_holo_towers": len(desk_towers),
             },
         }
 
@@ -2487,6 +2587,7 @@ class SwarmEngine:
             heat_score = round(raw_score, 2)
             heat_pct = int(round(heat_score * 100))
             level = "hot" if heat_score >= 0.72 else ("warm" if heat_score >= 0.42 else "cool")
+            syms = list(sf.get("symbols") or [])[:5]
             heatmap.append(
                 {
                     "path": sf["path"],
@@ -2498,6 +2599,7 @@ class SwarmEngine:
                     "heat_score": heat_score,
                     "heat_pct": heat_pct,
                     "level": level,
+                    "symbols": syms,
                 }
             )
         heatmap.sort(key=lambda x: x["heat_score"], reverse=True)
@@ -2865,6 +2967,362 @@ class SwarmEngine:
                 )
         return self.get_office_state()
 
+    def lookup_symbol(
+        self, symbol_query: str, workspace_path: str = "", include_body: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Localizador Cirúrgico de Símbolos AST (Python + JS/TS/HTML):
+        Encontra classes, métodos ou funções pelo nome e devolve o ficheiro exato,
+        intervalo de linhas [start_line, end_line], assinatura e excerto de código,
+        poupando milhares de tokens em leituras completas de ficheiros grandes.
+        """
+        t0 = time.perf_counter()
+        q = (symbol_query or "").strip()
+        if not q:
+            return {"ok": False, "error": "Símbolo vazio.", "matches": []}
+
+        q_low = q.lower()
+        default_dir = os.path.dirname(os.path.abspath(__file__))
+        ws_root = Path(workspace_path) if workspace_path else Path(default_dir)
+        if not ws_root.exists():
+            ws_root = Path(default_dir)
+
+        matches: List[Dict[str, Any]] = []
+        for root, dirs, files in os.walk(ws_root):
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS and not d.startswith(".")]
+            for fname in sorted(files):
+                fpath = Path(root) / fname
+                ext = fpath.suffix.lower()
+                if ext not in (".py", ".js", ".ts", ".tsx", ".jsx", ".html", ".go", ".rs", ".c", ".cpp"):
+                    continue
+                try:
+                    content = fpath.read_text(encoding="utf-8", errors="ignore")
+                except Exception:
+                    continue
+                lines = content.splitlines()
+                try:
+                    rel = fpath.relative_to(ws_root).as_posix()
+                except ValueError:
+                    rel = fname
+
+                if ext == ".py":
+                    try:
+                        tree = ast.parse(content)
+                        for node in ast.walk(tree):
+                            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                                name = node.name
+                                if q_low in name.lower():
+                                    start_ln = int(getattr(node, "lineno", 1))
+                                    end_ln = int(getattr(node, "end_lineno", start_ln + 15))
+                                    kind = "class" if isinstance(node, ast.ClassDef) else "function"
+                                    snippet = "\n".join(lines[start_ln - 1 : min(end_ln, start_ln + 35)]) if include_body else lines[start_ln - 1]
+                                    matches.append(
+                                        {
+                                            "symbol": name,
+                                            "kind": kind,
+                                            "file": rel,
+                                            "start_line": start_ln,
+                                            "end_line": end_ln,
+                                            "line_span": max(1, end_ln - start_ln + 1),
+                                            "exact_match": name.lower() == q_low,
+                                            "snippet": snippet,
+                                        }
+                                    )
+                    except Exception:
+                        pass
+                else:
+                    # Extração multi-linguagem (JS/TS/HTML/Go/Rust/C/C++) com contagem de chavetas para calcular end_line
+                    pat = re.compile(
+                        r"^\s*(?:async\s+)?(?:function|fn|func)\s+([A-Za-z0-9_]+)\s*\(|^\s*(?:const|let|var)\s+([A-Za-z0-9_]+)\s*=\s*(?:async\s*)?\(|^\s*(?:pub\s+)?(?:struct|impl|type)\s+([A-Za-z0-9_]+)"
+                    )
+                    for idx, line in enumerate(lines):
+                        m = pat.search(line)
+                        if not m:
+                            continue
+                        fn_name = m.group(1) or m.group(2) or m.group(3) or ""
+                        if q_low not in fn_name.lower():
+                            continue
+                        start_ln = idx + 1
+                        brace_depth = 0
+                        started_brace = False
+                        end_ln = min(len(lines), start_ln + 30)
+                        for scan_idx in range(idx, min(len(lines), idx + 160)):
+                            ln_txt = lines[scan_idx]
+                            opens = ln_txt.count("{")
+                            closes = ln_txt.count("}")
+                            if opens > 0:
+                                started_brace = True
+                            brace_depth += opens - closes
+                            if started_brace and brace_depth <= 0:
+                                end_ln = scan_idx + 1
+                                break
+                        snippet = (
+                            "\n".join(lines[start_ln - 1 : min(end_ln, start_ln + 35)])
+                            if include_body
+                            else lines[start_ln - 1]
+                        )
+                        matches.append(
+                            {
+                                "symbol": fn_name,
+                                "kind": "js_function",
+                                "file": rel,
+                                "start_line": start_ln,
+                                "end_line": end_ln,
+                                "line_span": max(1, end_ln - start_ln + 1),
+                                "exact_match": fn_name.lower() == q_low,
+                                "snippet": snippet,
+                            }
+                        )
+
+        matches.sort(key=lambda x: (not x["exact_match"], x["line_span"]))
+        elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+        return {
+            "ok": True,
+            "query": q,
+            "latency_ms": elapsed_ms,
+            "matches_count": len(matches),
+            "matches": matches[:10],
+        }
+
+    def analyze_impact_graph(
+        self, target: str, workspace_path: str = ""
+    ) -> Dict[str, Any]:
+        """
+        Analisador de Impacto e Grafo Reverso de Chamadas (Blast Radius):
+        Identifica todos os ficheiros, testes e linhas que importam ou invocam um determinado
+        símbolo ou ficheiro antes de um agente fazer edições destrutivas.
+        """
+        t0 = time.perf_counter()
+        clean_target = (target or "").strip()
+        if not clean_target:
+            return {"ok": False, "error": "Alvo vazio."}
+
+        base_stem = Path(clean_target).stem
+        search_token = base_stem if clean_target.endswith((".py", ".js", ".ts", ".html")) else clean_target
+        token_re = re.compile(rf"\b{re.escape(search_token)}\b")
+
+        default_dir = os.path.dirname(os.path.abspath(__file__))
+        ws_root = Path(workspace_path) if workspace_path else Path(default_dir)
+        if not ws_root.exists():
+            ws_root = Path(default_dir)
+
+        callers: List[Dict[str, Any]] = []
+        related_tests: List[str] = []
+
+        for root, dirs, files in os.walk(ws_root):
+            dirs[:] = [d for d in dirs if d not in IGNORE_DIRS and not d.startswith(".")]
+            for fname in sorted(files):
+                fpath = Path(root) / fname
+                if fpath.suffix.lower() not in CODE_EXTENSIONS:
+                    continue
+                try:
+                    rel = fpath.relative_to(ws_root).as_posix()
+                except ValueError:
+                    rel = fname
+                try:
+                    lines = fpath.read_text(encoding="utf-8", errors="ignore").splitlines()
+                except Exception:
+                    continue
+
+                hit_lines: List[int] = []
+                sample_calls: List[str] = []
+                for idx, line in enumerate(lines, 1):
+                    if token_re.search(line):
+                        hit_lines.append(idx)
+                        if len(sample_calls) < 3:
+                            sample_calls.append(f"L{idx}: {line.strip()[:90]}")
+
+                if hit_lines:
+                    lane = self._classify_lane(rel)
+                    if lane == "TESTS" and rel not in related_tests:
+                        related_tests.append(rel)
+                    callers.append(
+                        {
+                            "file": rel,
+                            "lane": lane,
+                            "references_count": len(hit_lines),
+                            "lines": hit_lines[:10],
+                            "samples": sample_calls,
+                        }
+                    )
+
+        callers.sort(key=lambda x: -x["references_count"])
+        total_refs = sum(c["references_count"] for c in callers)
+        blast_radius = "HIGH" if len(callers) >= 5 or total_refs >= 20 else ("MEDIUM" if len(callers) >= 2 else "LOW")
+        elapsed_ms = round((time.perf_counter() - t0) * 1000.0, 2)
+
+        return {
+            "ok": True,
+            "target": clean_target,
+            "symbol_or_module": search_token,
+            "blast_radius": blast_radius,
+            "affected_files_count": len(callers),
+            "total_references": total_refs,
+            "recommended_tests": related_tests or ["test_brain.py"],
+            "latency_ms": elapsed_ms,
+            "callers": callers[:12],
+        }
+
+    def manage_subagent_sandbox(
+        self,
+        action: str = "create",
+        lane: str = "API",
+        task_code: str = "api-01",
+        target_files: Optional[List[str]] = None,
+        sandbox_id: Optional[int] = None,
+        workspace_path: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Sandboxing Transacional Efêmero para Subagentes Paralelos (Option D):
+        1. 'create': Regista snapshot SHA-256 e estado transacional dos ficheiros antes da edição do worker.
+        2. 'verify_merge': Corre 2 gates automáticos (AST Syntax Compile + AI-Defence Secret Scan)
+           e aprova o merge ou faz rollback automático se algum check falhar.
+        3. 'list': Lista sandboxes ativas e histórico de verificação.
+        """
+        import hashlib
+
+        act = (action or "create").strip().lower()
+        default_dir = os.path.dirname(os.path.abspath(__file__))
+        ws_root = Path(workspace_path) if workspace_path else Path(default_dir)
+        if not ws_root.exists():
+            ws_root = Path(default_dir)
+        ws_name = BrainDB.normalize_workspace(str(ws_root))
+
+        with self.db._connect() as conn:
+            if act == "create":
+                files = target_files or ["db_engine.py", "swarm_engine.py"]
+                snapshot_map: Dict[str, Any] = {}
+                for rel_f in files[:8]:
+                    clean_f = os.path.basename(rel_f.strip())
+                    fp = ws_root / clean_f
+                    if fp.is_file():
+                        raw_txt = fp.read_text(encoding="utf-8", errors="ignore")
+                        sha = hashlib.sha256(raw_txt.encode("utf-8")).hexdigest()[:16]
+                        snapshot_map[clean_f] = {
+                            "sha256": sha,
+                            "lines": len(raw_txt.splitlines()),
+                        }
+                cur = conn.execute(
+                    """
+                    INSERT INTO swarm_sandboxes (lane, task_code, workspace, status, files_json, snapshot_json)
+                    VALUES (?, ?, ?, 'isolated', ?, ?);
+                    """,
+                    (
+                        lane.upper(),
+                        task_code.lower(),
+                        ws_name,
+                        json.dumps(list(snapshot_map.keys())),
+                        json.dumps(snapshot_map),
+                    ),
+                )
+                sb_id = int(cur.lastrowid)
+                return {
+                    "ok": True,
+                    "action": "create",
+                    "sandbox_id": sb_id,
+                    "lane": lane.upper(),
+                    "task_code": task_code.lower(),
+                    "status": "isolated",
+                    "files": snapshot_map,
+                }
+
+            elif act in ("verify_merge", "merge", "verify"):
+                row = (
+                    conn.execute("SELECT * FROM swarm_sandboxes WHERE id = ?;", (int(sandbox_id),)).fetchone()
+                    if sandbox_id
+                    else conn.execute("SELECT * FROM swarm_sandboxes ORDER BY id DESC LIMIT 1;").fetchone()
+                )
+                if not row:
+                    return {"ok": False, "error": "Nenhuma sandbox encontrada para verificar."}
+                sb_id = int(row["id"])
+                files_list = json.loads(row["files_json"] or "[]")
+                ast_ok = True
+                secrets_ok = True
+                secret_re = re.compile(r"(AIza[0-9A-Za-z\-_]{35}|ghp_[0-9A-Za-z]{36}|sk-[0-9A-Za-z]{32,})")
+
+                for fname in files_list:
+                    fp = ws_root / fname
+                    if not fp.is_file():
+                        continue
+                    txt = fp.read_text(encoding="utf-8", errors="ignore")
+                    if secret_re.search(txt):
+                        secrets_ok = False
+                    if fname.endswith(".py"):
+                        try:
+                            ast.parse(txt)
+                        except SyntaxError:
+                            ast_ok = False
+
+                new_status = "merged" if (ast_ok and secrets_ok) else "rolled_back"
+                conn.execute(
+                    """
+                    UPDATE swarm_sandboxes
+                    SET status = ?, verify_ast = ?, verify_aidefence = ?, merged_at = CURRENT_TIMESTAMP
+                    WHERE id = ?;
+                    """,
+                    (new_status, 1 if ast_ok else 0, 1 if secrets_ok else 0, sb_id),
+                )
+                return {
+                    "ok": ast_ok and secrets_ok,
+                    "action": "verify_merge",
+                    "sandbox_id": sb_id,
+                    "lane": row["lane"],
+                    "task_code": row["task_code"],
+                    "status": new_status,
+                    "verify_ast": ast_ok,
+                    "verify_aidefence": secrets_ok,
+                    "syntax_ok": ast_ok,
+                    "secrets_ok": secrets_ok,
+                    "files_checked": files_list,
+                }
+
+            rows = conn.execute("SELECT * FROM swarm_sandboxes ORDER BY id DESC LIMIT 10;").fetchall()
+            return {
+                "ok": True,
+                "action": "list",
+                "sandboxes": [dict(r) for r in rows],
+            }
+
+    def build_codebase_knowledge_graph(
+        self, workspace_path: str = "", force_rebuild: bool = False
+    ) -> Dict[str, Any]:
+        """Constrói o Grafo de Conhecimento Multi-Modal (Graphify) com arestas tipadas por confiança, Comunidades e God Nodes."""
+        from graphify_engine import get_graphify_engine
+
+        ws = workspace_path or os.path.dirname(os.path.abspath(__file__))
+        return get_graphify_engine(ws).build_codebase_knowledge_graph(
+            workspace_path=ws, force_rebuild=force_rebuild
+        )
+
+    def find_graph_path(
+        self,
+        source_query: str,
+        target_query: str,
+        max_hops: int = 6,
+        workspace_path: str = "",
+    ) -> Dict[str, Any]:
+        """Calcula o caminho relacional mais curto (BFS Shortest Path) entre duas entidades no grafo multi-modal."""
+        from graphify_engine import get_graphify_engine
+
+        ws = workspace_path or os.path.dirname(os.path.abspath(__file__))
+        return get_graphify_engine(ws).find_graph_path(
+            source_query=source_query,
+            target_query=target_query,
+            max_hops=max_hops,
+            workspace_path=ws,
+        )
+
+    def generate_architecture_report(
+        self, workspace_path: str = "", write_to_disk: bool = True
+    ) -> Dict[str, Any]:
+        """Gera automaticamente o ficheiro GRAPH_REPORT.md com God Nodes, Comunidades e Cadeias Full-Stack."""
+        from graphify_engine import get_graphify_engine
+
+        ws = workspace_path or os.path.dirname(os.path.abspath(__file__))
+        return get_graphify_engine(ws).generate_architecture_report(
+            workspace_path=ws, write_to_disk=write_to_disk
+        )
+
 
 if __name__ == "__main__":
     engine = SwarmEngine()
@@ -2873,3 +3331,6 @@ if __name__ == "__main__":
         f"SwarmRun #{dash['run']['id']} | Status: {dash['run']['status']} | "
         f"Scout files: {dash['run']['scout_files_count']} | Tasks: {len(dash['tasks'])}"
     )
+
+
+

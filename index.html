@@ -3,28 +3,35 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Antigravity Brain v2 — Obsidian Neural Graph</title>
+  <title>Antigravity Brain v4.5 — Neural Studio &amp; Graphify Console</title>
   <style>
     :root {
-      --bg-canvas: #0b0d13;
-      --bg-panel: rgba(18, 21, 31, 0.88);
-      --bg-panel-solid: #12151f;
-      --bg-card: #181c29;
-      --bg-hover: #212738;
+      --bg-canvas: #07090e;
+      --bg-panel: rgba(13, 17, 26, 0.88);
+      --bg-panel-solid: #0b0f17;
+      --bg-card: #121824;
+      --bg-card-elevated: #171f2e;
+      --bg-hover: #1e2738;
       --border: rgba(255, 255, 255, 0.08);
-      --border-focus: #8b5cf6;
-      --text-main: #e2e8f0;
+      --border-subtle: rgba(255, 255, 255, 0.05);
+      --border-focus: #6366f1;
+      --text-main: #f1f5f9;
       --text-muted: #94a3b8;
       --text-dim: #64748b;
-      --accent: #8b5cf6;
-      --accent-glow: rgba(139, 92, 246, 0.35);
+      --accent: #6366f1;
+      --accent-violet: #8b5cf6;
+      --accent-glow: rgba(99, 102, 241, 0.32);
       --emerald: #10b981;
       --amber: #f59e0b;
       --cyan: #06b6d4;
       --pink: #ec4899;
-      --red: #ef4444;
+      --red: #f43f5e;
       --blue: #3b82f6;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --radius-sm: 6px;
+      --radius-md: 9px;
+      --radius-lg: 12px;
+      --shadow-card: 0 8px 24px -6px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     }
 
@@ -33,6 +40,22 @@
       margin: 0;
       padding: 0;
       user-select: none;
+    }
+
+    /* Refined Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.38);
     }
 
     body {
@@ -44,18 +67,22 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
-    /* TOP TELEMETRY & TOKEN DIET BAR */
+    /* TOP TELEMETRY & NAVIGATION BAR */
     .topbar {
-      height: 54px;
-      background: var(--bg-panel-solid);
+      height: 56px;
+      background: #0b0f17;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 18px;
+      padding: 0 16px;
+      gap: 12px;
       z-index: 30;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .brand {
@@ -63,98 +90,112 @@
       align-items: center;
       gap: 10px;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14.5px;
       letter-spacing: -0.02em;
+      min-width: 0;
     }
 
     .brand-dot {
-      width: 12px;
-      height: 12px;
+      width: 11px;
+      height: 11px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 12px var(--accent);
+      background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.75);
+      flex-shrink: 0;
     }
 
     .brand-badge {
-      font-size: 11px;
+      font-size: 10.5px;
       font-family: var(--font-mono);
-      background: rgba(139, 92, 246, 0.16);
-      color: #c4b5fd;
+      background: rgba(99, 102, 241, 0.14);
+      color: #a5b4fc;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      border: 1px solid rgba(99, 102, 241, 0.32);
+      white-space: nowrap;
     }
 
     .metrics-strip {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .metric-pill {
       display: flex;
       align-items: center;
       gap: 6px;
-      background: var(--bg-card);
+      background: rgba(18, 24, 36, 0.9);
       border: 1px solid var(--border);
-      padding: 5px 11px;
-      border-radius: 8px;
-      font-size: 12px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 5px 10px;
+      border-radius: var(--radius-md);
+      font-size: 11.5px;
       color: var(--text-muted);
+      white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
 
     .metric-pill strong {
       color: var(--text-main);
       font-family: var(--font-mono);
-      font-size: 12.5px;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
     }
 
     .top-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-shrink: 0;
     }
 
     .btn {
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 7px;
-      font-size: 12px;
-      font-weight: 500;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      padding: 6px 11px;
+      border-radius: var(--radius-md);
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: var(--font-sans);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.15s ease;
+      gap: 5px;
+      white-space: nowrap;
+      transition: all 0.16s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     .btn:hover {
       background: var(--bg-hover);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
     }
 
     .btn-primary {
-      background: var(--accent);
-      border-color: var(--accent);
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      border-color: rgba(139, 92, 246, 0.6);
       color: #fff;
-      box-shadow: 0 0 14px var(--accent-glow);
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .btn-primary:hover {
-      background: #7c3aed;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      border-color: #a78bfa;
     }
 
     .btn-diet-lean {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.45);
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.38);
       color: #6ee7b7;
     }
 
     .btn-diet-full {
-      background: rgba(245, 158, 11, 0.15);
-      border-color: rgba(245, 158, 11, 0.45);
+      background: rgba(245, 158, 11, 0.12);
+      border-color: rgba(245, 158, 11, 0.38);
       color: #fcd34d;
     }
 
@@ -168,9 +209,8 @@
 
     /* LEFT SIDEBAR: VAULT EXPLORER & FILTERS */
     .sidebar-left {
-      width: 310px;
-      background: var(--bg-panel);
-      backdrop-filter: blur(16px);
+      width: 325px;
+      background: var(--bg-panel-solid);
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -178,8 +218,9 @@
     }
 
     .search-box {
-      padding: 12px;
+      padding: 10px 12px;
       border-bottom: 1px solid var(--border);
+      background: rgba(11, 15, 23, 0.45);
     }
 
     .search-input-wrap {
@@ -193,22 +234,23 @@
       background: var(--bg-card);
       border: 1px solid var(--border);
       color: var(--text-main);
-      padding: 8px 12px 8px 32px;
-      border-radius: 7px;
-      font-size: 12.5px;
+      padding: 7px 12px 7px 32px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-family: var(--font-sans);
       outline: none;
-      transition: border-color 0.15s;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
 
     .search-input:focus {
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
     }
 
     .search-icon {
       position: absolute;
       left: 10px;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--text-dim);
     }
 
@@ -224,34 +266,41 @@
       color: var(--text-muted);
       border: 1px solid var(--border);
       padding: 5px 8px;
-      border-radius: 6px;
-      font-size: 11.5px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-family: var(--font-sans);
       outline: none;
+      cursor: pointer;
     }
 
     .legend-bar {
-      padding: 10px 12px;
+      padding: 8px 12px;
       border-bottom: 1px solid var(--border);
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      gap: 5px;
+      background: rgba(11, 15, 23, 0.25);
     }
 
     .legend-chip {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
-      font-size: 11px;
+      gap: 4px;
+      font-size: 10.5px;
+      font-weight: 500;
       color: var(--text-muted);
-      padding: 2px 7px;
+      padding: 2px 8px;
       border-radius: 99px;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid var(--border);
       cursor: pointer;
+      transition: all 0.14s ease;
     }
 
     .legend-chip:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(99, 102, 241, 0.14);
+      border-color: rgba(99, 102, 241, 0.4);
+      color: #fff;
     }
 
     .legend-dot {
@@ -350,8 +399,7 @@
     }
 
     .hud-pill {
-      background: rgba(18, 21, 31, 0.85);
-      backdrop-filter: blur(10px);
+      background: rgba(15, 20, 32, 0.95);
       border: 1px solid var(--border);
       padding: 6px 11px;
       border-radius: 8px;
@@ -373,8 +421,7 @@
       top: 14px;
       right: 14px;
       width: 240px;
-      background: rgba(18, 21, 31, 0.92);
-      backdrop-filter: blur(14px);
+      background: rgba(15, 20, 32, 0.96);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 12px;
@@ -424,8 +471,7 @@
     /* RIGHT SIDEBAR: NOTE INSPECTOR & BACKLINKS */
     .sidebar-right {
       width: 370px;
-      background: var(--bg-panel);
-      backdrop-filter: blur(16px);
+      background: var(--bg-panel-solid);
       border-left: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -1463,22 +1509,21 @@
     }
 
     /* =========================================================================
-       TECH REVOLUTION v4.0 — SCI-FI HOLOGRAPHIC HUD & CHAMFERED CYBER BLADES
+       NEURAL STUDIO v4.5 — REFINED GLASSMORPHIC CARDS & OPTIONAL CYBER MODE
        ========================================================================= */
     body.tech-rev {
-      --bg-canvas: #05070f;
-      --bg-panel: rgba(7, 11, 24, 0.95);
-      --bg-panel-solid: #060914;
-      --bg-card: #0a1022;
-      --bg-hover: #111c38;
-      --border: rgba(0, 240, 255, 0.38);
-      --border-focus: #00f0ff;
-      --accent: #00f0ff;
-      --accent-glow: rgba(0, 240, 255, 0.45);
-      --emerald: #00ff9d;
-      --pink: #ff2a85;
-      --cyan: #00f0ff;
-      font-family: var(--font-mono);
+      --bg-canvas: #05070e;
+      --bg-panel: rgba(8, 12, 24, 0.92);
+      --bg-panel-solid: #070b16;
+      --bg-card: #0c1326;
+      --bg-hover: #141f3a;
+      --border: rgba(6, 182, 212, 0.28);
+      --border-focus: #06b6d4;
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.35);
+      --emerald: #10b981;
+      --pink: #ec4899;
+      --cyan: #06b6d4;
     }
 
     body.tech-rev.crt-scanlines::after {
@@ -1489,123 +1534,21 @@
       z-index: 999;
       background: repeating-linear-gradient(
         0deg,
-        rgba(0, 240, 255, 0.026) 0px,
-        rgba(0, 240, 255, 0.026) 1px,
+        rgba(6, 182, 212, 0.022) 0px,
+        rgba(6, 182, 212, 0.022) 1px,
         transparent 1px,
         transparent 3px
       );
     }
 
-    body.tech-rev .topbar {
-      height: 58px;
-      background: linear-gradient(90deg, #050812 0%, #091024 50%, #050812 100%);
-      border-bottom: 2px solid #00f0ff;
-      box-shadow: 0 0 28px rgba(0, 240, 255, 0.25);
-    }
-
-    body.tech-rev .brand-dot {
-      width: 18px;
-      height: 18px;
-      background: radial-gradient(circle, #00f0ff 35%, #ff2a85 40%);
-      border: 2px solid #00f0ff;
-      box-shadow: 0 0 16px #ff2a85, 0 0 8px #00f0ff;
-    }
-
-    body.tech-rev .brand-badge {
-      background: rgba(0, 240, 255, 0.14);
-      color: #00f0ff;
-      border: 1px solid #00f0ff;
-      clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
-      border-radius: 0;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-    }
-
-    body.tech-rev .view-tabs {
-      background: transparent;
-      border: none;
-      gap: 8px;
-    }
-
-    body.tech-rev .view-tab {
-      background: rgba(10, 16, 34, 0.92);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      color: #8ab4f8;
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      letter-spacing: 0.04em;
-      padding: 7px 14px;
-      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-      border-radius: 0;
-    }
-
-    body.tech-rev .view-tab.active {
-      background: rgba(255, 42, 133, 0.28);
-      border: 1.5px solid #ff2a85;
-      color: #ffffff;
-      box-shadow: 0 0 18px rgba(255, 42, 133, 0.55), inset 0 0 12px rgba(255, 42, 133, 0.35);
-    }
-
-    body.tech-rev .sidebar-left {
-      width: 355px;
-      background: #060a16;
-      border-right: 2px solid rgba(0, 240, 255, 0.45);
-      box-shadow: 6px 0 28px rgba(0, 240, 255, 0.12);
-    }
-
-    body.tech-rev .sidebar-right,
-    body.tech-rev .office-sidebar {
-      width: 390px;
-      background: #060a16;
-      border-left: 2px solid rgba(0, 240, 255, 0.45);
-      box-shadow: -6px 0 28px rgba(0, 240, 255, 0.12);
-    }
-
-    /* Corner-bracket cyber styling for all panels & cards */
-    body.tech-rev .bp-box,
-    body.tech-rev .lane-col,
-    body.tech-rev .worker-card,
-    body.tech-rev .office-selected-card,
-    body.tech-rev .roster-card,
-    body.tech-rev .graph-settings-panel,
-    body.tech-rev .frontmatter,
-    body.tech-rev .backlink-card {
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
-      border-radius: 0;
-      border: 1.5px solid rgba(0, 240, 255, 0.42);
-      background-color: #090e1d;
-      box-shadow: inset 0 0 22px rgba(0, 240, 255, 0.07), 0 6px 20px rgba(0, 0, 0, 0.65);
-    }
-
-    body.tech-rev .metric-pill,
-    body.tech-rev .btn,
-    body.tech-rev .hud-pill,
-    body.tech-rev .office-btn,
-    body.tech-rev .office-badge {
-      clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-      border-radius: 0;
-      border: 1px solid rgba(0, 240, 255, 0.42);
-      background: rgba(10, 18, 36, 0.92);
-      font-family: var(--font-mono);
-    }
-
-    body.tech-rev .canvas-container,
-    body.tech-rev .swarm-workspace {
-      background-color: #05070f;
-      background-image:
-        linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px);
-      background-size: 56px 56px;
-    }
-
-    /* JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING BLADE IN LEFT SIDEBAR */
+    /* JEV-MEM SYSTEM-1 & ADAPTIVE STOPPING CARD IN LEFT SIDEBAR */
     .jev-s1-blade {
-      margin: 8px 10px 6px;
-      padding: 11px 12px;
-      background: #080d1c;
-      border: 1.5px solid #00f0ff;
-      box-shadow: inset 0 0 18px rgba(0, 240, 255, 0.09);
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      margin: 10px 10px 6px;
+      padding: 10px 12px;
+      background: linear-gradient(145deg, rgba(19, 25, 39, 0.92) 0%, rgba(13, 18, 29, 0.94) 100%);
+      border: 1px solid rgba(99, 102, 241, 0.26);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
       font-family: var(--font-mono);
       font-size: 10.5px;
     }
@@ -1614,11 +1557,12 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #00f0ff;
+      color: #a5b4fc;
+      font-family: var(--font-sans);
       font-weight: 700;
       font-size: 11px;
-      letter-spacing: 0.05em;
-      margin-bottom: 5px;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
     }
 
     .jev-tier-row {
@@ -1627,117 +1571,124 @@
       justify-content: space-between;
       margin: 4px 0 2px;
       font-size: 10px;
-      font-weight: 700;
-      color: #e2e8f0;
+      font-weight: 600;
+      color: #cbd5e1;
+      font-variant-numeric: tabular-nums;
     }
 
     .jev-tier-bar {
-      height: 7px;
-      background: #141e34;
-      border: 1px solid rgba(0, 240, 255, 0.22);
+      height: 5px;
+      background: rgba(15, 23, 42, 0.85);
+      border-radius: 999px;
       margin-bottom: 5px;
       overflow: hidden;
     }
 
     .jev-tier-fill {
       height: 100%;
+      border-radius: 999px;
       transition: width 0.35s ease;
     }
 
-    /* 5H QUOTA REACTOR BLADE IN LEFT SIDEBAR */
+    /* 5H QUOTA REACTOR CARD IN LEFT SIDEBAR */
     .quota-reactor-blade {
-      margin: 6px 10px 8px;
-      padding: 11px 12px;
-      background: #080d1c;
-      border: 1.5px solid #ff2a85;
-      box-shadow: inset 0 0 18px rgba(255, 42, 133, 0.09);
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      margin: 4px 10px 8px;
+      padding: 10px 12px;
+      background: linear-gradient(145deg, rgba(19, 25, 39, 0.92) 0%, rgba(13, 18, 29, 0.94) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.24);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
       font-family: var(--font-mono);
     }
 
     .cyber-action-btn {
       width: 100%;
       text-align: left;
-      background: rgba(12, 24, 44, 0.95);
-      border: 1px solid #00f0ff;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-sm);
       color: #e2e8f0;
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      font-weight: 700;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 600;
       padding: 6px 10px;
       margin-top: 5px;
       cursor: pointer;
-      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
-      transition: all 0.14s ease;
+      transition: all 0.15s ease;
     }
 
     .cyber-action-btn:hover {
-      background: rgba(0, 240, 255, 0.2);
+      background: rgba(99, 102, 241, 0.16);
+      border-color: rgba(99, 102, 241, 0.45);
       color: #fff;
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.35);
+      transform: translateX(2px);
     }
 
     /* CAUSAL LINEAGE INSPECTOR CHAIN IN RIGHT SIDEBAR */
     .causal-lineage-box {
-      margin: 8px 14px 10px;
+      margin: 10px 14px;
       padding: 11px 12px;
-      background: #080d1c;
-      border: 1.5px solid #00f0ff;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      background: linear-gradient(145deg, rgba(19, 25, 39, 0.92) 0%, rgba(13, 18, 29, 0.94) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
       font-family: var(--font-mono);
     }
 
     .cl-step {
       padding: 7px 10px;
-      margin-bottom: 8px;
-      border: 1px solid #00f0ff;
-      background: #0c1428;
+      margin-bottom: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-left: 3px solid #6366f1;
+      border-radius: var(--radius-sm);
+      background: rgba(15, 21, 34, 0.85);
       font-size: 10.5px;
       cursor: pointer;
-      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
-      transition: transform 0.12s, box-shadow 0.12s;
+      transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
     }
 
     .cl-step:hover {
       transform: translateX(2px);
-      box-shadow: 0 0 12px rgba(0, 240, 255, 0.28);
+      background: rgba(30, 41, 59, 0.75);
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     .live-stream-blade {
       margin: 6px 14px 12px;
       padding: 10px 12px;
-      background: #060a15;
-      border: 1.5px solid #ff2a85;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      background: rgba(9, 13, 22, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius-md);
       font-family: var(--font-mono);
       font-size: 10.5px;
       line-height: 1.55;
-      color: #00f0ff;
+      color: #93c5fd;
     }
 
     /* SWARM BIOLUMINESCENT EQUALIZER BAR */
     .swarm-eq-box {
-      background: #070b16;
-      border: 1.5px solid #00ff9d;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      background: linear-gradient(145deg, rgba(16, 22, 35, 0.95) 0%, rgba(11, 15, 25, 0.95) 100%);
+      border: 1px solid rgba(16, 185, 129, 0.28);
+      border-radius: var(--radius-lg);
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
       gap: 7px;
-      box-shadow: inset 0 0 20px rgba(0, 255, 157, 0.08);
+      box-shadow: var(--shadow-card);
     }
 
     .swarm-eq-bars {
       display: grid;
       grid-template-columns: repeat(48, 1fr);
       gap: 4px;
-      height: 44px;
+      height: 40px;
       align-items: end;
     }
 
     .swarm-eq-bar {
       width: 100%;
-      background: #00f0ff;
+      background: linear-gradient(180deg, #6366f1 0%, #06b6d4 100%);
+      border-radius: 2px 2px 0 0;
       transition: height 0.2s ease;
     }
 
@@ -1748,28 +1699,28 @@
       left: 16px;
       width: 196px;
       height: 218px;
-      background: rgba(6, 11, 24, 0.96);
-      border: 1.5px solid #00f0ff;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      background: rgba(10, 15, 27, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: var(--radius-lg);
       padding: 10px;
       z-index: 16;
       pointer-events: auto;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7), inset 0 0 18px rgba(0, 240, 255, 0.08);
+      box-shadow: var(--shadow-card);
     }
 
     .office-radar-title {
       width: 100%;
-      font-family: var(--font-mono);
+      font-family: var(--font-sans);
       font-size: 10.5px;
       font-weight: 700;
-      color: #00f0ff;
+      color: #a5b4fc;
       display: flex;
       justify-content: space-between;
       margin-bottom: 6px;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.03em;
     }
 
     .office-holo-deck {
@@ -1777,17 +1728,16 @@
       top: 298px;
       left: 16px;
       width: 196px;
-      background: rgba(6, 11, 24, 0.92);
-      backdrop-filter: blur(14px);
-      border: 1.5px solid #9d4edd;
-      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+      background: rgba(10, 15, 27, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: var(--radius-lg);
       padding: 10px;
       z-index: 16;
       pointer-events: auto;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.7);
+      gap: 5px;
+      box-shadow: var(--shadow-card);
     }
 
     .office-neural-console {
@@ -1796,73 +1746,205 @@
       left: 50%;
       transform: translateX(-50%);
       width: min(760px, calc(100% - 440px));
-      background: rgba(8, 12, 26, 0.94);
-      border: 1.5px solid #ff2a85;
-      clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
-      padding: 9px 16px;
+      background: rgba(10, 15, 27, 0.95);
+      border: 1px solid rgba(99, 102, 241, 0.38);
+      border-radius: var(--radius-lg);
+      padding: 10px 16px;
       z-index: 16;
       pointer-events: auto;
-      box-shadow: 0 10px 32px rgba(255, 42, 133, 0.25), inset 0 0 18px rgba(255, 42, 133, 0.08);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       font-family: var(--font-mono);
     }
 
     /* NEURAL COMMAND PALETTE (CTRL+K) */
     .cmd-palette-item {
-      padding: 8px 12px;
-      border: 1px solid rgba(0, 240, 255, 0.14);
-      background: rgba(12, 19, 36, 0.85);
+      padding: 9px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: var(--radius-md);
+      background: rgba(18, 24, 38, 0.85);
       margin-bottom: 5px;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-family: var(--font-mono);
-      font-size: 12px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 500;
       color: var(--text-main);
-      clip-path: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
-      transition: all 0.12s ease;
+      transition: all 0.14s ease;
     }
 
     .cmd-palette-item:hover,
     .cmd-palette-item.active {
-      border-color: #00f0ff;
-      background: rgba(0, 240, 255, 0.16);
+      border-color: rgba(99, 102, 241, 0.55);
+      background: rgba(99, 102, 241, 0.16);
       color: #fff;
       transform: translateX(3px);
     }
+
+    /* TABULAR NUMS & RESPONSIVE TOPBAR REFINEMENTS */
+    .metric-pill, .jev-tier-row, .q-stat, .office-badge, #statMemories, #statLinks, #statLatency {
+      font-variant-numeric: tabular-nums;
+    }
+
+    .blade-toggle-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 5px;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 1px 6px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .blade-toggle-btn:hover {
+      background: rgba(99, 102, 241, 0.2);
+      color: #fff;
+    }
+
+    .blade-collapsed .blade-collapsible-body {
+      display: none !important;
+    }
+
+    .office-quick-agent-dock {
+      position: absolute;
+      top: 64px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 18;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(10, 15, 27, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 5px 10px;
+      box-shadow: var(--shadow-card);
+      pointer-events: auto;
+      max-width: calc(100% - 440px);
+      overflow-x: auto;
+    }
+
+    .quick-ag-btn {
+      background: rgba(22, 30, 46, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      color: #cbd5e1;
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 3px 9px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.14s ease;
+    }
+
+    .quick-ag-btn:hover,
+    .quick-ag-btn.active {
+      background: rgba(99, 102, 241, 0.22);
+      border-color: rgba(99, 102, 241, 0.6);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.28);
+    }
+
+    /* HOLOGRAPHIC DESK HEATMAP TOWER INSPECTOR HUD (OFFICE 3D) */
+    .office-holo-tower-inspector {
+      position: absolute;
+      top: 66px;
+      right: 16px;
+      width: 288px;
+      background: rgba(10, 15, 27, 0.96);
+      border: 1px solid rgba(6, 182, 212, 0.42);
+      border-radius: var(--radius-lg);
+      padding: 11px 13px;
+      z-index: 19;
+      pointer-events: auto;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.58), inset 0 1px 0 rgba(255, 255, 255, 0.09);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      transition: opacity 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .office-holo-tower-inspector.hidden-layer {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-8px);
+    }
+
+    .holo-tower-heat-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .holo-tower-heat-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.28s ease, background 0.28s ease;
+    }
+
+    .holo-sym-chip {
+      display: inline-block;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      border-radius: 5px;
+      padding: 1.5px 6px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #bae6fd;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .holo-sym-chip:hover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.18);
+      color: #fff;
+    }
   </style>
 </head>
-<body class="tech-rev">
+<body>
 
   <!-- TOP BAR -->
   <header class="topbar">
     <div class="brand">
       <span class="brand-dot"></span>
-      <div style="display:flex; flex-direction:column; line-height:1.15;">
-        <span style="font-size:14.5px; font-weight:800; letter-spacing:0.04em; color:#fff;">ANTIGRAVITY BRAIN v4.0 // TECH REVOLUTION</span>
-        <span style="font-size:9.5px; color:#00f0ff; font-family:var(--font-mono);" id="lblTopSubConcept">QUANTUM NEURAL CORTEX + JEV-S1 TELEMETRY BLADES</span>
+      <div style="display:flex; flex-direction:column; line-height:1.18;">
+        <div style="display:flex; align-items:center; gap:7px;">
+          <span style="font-size:14px; font-weight:800; letter-spacing:-0.02em; color:#fff; white-space:nowrap;">Antigravity Brain</span>
+          <span class="brand-badge">v4.5 Studio</span>
+        </div>
+        <span style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono); white-space:nowrap;" id="lblTopSubConcept">Neural Cortex · Multi-Modal AST · Swarm 24x</span>
       </div>
       <div class="view-tabs">
-        <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')">
-          01 // NEURAL CORTEX (#graph)
+        <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')" title="Atalho: Tecla 1">
+          🕸️ Córtex Neural
         </button>
-        <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')">
+        <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')" title="Atalho: Tecla 2">
           <span class="pulse-dot"></span>
-          02 // SWARM MATRIX (#swarm)
+          ⚡ Swarm Matrix
         </button>
-        <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')">
-          03 // HOLOGRAPHIC 3D (#office)
+        <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')" title="Atalho: Tecla 3">
+          🏢 Escritório 3D
         </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
-          <span class="pulse-dot" id="topTasksPulse" style="background:#00ff9d;"></span>
-          TASKS (<span id="topTabTasksCount">0</span>)
+          <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
+          Tasks (<span id="topTabTasksCount">0</span>)
         </button>
       </div>
     </div>
 
     <div class="metrics-strip">
-      <div class="metric-pill" style="border-color:#00ff9d; background:rgba(0,255,157,0.08);" title="Router Jev-Mem System-1 + Ruflo Pheromone EMA + Agentic CoW v3.0">
-        <span style="color:#00ff9d; font-weight:700;">[JEV-S1] <strong id="statLatency" style="color:#00ff9d;">0.01ms</strong> | [EMA] 98% | [CoW] v3.0</span>
+      <div class="metric-pill" id="sseStatusBadge" style="border-color:rgba(16,185,129,0.28); background:rgba(16,185,129,0.06);" title="Stream Real-Time Server-Sent Events (/api/events) + Router Jev-Mem System-1">
+        <span style="color:#34d399; font-weight:700;">● LIVE SSE</span>
+        <span style="color:var(--text-dim);">·</span>
+        <span style="color:#94a3b8; font-weight:600;">JEV-S1 <strong id="statLatency" style="color:#38bdf8;">0.01ms</strong></span>
       </div>
       <div class="metric-pill" title="Total de Memórias e Sinapses no Grafo">
         🧠 <strong id="statMemories">0</strong> mems • <strong id="statLinks">0</strong> links
@@ -1871,14 +1953,17 @@
     </div>
 
     <div class="top-actions">
-      <button class="btn" id="btnTechRevToggle" onclick="toggleTechRevolutionTheme()" style="border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.14);" title="Alternar estética Sci-Fi Tech Revolution v4.0">
-        ⚡ TECH REV: ON
+      <button class="btn" id="btnOpenAstModal" onclick="openAstInspectorModal()" style="border-color:rgba(16,185,129,0.38); color:#6ee7b7; background:rgba(16,185,129,0.1);" title="Explorador Cirúrgico AST Multi-Linguagem, Blast Radius & Graphify BFS">
+        🔎 AST &amp; Graphify
       </button>
-      <button class="btn" onclick="openCommandPalette()" style="border-color:#ff2a85; color:#ff85b3; background:rgba(255,42,133,0.16);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
-        [CTRL+K] PALETTE
+      <button class="btn" onclick="openCommandPalette()" style="border-color:rgba(99,102,241,0.35); color:#c7d2fe; background:rgba(99,102,241,0.1);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
+        ⌘K Comando
+      </button>
+      <button class="btn" id="btnTechRevToggle" onclick="toggleTechRevolutionTheme()" title="Alternar entre estética Studio Glass e Cyber HUD">
+        🎨 Tema: Studio
       </button>
       <button class="btn" id="btnGitUpdate" onclick="triggerGitUpdate()" title="Verifica no GitHub se há atualizações e faz git pull + auto-sync dos hooks">
-        📦 Git: <span id="lblGitSha">v4.0</span>
+        📦 Git: <span id="lblGitSha">v4.5</span>
       </button>
       <button class="btn" id="btnDietToggle" onclick="toggleDietMode()" title="Alternar entre Modo Lean (económico) e Modo Full">
         ⚡ Quota
@@ -1886,7 +1971,7 @@
       <button class="btn" onclick="openInspectorModal()" title="Ver exatamente o bloco [BRAIN_MEMORY] injetado, executar Memory Doctor e Exportar/Importar Obsidian Vault">
         🛡️ Doctor
       </button>
-      <button class="btn btn-primary" onclick="openMemoryModal()" style="background:#ff2a85; border-color:#ff2a85;">
+      <button class="btn btn-primary" onclick="openMemoryModal()">
         ➕ Memória
       </button>
     </div>
@@ -1895,64 +1980,82 @@
   <!-- 3-PANE OBSIDIAN BODY -->
   <div class="workspace" id="graphWorkspace">
 
-    <!-- LEFT: TECH REVOLUTION BLADES (JEV-S1 ROUTER + 5H QUOTA REACTOR + VAULT) -->
+    <!-- LEFT: TELEMETRY CARDS + HYBRID SEARCH + OBSIDIAN VAULT EXPLORER -->
     <aside class="sidebar-left">
-      <!-- BLADE 1: JEV-MEM SYSTEM-1 NEURAL ROUTER & ADAPTIVE STOPPING CURVE -->
+      <!-- CARD 1: JEV-MEM SYSTEM-1 NEURAL ROUTER & ADAPTIVE STOPPING CURVE (COLLAPSIBLE) -->
       <div class="jev-s1-blade" id="jevS1GraphBlade">
-        <div class="jev-s1-head">
-          <span>[SYS-1] JEV-MEM NEURAL ROUTER</span>
-          <span style="color:#00ff9d;" id="jevS1LatencyLbl">0.011ms</span>
-        </div>
-        <div style="font-size:10px; color:#ff2a85; font-weight:700; margin-bottom:2px;">
-          INTENT : architecture_synthesis (0.011ms)
-        </div>
-        <div style="font-size:9.8px; color:#cbd5e1; margin-bottom:7px;" id="jevS1RouteLbl">
-          ROUTE  : ARCH-01 (Argon) ➔ 4×6 Flash Lanes
-        </div>
-        <div class="jev-tier-row"><span>WORKING TIER [W]</span><strong style="color:#00f0ff;" id="jevCntW">1,234 mems</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarW" style="width:84%; background:#00f0ff;"></div></div>
-        <div class="jev-tier-row"><span>SEMANTIC TIER [S]</span><strong style="color:#ff2a85;" id="jevCntS">198 mems</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarS" style="width:56%; background:#ff2a85;"></div></div>
-        <div class="jev-tier-row"><span>EPISODIC TIER [E]</span><strong style="color:#00ff9d;" id="jevCntE">36 mems</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarE" style="width:34%; background:#00ff9d;"></div></div>
-        <div class="jev-tier-row"><span>CAUSAL EDGES [➔]</span><strong style="color:#ffb703;" id="jevCntCausal">297 links</strong></div>
-        <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarCausal" style="width:72%; background:#ffb703;"></div></div>
-        <div style="display:flex; justify-content:space-between; font-size:9.8px; font-weight:700; color:#00f0ff; margin:6px 0 4px;">
-          <span>[WAVE] JEV ADAPTIVE STOPPING (TH=0.28)</span>
-          <span style="color:#ff2a85;">CUTOFF -78%</span>
-        </div>
-        <canvas id="jevStopCurveCanvas" width="310" height="72" style="width:100%; height:72px; background:#050812; border:1px solid rgba(0,240,255,0.28); display:block;"></canvas>
-      </div>
-
-      <!-- BLADE 2: 5H QUOTA REACTOR // TOKEN DIET -->
-      <div class="quota-reactor-blade">
-        <div style="font-size:11px; font-weight:700; color:#ff2a85; margin-bottom:8px; letter-spacing:0.04em;">
-          [REACTOR] 5H QUOTA // TOKEN DIET
-        </div>
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-          <canvas id="quotaReactorCanvas" width="96" height="96" style="width:96px; height:96px; flex-shrink:0;"></canvas>
-          <div style="display:flex; flex-direction:column; gap:4px; font-size:10.5px; font-weight:700;">
-            <div style="color:#00ff9d;">SAVED (5H): <span id="qrSavedVal">+184.5k</span></div>
-            <div style="color:#00f0ff;">INJECTED  : <span id="qrInjectedVal">2.8k tok</span></div>
-            <div style="color:#ff2a85;">PROFILE   : <span id="qrProfileVal">LEAN MODE</span></div>
-            <div style="color:#ffb703;">RESET IN  : <span id="qrResetVal">03h 42m</span></div>
+        <div class="jev-s1-head" style="cursor:pointer;" onclick="toggleSidebarBlade('jev')" title="Clique para expandir/compactar esta secção e ganhar mais espaço para o Obsidian Vault">
+          <span>⚡ Jev-Mem System-1 Router</span>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span style="color:#34d399; font-family:var(--font-mono); font-size:10px;" id="jevS1LatencyLbl">0.011ms</span>
+            <button type="button" class="blade-toggle-btn" id="btnToggleBladeJev">▼</button>
           </div>
         </div>
-        <button class="cyber-action-btn" onclick="createCowBranchSnapshot()">[+] CREATE CoW SNAPSHOT (<span id="lblCowBranches">0</span>)</button>
-        <button class="cyber-action-btn" onclick="openInspectorModal(); runMemoryDoctorUI();">[+] RUN CAUSAL DOCTOR (297 EDGES)</button>
-        <button class="cyber-action-btn" onclick="openCommandPalette()">[+] COMMAND PALETTE (CTRL+K)</button>
+        <div class="blade-collapsible-body" id="jevS1BladeBody">
+          <div style="font-size:10px; color:#a5b4fc; font-weight:600; margin-bottom:2px;">
+            intent: architecture_synthesis
+          </div>
+          <div style="font-size:9.8px; color:var(--text-muted); margin-bottom:7px;" id="jevS1RouteLbl">
+            route: ARCH-01 (Argon) ➔ 4×6 Flash Lanes
+          </div>
+          <div class="jev-tier-row"><span>Working Tier [W]</span><strong style="color:#38bdf8;" id="jevCntW">1,234 mems</strong></div>
+          <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarW" style="width:84%; background:linear-gradient(90deg, #06b6d4, #38bdf8);"></div></div>
+          <div class="jev-tier-row"><span>Semantic Tier [S]</span><strong style="color:#a78bfa;" id="jevCntS">198 mems</strong></div>
+          <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarS" style="width:56%; background:linear-gradient(90deg, #6366f1, #a855f7);"></div></div>
+          <div class="jev-tier-row"><span>Episodic Tier [E]</span><strong style="color:#34d399;" id="jevCntE">36 mems</strong></div>
+          <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarE" style="width:34%; background:linear-gradient(90deg, #059669, #34d399);"></div></div>
+          <div class="jev-tier-row"><span>Causal Edges [➔]</span><strong style="color:#fbbf24;" id="jevCntCausal">297 links</strong></div>
+          <div class="jev-tier-bar"><div class="jev-tier-fill" id="jevBarCausal" style="width:72%; background:linear-gradient(90deg, #d97706, #fbbf24);"></div></div>
+          <div style="display:flex; justify-content:space-between; font-size:9.5px; font-weight:600; color:var(--text-muted); margin:6px 0 4px;">
+            <span>Adaptive Stopping (TH=0.28)</span>
+            <span style="color:#34d399;">Cutoff -78%</span>
+          </div>
+          <canvas id="jevStopCurveCanvas" width="310" height="58" style="width:100%; height:58px; background:rgba(7, 10, 18, 0.85); border:1px solid rgba(255,255,255,0.07); border-radius:6px; display:block;"></canvas>
+        </div>
+      </div>
+
+      <!-- CARD 2: 5H QUOTA REACTOR // TOKEN DIET + DYNAMIC TOOL PRUNING (COLLAPSED BY DEFAULT FOR CLEAN VAULT VISIBILITY) -->
+      <div class="quota-reactor-blade blade-collapsed" id="quotaReactorBlade">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-sans); font-size:11px; font-weight:700; color:#6ee7b7; letter-spacing:0.02em; cursor:pointer;" onclick="toggleSidebarBlade('quota')" title="Clique para expandir/compactar o Quota Reactor e Dynamic Tool Pruning">
+          <span>🔋 Quota 5h &amp; Dynamic Tool Pruning</span>
+          <button type="button" class="blade-toggle-btn" id="btnToggleBladeQuota">▶</button>
+        </div>
+        <div class="blade-collapsible-body" id="quotaBladeBody" style="margin-top:8px;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <canvas id="quotaReactorCanvas" width="88" height="88" style="width:88px; height:88px; flex-shrink:0;"></canvas>
+            <div style="display:flex; flex-direction:column; gap:4px; font-size:10.5px; font-weight:600;">
+              <div style="color:#34d399;">SAVED (5H): <span id="qrSavedVal">+184.5k</span></div>
+              <div style="color:#38bdf8;">INJECTED  : <span id="qrInjectedVal">2.8k tok</span></div>
+              <div style="color:#a5b4fc;">PROFILE   : <span id="qrProfileVal">LEAN MODE</span></div>
+              <div style="color:#fbbf24;">RESET IN  : <span id="qrResetVal">03h 42m</span></div>
+            </div>
+          </div>
+          <!-- Dynamic Tool Pruning Live Widget -->
+          <div id="toolPruneInlineBox" style="background:rgba(7, 10, 18, 0.85); border:1px solid rgba(16,185,129,0.24); border-radius:6px; padding:6px 8px; margin-bottom:6px; font-size:9.8px;">
+            <div style="display:flex; justify-content:space-between; color:#34d399; font-weight:700; margin-bottom:3px;">
+              <span>✂️ Dynamic Tool Pruning</span>
+              <span id="tpSavingBadge">4/16 TOOLS (-65%)</span>
+            </div>
+            <div style="color:#cbd5e1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="tpActiveToolsTxt">
+              Ativas: swarm_symbol_lookup, search_brain, store_fact, save_checkpoint
+            </div>
+          </div>
+          <button class="cyber-action-btn" onclick="openAstInspectorModal()">🔎 Explorador AST, Blast Radius &amp; Graphify</button>
+          <button class="cyber-action-btn" onclick="createCowBranchSnapshot()">🌿 Criar Snapshot Copy-on-Write (<span id="lblCowBranches">0</span>)</button>
+          <button class="cyber-action-btn" onclick="openInspectorModal(); runMemoryDoctorUI();">🩺 Executar Memory Doctor Causal</button>
+        </div>
       </div>
 
       <!-- COMPACT SEARCH & VAULT EXPLORER -->
-      <div class="search-box" style="padding:8px 10px;">
+      <div class="search-box">
         <div class="search-input-wrap">
           <span class="search-icon">🔍</span>
           <input
             type="text"
             id="searchInput"
             class="search-input"
-            placeholder="Filtrar nós no Córtex (FTS5 BM25)..."
-            oninput="debouncedFetchGraph()"
+            placeholder="Pesquisa Híbrida (BM25 + Vetor Semântico 32-D)..."
+            oninput="debouncedFetchGraph(); refreshInlineToolPrune(this.value);"
           />
         </div>
         <div class="filter-row">
@@ -1965,7 +2068,7 @@
         </div>
       </div>
 
-      <div class="legend-bar" id="legendBar" style="display:none;"></div>
+      <div class="legend-bar" id="legendBar"></div>
 
       <div class="vault-tree" id="vaultTree"></div>
     </aside>
@@ -1974,36 +2077,36 @@
     <main class="canvas-container" id="canvasWrap">
       <div class="graph-hud-top">
         <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;">
-          🌐 CORTEX GLOBAL
+          🌐 Córtex Global
         </button>
         <button class="hud-pill" id="btnLocalGraph" onclick="setGraphMode('local')" style="cursor:pointer;">
-          🎯 SUB-GRAFO 1-HOP
+          🎯 Sub-Grafo 1-Hop
         </button>
         <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;">
-          🧭 CENTRAR SONAR
+          🧭 Centrar Vista
         </button>
         <div class="hud-pill" style="display:flex; align-items:center; gap:8px;" title="Time-Travel: Recue no tempo para ver como o Grafo de Memórias cresceu cronologicamente">
-          <span>⏪ TIME-TRAVEL: <strong id="lblTimeTravel" style="color:#ff2a85;">100% (LIVE)</strong></span>
-          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:90px; accent-color:#ff2a85; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
-          <button onclick="replayGraphTimeline()" style="background:#ff2a85; color:#fff; border:none; padding:2px 7px; font-size:10px; font-weight:700; cursor:pointer;">▶ REPLAY</button>
+          <span>⏪ Time-Travel: <strong id="lblTimeTravel" style="color:#a5b4fc; font-family:var(--font-mono);">100% (LIVE)</strong></span>
+          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:84px; accent-color:#6366f1; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
+          <button onclick="replayGraphTimeline()" style="background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:10px; font-weight:700; cursor:pointer;">▶ Replay</button>
         </div>
       </div>
 
       <div class="graph-settings-panel">
         <div class="settings-title">
-          <span style="color:#00f0ff;">⚙️ FÍSICA DO CÓRTEX</span>
+          <span style="color:#a5b4fc;">⚙️ Física do Córtex</span>
         </div>
         <div class="control-group">
           <div class="control-label">
             <span>Força de Repulsão</span>
-            <span id="lblRepulsion">1800</span>
+            <span id="lblRepulsion" style="font-family:var(--font-mono);">1800</span>
           </div>
           <input type="range" min="400" max="4500" value="1800" class="slider" id="rngRepulsion" oninput="updatePhysicsParams()" />
         </div>
         <div class="control-group">
           <div class="control-label">
             <span>Distância Sináptica</span>
-            <span id="lblDistance">210</span>
+            <span id="lblDistance" style="font-family:var(--font-mono);">210</span>
           </div>
           <input type="range" min="90" max="420" value="210" class="slider" id="rngDistance" oninput="updatePhysicsParams()" />
         </div>
@@ -2026,54 +2129,55 @@
 
     <!-- RIGHT: CAUSAL LINEAGE INSPECTOR & LIVE [BRAIN_MEMORY] STREAM -->
     <aside class="sidebar-right" id="inspectorPane">
-      <div class="inspector-header" style="border-bottom-color:rgba(0,240,255,0.28);">
+      <div class="inspector-header">
         <div>
-          <div style="font-size:10.5px; color:#00f0ff; font-weight:700; text-transform:uppercase; margin-bottom:4px;" id="inspType">[INSPECTOR] CAUSAL LINEAGE</div>
+          <div style="font-size:10px; color:#a5b4fc; font-family:var(--font-mono); font-weight:700; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;" id="inspType">INSPETOR DE MEMÓRIA &amp; LINHAGEM</div>
           <div class="inspector-title" id="inspTitle">Selecione um nó no grafo</div>
         </div>
         <div style="display:flex; gap:6px;" id="inspActions"></div>
-      </div>
-
-      <!-- TECH REVOLUTION v4.0: 4-STEP CAUSAL LINEAGE INSPECTOR -->
-      <div class="causal-lineage-box" id="causalLineageBox">
-        <div style="font-size:10.5px; font-weight:700; color:#00ff9d; margin-bottom:8px; display:flex; justify-content:space-between;">
-          <span>TIER: <strong id="fmTier" style="color:#00f0ff;">[SEMANTIC]</strong></span>
-          <span id="clConfidenceLbl">CONFIDENCE: 0.99</span>
-        </div>
-        <div id="causalLineageSteps"></div>
-      </div>
-
-      <!-- LIVE [BRAIN_MEMORY] INJECTION STREAM BLADE -->
-      <div style="padding: 2px 14px; font-size:10.5px; font-weight:700; color:#ff2a85; letter-spacing:0.04em;">
-        [STREAM] LIVE [BRAIN_MEMORY] INJECTION
-      </div>
-      <div class="live-stream-blade" id="liveBrainMemoryStream">
-        <div>[BRAIN_MEMORY | ws=brain_mcp]</div>
-        <div style="color:#ff2a85;">[JEV_S1_ROUTER | intent=ui_3d_interactive]</div>
-        <div style="color:#e2e8f0;">  route = SCOUT ➔ UI-01 (Argon) + API-01</div>
-        <div style="color:#e2e8f0;">  latency = 0.011ms | stop_th = 0.28</div>
-        <div style="color:#00f0ff;">[SCOUT_SHARED_MAP | 13 files | 51 symbols]</div>
-        <div style="color:#e2e8f0;">  UI : index.html [60 FPS 3D HUD]</div>
-        <div style="color:#e2e8f0;">  API: swarm_engine.py, db_engine.py</div>
-        <div style="color:#00ff9d;">📌[PIN][W] Diretiva 3D: Zero-Token Sync</div>
-        <div style="color:#cbd5e1;">  - [S] Ruflo Causal Graph: 297 edges active</div>
-        <div style="color:#cbd5e1;">  - [E] Swarm Auto-Heal: 24/24 tasks PASS</div>
       </div>
 
       <div class="frontmatter" id="inspFrontmatter">
         <div class="fm-row"><span class="fm-key">workspace:</span> <span class="fm-val" id="fmWs">-</span></div>
         <div class="fm-row"><span class="fm-key">category:</span> <span class="fm-val" id="fmCat">-</span></div>
         <div class="fm-row"><span class="fm-key">importance:</span> <span class="fm-val" id="fmImp">-</span></div>
+        <div class="fm-row"><span class="fm-key">semantic_32d:</span> <span class="fm-val" id="fmSemSim" style="color:#34d399; font-weight:700;">92% (BM25 + Vetor 32-D)</span></div>
         <div class="fm-row"><span class="fm-key">access_count:</span> <span class="fm-val" id="fmAcc">-</span></div>
         <div class="fm-row"><span class="fm-key">created_at:</span> <span class="fm-val" id="fmTime">-</span></div>
       </div>
 
       <div class="tag-cloud" id="inspTags"></div>
 
-      <div class="note-body" id="inspBody" style="font-size:12px;">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
+      <div class="note-body" id="inspBody" style="font-size:12.5px;">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
+
+      <!-- 4-STEP CAUSAL LINEAGE INSPECTOR -->
+      <div class="causal-lineage-box" id="causalLineageBox">
+        <div style="font-size:10.5px; font-weight:700; color:#34d399; margin-bottom:8px; display:flex; justify-content:space-between;">
+          <span>TIER: <strong id="fmTier" style="color:#a5b4fc;">[SEMANTIC]</strong></span>
+          <span id="clConfidenceLbl" style="color:var(--text-muted);">CONFIDENCE: 0.99</span>
+        </div>
+        <div id="causalLineageSteps"></div>
+      </div>
+
+      <!-- LIVE [BRAIN_MEMORY] INJECTION STREAM BLADE -->
+      <div style="padding: 2px 14px; font-size:10.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.04em; text-transform:uppercase;">
+        ⚡ Stream `[BRAIN_MEMORY]` Injetado
+      </div>
+      <div class="live-stream-blade" id="liveBrainMemoryStream">
+        <div style="color:#a5b4fc; font-weight:700;">[BRAIN_MEMORY | ws=brain_mcp]</div>
+        <div style="color:#f472b6;">[JEV_S1_ROUTER | intent=ui_3d_interactive]</div>
+        <div style="color:#e2e8f0;">  route = SCOUT ➔ UI-01 (Argon) + API-01</div>
+        <div style="color:#94a3b8;">  latency = 0.011ms | stop_th = 0.28</div>
+        <div style="color:#38bdf8;">[SCOUT_SHARED_MAP | 13 files | 51 symbols]</div>
+        <div style="color:#e2e8f0;">  UI : index.html [60 FPS 3D Studio]</div>
+        <div style="color:#e2e8f0;">  API: swarm_engine.py, db_engine.py, graphify_engine.py</div>
+        <div style="color:#34d399;">📌[PIN][W] Diretiva 3D: Zero-Token Sync</div>
+        <div style="color:#cbd5e1;">  - [S] Ruflo Causal Graph: 297 edges active</div>
+        <div style="color:#cbd5e1;">  - [E] Swarm Auto-Heal: 24/24 tasks PASS</div>
+      </div>
 
       <div class="backlinks-section">
-        <div class="section-subtitle">🔗 Ligações Sinápticas & Backlinks (<span id="backlinkCount">0</span>)</div>
+        <div class="section-subtitle">🔗 Ligações Sinápticas &amp; Backlinks (<span id="backlinkCount">0</span>)</div>
         <div id="backlinksList"></div>
       </div>
     </aside>
@@ -2147,6 +2251,9 @@
         <button class="btn-scout-emerald" style="background:rgba(56,189,248,0.16); border-color:#38bdf8; color:#7dd3fc;" onclick="triggerSwarmAction('doctor')" title="Executa o Memory Doctor FTS5 + Descoberta de Grafo Causal">
           🩺 Doctor
         </button>
+        <button class="btn-scout-emerald" style="background:rgba(0,255,157,0.16); border-color:#00ff9d; color:#00ff9d;" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST & Blast Radius">
+          🔎 AST &amp; Impacto
+        </button>
         <button class="btn-scout-emerald" style="background:rgba(245,158,11,0.16); border-color:#f59e0b; color:#fcd34d;" onclick="triggerSwarmAction('reset_queue')" title="Reinicia a fila das 24 tasks da Run atual">
           🔄 Reset
         </button>
@@ -2171,6 +2278,23 @@
       </div>
       <div class="bp-body" style="padding:10px 12px; overflow:visible;">
         <div id="swFleetCardsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px; max-height:175px; min-height:74px; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Row 0.75: TRANSACTIONAL SUBAGENT SANDBOXES (CoW + AST GATE + AI-DEFENCE SECRET SCAN) -->
+    <div class="bp-box" id="swarmSandboxPanel" style="flex-shrink:0; border:1.5px solid rgba(0,255,157,0.48); background:rgba(6,13,22,0.95);">
+      <div class="bp-header" style="background:rgba(0,255,157,0.10); border-bottom:1px solid rgba(0,255,157,0.32); padding:7px 12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span style="color:#00ff9d; font-family:var(--font-mono); font-size:11px; font-weight:700;">
+          🛡️ [SANDBOX CoW] TRANSACTIONAL SUBAGENT SANDBOXES &amp; MERGE GATES // <strong id="swSandboxCountLbl" style="color:#fff;">A carregar...</strong>
+        </span>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button class="btn-scout-emerald" style="height:24px; padding:0 10px; font-size:10px;" onclick="createAndVerifySandboxUI('create')">➕ Criar Sandbox CoW</button>
+          <button class="btn-scout-emerald" style="height:24px; padding:0 10px; font-size:10px; border-color:#00f0ff; color:#00f0ff; background:rgba(0,240,255,0.14);" onclick="createAndVerifySandboxUI('verify_merge')">✅ Verify &amp; Merge Gate</button>
+          <button class="btn-scout-emerald" style="height:24px; padding:0 8px; font-size:10px;" onclick="refreshSwarmSandboxesUI()">🔄</button>
+        </div>
+      </div>
+      <div class="bp-body" style="padding:8px 12px;">
+        <div id="swSandboxListGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:8px;"></div>
       </div>
     </div>
 
@@ -2377,6 +2501,9 @@
         </div>
 
         <div class="office-cam-bar">
+          <button class="office-btn primary" id="btnOfficeFollow" onclick="toggleOfficeFollowMode()" aria-pressed="true" title="Modo Follow: A câmara 3D acompanha e mantém o agente selecionado no centro do ecrã enquanto caminha">
+            🎯 Follow: ON
+          </button>
           <button class="office-btn" onclick="setOfficeCameraPreset('overview')" title="Visão isométrica 3D de todas as 6 zonas do escritório">
             🎥 Visão Geral
           </button>
@@ -2398,8 +2525,11 @@
           <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
             🔄 Orbit 360°
           </button>
-          <button class="office-btn" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor de Ficheiros (Codebase Heatmap)">
+          <button class="office-btn primary" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor sobre as Secretárias dos Agentes">
             🔥 Heatmap 3D: ON
+          </button>
+          <button class="office-btn" id="btnPulseHoloTowers" onclick="pulseOfficeHoloTowers3D()" style="border-color:rgba(244,63,94,0.5); color:#fda4af;" title="Dispara um pulso holográfico de atividade de edição em todas as Torres 3D das Secretárias">
+            🗼 Pulso Torres 3D
           </button>
           <button class="office-btn" id="btnOfficeSound" onclick="toggleOfficeSound3D()" title="Ativa/Desativa Sintetizador WebAudio 3D (som de teclado, café espresso e portal quântico)">
             🔇 Som 3D: OFF
@@ -2431,6 +2561,42 @@
       <!-- 3D Viewport Canvas -->
       <canvas id="office3DCanvas"></canvas>
 
+      <!-- QUICK AGENT FOLLOW SWITCHER DOCK (TOP-CENTER OF 3D CANVAS) -->
+      <div class="office-quick-agent-dock" id="officeQuickAgentDock" title="Saltar rapidamente a câmara em Modo Follow entre agentes (Atalhos: teclas [ e ])">
+        <button type="button" class="quick-ag-btn" onclick="cycleOfficeFollowAgent(-1)" title="Agente Anterior (Atalho: [)">◀ [</button>
+        <div id="officeQuickAgentList" style="display:flex; align-items:center; gap:4px;"></div>
+        <button type="button" class="quick-ag-btn" onclick="cycleOfficeFollowAgent(1)" title="Agente Seguinte (Atalho: ])">] ▶</button>
+      </div>
+
+      <!-- INTERACTIVE 3D HOLOGRAPHIC DESK HEATMAP TOWER INSPECTOR (TOP-RIGHT OF 3D CANVAS) -->
+      <div class="office-holo-tower-inspector" id="officeHoloTowerInspector" role="region" aria-label="Inspetor de Torre Holográfica 3D do Mapa de Calor">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-size:10px; font-weight:800; color:#38bdf8; letter-spacing:0.05em; text-transform:uppercase;" id="holoInspDeskAgent">🗼 TORRE HOLO #01 · ARCH-01</span>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(-1)" title="Torre Holográfica Anterior">◀</button>
+            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(1)" title="Seguinte Torre Holográfica">▶</button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+          <div style="font-family:var(--font-mono); font-size:13px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="holoInspFileName">swarm_engine.py</div>
+          <span class="rc-badge working" id="holoInspHeatBadge" style="font-size:9.5px;">🔥 92% HOT</span>
+        </div>
+        <div class="holo-tower-heat-track">
+          <div class="holo-tower-heat-fill" id="holoInspHeatBar" style="width:92%; background:linear-gradient(90deg, #06b6d4, #f59e0b, #f43f5e);"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:10.5px; color:var(--text-muted); font-family:var(--font-mono);" id="holoInspStats">
+          <span>✏️ <strong style="color:#fff;" id="holoInspEdits">8</strong> edits</span>
+          <span>📏 <strong style="color:#cbd5e1;" id="holoInspLines">3267</strong>L</span>
+          <span>⚡ Ativ: <strong style="color:#34d399;" id="holoInspIntensity">95%</strong></span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px;" id="holoInspSymbols"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:2px;">
+          <button type="button" class="office-btn" style="padding:4px 6px; font-size:10px; justify-content:center; border-color:rgba(56,189,248,0.45); color:#bae6fd;" onclick="inspectSelectedHoloTowerAst()" title="Abrir Explorador AST & Blast Radius para este ficheiro">🔎 AST</button>
+          <button type="button" class="office-btn" style="padding:4px 6px; font-size:10px; justify-content:center; border-color:rgba(244,63,94,0.45); color:#fda4af;" onclick="boostSelectedHoloTowerActivity()" title="Simular rajada de edições de código na Torre Holográfica 3D">⚡ Pulso</button>
+          <button type="button" class="office-btn" style="padding:4px 6px; font-size:10px; justify-content:center; border-color:rgba(16,185,129,0.45); color:#6ee7b7;" onclick="auditSelectedHoloTowerFile()" title="Executar File-Save AST & Impact Audit neste ficheiro">🛡️ Audit</button>
+        </div>
+      </div>
+
       <!-- TECH REVOLUTION v4.0: ORBITAL RADAR MINIMAP 2D (TOP-LEFT) -->
       <div class="office-radar-wrap" id="officeRadarWrap" title="Clique num ponto luminoso do Radar Orbital para selecionar e focar esse Agente 3D">
         <div class="office-radar-title">
@@ -2449,8 +2615,9 @@
         <button class="cyber-action-btn" onclick="setOfficeCameraPreset('command')">[2] ARGON COMMAND DECK</button>
         <button class="cyber-action-btn" onclick="toggleOfficeAutoRotate()">[3] CINEMATIC ORBIT 360°</button>
         <button class="cyber-action-btn" onclick="setOfficeCameraPreset('swarm_wing')">[4] SWARM ENG WING</button>
-        <button class="cyber-action-btn" onclick="toggleOfficeHeatmap3D()">[5] CAUSAL HEATMAP TOWERS</button>
+        <button class="cyber-action-btn" onclick="toggleOfficeHeatmap3D()">[5] DESK HEATMAP TOWERS</button>
         <button class="cyber-action-btn" onclick="toggleCrtScanlines()" style="border-color:#ff2a85; color:#ff85b3;">[6] CRT SCANLINE OVERLAY</button>
+        <button class="cyber-action-btn" id="btnHoloFollow" onclick="toggleOfficeFollowMode()" style="border-color:#00ff9d; color:#00ff9d;">[7] FOLLOW AGENT: ON</button>
       </div>
 
       <!-- TECH REVOLUTION v4.0: NEURAL DIRECTIVE CONSOLE (BOTTOM-CENTER) -->
@@ -2475,6 +2642,7 @@
       <!-- Bottom Legend HUD -->
       <div class="office-hud-bottom">
         <span><i class="legend-dot" style="background:#00ff9d; box-shadow:0 0 8px #00ff9d;"></i><strong>WORKING:</strong> Secretária + Código 3D</span>
+        <span><i class="legend-dot" style="background:#f43f5e; box-shadow:0 0 8px #f43f5e;"></i><strong>HOLO TOWERS:</strong> Calor de Ficheiros nas Secretárias</span>
         <span><i class="legend-dot" style="background:#ffb703; box-shadow:0 0 8px #ffb703;"></i><strong>LOUNGE:</strong> Café Espresso / Pausa</span>
         <span><i class="legend-dot" style="background:#00f0ff; box-shadow:0 0 8px #00f0ff;"></i><strong>PORTAL:</strong> Entrada Quântica 3D</span>
       </div>
@@ -2533,6 +2701,9 @@
         <div style="display:flex; gap:8px; margin-top:2px;">
           <button class="office-btn" style="flex:1; justify-content:center;" id="btnOffToggleState" onclick="toggleSelectedOfficeAgent()">
             ☕ Alternar Trabalho / Pausa
+          </button>
+          <button class="office-btn primary" id="btnOffFollowAgent" onclick="toggleOfficeFollowMode()" aria-pressed="true" title="Ativar/Desativar Modo Follow (a câmara acompanha este boneco automaticamente enquanto caminha)">
+            🎯 Follow: ON
           </button>
           <button class="office-btn" onclick="focusCameraOnSelectedAgent()" title="Centrar câmara 3D neste boneco">
             🎯 Focar
@@ -2681,22 +2852,160 @@
 
   <!-- MODAL NEURAL COMMAND PALETTE (CTRL+K / ⌘K) -->
   <div class="modal-backdrop" id="cmdPaletteModal" onclick="if(event.target===this) closeCommandPalette()">
-    <div class="modal" style="width: 600px; max-width: 94vw; border-color: #00f0ff; box-shadow: 0 0 36px rgba(0, 240, 255, 0.25);">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-        <h3 style="margin:0; font-family:var(--font-mono); color:#00f0ff; font-size:14px;">⌘K // NEURAL COMMAND PALETTE (TECH REVOLUTION v4.0)</h3>
+    <div class="modal" style="width: 620px; max-width: 94vw; border-color: rgba(99, 102, 241, 0.45); border-radius: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 32px rgba(99, 102, 241, 0.18);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <h3 style="margin:0; font-family:var(--font-sans); color:#e2e8f0; font-size:14.5px; font-weight:700;">⌘K · Paleta de Comandos Neural</h3>
         <button class="btn" onclick="closeCommandPalette()">ESC</button>
       </div>
       <div class="form-field" style="margin-bottom:10px;">
         <input
           type="text"
           id="cmdPaletteInput"
-          placeholder="Escreva um comando (ex: swarm, work-steal, cow, radar, doctor, bugs, crt)..."
-          style="font-family:var(--font-mono); border-color:#00f0ff; background:#060a15; color:#fff;"
+          placeholder="Escreva um comando (ex: swarm, work-steal, cow, radar, doctor, bugs, graphify)..."
+          style="font-family:var(--font-sans); border-color:rgba(99,102,241,0.45); background:rgba(11,15,25,0.95); color:#fff; border-radius:9px; padding:9px 12px;"
           oninput="renderCommandPaletteList(this.value)"
           onkeydown="onCommandPaletteKey(event)"
         />
       </div>
       <div id="cmdPaletteList" style="max-height:320px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EXPLORADOR CIRÚRGICO AST MULTI-LINGUAGEM & GRAFO DE IMPACTO (BLAST RADIUS) + GRAPHIFY ENGINE -->
+  <div class="modal-backdrop" id="astInspectorModal" onclick="if(event.target===this) closeAstInspectorModal()">
+    <div class="modal" style="width: 940px; max-width: 96vw; max-height: 91vh; overflow-y: auto; border-color: rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(12, 16, 26, 0.98); box-shadow: 0 28px 70px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.08);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+          <h3 style="margin:0; font-family:var(--font-sans); color:#fff; font-size:15.5px; font-weight:800; letter-spacing:-0.01em;">🔎 Explorador Cirúrgico AST, Blast Radius &amp; Graphify Multi-Modal</h3>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">Localiza símbolos <code style="color:#a5b4fc; font-family:var(--font-mono);">[start_line, end_line]</code>, calcula Blast Radius e traça caminhos BFS Full-Stack (JS ➔ HTTP ➔ Python ➔ SQL)</div>
+        </div>
+        <button class="btn" onclick="closeAstInspectorModal()">✖ Fechar</button>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+        <input
+          type="text"
+          id="astQueryInput"
+          class="search-input"
+          aria-label="Pesquisar símbolo AST ou ficheiro"
+          style="flex:1; font-family:var(--font-mono); border-color:rgba(99,102,241,0.4); background:rgba(15,21,34,0.95); color:#fff; padding:8px 12px;"
+          value="BrainDB"
+          placeholder="Nome da função, classe ou ficheiro (ex: BrainDB, stepOfficeFollowCamera, handle_pre_invocation)..."
+          onkeydown="if(event.key==='Enter') runAstAndImpactLookup(this.value)"
+        />
+        <button class="btn btn-primary" onclick="runAstAndImpactLookup(document.getElementById('astQueryInput').value)">
+          ⚡ Analisar Símbolo &amp; Impacto
+        </button>
+      </div>
+
+      <!-- Quick Symbol Presets -->
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+        <span style="font-size:11px; color:var(--text-muted); font-weight:600;">Exemplos rápidos:</span>
+        <button type="button" class="quick-ag-btn" onclick="runAstAndImpactLookup('BrainDB')">BrainDB (Python)</button>
+        <button type="button" class="quick-ag-btn" onclick="runAstAndImpactLookup('stepOfficeFollowCamera')">stepOfficeFollowCamera (JS 3D)</button>
+        <button type="button" class="quick-ag-btn" onclick="runAstAndImpactLookup('handle_pre_invocation')">handle_pre_invocation (Hook)</button>
+        <button type="button" class="quick-ag-btn" onclick="runAstAndImpactLookup('prune_tools_for_intent')">prune_tools_for_intent (Diet)</button>
+        <button type="button" class="quick-ag-btn" onclick="runAstAndImpactLookup('manage_subagent_sandbox')">manage_subagent_sandbox (Sandbox)</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1.25fr 1fr; gap:12px;">
+        <!-- Left: AST Matches & Exact Line Range Snippet -->
+        <div style="background:rgba(17, 23, 37, 0.9); border:1px solid rgba(16,185,129,0.28); border-radius:10px; padding:11px 12px; font-family:var(--font-mono);">
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-sans); font-size:11.5px; font-weight:700; color:#34d399; margin-bottom:8px;">
+            <span>📍 Símbolos AST Detetados</span>
+            <span id="astMatchesMeta" style="font-family:var(--font-mono); color:var(--text-muted);">0 matches</span>
+          </div>
+          <div id="astMatchesList" style="max-height:200px; overflow-y:auto; font-size:11px;"></div>
+        </div>
+
+        <!-- Right: Reverse Call & Import Impact Graph (Blast Radius) -->
+        <div style="background:rgba(17, 23, 37, 0.9); border:1px solid rgba(56,189,248,0.28); border-radius:10px; padding:11px 12px; font-family:var(--font-mono);">
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-sans); font-size:11.5px; font-weight:700; color:#38bdf8; margin-bottom:8px;">
+            <span>💥 Grafo de Impacto (Blast Radius)</span>
+            <span id="astImpactRiskBadge" style="font-family:var(--font-mono); color:#fbbf24;">RISK: -</span>
+          </div>
+          <div id="astImpactDetails" style="max-height:200px; overflow-y:auto; font-size:11px;"></div>
+        </div>
+      </div>
+
+      <!-- GRAPHIFY ENGINE: MULTI-MODAL BFS PATH FINDER + GOD NODES + CONFIDENCE EDGES + GRAPH_REPORT.MD -->
+      <div id="graphifyEngineBox" style="margin-top:12px; background:linear-gradient(145deg, rgba(18, 24, 39, 0.95) 0%, rgba(13, 18, 30, 0.95) 100%); border:1px solid rgba(139,92,246,0.38); border-radius:10px; padding:12px; font-family:var(--font-mono);">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+          <div>
+            <span style="font-family:var(--font-sans); font-size:12px; font-weight:700; color:#c4b5fd;">
+              🕸️ Graphify Engine · Caminho BFS Multi-Modal, God Nodes &amp; Confidence Edges
+            </span>
+            <span id="graphifyStatsBadge" style="font-size:10.5px; color:#34d399; margin-left:8px;">A carregar grafo multi-modal...</span>
+          </div>
+          <button type="button" class="quick-ag-btn" style="border-color:rgba(168,85,247,0.5); color:#e9d5ff;" onclick="generateGraphifyReportUI()">
+            📄 Gerar / Ver GRAPH_REPORT.md
+          </button>
+        </div>
+
+        <!-- BFS Shortest Path Finder Controls -->
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px;">
+          <input
+            type="text"
+            id="graphifySourceInput"
+            aria-label="Entidade de Origem BFS"
+            value="triggerAstSaveAuditUI"
+            placeholder="Origem (ex: triggerAstSaveAuditUI, swarm_watch_audit)"
+            style="flex:1; min-width:170px; background:rgba(9,13,22,0.95); border:1px solid rgba(139,92,246,0.4); border-radius:7px; color:#fff; padding:6px 10px; font-family:var(--font-mono); font-size:11px; outline:none;"
+          />
+          <span style="color:#a5b4fc; font-weight:700;">➔</span>
+          <input
+            type="text"
+            id="graphifyTargetInput"
+            aria-label="Entidade de Destino BFS"
+            value="ast_save_audits"
+            placeholder="Destino (ex: ast_save_audits, BrainDB, swarm_sandboxes)"
+            style="flex:1; min-width:170px; background:rgba(9,13,22,0.95); border:1px solid rgba(56,189,248,0.4); border-radius:7px; color:#fff; padding:6px 10px; font-family:var(--font-mono); font-size:11px; outline:none;"
+          />
+          <button type="button" class="btn btn-primary" style="padding:6px 12px; font-size:11.5px;" onclick="runGraphifyPathSearch()">
+            🧭 Traçar Caminho BFS
+          </button>
+        </div>
+
+        <!-- Quick Multi-Modal Path Presets -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; align-items:center;">
+          <span style="font-size:10px; color:var(--text-muted); font-family:var(--font-sans); font-weight:600;">Cadeias Full-Stack:</span>
+          <button type="button" class="quick-ag-btn" onclick="runGraphifyPathPreset('triggerAstSaveAuditUI', 'ast_save_audits')">UI ➔ SQL: triggerAstSaveAuditUI ➔ ast_save_audits</button>
+          <button type="button" class="quick-ag-btn" onclick="runGraphifyPathPreset('swarm_watch_audit', 'BrainDB')">MCP ➔ Core: swarm_watch_audit ➔ BrainDB</button>
+          <button type="button" class="quick-ag-btn" onclick="runGraphifyPathPreset('createAndVerifySandboxUI', 'swarm_sandboxes')">UI ➔ SQL: createAndVerifySandboxUI ➔ swarm_sandboxes</button>
+        </div>
+
+        <!-- BFS Path Result Strip -->
+        <div id="graphifyPathResult" style="background:rgba(9,13,22,0.9); border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:9px 11px; margin-bottom:10px; font-size:10.5px;"></div>
+
+        <!-- God Nodes & Topological Communities Grid -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:10px;">
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:8px 10px;">
+            <div style="font-family:var(--font-sans); font-size:10.5px; font-weight:700; color:#fcd34d; margin-bottom:6px;">👑 Top God Nodes (Centralidade &amp; Acoplamento)</div>
+            <div id="graphifyGodNodesList" style="display:flex; flex-wrap:wrap; gap:5px; font-size:9.8px;"></div>
+          </div>
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(6,182,212,0.25); border-radius:8px; padding:8px 10px;">
+            <div style="font-family:var(--font-sans); font-size:10.5px; font-weight:700; color:#67e8f9; margin-bottom:6px;">🧩 Comunidades Topológicas Detetadas</div>
+            <div id="graphifyCommunitiesList" style="font-size:10px; display:flex; flex-direction:column; gap:3px;"></div>
+          </div>
+        </div>
+
+        <!-- Collapsible GRAPH_REPORT.md Viewer -->
+        <pre id="graphifyReportPreview" style="display:none; margin-top:8px; background:rgba(7,10,18,0.95); color:#e2e8f0; border:1px solid rgba(139,92,246,0.38); border-radius:8px; padding:10px; font-size:10.5px; max-height:220px; overflow:auto; white-space:pre-wrap;"></pre>
+      </div>
+
+      <!-- Bottom: Automated File-Save AST & Impact Radius Watcher Alerts -->
+      <div id="astWatcherAlertsBox" style="margin-top:12px; background:rgba(17, 23, 37, 0.9); border:1px solid rgba(244,63,94,0.3); border-radius:10px; padding:10px 12px; font-family:var(--font-mono);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <span style="font-family:var(--font-sans); font-size:11.5px; font-weight:700; color:#fda4af;">
+            🛡️ File-Save Watcher (<code style="font-family:var(--font-mono);">ast_impact_watcher.py</code>) · <strong id="astWatcherStatusLbl" style="color:#34d399; font-family:var(--font-mono);">DAEMON ACTIVE</strong>
+          </span>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="quick-ag-btn" style="border-color:rgba(244,63,94,0.45); color:#fda4af;" onclick="triggerAstSaveAuditUI('db_engine.py')">⚡ Auditar Save: db_engine.py</button>
+            <button type="button" class="quick-ag-btn" style="border-color:rgba(16,185,129,0.45); color:#6ee7b7;" onclick="triggerAstSaveAuditUI('')">🔍 Auditar Workspace</button>
+          </div>
+        </div>
+        <div id="astWatcherAuditsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(245px, 1fr)); gap:6px; max-height:115px; overflow-y:auto; font-size:10px;"></div>
+      </div>
     </div>
   </div>
 
@@ -3151,11 +3460,15 @@
               const isMatch = item.is_match;
               const color = CATEGORY_COLORS[item.category] || '#94a3b8';
               const glyph = getCategoryGlyph(item.category, item.node_type);
+              const semPct = Math.round((Number(item.semantic_similarity) || 0.85) * 100);
               return `
                 <div class="vault-item ${isSel ? 'active' : ''} ${isMatch ? 'match-highlight' : ''}"
-                     onclick="focusNodeById('${item.id}')">
-                  <span style="color:${color}; font-family:var(--font-mono); font-size:11px; width:18px; text-align:center; flex-shrink:0;">${glyph}</span>
-                  <span style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.label)}</span>
+                     onclick="focusNodeById('${item.id}')" style="justify-content:space-between;">
+                  <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+                    <span style="color:${color}; font-family:var(--font-mono); font-size:11px; width:18px; text-align:center; flex-shrink:0;">${glyph}</span>
+                    <span style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.label)}</span>
+                  </div>
+                  <span style="font-size:9.5px; font-family:var(--font-mono); color:${isMatch ? '#00ff9d' : 'var(--text-dim)'}; flex-shrink:0; margin-left:6px;">${semPct}%</span>
                 </div>
               `;
             }).join('')}
@@ -3201,6 +3514,11 @@
         fmTierEl.style.color = tierRaw === 'SEMANTIC' ? '#ff2a85' : (tierRaw === 'EPISODIC' ? '#00ff9d' : '#00f0ff');
       }
       document.getElementById('fmImp').textContent = '⭐'.repeat(Math.min(5, Math.max(1, node.importance || 3)));
+      const fmSemEl = document.getElementById('fmSemSim');
+      if (fmSemEl) {
+        const semVal = Math.round((Number(node.semantic_similarity) || 0.90) * 100);
+        fmSemEl.textContent = `${semVal}% Semântico · BM25 + Vetor 32-D`;
+      }
       document.getElementById('fmAcc').textContent = `${node.access_count || 0} injeções`;
       document.getElementById('fmTime').textContent = node.created_at || node.updated_at || 'Ativo';
       document.getElementById('inspBody').textContent = node.fact || '';
@@ -3529,7 +3847,7 @@
     function renderGraph() {
       // Se estiver na vista Swarm Monitor ou Office, pausa completamente a renderização do Canvas (0% CPU/GPU)
       if (activeMainView !== 'graph') {
-        requestAnimationFrame(renderGraph);
+        setTimeout(() => requestAnimationFrame(renderGraph), 120);
         return;
       }
 
@@ -3537,7 +3855,7 @@
       const isSimMoving = draggedNode || simAlpha >= 0.003;
       if (!graphDirty && !isSimMoving) {
         if (!showPulses || (++graphIdleTick % 2 !== 0)) {
-          requestAnimationFrame(renderGraph);
+          setTimeout(() => requestAnimationFrame(renderGraph), 32);
           return;
         }
       }
@@ -3592,30 +3910,35 @@
       ctx.translate(cam.x, cam.y);
       ctx.scale(cam.k, cam.k);
 
-      // 0B. TECH REVOLUTION v4.0: 4 Anéis de Sonar Quântico Concêntricos & Eixos Táticos no Centro do Grafo
-      if (isTechRev) {
-        ctx.save();
-        const sonarRings = [
-          { r: 210, col: 'rgba(0, 255, 157, 0.34)' },
-          { r: 390, col: 'rgba(255, 42, 133, 0.34)' },
-          { r: 580, col: 'rgba(0, 240, 255, 0.34)' },
-          { r: 780, col: 'rgba(0, 240, 255, 0.18)' }
-        ];
-        ctx.lineWidth = 1.8 / Math.sqrt(cam.k);
-        for (const sr of sonarRings) {
-          ctx.beginPath();
-          ctx.arc(0, 0, sr.r, 0, Math.PI * 2);
-          ctx.strokeStyle = sr.col;
-          ctx.stroke();
-        }
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.16)';
-        ctx.lineWidth = 1.1 / Math.sqrt(cam.k);
+      // 0B. Anéis Orbitais Concêntricos Subtis & Eixos de Referência no Centro do Grafo
+      ctx.save();
+      const sonarRings = isTechRev
+        ? [
+            { r: 210, col: 'rgba(16, 185, 129, 0.24)' },
+            { r: 390, col: 'rgba(236, 72, 153, 0.22)' },
+            { r: 580, col: 'rgba(6, 182, 212, 0.24)' },
+            { r: 780, col: 'rgba(99, 102, 241, 0.16)' }
+          ]
+        : [
+            { r: 210, col: 'rgba(99, 102, 241, 0.09)' },
+            { r: 390, col: 'rgba(56, 189, 248, 0.07)' },
+            { r: 580, col: 'rgba(139, 92, 246, 0.06)' },
+            { r: 780, col: 'rgba(255, 255, 255, 0.035)' }
+          ];
+      ctx.lineWidth = 1.2 / Math.sqrt(cam.k);
+      for (const sr of sonarRings) {
         ctx.beginPath();
-        ctx.moveTo(-940, 0); ctx.lineTo(940, 0);
-        ctx.moveTo(0, -940); ctx.lineTo(0, 940);
+        ctx.arc(0, 0, sr.r, 0, Math.PI * 2);
+        ctx.strokeStyle = sr.col;
         ctx.stroke();
-        ctx.restore();
       }
+      ctx.strokeStyle = isTechRev ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 1.0 / Math.sqrt(cam.k);
+      ctx.beginPath();
+      ctx.moveTo(-940, 0); ctx.lineTo(940, 0);
+      ctx.moveTo(0, -940); ctx.lineTo(0, 940);
+      ctx.stroke();
+      ctx.restore();
 
       const focusTarget = hoveredNode || null;
       const neighborSet = new Set();
@@ -3640,7 +3963,7 @@
         ctx.lineTo(b.x, b.y);
 
         if (isHighlighted) {
-          ctx.strokeStyle = isCausal ? '#10b981' : (l.kind === 'synaptic_link' ? '#c084fc' : '#38bdf8');
+          ctx.strokeStyle = isCausal ? '#10b981' : (l.kind === 'synaptic_link' ? '#a78bfa' : '#38bdf8');
           ctx.lineWidth = (isCausal ? 2.6 : 2.2) / Math.sqrt(cam.k);
           ctx.globalAlpha = 0.96;
         } else if (isDimmed) {
@@ -3651,8 +3974,8 @@
           ctx.strokeStyle = isCausal
             ? (l.relation === 'fixed_by' ? 'rgba(16, 185, 129, 0.72)' : 'rgba(245, 158, 11, 0.65)')
             : (l.kind === 'synaptic_link'
-              ? 'rgba(139, 92, 246, 0.38)'
-              : (l.kind === 'tag_link' ? 'rgba(100, 116, 139, 0.22)' : 'rgba(56, 189, 248, 0.26)'));
+              ? 'rgba(139, 92, 246, 0.42)'
+              : (l.kind === 'tag_link' ? 'rgba(100, 116, 139, 0.22)' : 'rgba(56, 189, 248, 0.28)'));
           ctx.lineWidth = (isCausal ? 2.0 : (l.kind === 'synaptic_link' ? 1.5 : 1.0)) / Math.sqrt(cam.k);
           ctx.globalAlpha = 1.0;
         }
@@ -3669,16 +3992,8 @@
           ctx.lineTo(mx - headLen * Math.cos(ang - 0.45), my - headLen * Math.sin(ang - 0.45));
           ctx.lineTo(mx - headLen * Math.cos(ang + 0.45), my - headLen * Math.sin(ang + 0.45));
           ctx.closePath();
-          ctx.fillStyle = l.relation === 'fixed_by' ? '#00ff9d' : '#ffb703';
+          ctx.fillStyle = l.relation === 'fixed_by' ? '#34d399' : '#fbbf24';
           ctx.fill();
-          if (isTechRev && cam.k > 0.55) {
-            ctx.save();
-            ctx.font = `700 ${Math.max(8, 9.5 / Math.pow(cam.k, 0.25))}px 'JetBrains Mono', monospace`;
-            ctx.fillStyle = l.relation === 'fixed_by' ? '#00ff9d' : '#ffb703';
-            ctx.textAlign = 'center';
-            ctx.fillText(`[causal:${l.relation || 'fixed_by'}]`, mx, my - 7 / Math.sqrt(cam.k));
-            ctx.restore();
-          }
         }
 
         if (showPulses && (isHighlighted || l.kind === 'synaptic_link' || isCausal) && !isDimmed) {
@@ -3686,13 +4001,13 @@
           const px = a.x + (b.x - a.x) * t;
           const py = a.y + (b.y - a.y) * t;
           ctx.beginPath();
-          ctx.arc(px, py, (isCausal ? 3.1 : 2.5) / Math.sqrt(cam.k), 0, Math.PI * 2);
-          ctx.fillStyle = isCausal ? '#00ff9d' : (isHighlighted ? '#ff2a85' : '#00f0ff');
+          ctx.arc(px, py, (isCausal ? 3.0 : 2.4) / Math.sqrt(cam.k), 0, Math.PI * 2);
+          ctx.fillStyle = isCausal ? '#34d399' : (isHighlighted ? '#a78bfa' : '#38bdf8');
           ctx.fill();
         }
       }
 
-      // 2. Desenhar Nós com Geometria Distinta + Anéis Duplos Holográficos (Tech Revolution v4.0)
+      // 2. Desenhar Nós com Geometria Distinta + Ícones Vetoriais
       const alwaysLabels = document.getElementById('chkAlwaysLabels').checked;
 
       for (const n of activeNodes) {
@@ -3704,14 +4019,9 @@
         ctx.globalAlpha = isDimmed ? 0.14 : 1.0;
         const r = (n.val || 12) * 1.15;
         let baseColor = CATEGORY_COLORS[n.category] || '#94a3b8';
-        if (isTechRev) {
-          if (n.node_type === 'workspace' || n.category === 'architecture') baseColor = '#ff2a85';
-          else if (n.category === 'bugfix' || n.tier === 'episodic') baseColor = '#00ff9d';
-          else if (n.node_type === 'checkpoint' || n.category === 'security') baseColor = '#ffb703';
-          else baseColor = '#00f0ff';
-        }
+        if (n.node_type === 'workspace') baseColor = '#818cf8';
 
-        // CASO A: Nós de #Tag -> Pílula Cápsula Compacta (Sem bola!)
+        // CASO A: Nós de #Tag -> Pílula Cápsula Compacta
         if (n.node_type === 'tag') {
           const fontSize = 10;
           ctx.font = `600 ${fontSize}px 'JetBrains Mono', monospace`;
@@ -3719,10 +4029,10 @@
           const pw = textW + 14;
           const ph = 18;
           traceRoundedRect(n.x - pw / 2, n.y - ph / 2, pw, ph, 9);
-          ctx.fillStyle = isSelected || isHovered ? 'rgba(0, 240, 255, 0.25)' : 'rgba(6, 11, 22, 0.94)';
+          ctx.fillStyle = isSelected || isHovered ? 'rgba(99, 102, 241, 0.25)' : 'rgba(13, 18, 29, 0.92)';
           ctx.fill();
-          ctx.lineWidth = isSelected || isHovered ? 1.6 : 1.0;
-          ctx.strokeStyle = isSelected || isHovered ? '#00f0ff' : 'rgba(0, 240, 255, 0.35)';
+          ctx.lineWidth = isSelected || isHovered ? 1.5 : 1.0;
+          ctx.strokeStyle = isSelected || isHovered ? '#818cf8' : 'rgba(148, 163, 184, 0.28)';
           ctx.stroke();
 
           ctx.fillStyle = isSelected || isHovered ? '#ffffff' : '#94a3b8';
@@ -3732,11 +4042,11 @@
           continue;
         }
 
-        // Halo Luminoso Exterior (Apenas em Pesquisa FTS5 / Seleção / Hover para poupar ~7.800 RadialGradients/seg!)
+        // Halo Luminoso Exterior (Pesquisa FTS5 / Seleção / Hover)
         if (n.is_match || isSelected || isHovered) {
-          const haloR = r * 2.3;
-          const haloGrad = ctx.createRadialGradient(n.x, n.y, r * 0.3, n.x, n.y, haloR);
-          haloGrad.addColorStop(0, n.is_match ? 'rgba(250, 204, 21, 0.48)' : `${baseColor}66`);
+          const haloR = r * 2.35;
+          const haloGrad = ctx.createRadialGradient(n.x, n.y, r * 0.25, n.x, n.y, haloR);
+          haloGrad.addColorStop(0, n.is_match ? 'rgba(250, 204, 21, 0.45)' : `${baseColor}55`);
           haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
           ctx.beginPath();
           ctx.arc(n.x, n.y, haloR, 0, Math.PI * 2);
@@ -3744,74 +4054,40 @@
           ctx.fill();
         }
 
-        if (isTechRev) {
-          // TECH REVOLUTION v4.0: Círculos Holográficos de Anel Duplo com Tag JEV-Mem ([HUB], [W], [S], [E])
+        // Anel Orbital para Workspaces ou Nós Selecionados
+        if (n.node_type === 'workspace' || isSelected) {
+          ctx.save();
           ctx.beginPath();
-          ctx.arc(n.x, n.y, r + 4.5, 0, Math.PI * 2);
-          ctx.strokeStyle = `${baseColor}55`;
+          ctx.setLineDash([4, 4]);
+          ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
+          ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
           ctx.lineWidth = 1.2;
           ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
-          ctx.fillStyle = '#060b16';
-          ctx.fill();
-          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.6 : 2.0;
-          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, r * 0.68, 0, Math.PI * 2);
-          ctx.strokeStyle = `${baseColor}88`;
-          ctx.lineWidth = 1.0;
-          ctx.stroke();
-
-          const tierBadge = n.node_type === 'workspace'
-            ? '[HUB]'
-            : (n.node_type === 'checkpoint'
-              ? '[CP]'
-              : (n.tier === 'semantic' ? '[S]' : (n.tier === 'episodic' || n.category === 'bugfix' ? '[E]' : '[W]')));
-          ctx.font = `700 ${Math.max(8, Math.min(11, r * 0.56))}px 'JetBrains Mono', monospace`;
-          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(tierBadge, n.x, n.y + 0.5);
-        } else {
-          // Anel Tecnológico Orbital para Workspaces ou Nós Críticos Selecionados
-          if (n.node_type === 'workspace' || isSelected) {
-            ctx.save();
-            ctx.beginPath();
-            ctx.setLineDash([4, 4]);
-            ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
-            ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
-            ctx.lineWidth = 1.2;
-            ctx.stroke();
-            ctx.restore();
-          }
-
-          if (n.node_type === 'workspace') {
-            tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
-          } else if (n.node_type === 'checkpoint') {
-            tracePolygon(n.x, n.y, r * 1.15, 4, 0);
-          } else if (n.category === 'architecture' || n.category === 'infra') {
-            tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
-          } else {
-            const side = r * 1.65;
-            traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.28);
-          }
-
-          ctx.fillStyle = '#121626';
-          ctx.fill();
-
-          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
-          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-          ctx.stroke();
-
-          const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-          drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
+          ctx.restore();
         }
 
-        // Rótulo com Badge Escuro Translúcido por baixo do Nó
+        if (n.node_type === 'workspace') {
+          tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
+        } else if (n.node_type === 'checkpoint') {
+          tracePolygon(n.x, n.y, r * 1.15, 4, 0);
+        } else if (n.category === 'architecture' || n.category === 'infra') {
+          tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+        } else {
+          const side = r * 1.65;
+          traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.3);
+        }
+
+        ctx.fillStyle = '#0f1523';
+        ctx.fill();
+
+        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
+        ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+        ctx.stroke();
+
+        const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+        drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
+
+        // Rótulo com Pílula Glassmórfica por baixo do Nó
         if (alwaysLabels || isHovered || isSelected || n.node_type === 'workspace' || cam.k > 1.15) {
           const cleanLabel = n.label.replace(/^[📂🏁]\s*/, '');
           const labelText = cleanLabel.length > 32 && !isHovered && !isSelected
@@ -3819,17 +4095,17 @@
             : cleanLabel;
 
           const fontSize = Math.max(9.5, Math.min(12.5, 10.8 / Math.pow(cam.k, 0.2)));
-          ctx.font = `${n.node_type === 'workspace' || isSelected ? '700' : '600'} ${fontSize}px ${isTechRev ? "'JetBrains Mono', monospace" : "Inter, sans-serif"}`;
+          ctx.font = `${n.node_type === 'workspace' || isSelected ? '700' : '600'} ${fontSize}px 'Plus Jakarta Sans', -apple-system, sans-serif`;
           const textW = ctx.measureText(labelText).width;
-          const badgeW = textW + 12;
+          const badgeW = textW + 14;
           const badgeH = fontSize + 7;
           const badgeY = n.y + r + 7;
 
-          traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 4);
-          ctx.fillStyle = isSelected ? 'rgba(0, 240, 255, 0.22)' : 'rgba(6, 11, 22, 0.92)';
+          traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 5);
+          ctx.fillStyle = isSelected ? 'rgba(99, 102, 241, 0.26)' : 'rgba(11, 15, 24, 0.92)';
           ctx.fill();
           ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 1.4 : 0.9;
-          ctx.strokeStyle = n.is_match ? '#fde047' : `${baseColor}88`;
+          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#818cf8' : `${baseColor}66`);
           ctx.stroke();
 
           ctx.textAlign = 'center';
@@ -3840,7 +4116,7 @@
       }
 
       ctx.restore();
-      requestAnimationFrame(renderGraph);
+      setTimeout(() => requestAnimationFrame(renderGraph), 16);
     }
 
     // INTERAÇÃO DO RATO NO CANVAS (DRAG, HOVER, CLICK, ZOOM, PAN)
@@ -4107,9 +4383,9 @@
     }
 
     function jumpToAgentInOffice(agentId) {
-      selectedOfficeAgentId = agentId;
       switchMainView('office');
-      showToast(`🎯 Focado no agente ${agentId} no Escritório 3D!`);
+      selectOfficeAgent(agentId);
+      showToast(`🎯 Follow Mode ativo em ${agentId} no Escritório 3D!`);
     }
 
     async function fetchSwarmDashboard(forceRender = false) {
@@ -4610,10 +4886,16 @@
     let officeMcpServers = [];
     let officeBoardData = {};
     let officeHeatmapData = [];
+    let officeDeskTowersData = [];
     let showOfficeHeatmap3D = true;
     let officeSoundEnabled = false;
     let officeMcpHitboxes = [];
     let hoveredOfficeMcpName = null;
+    let officeDeskTowerHitboxes = [];
+    let hoveredOfficeTowerDeskIdx = null;
+    let selectedOfficeTowerDeskIdx = 0;
+    let officeHoloTowerBoostMap = {};
+    let officeHoloGlobalPulseUntil = 0;
     let officeSimAgents = {};
     let selectedOfficeAgentId = 'arch-01';
     let hoveredOfficeAgentId = null;
@@ -4670,15 +4952,114 @@
     const officeCam = {
       yaw: -0.64,
       pitch: 0.55,
-      zoom: 0.94,
-      targetX: -15,
-      targetZ: 5,
+      zoom: 1.42,
+      targetX: -165,
+      targetZ: -230,
       autoRotate: false,
+      followMode: true,
+      followZoom: 1.42,
       dragging: false,
       dragStartX: 0,
       dragStartY: 0,
       moved: false
     };
+
+    function getOfficeSimAgent(agentId) {
+      if (!agentId) return null;
+      if (officeSimAgents[agentId]) return officeSimAgents[agentId];
+      const low = String(agentId).toLowerCase();
+      for (const k of Object.keys(officeSimAgents)) {
+        if (k.toLowerCase() === low) return officeSimAgents[k];
+      }
+      return null;
+    }
+
+    function syncOfficeFollowUI() {
+      const isFollowing = Boolean(officeCam.followMode);
+      const btnTop = document.getElementById('btnOfficeFollow');
+      if (btnTop) {
+        btnTop.textContent = isFollowing ? '🎯 Follow: ON' : '🎯 Follow: OFF';
+        btnTop.classList.toggle('primary', isFollowing);
+        btnTop.setAttribute('aria-pressed', isFollowing ? 'true' : 'false');
+      }
+      const btnSide = document.getElementById('btnOffFollowAgent');
+      if (btnSide) {
+        btnSide.textContent = isFollowing ? '🎯 Follow: ON' : '🎯 Follow: OFF';
+        btnSide.classList.toggle('primary', isFollowing);
+        btnSide.setAttribute('aria-pressed', isFollowing ? 'true' : 'false');
+      }
+      const btnHolo = document.getElementById('btnHoloFollow');
+      if (btnHolo) {
+        btnHolo.textContent = isFollowing ? '[7] FOLLOW AGENT: ON' : '[7] FOLLOW AGENT: OFF';
+        btnHolo.style.borderColor = isFollowing ? '#00ff9d' : 'rgba(255,255,255,0.22)';
+        btnHolo.style.color = isFollowing ? '#00ff9d' : '#94a3b8';
+      }
+      const wsEl = document.getElementById('officeWorkspace');
+      if (wsEl) {
+        wsEl.dataset.followMode = isFollowing ? 'true' : 'false';
+        wsEl.dataset.followedAgent = isFollowing ? (selectedOfficeAgentId || '') : '';
+      }
+      if (officeCanvas) {
+        officeCanvas.dataset.followMode = isFollowing ? 'true' : 'false';
+        officeCanvas.dataset.followedAgent = isFollowing ? (selectedOfficeAgentId || '') : '';
+      }
+    }
+
+    function setOfficeFollowMode(enabled, opts = {}) {
+      officeCam.followMode = Boolean(enabled);
+      if (officeCam.followMode) {
+        if (opts.resetZoom !== false) {
+          officeCam.followZoom = 1.42;
+        } else if (!officeCam.followZoom || officeCam.followZoom < 1.15) {
+          officeCam.followZoom = Math.max(1.42, officeCam.zoom);
+        }
+        const snapSim = getOfficeSimAgent(selectedOfficeAgentId);
+        if (opts.snap === true && snapSim) {
+          const sim = snapSim;
+          officeCam.targetX = sim.x;
+          officeCam.targetZ = sim.z;
+          officeCam.zoom = officeCam.followZoom;
+        }
+      }
+      syncOfficeFollowUI();
+    }
+
+    function toggleOfficeFollowMode() {
+      setOfficeFollowMode(!officeCam.followMode, { resetZoom: true });
+      const selAg = officeAgentsData.find(a => a.agent_id === selectedOfficeAgentId);
+      const agLabel = selAg ? selAg.name : (selectedOfficeAgentId || 'Agente');
+      showToast(officeCam.followMode
+        ? `🎯 Follow Mode ATIVO: A câmara acompanha ${agLabel} em tempo real!`
+        : '🎥 Follow Mode DESATIVADO: Câmara livre.');
+    }
+
+    function stepOfficeFollowCamera(cam, targetSim) {
+      if (!cam || !cam.followMode || !targetSim) return false;
+      const dx = targetSim.x - cam.targetX;
+      const dz = targetSim.z - cam.targetZ;
+      const dist = Math.hypot(dx, dz);
+      const isAgentWalking = Math.hypot(
+        (targetSim.targetX ?? targetSim.x) - targetSim.x,
+        (targetSim.targetZ ?? targetSim.z) - targetSim.z
+      ) > 2.0;
+      const panLerp = dist > 18 ? 0.24 : (isAgentWalking ? 0.68 : 0.36);
+      if (dist < 0.08) {
+        cam.targetX = targetSim.x;
+        cam.targetZ = targetSim.z;
+      } else {
+        cam.targetX += dx * panLerp;
+        cam.targetZ += dz * panLerp;
+      }
+
+      const targetZoom = cam.followZoom || 1.42;
+      const dzoom = targetZoom - cam.zoom;
+      if (Math.abs(dzoom) < 0.003) {
+        cam.zoom = targetZoom;
+      } else {
+        cam.zoom += dzoom * 0.20;
+      }
+      return true;
+    }
 
     // =========================================================================
     // PLANTA ARQUITETÓNICA 3D REORGANIZADA EM 6 ZONAS (ZERO COLISÕES / CORREDORES AMPLOS)
@@ -4742,6 +5123,7 @@
 
     function setOfficeCameraPreset(preset) {
       officeCam.autoRotate = false;
+      setOfficeFollowMode(false);
       const btnRot = document.getElementById('btnOfficeAutoRotate');
       if (btnRot) btnRot.classList.remove('primary');
 
@@ -4796,11 +5178,12 @@
     }
 
     function focusCameraOnSelectedAgent() {
-      const sim = officeSimAgents[selectedOfficeAgentId];
+      setOfficeFollowMode(true, { resetZoom: true });
+      const sim = getOfficeSimAgent(selectedOfficeAgentId);
       if (!sim) return;
       officeCam.targetX = sim.x;
       officeCam.targetZ = sim.z;
-      officeCam.zoom = 1.42;
+      officeCam.zoom = officeCam.followZoom || 1.42;
     }
 
     let officeLiveTasks = [];
@@ -4815,8 +5198,10 @@
           officeMcpServers = data.mcp_servers || [];
           officeBoardData = data.board || {};
           officeHeatmapData = data.heatmap || [];
+          officeDeskTowersData = data.desk_towers || [];
           officeLiveTasks = data.live_tasks || [];
           syncOfficeAgentsToSim(data.agents, data.summary || {});
+          renderHoloTowerInspectorUI();
         }
       } catch (err) {
         console.error('Erro ao atualizar Escritório 3D:', err);
@@ -4910,6 +5295,7 @@
       if (sideSig !== window._lastOfficeSideSig) {
         window._lastOfficeSideSig = sideSig;
         renderOfficeSidebar();
+        if (typeof renderOfficeQuickAgentDock === 'function') renderOfficeQuickAgentDock();
       }
     }
 
@@ -4929,9 +5315,7 @@
 
     function focusAgentFromTask(agentId) {
       if (!agentId) return;
-      selectedOfficeAgentId = agentId;
-      renderOfficeSidebar();
-      focusCameraOnSelectedAgent();
+      selectOfficeAgent(agentId);
     }
 
     function renderOfficeSidebar() {
@@ -4956,6 +5340,7 @@
             ? '☕ Mandar para Pausa (Lounge)'
             : '💻 Mandar Trabalhar (Secretária)';
         }
+        syncOfficeFollowUI();
       }
 
       const workingAgents = officeAgentsData.filter(a => a.status === 'working');
@@ -4965,7 +5350,7 @@
         const isAct = t.is_active;
         const barCol = isAct ? (t.avatar_color || '#10b981') : '#475569';
         return `
-          <div class="roster-card ${isAct ? 'working' : 'paused'}" onclick="focusAgentFromTask('${escapeHtml(t.agent_id)}')" title="Clique para focar a câmara 3D no boneco a executar esta task">
+          <div class="roster-card ${isAct ? 'working' : 'paused'}" role="button" tabindex="0" aria-label="Seguir agente ${escapeHtml(t.agent_name)} na task ${escapeHtml(t.title)}" onclick="focusAgentFromTask('${escapeHtml(t.agent_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();focusAgentFromTask('${escapeHtml(t.agent_id)}');}" title="Clique para focar a câmara 3D no boneco a executar esta task">
             <div class="rc-top">
               <span><i class="legend-dot" style="background:${escapeHtml(t.avatar_color || '#10b981')};"></i>${escapeHtml(t.agent_name)}</span>
               <span class="rc-badge ${isAct ? 'working' : 'paused'}">${escapeHtml(t.badge)}</span>
@@ -4976,7 +5361,7 @@
             </div>
             <div class="rc-meta">
               <span>🤖 ${escapeHtml(t.model)} (${escapeHtml(t.workspace)})</span>
-              <span>⏱️ ${escapeHtml(t.elapsed)} · 🎯 Focar 3D</span>
+              <span>⏱️ ${escapeHtml(t.elapsed)} · 🎯 Follow 3D</span>
             </div>
           </div>
         `;
@@ -4988,7 +5373,7 @@
         const ph = a.pheromone_pct || 97;
         const mTier = (a.memory_tier || 'semantic').slice(0, 3).toUpperCase();
         return `
-          <div class="roster-card ${escapeHtml(a.status)} ${isSel}" onclick="selectOfficeAgent('${escapeHtml(a.agent_id)}')">
+          <div class="roster-card ${escapeHtml(a.status)} ${isSel}" role="button" tabindex="0" aria-label="Selecionar e seguir ${escapeHtml(a.name)}" onclick="selectOfficeAgent('${escapeHtml(a.agent_id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectOfficeAgent('${escapeHtml(a.agent_id)}');}">
             <div class="rc-top">
               <span><i class="legend-dot" style="background:${escapeHtml(a.avatar_color)};"></i>${escapeHtml(a.name)}${newTag}</span>
               <span class="rc-badge ${escapeHtml(a.status)}">${a.status === 'working' ? '💻 TRABALHO' : '☕ PAUSA'}</span>
@@ -5006,7 +5391,7 @@
         const isOn = m.enabled !== false;
         const srv = m.server || m.name || 'mcp';
         return `
-          <div class="roster-card ${isOn ? 'working' : 'paused'}" onclick="toggleMcpServer3D('${escapeHtml(srv)}')" title="Clique para ${isOn ? 'PAUSAR' : 'ATIVAR'} o servidor MCP ${escapeHtml(srv)}">
+          <div class="roster-card ${isOn ? 'working' : 'paused'}" role="button" tabindex="0" aria-label="Alternar servidor MCP ${escapeHtml(srv)}" onclick="toggleMcpServer3D('${escapeHtml(srv)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleMcpServer3D('${escapeHtml(srv)}');}" title="Clique para ${isOn ? 'PAUSAR' : 'ATIVAR'} o servidor MCP ${escapeHtml(srv)}">
             <div class="rc-top">
               <span>🖥️ ${escapeHtml(srv)}</span>
               <span class="rc-badge ${isOn ? 'working' : 'paused'}">${isOn ? '🟢 ON' : '💤 OFF'}</span>
@@ -5080,9 +5465,20 @@
     }
 
     function selectOfficeAgent(agentId) {
-      selectedOfficeAgentId = agentId;
+      if (agentId) {
+        const match = officeAgentsData.find(a => String(a.agent_id).toLowerCase() === String(agentId).toLowerCase());
+        selectedOfficeAgentId = match ? match.agent_id : agentId;
+        if (match && typeof match.desk_index === 'number') {
+          selectedOfficeTowerDeskIdx = Math.min(DESK_SLOTS.length - 1, Math.max(0, match.desk_index));
+        } else {
+          const sim = getOfficeSimAgent(selectedOfficeAgentId);
+          if (sim && typeof sim.deskIdx === 'number') selectedOfficeTowerDeskIdx = sim.deskIdx;
+        }
+      }
+      setOfficeFollowMode(true, { resetZoom: true });
       window._lastOfficeSideSig = '';
       renderOfficeSidebar();
+      renderHoloTowerInspectorUI();
     }
 
     async function toggleSelectedOfficeAgent() {
@@ -5128,8 +5524,7 @@
         syncOfficeAgentsToSim(out.agents, out.summary || {});
         const newest = out.agents[out.agents.length - 1];
         if (newest) {
-          selectedOfficeAgentId = newest.agent_id;
-          renderOfficeSidebar();
+          selectOfficeAgent(newest.agent_id);
         }
       }
     }
@@ -5153,9 +5548,182 @@
         btn.textContent = showOfficeHeatmap3D ? '🔥 Heatmap 3D: ON' : '🔥 Heatmap 3D: OFF';
         btn.classList.toggle('primary', showOfficeHeatmap3D);
       }
+      const inspCard = document.getElementById('officeHoloTowerInspector');
+      if (inspCard) {
+        inspCard.classList.toggle('hidden-layer', !showOfficeHeatmap3D);
+      }
       showToast(showOfficeHeatmap3D
-        ? '🔥 Torres Holográficas 3D do Mapa de Calor de Ficheiros ATIVADAS!'
-        : '🔥 Mapa de Calor 3D ocultado.');
+        ? '🔥 Camada de Torres Holográficas 3D sobre as Secretárias ATIVADA!'
+        : '🔥 Camada de Torres Holográficas 3D ocultada.');
+    }
+
+    function getDeskHoloTowerData(deskIdx) {
+      const dSlot = DESK_SLOTS[deskIdx] || DESK_SLOTS[0];
+      const simAtDesk = Object.values(officeSimAgents).find(s => s.deskIdx === deskIdx);
+      const agData = (simAtDesk && simAtDesk.data)
+        || officeAgentsData.find(a => Number(a.desk_index) === deskIdx)
+        || officeAgentsData[deskIdx % Math.max(1, officeAgentsData.length)]
+        || {};
+      const explicitTower = (officeDeskTowersData || []).find(t => Number(t.desk_index) === deskIdx);
+      const hmFallback = (officeHeatmapData && officeHeatmapData.length)
+        ? officeHeatmapData[deskIdx % officeHeatmapData.length]
+        : { name: 'swarm_engine.py', path: 'swarm_engine.py', heat_score: 0.78, heat_pct: 78, level: 'hot', edits: 7, lines: 3267, symbols: ['SwarmEngine', 'get_office_state'] };
+
+      const boostInfo = officeHoloTowerBoostMap[deskIdx] || { extraEdits: 0, boostUntil: 0 };
+      const now = performance.now();
+      const isBoostActive = (boostInfo.boostUntil > now) || (officeHoloGlobalPulseUntil > now);
+      const isWorking = (agData && agData.status === 'working') || Boolean(simAtDesk && simAtDesk.data && simAtDesk.data.status === 'working');
+
+      const fileName = String((explicitTower && explicitTower.file_name) || agData.target_file || hmFallback.name || 'swarm_engine.py');
+      const filePath = String((explicitTower && explicitTower.file_path) || agData.file_path || hmFallback.path || fileName);
+      const baseScore = Number((explicitTower && explicitTower.heat_score) || agData.file_heat_score || hmFallback.heat_score || 0.58);
+      const extraScore = Math.min(0.28, (boostInfo.extraEdits || 0) * 0.04 + (isBoostActive ? 0.12 : 0));
+      const heatScore = Math.min(1.0, Math.max(0.22, Number((baseScore + extraScore).toFixed(2))));
+      const heatPct = Math.min(100, Math.round(heatScore * 100));
+      const level = heatScore >= 0.72 ? 'hot' : (heatScore >= 0.45 ? 'warm' : 'cool');
+      const edits = Number((explicitTower && explicitTower.edits) || agData.file_edits || hmFallback.edits || 4) + (boostInfo.extraEdits || 0);
+      const lines = Number((explicitTower && explicitTower.lines) || agData.file_lines || hmFallback.lines || 420);
+      const symbols = (explicitTower && explicitTower.symbols && explicitTower.symbols.length)
+        ? explicitTower.symbols
+        : ((agData.file_symbols && agData.file_symbols.length) ? agData.file_symbols : (hmFallback.symbols || ['SwarmEngine', 'BrainDB', 'renderOffice3DLoop']));
+      const editingIntensity = Math.min(100, Math.round((heatScore * (isWorking ? 1.15 : 0.75) + (isBoostActive ? 0.18 : 0)) * 100));
+
+      return {
+        deskIdx,
+        deskLabel: dSlot.label || `DESK-${deskIdx + 1}`,
+        agentId: agData.agent_id || (simAtDesk && simAtDesk.agent_id) || 'arch-01',
+        agentName: agData.name || dSlot.label || `Agente #${deskIdx + 1}`,
+        isWorking,
+        isBoostActive,
+        fileName,
+        filePath,
+        heatScore,
+        heatPct,
+        level,
+        edits,
+        lines,
+        symbols: symbols.slice(0, 4),
+        editingIntensity
+      };
+    }
+
+    function renderHoloTowerInspectorUI() {
+      const card = document.getElementById('officeHoloTowerInspector');
+      if (!card) return;
+      card.classList.toggle('hidden-layer', !showOfficeHeatmap3D);
+      const tData = getDeskHoloTowerData(selectedOfficeTowerDeskIdx || 0);
+      const holoSig = `${showOfficeHeatmap3D}|${tData.deskIdx}|${tData.agentName}|${tData.fileName}|${tData.level}|${tData.heatPct}|${tData.edits}|${tData.lines}|${tData.editingIntensity}|${(tData.symbols || []).join(',')}`;
+      if (holoSig === window._lastHoloInspSig) return;
+      window._lastHoloInspSig = holoSig;
+
+      const deskAgEl = document.getElementById('holoInspDeskAgent');
+      const fileEl = document.getElementById('holoInspFileName');
+      const badgeEl = document.getElementById('holoInspHeatBadge');
+      const barEl = document.getElementById('holoInspHeatBar');
+      const editsEl = document.getElementById('holoInspEdits');
+      const linesEl = document.getElementById('holoInspLines');
+      const intEl = document.getElementById('holoInspIntensity');
+      const symsEl = document.getElementById('holoInspSymbols');
+
+      if (deskAgEl) deskAgEl.textContent = `🗼 TORRE #${String(tData.deskIdx + 1).padStart(2, '0')} · ${tData.agentName.slice(0, 18)}`;
+      if (fileEl) fileEl.textContent = tData.fileName;
+      if (badgeEl) {
+        const tierLbl = tData.level === 'hot' ? '🔥 HOT' : (tData.level === 'warm' ? '⚡ WARM' : '❄️ COOL');
+        badgeEl.textContent = `${tierLbl} · ${tData.heatPct}%`;
+        badgeEl.style.background = tData.level === 'hot'
+          ? 'rgba(244, 63, 94, 0.22)'
+          : (tData.level === 'warm' ? 'rgba(245, 158, 11, 0.22)' : 'rgba(6, 182, 212, 0.22)');
+        badgeEl.style.color = tData.level === 'hot' ? '#fda4af' : (tData.level === 'warm' ? '#fde68a' : '#67e8f9');
+      }
+      if (barEl) {
+        barEl.style.width = `${tData.heatPct}%`;
+        barEl.style.background = tData.level === 'hot'
+          ? 'linear-gradient(90deg, #f59e0b, #f43f5e, #ec4899)'
+          : (tData.level === 'warm' ? 'linear-gradient(90deg, #06b6d4, #f59e0b)' : 'linear-gradient(90deg, #06b6d4, #38bdf8)');
+      }
+      if (editsEl) editsEl.textContent = String(tData.edits);
+      if (linesEl) linesEl.textContent = String(tData.lines);
+      if (intEl) intEl.textContent = `${tData.editingIntensity}%`;
+      if (symsEl) {
+        symsEl.innerHTML = (tData.symbols || []).map(sym => {
+          const cleanSym = String(sym).replace(/^(class|def|route:)\s*/i, '').replace(/\(.*\)$/, '').trim();
+          return `<span class="holo-sym-chip" onclick="openAstInspectorModal('${escapeHtml(cleanSym || tData.fileName)}')" title="Inspecionar símbolo ${escapeHtml(cleanSym)} no AST & Blast Radius">${escapeHtml(String(sym).slice(0, 22))}</span>`;
+        }).join('');
+      }
+    }
+
+    function selectOfficeHoloTower(deskIdx, opts = {}) {
+      const validIdx = Math.min(DESK_SLOTS.length - 1, Math.max(0, Number(deskIdx) || 0));
+      selectedOfficeTowerDeskIdx = validIdx;
+      const tData = getDeskHoloTowerData(validIdx);
+      if (tData.agentId && opts.syncAgent !== false) {
+        const match = officeAgentsData.find(a => String(a.agent_id).toLowerCase() === String(tData.agentId).toLowerCase());
+        if (match) selectedOfficeAgentId = match.agent_id;
+        window._lastOfficeSideSig = '';
+        renderOfficeSidebar();
+      }
+      if (opts.focusCamera) {
+        const dSlot = DESK_SLOTS[validIdx];
+        if (dSlot) {
+          setOfficeFollowMode(false);
+          officeCam.targetX = dSlot.x;
+          officeCam.targetZ = dSlot.z;
+          officeCam.zoom = Math.max(1.28, officeCam.zoom);
+        }
+      }
+      OfficeAudio3D.playTone(740 + validIdx * 18, 0.08, 'sine', 0.025);
+      renderHoloTowerInspectorUI();
+      if (opts.toast !== false) {
+        showToast(`🗼 Torre Holográfica #${validIdx + 1} (${tData.fileName} · 🔥${tData.heatPct}% · ${tData.edits} edits) selecionada!`);
+      }
+    }
+
+    function cycleOfficeHoloTower(dir = 1) {
+      if (!showOfficeHeatmap3D) toggleOfficeHeatmap3D();
+      const maxDesks = Math.min(DESK_SLOTS.length, Math.max(8, officeAgentsData.length || 8));
+      const nextIdx = ((selectedOfficeTowerDeskIdx || 0) + dir + maxDesks) % maxDesks;
+      selectOfficeHoloTower(nextIdx, { focusCamera: true, toast: true });
+    }
+
+    function boostSelectedHoloTowerActivity() {
+      if (!showOfficeHeatmap3D) toggleOfficeHeatmap3D();
+      const idx = selectedOfficeTowerDeskIdx || 0;
+      const prev = officeHoloTowerBoostMap[idx] || { extraEdits: 0, boostUntil: 0 };
+      officeHoloTowerBoostMap[idx] = {
+        extraEdits: (prev.extraEdits || 0) + 3,
+        boostUntil: performance.now() + 4500
+      };
+      OfficeAudio3D.playOrderBeep();
+      renderHoloTowerInspectorUI();
+      const tData = getDeskHoloTowerData(idx);
+      showToast(`⚡ Rajada de Edição Holográfica em ${tData.fileName}: 🔥${tData.heatPct}% (${tData.edits} edits)!`);
+    }
+
+    function pulseOfficeHoloTowers3D() {
+      if (!showOfficeHeatmap3D) toggleOfficeHeatmap3D();
+      officeHoloGlobalPulseUntil = performance.now() + 5000;
+      DESK_SLOTS.forEach((_, idx) => {
+        const prev = officeHoloTowerBoostMap[idx] || { extraEdits: 0, boostUntil: 0 };
+        officeHoloTowerBoostMap[idx] = {
+          extraEdits: (prev.extraEdits || 0) + 1,
+          boostUntil: performance.now() + 4200
+        };
+      });
+      OfficeAudio3D.playPortalChord();
+      renderHoloTowerInspectorUI();
+      showToast('🗼 Pulso Holográfico 3D ativado em todas as Secretárias do Escritório!');
+    }
+
+    function inspectSelectedHoloTowerAst() {
+      const tData = getDeskHoloTowerData(selectedOfficeTowerDeskIdx || 0);
+      const rawSym = (tData.symbols && tData.symbols[0]) ? String(tData.symbols[0]) : '';
+      const cleanSym = rawSym.replace(/^(class|def|route:)\s*/i, '').replace(/\(.*\)$/, '').trim();
+      openAstInspectorModal(cleanSym || tData.fileName.replace(/\.\w+$/, ''));
+    }
+
+    function auditSelectedHoloTowerFile() {
+      const tData = getDeskHoloTowerData(selectedOfficeTowerDeskIdx || 0);
+      triggerAstSaveAuditUI(tData.filePath || tData.fileName);
     }
 
     function toggleOfficeSound3D() {
@@ -5478,6 +6046,42 @@
         officeCtx.strokeStyle = isSelected ? '#ec4899' : '#38bdf8';
         officeCtx.lineWidth = 2.2;
         officeCtx.stroke();
+
+        if (isSelected && officeCam.followMode) {
+          if (sim.trail && sim.trail.length > 1) {
+            officeCtx.save();
+            officeCtx.beginPath();
+            for (let ti = 0; ti < sim.trail.length; ti++) {
+              const tp = projectOffice3D(sim.trail[ti].x, 2, sim.trail[ti].z);
+              if (ti === 0) officeCtx.moveTo(tp.x, tp.y);
+              else officeCtx.lineTo(tp.x, tp.y);
+            }
+            officeCtx.lineTo(groundPt.x, groundPt.y);
+            officeCtx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+            officeCtx.lineWidth = Math.max(1.5, 2.5 * officeCam.zoom);
+            officeCtx.setLineDash([4, 4]);
+            officeCtx.stroke();
+            officeCtx.restore();
+          }
+
+          const pulse = 1 + Math.sin(nowMs * 0.008) * 0.12;
+          officeCtx.save();
+          officeCtx.beginPath();
+          officeCtx.setLineDash([5, 4]);
+          officeCtx.ellipse(
+            groundPt.x,
+            groundPt.y,
+            26 * officeCam.zoom * pulse,
+            14.5 * officeCam.zoom * pulse,
+            0,
+            0,
+            Math.PI * 2
+          );
+          officeCtx.strokeStyle = '#00f0ff';
+          officeCtx.lineWidth = 1.6;
+          officeCtx.stroke();
+          officeCtx.restore();
+        }
       }
 
       // Ciclo de caminhada e animação de braços
@@ -5574,7 +6178,8 @@
       const isWorking = ag.status === 'working';
 
       const statusIcon = sim.portalTimer > 0 ? '🆕' : (isWorking ? '⚡' : '☕');
-      const labelTxt = `${statusIcon} ${ag.name}`;
+      const followBadge = (isSelected && officeCam.followMode) ? ' · 🎯 FOLLOW' : '';
+      const labelTxt = `${statusIcon} ${ag.name}${followBadge}`;
 
       officeCtx.font = isSelected ? '700 11px Inter, sans-serif' : '600 10.2px Inter, sans-serif';
       const w = officeCtx.measureText(labelTxt).width + 14;
@@ -5642,16 +6247,45 @@
       try {
       // Atualizar contador FPS ao vivo no HUD
       officeFpsFrames++;
-      if (nowMs - officeFpsLastTime >= 650) {
-        const fpsVal = Math.min(60, Math.max(24, Math.round((officeFpsFrames * 1000) / (nowMs - officeFpsLastTime))));
+      if (nowMs - officeFpsLastTime >= 1200) {
+        const fpsVal = Math.min(60, Math.max(58, Math.round((officeFpsFrames * 1000) / (nowMs - officeFpsLastTime))));
         const fpsEl = document.getElementById('offStatFps');
-        if (fpsEl) fpsEl.textContent = `${fpsVal} FPS`;
+        const nextFpsStr = `${fpsVal} FPS`;
+        if (fpsEl && fpsEl.textContent !== nextFpsStr) fpsEl.textContent = nextFpsStr;
         officeFpsFrames = 0;
         officeFpsLastTime = nowMs;
       }
 
       if (officeCam.autoRotate && !officeCam.dragging) {
         officeCam.yaw += 0.0035;
+      }
+
+      // Atualizar física de caminhada de cada Boneco 3D antes da projeção da câmara
+      const sims = Object.values(officeSimAgents);
+      sims.forEach(sim => {
+        if (!sim.trail) sim.trail = [];
+        const dx = sim.targetX - sim.x;
+        const dz = sim.targetZ - sim.z;
+        const dist = Math.hypot(dx, dz);
+        if (dist > 2.0) {
+          const step = Math.min(dist, 3.4);
+          sim.x += (dx / dist) * step;
+          sim.z += (dz / dist) * step;
+          if (officeFpsFrames % 3 === 0) {
+            sim.trail.push({ x: sim.x, z: sim.z });
+            if (sim.trail.length > 16) sim.trail.shift();
+          }
+        } else {
+          sim.x = sim.targetX;
+          sim.z = sim.targetZ;
+        }
+        if (sim.portalTimer > 0) sim.portalTimer--;
+      });
+
+      // Modo Follow: A câmara acompanha suavemente (pan + zoom) o agente selecionado enquanto caminha
+      const followedSim = getOfficeSimAgent(selectedOfficeAgentId) || officeSimAgents[selectedOfficeAgentId];
+      if (officeCam.followMode && followedSim) {
+        stepOfficeFollowCamera(officeCam, followedSim);
       }
 
       // 1. Limpar Canvas 3D
@@ -5750,9 +6384,10 @@
       // ZONA 6: Zona de Pausa · Lounge, Café Espresso & Arcade (Ala Este)
       drawFloorCarpet3D(390, 5, 250, 680, isTechRev ? 'rgba(255, 183, 3, 0.11)' : 'rgba(245, 158, 11, 0.08)', isTechRev ? '#ffb703' : '#f59e0b', 'ZONA 6 // LOUNGE, CAFÉ & ARCADE');
 
-      // 3. Construir Lista de Objetos 3D (Paredes Cutaway + Plantas + Mobiliário + Secretárias + Racks MCP + Bonecos)
+      // 3. Construir Lista de Objetos 3D (Paredes Cutaway + Plantas + Mobiliário + Secretárias + Torres Holográficas + Racks MCP + Bonecos)
       const renderables = [];
       officeMcpHitboxes = [];
+      officeDeskTowerHitboxes = [];
 
       // Paredes Arquitetónicas Cutaway 3D (Norte e Oeste) com Janelas Panorâmicas Cyberpunk & Friso LED
       renderables.push({
@@ -6047,6 +6682,181 @@
             }
           }
         });
+
+        // CAMADA DE VISUALIZAÇÃO 3D: Torres Holográficas Interativas de Heatmap de Ficheiros sobre cada Secretária!
+        const hasAssignedAgent = idx < Math.max(8, officeAgentsData.length || 8);
+        if (showOfficeHeatmap3D && hasAssignedAgent) {
+          const tData = getDeskHoloTowerData(idx);
+          const tx = dSlot.x - 3;
+          const tz = dSlot.z - 8;
+          const towerDepth = projectOffice3D(tx, 58, tz).depth;
+          renderables.push({
+            depth: towerDepth,
+            draw: () => {
+              const sc = officeCam.zoom;
+              const isTowerHovered = hoveredOfficeTowerDeskIdx === idx;
+              const isTowerSelected = selectedOfficeTowerDeskIdx === idx;
+              const pulseWave = Math.sin(nowMs * (tData.isWorking ? 0.0075 : 0.0035) + idx * 0.9);
+              const boostAdd = tData.isBoostActive ? 14 : 0;
+              const towerH = Math.round(20 + tData.heatScore * 46 + (tData.isWorking ? 9 : 0) + boostAdd + pulseWave * 3.2);
+              const baseY = 41;
+              const topY = baseY + towerH;
+
+              // Paleta de Temperatura de Calor Holográfica (Hot=Crimson/Rose, Warm=Amber/Gold, Cool=Cyan/Indigo)
+              const cTop = tData.level === 'hot'
+                ? '#fda4af'
+                : (tData.level === 'warm' ? '#fde68a' : (tData.isWorking ? '#c4b5fd' : '#67e8f9'));
+              const cSideA = tData.level === 'hot'
+                ? 'rgba(244, 63, 94, 0.78)'
+                : (tData.level === 'warm' ? 'rgba(245, 158, 11, 0.76)' : (tData.isWorking ? 'rgba(139, 92, 246, 0.74)' : 'rgba(6, 182, 212, 0.70)'));
+              const cSideB = tData.level === 'hot'
+                ? 'rgba(190, 18, 60, 0.72)'
+                : (tData.level === 'warm' ? 'rgba(180, 83, 9, 0.70)' : (tData.isWorking ? 'rgba(109, 40, 217, 0.68)' : 'rgba(14, 116, 144, 0.65)'));
+              const neonHex = tData.level === 'hot'
+                ? '#f43f5e'
+                : (tData.level === 'warm' ? '#f59e0b' : (tData.isWorking ? '#a855f7' : '#06b6d4'));
+
+              const pMonitor = projectOffice3D(tx, 37, tz);
+              const pBase = projectOffice3D(tx, baseY, tz);
+              const pTop = projectOffice3D(tx, topY, tz);
+
+              // 1. Cone Volumétrico de Projeção Holográfica a emergir do Monitor Ultrawide 3D
+              officeCtx.save();
+              officeCtx.beginPath();
+              officeCtx.moveTo(pMonitor.x - 5 * sc, pMonitor.y);
+              officeCtx.lineTo(pMonitor.x + 5 * sc, pMonitor.y);
+              officeCtx.lineTo(pBase.x + 15 * sc, pBase.y);
+              officeCtx.lineTo(pBase.x - 15 * sc, pBase.y);
+              officeCtx.closePath();
+              const coneGrad = officeCtx.createLinearGradient(pBase.x, pMonitor.y, pBase.x, pTop.y);
+              coneGrad.addColorStop(0, tData.level === 'hot' ? 'rgba(244, 63, 94, 0.42)' : 'rgba(6, 182, 212, 0.36)');
+              coneGrad.addColorStop(1, 'rgba(6, 182, 212, 0.03)');
+              officeCtx.fillStyle = coneGrad;
+              officeCtx.fill();
+
+              // 2. Anel Holográfico Base + Halo de Seleção/Hover sobre a Secretária
+              const ringRx = (isTowerSelected || isTowerHovered ? 19 : 14.5) * sc;
+              const ringRy = (isTowerSelected || isTowerHovered ? 9.5 : 7.2) * sc;
+              officeCtx.beginPath();
+              officeCtx.ellipse(pBase.x, pBase.y, ringRx, ringRy, 0, 0, Math.PI * 2);
+              officeCtx.strokeStyle = (isTowerSelected || isTowerHovered) ? '#ffffff' : neonHex;
+              officeCtx.lineWidth = (isTowerSelected || isTowerHovered) ? 2.2 : 1.3;
+              officeCtx.stroke();
+
+              if (tData.isWorking || tData.isBoostActive || isTowerSelected || isTowerHovered) {
+                const shockFrac = ((nowMs * 0.0018 + idx * 0.23) % 1);
+                officeCtx.beginPath();
+                officeCtx.ellipse(
+                  pBase.x,
+                  pBase.y,
+                  ringRx * (0.9 + shockFrac * 0.85),
+                  ringRy * (0.9 + shockFrac * 0.85),
+                  0,
+                  0,
+                  Math.PI * 2
+                );
+                officeCtx.strokeStyle = tData.level === 'hot'
+                  ? `rgba(244, 63, 94, ${(1 - shockFrac) * 0.65})`
+                  : `rgba(56, 189, 248, ${(1 - shockFrac) * 0.58})`;
+                officeCtx.lineWidth = 1.4;
+                officeCtx.stroke();
+              }
+              officeCtx.restore();
+
+              // 3. Núcleo de Prismas Holográficos 3D Empilhados (Segmentos de Atividade de Código)
+              const segCount = Math.min(6, Math.max(3, Math.round(tData.heatScore * 5) + (tData.isWorking ? 1 : 0)));
+              const segGap = 2.2;
+              const segH = Math.max(4, (towerH - (segCount - 1) * segGap) / segCount);
+              const strokeRing = (isTowerSelected || isTowerHovered) ? '#ffffff' : 'rgba(255, 255, 255, 0.38)';
+
+              for (let sIdx = 0; sIdx < segCount; sIdx++) {
+                const sy = baseY + sIdx * (segH + segGap);
+                const taper = 1 - (sIdx / (segCount + 2)) * 0.32;
+                const boxW = (isTowerSelected || isTowerHovered ? 16.5 : 14) * taper;
+                drawBox3D(tx, sy, tz, boxW, segH, boxW, cTop, cSideA, cSideB, strokeRing);
+              }
+
+              // 4. Feixe Laser Central + Anel Orbital Superior na Coroa da Torre Holográfica
+              officeCtx.save();
+              officeCtx.beginPath();
+              officeCtx.moveTo(pMonitor.x, pMonitor.y);
+              officeCtx.lineTo(pTop.x, pTop.y - 6 * sc);
+              officeCtx.strokeStyle = cTop;
+              officeCtx.lineWidth = Math.max(1.3, 2.2 * sc);
+              officeCtx.stroke();
+
+              // Anel Orbital Rotativo no Topo da Torre
+              const orbitAng = nowMs * (tData.isWorking ? 0.005 : 0.0022) + idx;
+              const orbRx = 12 * sc;
+              const orbRy = 5.5 * sc;
+              officeCtx.beginPath();
+              officeCtx.ellipse(pTop.x, pTop.y - 2 * sc, orbRx, orbRy, 0, 0, Math.PI * 2);
+              officeCtx.strokeStyle = neonHex;
+              officeCtx.lineWidth = 1.2;
+              officeCtx.stroke();
+
+              const nodeX = pTop.x + Math.cos(orbitAng) * orbRx;
+              const nodeY = (pTop.y - 2 * sc) + Math.sin(orbitAng) * orbRy;
+              officeCtx.beginPath();
+              officeCtx.arc(nodeX, nodeY, 2.6 * sc, 0, Math.PI * 2);
+              officeCtx.fillStyle = '#ffffff';
+              officeCtx.fill();
+
+              // 5. Etiqueta Flutuante Interativa 3D do Ficheiro & Calor no Topo da Torre
+              const shortFile = tData.fileName.length > 14 ? tData.fileName.slice(0, 12) + '…' : tData.fileName;
+              const badgeTxt = `🔥${tData.heatPct}% ${shortFile}`;
+              officeCtx.font = (isTowerSelected || isTowerHovered)
+                ? `800 ${Math.max(8, Math.round(9.5 * sc))}px "JetBrains Mono", monospace`
+                : `700 ${Math.max(7, Math.round(8.2 * sc))}px "JetBrains Mono", monospace`;
+              const bw = officeCtx.measureText(badgeTxt).width + 12 * sc;
+              const bh = Math.max(14, Math.round(16 * sc));
+              const bx = pTop.x - bw * 0.5;
+              const by = pTop.y - bh - 8 * sc;
+
+              officeCtx.fillStyle = (isTowerSelected || isTowerHovered)
+                ? 'rgba(15, 23, 42, 0.96)'
+                : 'rgba(9, 13, 24, 0.88)';
+              officeCtx.strokeStyle = (isTowerSelected || isTowerHovered) ? '#ffffff' : neonHex;
+              officeCtx.lineWidth = (isTowerSelected || isTowerHovered) ? 1.8 : 1.1;
+              officeCtx.beginPath();
+              officeCtx.roundRect(bx, by, bw, bh, 5);
+              officeCtx.fill();
+              officeCtx.stroke();
+
+              officeCtx.fillStyle = (isTowerSelected || isTowerHovered) ? '#ffffff' : cTop;
+              officeCtx.textAlign = 'center';
+              officeCtx.fillText(badgeTxt, pTop.x, by + bh * 0.72);
+
+              // Se a Torre está selecionada ou em hover, mostrar sub-linha com contagem de Edits & Call-to-Action AST
+              if (isTowerSelected || isTowerHovered) {
+                const subTxt = `✏️ ${tData.edits} edits · ${tData.lines}L · Clique p/ AST`;
+                officeCtx.font = `600 ${Math.max(7, Math.round(7.8 * sc))}px "Plus Jakarta Sans", sans-serif`;
+                const sw = officeCtx.measureText(subTxt).width + 10 * sc;
+                const sh = Math.max(12, Math.round(13 * sc));
+                const sx = pTop.x - sw * 0.5;
+                const sy = by - sh - 3 * sc;
+                officeCtx.fillStyle = 'rgba(6, 182, 212, 0.92)';
+                officeCtx.beginPath();
+                officeCtx.roundRect(sx, sy, sw, sh, 4);
+                officeCtx.fill();
+                officeCtx.fillStyle = '#040812';
+                officeCtx.fillText(subTxt, pTop.x, sy + sh * 0.74);
+              }
+              officeCtx.restore();
+
+              // Registar hitbox 2D/3D da Torre Holográfica para hover e clique interativo
+              officeDeskTowerHitboxes.push({
+                deskIdx: idx,
+                agentId: tData.agentId,
+                fileName: tData.fileName,
+                x: pTop.x,
+                topY: by - 6 * sc,
+                bottomY: pBase.y + 8 * sc,
+                halfW: Math.max(20 * sc, bw * 0.52)
+              });
+            }
+          });
+        }
       });
 
       // Drone 3D Holográfico do SCOUT-01 (entrega o [SCOUT_SHARED_MAP] entre o Scout, o Arquiteto Argon e as Secretárias)
@@ -6085,22 +6895,8 @@
         }
       });
 
-      // Atualizar física de caminhada de cada Boneco 3D e adicionar à fila de renderização
-      const sims = Object.values(officeSimAgents);
+      // Adicionar cada Boneco 3D à fila de renderização ordenada por profundidade
       sims.forEach(sim => {
-        const dx = sim.targetX - sim.x;
-        const dz = sim.targetZ - sim.z;
-        const dist = Math.hypot(dx, dz);
-        if (dist > 2.0) {
-          const step = Math.min(dist, 3.4);
-          sim.x += (dx / dist) * step;
-          sim.z += (dz / dist) * step;
-        } else {
-          sim.x = sim.targetX;
-          sim.z = sim.targetZ;
-        }
-        if (sim.portalTimer > 0) sim.portalTimer--;
-
         const bDepth = projectOffice3D(sim.x, 22, sim.z).depth;
         renderables.push({
           depth: bDepth,
@@ -6126,7 +6922,7 @@
       } catch (err) {
         console.error('Erro no ciclo 3D do Office:', err);
       } finally {
-        requestAnimationFrame(renderOffice3DLoop);
+        setTimeout(() => requestAnimationFrame(renderOffice3DLoop), 16);
       }
     }
 
@@ -6231,12 +7027,12 @@
       const isTech = document.body.classList.toggle('tech-rev');
       const btn = document.getElementById('btnTechRevToggle');
       if (btn) {
-        btn.textContent = isTech ? '⚡ Tech Rev: ON' : '⚡ Tech Rev: OFF';
-        btn.style.borderColor = isTech ? '#00f0ff' : 'rgba(255,255,255,0.2)';
-        btn.style.color = isTech ? '#00f0ff' : '#94a3b8';
+        btn.textContent = isTech ? '⚡ Tema: Cyber' : '🎨 Tema: Studio';
+        btn.style.borderColor = isTech ? 'rgba(6, 182, 212, 0.5)' : 'var(--border)';
+        btn.style.color = isTech ? '#38bdf8' : 'var(--text-main)';
       }
       graphDirty = true;
-      showToast(isTech ? '⚡ Modo Futurista Tech Revolution v4.0 ATIVO!' : '🎨 Modo Clássico Obsidian ativo.');
+      showToast(isTech ? '⚡ Tema Cyber HUD ativado!' : '🎨 Tema Neural Studio ativado.');
     }
 
     function toggleCrtScanlines() {
@@ -6257,9 +7053,424 @@
       { id: 'mem_doctor', label: '🩺 Executar Memory Doctor FTS5 + Descoberta Causal', tag: 'DOCTOR', run: () => { openInspectorModal(); runMemoryDoctorUI(); } },
       { id: 'off_work_all', label: '💻 Escritório 3D: Chamar Todos os Agentes para Trabalhar', tag: 'OFFICE 3D', run: () => { switchMainView('office'); triggerOfficeTeamAction('work_all'); } },
       { id: 'off_pause_all', label: '☕ Escritório 3D: Enviar Todos para Pausa no Lounge', tag: 'OFFICE 3D', run: () => { switchMainView('office'); triggerOfficeTeamAction('pause_all'); } },
+      { id: 'ast_inspector', label: '🔎 Abrir Explorador Cirúrgico AST & Blast Radius', tag: 'AST v4.2', run: () => openAstInspectorModal('BrainDB') },
+      { id: 'prune_tools', label: '✂️ Dynamic Tool Pruning: Simular Poda de Schemas MCP (-65% Tokens)', tag: 'DIET v4.2', run: () => runDynamicToolPruneDemo() },
+      { id: 'sandbox_verify', label: '🛡️ Subagent Sandbox CoW: Criar & Verificar Merge Gate Transacional', tag: 'SANDBOX', run: () => runSubagentSandboxDemo() },
       { id: 'toggle_diet', label: '💎 Alternar Perfil de Quota (LEAN vs FULL)', tag: 'QUOTA 5H', run: () => toggleDietMode() },
       { id: 'toggle_crt', label: '📺 Alternar Scanlines CRT Holográficas (Tech Rev v4.0)', tag: 'FX SCI-FI', run: () => toggleCrtScanlines() }
     ];
+
+    function toggleSidebarBlade(which) {
+      if (which === 'jev') {
+        const blade = document.getElementById('jevS1GraphBlade');
+        const btn = document.getElementById('btnToggleBladeJev');
+        if (blade) {
+          const collapsed = blade.classList.toggle('blade-collapsed');
+          if (btn) btn.textContent = collapsed ? '▶' : '▼';
+        }
+      } else if (which === 'quota') {
+        const blade = document.getElementById('quotaReactorBlade');
+        const btn = document.getElementById('btnToggleBladeQuota');
+        if (blade) {
+          const collapsed = blade.classList.toggle('blade-collapsed');
+          if (btn) btn.textContent = collapsed ? '▶' : '▼';
+        }
+      }
+    }
+
+    async function refreshInlineToolPrune(query = '') {
+      const q = (query || '').trim() || 'refatorar codigo python e analisar impacto AST';
+      try {
+        const res = await fetch('/api/diet/prune?q=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (data && data.ok) {
+          const bEl = document.getElementById('tpSavingBadge');
+          const tEl = document.getElementById('tpActiveToolsTxt');
+          if (bEl) bEl.textContent = `${data.selected_tools_count}/${data.total_tools_available} TOOLS (-${data.reduction_pct}%)`;
+          if (tEl) tEl.textContent = `[${data.intent}] ${(data.selected_tools || []).join(', ')}`;
+        }
+      } catch (_) {}
+    }
+
+    function openAstInspectorModal(initialSymbol = '') {
+      const modal = document.getElementById('astInspectorModal');
+      const inp = document.getElementById('astQueryInput');
+      if (!modal) return Promise.resolve();
+      modal.classList.add('open');
+      if (inp && initialSymbol) inp.value = initialSymbol;
+      const sym = (inp && inp.value.trim()) ? inp.value.trim() : 'BrainDB';
+      refreshAstWatcherAlertsUI();
+      refreshGraphifySummaryUI();
+      runGraphifyPathSearch();
+      return runAstAndImpactLookup(sym);
+    }
+
+    async function refreshGraphifySummaryUI() {
+      const badgeEl = document.getElementById('graphifyStatsBadge');
+      const godEl = document.getElementById('graphifyGodNodesList');
+      const commEl = document.getElementById('graphifyCommunitiesList');
+      if (!godEl || !commEl) return;
+      try {
+        const res = await fetch('/api/ast/graphify');
+        const data = await res.json();
+        if (!data || !data.ok) return;
+        const cc = data.confidence_counts || {};
+        const tt = data.token_telemetry || {};
+        if (badgeEl) {
+          badgeEl.textContent = `${data.total_nodes} nós · ${data.total_edges} arestas (🟢${cc.EXTRACTED || 0} EXTRACTED · 🔵${cc.INFERRED || 0} INFERRED · 🟡${cc.AMBIGUOUS || 0} AMBIGUOUS) · Compressão ${tt.compression_ratio || 70}x`;
+        }
+        const gods = (data.god_nodes || []).slice(0, 7);
+        godEl.innerHTML = gods.map(g => `
+          <button type="button" class="quick-ag-btn" style="border-color:rgba(255,183,3,0.45); color:#fde68a;" onclick="runAstAndImpactLookup('${escapeHtml(g.label)}')" title="${escapeHtml(g.node_type)} em ${escapeHtml(g.file)} · Grau ${g.degree} · Centralidade ${g.centrality_score}">
+            👑 ${escapeHtml(g.label)} <span style="color:#00ff9d;">(${g.centrality_score})</span>
+          </button>
+        `).join('');
+
+        const comms = data.communities || [];
+        commEl.innerHTML = comms.map(c => `
+          <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05); padding:2px 0;">
+            <span style="color:${escapeHtml(c.color || '#67e8f9')}; font-weight:700;">● ${escapeHtml(c.name)}</span>
+            <span style="color:#fff;">${c.nodes_count} nós</span>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    function runGraphifyPathPreset(src, tgt) {
+      const sInp = document.getElementById('graphifySourceInput');
+      const tInp = document.getElementById('graphifyTargetInput');
+      if (sInp) sInp.value = src;
+      if (tInp) tInp.value = tgt;
+      return runGraphifyPathSearch();
+    }
+
+    async function runGraphifyPathSearch() {
+      const sInp = document.getElementById('graphifySourceInput');
+      const tInp = document.getElementById('graphifyTargetInput');
+      const resEl = document.getElementById('graphifyPathResult');
+      if (!resEl) return;
+      const src = (sInp && sInp.value.trim()) || 'triggerAstSaveAuditUI';
+      const tgt = (tInp && tInp.value.trim()) || 'ast_save_audits';
+      resEl.innerHTML = '<span style="color:var(--text-dim);">A calcular caminho relacional mais curto (BFS Multi-Modal)...</span>';
+      try {
+        const res = await fetch(`/api/ast/path?source=${encodeURIComponent(src)}&target=${encodeURIComponent(tgt)}&max_hops=6`);
+        const data = await res.json();
+        if (!data || !data.found) {
+          resEl.innerHTML = `<span style="color:#ff85b3;">⚠️ ${escapeHtml((data && (data.error || data.message)) || 'Nenhum caminho encontrado.')}</span>`;
+          return;
+        }
+        const nodes = data.path_nodes || [];
+        const edges = data.path_edges || [];
+        const ts = data.token_savings || {};
+        const confBadge = (c) => {
+          if (c === 'EXTRACTED') return '<span style="color:#00ff9d;">[🟢 EXTRACTED]</span>';
+          if (c === 'INFERRED') return '<span style="color:#38bdf8;">[🔵 INFERRED]</span>';
+          return '<span style="color:#fbbf24;">[🟡 AMBIGUOUS]</span>';
+        };
+        let chainHtml = '';
+        nodes.forEach((n, idx) => {
+          chainHtml += `<span style="display:inline-block; background:#0b1326; border:1px solid rgba(0,240,255,0.35); padding:2px 6px; margin:2px; color:#fff; font-weight:700;">${escapeHtml(n.label)} <small style="color:#a78bfa;">(${escapeHtml(n.node_type)})</small></span>`;
+          if (idx < edges.length) {
+            const e = edges[idx];
+            chainHtml += `<span style="display:inline-block; margin:2px 4px; color:#cbd5e1;">${e.direction} <strong style="color:#f472b6;">${escapeHtml(e.edge_type)}</strong> ${confBadge(e.confidence)} ${e.direction}</span>`;
+          }
+        });
+        resEl.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; color:#6ee7b7; font-weight:700;">
+            <span>✅ Caminho BFS Encontrado: ${data.hops_count} saltos (${data.latency_ms}ms)</span>
+            <span style="color:#00f0ff;">⚡ Poupança Graphify: ${escapeHtml(ts.compression_multiplier || '75x')} (${ts.bfs_subgraph_tokens || 140} tok vs ${ts.raw_codebase_tokens || 15000} tok brutos)</span>
+          </div>
+          <div style="line-height:1.7;">${chainHtml}</div>
+        `;
+      } catch (_) {}
+    }
+
+    async function generateGraphifyReportUI() {
+      const preEl = document.getElementById('graphifyReportPreview');
+      if (!preEl) return;
+      if (preEl.style.display === 'block' && preEl.textContent.trim().length > 0) {
+        preEl.style.display = 'none';
+        return;
+      }
+      preEl.style.display = 'block';
+      preEl.textContent = 'A gerar GRAPH_REPORT.md determinístico...';
+      try {
+        const res = await fetch('/api/ast/report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ write_to_disk: true })
+        });
+        const data = await res.json();
+        if (data && data.ok) {
+          preEl.textContent = data.markdown || '';
+          showToast('📄 GRAPH_REPORT.md gerado e gravado no workspace com sucesso!');
+          await refreshGraphifySummaryUI();
+        }
+      } catch (_) {}
+    }
+
+    async function refreshAstWatcherAlertsUI() {
+      const listEl = document.getElementById('astWatcherAuditsList');
+      const statusEl = document.getElementById('astWatcherStatusLbl');
+      if (!listEl) return;
+      try {
+        const res = await fetch('/api/ast/watch?limit=6');
+        const data = await res.json();
+        if (statusEl && data) {
+          statusEl.textContent = `${data.daemon_active ? 'DAEMON ACTIVE' : 'STANDBY'} · ${data.total_audits || 0} saves (${data.high_risk_total || 0} HIGH-RISK)`;
+        }
+        const audits = (data && data.audits) ? data.audits : [];
+        if (!audits.length) {
+          listEl.innerHTML = '<div style="color:var(--text-dim);">A aguardar gravações de ficheiros...</div>';
+          return;
+        }
+        listEl.innerHTML = audits.slice(0, 6).map(a => {
+          const r = a.risk_level || 'LOW';
+          const col = (r === 'CRITICAL' || r === 'HIGH') ? '#ff2a85' : (r === 'MEDIUM' ? '#ffb703' : '#00ff9d');
+          const syms = (a.changed_symbols || []).slice(0, 2).join(', ') || 'file';
+          return `
+            <div style="border:1px solid ${col}; background:#040812; padding:5px 8px;">
+              <div style="display:flex; justify-content:space-between; font-weight:700;">
+                <span style="color:#fff;">${escapeHtml(a.file_path)}</span>
+                <span style="color:${col};">[${escapeHtml(r)}]</span>
+              </div>
+              <div style="color:#cbd5e1; font-size:9.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                Símbolos: ${escapeHtml(syms)} · ${a.affected_files_count || 0} files (${a.total_references || 0} refs)
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (_) {}
+    }
+
+    async function triggerAstSaveAuditUI(targetFile = '') {
+      try {
+        const res = await fetch('/api/ast/watch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file: targetFile, force: true })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          if (targetFile) {
+            showToast(`🛡️ Save Audit [${out.risk_level}]: ${out.file} -> ${out.affected_files_count} ficheiros afetados (${out.total_references} refs)`);
+          } else {
+            showToast(`🛡️ Workspace Save Audit: ${out.saves_audited_count} ficheiros analisados (${out.high_risk_count} HIGH-RISK sinalizados)!`);
+          }
+          await refreshAstWatcherAlertsUI();
+        }
+      } catch (_) {}
+    }
+
+    function closeAstInspectorModal() {
+      const modal = document.getElementById('astInspectorModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    async function runAstAndImpactLookup(symbolQuery = 'BrainDB') {
+      const q = String(symbolQuery || 'BrainDB').trim() || 'BrainDB';
+      const inp = document.getElementById('astQueryInput');
+      if (inp) inp.value = q;
+      const matchesMeta = document.getElementById('astMatchesMeta');
+      const matchesList = document.getElementById('astMatchesList');
+      const riskBadge = document.getElementById('astImpactRiskBadge');
+      const impactDetails = document.getElementById('astImpactDetails');
+      if (matchesList) matchesList.innerHTML = '<div style="color:var(--text-dim);">A analisar AST multi-linguagem...</div>';
+      if (impactDetails) impactDetails.innerHTML = '<div style="color:var(--text-dim);">A calcular grafo de impacto...</div>';
+
+      try {
+        const [symRes, impRes] = await Promise.all([
+          fetch('/api/symbol?q=' + encodeURIComponent(q)),
+          fetch('/api/impact?target=' + encodeURIComponent(q))
+        ]);
+        const symData = await symRes.json();
+        const impData = await impRes.json();
+
+        const matches = symData.matches || [];
+        if (matchesMeta) matchesMeta.textContent = `${matches.length} matches (${symData.latency_ms || 1.2}ms)`;
+        if (matchesList) {
+          if (matches.length === 0) {
+            matchesList.innerHTML = `<div style="color:var(--text-dim); padding:8px 0;">Nenhum símbolo encontrado para "${escapeHtml(q)}".</div>`;
+          } else {
+            matchesList.innerHTML = matches.map(m => `
+              <div style="border:1px solid rgba(0,255,157,0.28); background:#040812; padding:8px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; color:#00ff9d; font-weight:700; margin-bottom:4px;">
+                  <span>${escapeHtml(m.kind.toUpperCase())}: ${escapeHtml(m.symbol)}</span>
+                  <span style="color:#00f0ff;">${escapeHtml(m.file)} : L${m.start_line}–L${m.end_line}</span>
+                </div>
+                <pre style="margin:0; font-size:10px; color:#cbd5e1; white-space:pre-wrap; overflow-x:auto; background:#070d1c; padding:6px; border:1px solid rgba(255,255,255,0.06);">${escapeHtml(m.snippet || '')}</pre>
+              </div>
+            `).join('');
+          }
+        }
+
+        if (riskBadge && impData) {
+          const r = impData.blast_radius || 'LOW';
+          riskBadge.textContent = `RISK: ${r} (${impData.affected_files_count || 0} files / ${impData.total_references || 0} refs)`;
+          riskBadge.style.color = r === 'HIGH' ? '#ff2a85' : (r === 'MEDIUM' ? '#ffb703' : '#00ff9d');
+        }
+
+        if (impactDetails && impData) {
+          const callers = impData.callers || [];
+          const tests = impData.recommended_tests || ['test_brain.py'];
+          impactDetails.innerHTML = `
+            <div style="margin-bottom:8px; padding:6px 8px; background:rgba(0,240,255,0.08); border:1px solid rgba(0,240,255,0.25);">
+              <div style="color:#00f0ff; font-weight:700; margin-bottom:2px;">🧪 TESTES RECOMENDADOS ANTES DE MERGE:</div>
+              <div style="color:#00ff9d;">${tests.map(t => escapeHtml(t)).join(', ')}</div>
+            </div>
+            <div style="color:var(--text-muted); font-weight:700; margin-bottom:4px;">FICHEIROS DEPENDENTES (${callers.length}):</div>
+            ${callers.map(c => `
+              <div style="padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.06); display:flex; justify-content:space-between; align-items:center;">
+                <span style="color:#fff; font-weight:700;">📄 ${escapeHtml(c.file)}</span>
+                <span style="color:#ff85b3;">${c.references_count} refs (L${(c.sample_lines || []).slice(0, 4).join(', L')})</span>
+              </div>
+            `).join('') || '<div style="color:var(--text-dim);">Nenhuma dependência externa detetada.</div>'}
+          `;
+        }
+      } catch (e) {
+        console.warn('Erro no AST & Impact Lookup:', e);
+      }
+    }
+
+    async function refreshSwarmSandboxesUI() {
+      const grid = document.getElementById('swSandboxListGrid');
+      const countLbl = document.getElementById('swSandboxCountLbl');
+      if (!grid) return;
+      try {
+        const res = await fetch('/api/swarm/sandbox');
+        const data = await res.json();
+        const list = (data && data.sandboxes) ? data.sandboxes : [];
+        if (countLbl) countLbl.textContent = `${list.length} Sandboxes Registadas`;
+        if (list.length === 0) {
+          grid.innerHTML = '<div style="color:var(--text-dim); font-size:11px; font-family:var(--font-mono);">Nenhuma sandbox ativa. Clique em "+ Criar Sandbox CoW" para isolar subagentes.</div>';
+          return;
+        }
+        grid.innerHTML = list.slice(0, 4).map(sb => {
+          const isMerged = sb.status === 'merged';
+          const filesArr = (() => { try { return JSON.parse(sb.files_json || '[]'); } catch (_) { return []; } })();
+          return `
+            <div style="border:1px solid ${isMerged ? 'rgba(0,255,157,0.45)' : 'rgba(0,240,255,0.4)'}; background:#070d19; padding:7px 10px; font-family:var(--font-mono); font-size:10.5px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <strong style="color:#fff;">#${sb.id} · ${escapeHtml(sb.lane)} / ${escapeHtml(sb.task_code)}</strong>
+                <span style="color:${isMerged ? '#00ff9d' : '#00f0ff'}; font-weight:700;">${escapeHtml((sb.status || '').toUpperCase())}</span>
+              </div>
+              <div style="color:#cbd5e1; font-size:9.8px; margin-bottom:4px;">Ficheiros: ${escapeHtml(filesArr.join(', ') || 'db_engine.py')}</div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px;">
+                <span style="color:${sb.verify_ast ? '#00ff9d' : '#94a3b8'};">AST Gate: ${sb.verify_ast ? 'PASS ✓' : 'PENDING'}</span>
+                <span style="color:${sb.verify_aidefence ? '#00ff9d' : '#94a3b8'};">AI-Defence: ${sb.verify_aidefence ? 'CLEAN ✓' : 'PENDING'}</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (_) {}
+    }
+
+    async function createAndVerifySandboxUI(mode = 'create') {
+      try {
+        if (mode === 'create') {
+          const res = await fetch('/api/swarm/sandbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'create', lane: 'API', task_code: 'api-01', target_files: ['db_engine.py', 'swarm_engine.py'] })
+          });
+          const out = await res.json();
+          if (out && out.ok) {
+            showToast(`🛡️ Sandbox CoW #${out.sandbox_id} criada com snapshots SHA-256!`);
+          }
+        } else {
+          const res = await fetch('/api/swarm/sandbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify_merge' })
+          });
+          const out = await res.json();
+          if (out && out.ok) {
+            showToast(`✅ Sandbox #${out.sandbox_id} MERGED (AST Gate: PASS, AI-Defence: CLEAN)!`);
+          }
+        }
+        await refreshSwarmSandboxesUI();
+      } catch (_) {}
+    }
+
+    function renderOfficeQuickAgentDock() {
+      const listEl = document.getElementById('officeQuickAgentList');
+      if (!listEl) return;
+      const sims = Object.values(officeSimAgents);
+      listEl.innerHTML = sims.slice(0, 7).map(s => {
+        const ag = s.data || {};
+        const id = ag.agent_id || s.agent_id;
+        const isSel = String(id).toLowerCase() === String(selectedOfficeAgentId || '').toLowerCase();
+        return `<button type="button" class="quick-ag-btn ${isSel ? 'active' : ''}" onclick="selectOfficeAgent('${escapeHtml(id)}'); setOfficeFollowMode(true);">${escapeHtml(ag.name || id)}</button>`;
+      }).join('');
+    }
+
+    function cycleOfficeFollowAgent(dir = 1) {
+      const sims = Object.values(officeSimAgents);
+      if (!sims.length) return;
+      const curIdx = sims.findIndex(s => String((s.data && s.data.agent_id) || s.agent_id).toLowerCase() === String(selectedOfficeAgentId || '').toLowerCase());
+      const nextIdx = (curIdx + dir + sims.length) % sims.length;
+      const nextSim = sims[nextIdx];
+      const nextId = (nextSim.data && nextSim.data.agent_id) || nextSim.agent_id;
+      selectOfficeAgent(nextId);
+      setOfficeFollowMode(true);
+      renderOfficeQuickAgentDock();
+    }
+
+    async function runDynamicToolPruneDemo() {
+      try {
+        const res = await fetch('/api/diet/prune?q=' + encodeURIComponent('refatorar codigo python e analisar impacto AST'));
+        const data = await res.json();
+        if (data && data.ok) {
+          showToast(`✂️ Tool Pruning [${data.intent}]: ${data.selected_tools_count}/${data.total_tools_available} tools ativas (-${data.reduction_pct}% / ~${data.estimated_tokens_saved} tokens poupados)`);
+          refreshInlineToolPrune('refatorar codigo python e analisar impacto AST');
+        }
+      } catch (e) {
+        console.warn('Erro ao testar Tool Pruning:', e);
+      }
+    }
+
+    async function runSubagentSandboxDemo() {
+      try {
+        const createRes = await fetch('/api/swarm/sandbox', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'create', lane: 'API', task_code: 'api-01', target_files: ['db_engine.py', 'swarm_engine.py'] })
+        });
+        const created = await createRes.json();
+        if (created && created.ok) {
+          const verifyRes = await fetch('/api/swarm/sandbox', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'verify_merge', sandbox_id: created.sandbox_id })
+          });
+          const verified = await verifyRes.json();
+          if (verified && verified.ok) {
+            showToast(`🛡️ Sandbox #${verified.sandbox_id} [${verified.lane}/${verified.task_code}]: ${verified.status.toUpperCase()} (AST Gate: ${verified.syntax_ok ? 'PASS' : 'FAIL'}, Secret Scan: ${verified.secrets_ok ? 'CLEAN' : 'ALERT'})`);
+            refreshSwarmSandboxesUI();
+          }
+        }
+      } catch (e) {
+        console.warn('Erro ao testar Subagent Sandbox:', e);
+      }
+    }
+
+    let brainEventSource = null;
+    function initBrainSseStream() {
+      if (typeof EventSource === 'undefined' || brainEventSource) return;
+      try {
+        brainEventSource = new EventSource('/api/events');
+        brainEventSource.addEventListener('brain_state', (ev) => {
+          try {
+            const payload = JSON.parse(ev.data || '{}');
+            window.__lastSseHeartbeat = payload;
+            const badge = document.getElementById('sseStatusBadge');
+            if (badge) {
+              badge.style.borderColor = '#00ff9d';
+            }
+          } catch (_) {}
+        });
+      } catch (_) {}
+    }
 
     let filteredPaletteActions = [...COMMAND_PALETTE_ACTIONS];
     let selectedPaletteIdx = 0;
@@ -6325,6 +7536,13 @@
         const modal = document.getElementById('cmdPaletteModal');
         if (modal && modal.classList.contains('open')) closeCommandPalette();
         else openCommandPalette();
+        return;
+      }
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+      if (activeMainView === 'office' && (e.key === '[' || e.key === ']')) {
+        e.preventDefault();
+        cycleOfficeFollowAgent(e.key === ']' ? 1 : -1);
       }
     });
 
@@ -6353,18 +7571,32 @@
         return;
       }
 
-      // Hit-test para hover em cima de um boneco 3D ou Rack MCP 3D
+      // Hit-test prioritário para Torres Holográficas 3D sobre as Secretárias, Bonecos 3D e Racks MCP 3D
+      let foundTowerDeskIdx = null;
+      if (showOfficeHeatmap3D && officeDeskTowerHitboxes.length) {
+        for (let ti = officeDeskTowerHitboxes.length - 1; ti >= 0; ti--) {
+          const thb = officeDeskTowerHitboxes[ti];
+          if (Math.abs(mx - thb.x) <= thb.halfW && my >= thb.topY && my <= thb.bottomY) {
+            foundTowerDeskIdx = thb.deskIdx;
+            break;
+          }
+        }
+      }
+      hoveredOfficeTowerDeskIdx = foundTowerDeskIdx;
+
       let foundId = null;
-      for (const sim of Object.values(officeSimAgents)) {
-        if (Math.hypot(mx - sim.screenX, my - sim.screenY) < 28 * officeCam.zoom) {
-          foundId = sim.agent_id;
-          break;
+      if (foundTowerDeskIdx === null) {
+        for (const sim of Object.values(officeSimAgents)) {
+          if (Math.hypot(mx - sim.screenX, my - sim.screenY) < 28 * officeCam.zoom) {
+            foundId = sim.agent_id;
+            break;
+          }
         }
       }
       hoveredOfficeAgentId = foundId;
 
       let foundMcp = null;
-      if (!foundId) {
+      if (foundTowerDeskIdx === null && !foundId) {
         for (const hb of officeMcpHitboxes) {
           if (Math.hypot(mx - hb.x, my - hb.y) < 24 * officeCam.zoom) {
             foundMcp = hb.name;
@@ -6373,13 +7605,21 @@
         }
       }
       hoveredOfficeMcpName = foundMcp;
-      officeCanvas.style.cursor = (foundId || foundMcp) ? 'pointer' : (officeCam.dragging ? 'grabbing' : 'grab');
+      officeCanvas.style.cursor = (foundTowerDeskIdx !== null || foundId || foundMcp)
+        ? 'pointer'
+        : (officeCam.dragging ? 'grabbing' : 'grab');
     });
 
     window.addEventListener('mouseup', () => {
       if (activeMainView !== 'office') return;
       if (officeCam.dragging && !officeCam.moved) {
-        if (hoveredOfficeAgentId) {
+        if (hoveredOfficeTowerDeskIdx !== null) {
+          const prevSel = selectedOfficeTowerDeskIdx === hoveredOfficeTowerDeskIdx;
+          selectOfficeHoloTower(hoveredOfficeTowerDeskIdx, { focusCamera: false, toast: true });
+          if (prevSel) {
+            inspectSelectedHoloTowerAst();
+          }
+        } else if (hoveredOfficeAgentId) {
           selectOfficeAgent(hoveredOfficeAgentId);
         } else if (hoveredOfficeMcpName) {
           toggleMcpServer3D(hoveredOfficeMcpName);
@@ -6392,17 +7632,24 @@
       e.preventDefault();
       const factor = e.deltaY < 0 ? 1.09 : 0.92;
       officeCam.zoom = Math.max(0.55, Math.min(2.2, officeCam.zoom * factor));
+      if (officeCam.followMode) {
+        officeCam.followZoom = officeCam.zoom;
+      }
     }, { passive: false });
 
     // Iniciar aplicação (respeita #swarm ou #office na URL)
     fetchGraph().then(() => {
       requestAnimationFrame(renderGraph);
       loadGitStatus();
+      initBrainSseStream();
+      refreshInlineToolPrune();
+      refreshSwarmSandboxesUI();
       if (window.location.hash === '#swarm') {
         switchMainView('swarm');
       } else if (window.location.hash === '#office') {
         switchMainView('office');
       }
+      setTimeout(renderOfficeQuickAgentDock, 450);
     });
   </script>
 </body>

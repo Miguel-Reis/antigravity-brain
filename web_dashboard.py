@@ -12,6 +12,7 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
+from ast_impact_watcher import get_global_watcher, start_ast_impact_watcher_daemon
 from auto_updater import check_and_apply_update, get_git_status, start_auto_update_daemon
 from brain_harvest import harvest_latest_turn
 from db_engine import BrainDB, seed_initial_memories
@@ -19,6 +20,7 @@ from swarm_engine import SwarmEngine
 from token_diet import (
     audit_mcp_servers,
     audit_plugins,
+    prune_tools_for_intent,
     switch_mcp_profile,
     toggle_single_mcp_server,
 )
@@ -226,14 +228,18 @@ def build_obsidian_graph_payload(
             for r in conn.execute("SELECT * FROM checkpoints;").fetchall()
         ]
 
-    # Se houver query de pesquisa FTS5, identificar os IDs com match e respetivos scores
+    # Se houver query de pesquisa FTS5 + Semântica 32-D, identificar os IDs com match e respetivos scores
     matched_scores: Dict[int, float] = {}
+    matched_sem_sim: Dict[int, float] = {}
+    q_vec = BrainDB.compute_semantic_vector(query.strip()) if query.strip() else []
     if query.strip():
         search_res = db.search_memories(
             query=query.strip(), workspace="global", n_results=30, update_stats=False
         )
         for r in search_res:
-            matched_scores[int(r["id"])] = round(float(r.get("final_score", 1.0)), 2)
+            rid = int(r["id"])
+            matched_scores[rid] = round(float(r.get("final_score", 1.0)), 2)
+            matched_sem_sim[rid] = round(float(r.get("semantic_similarity", 0.0)), 3)
 
     # Filtrar memórias
     filtered_memories: List[Dict[str, Any]] = []
@@ -242,8 +248,17 @@ def build_obsidian_graph_payload(
             continue
         if category_filter != "all" and m.get("category") != category_filter:
             continue
-        m["is_match"] = (int(m["id"]) in matched_scores) if query.strip() else False
-        m["search_score"] = matched_scores.get(int(m["id"]), 0.0)
+        mid_int = int(m["id"])
+        m["is_match"] = (mid_int in matched_scores) if query.strip() else False
+        m["search_score"] = matched_scores.get(mid_int, 0.0)
+        if mid_int in matched_sem_sim:
+            m["semantic_similarity"] = matched_sem_sim[mid_int]
+        elif q_vec:
+            raw_emb = m.get("embedding_json")
+            m_vec = json.loads(raw_emb) if raw_emb else BrainDB.compute_semantic_vector(f"{m.get('topic','')} {m.get('fact','')} {m.get('tags','')}")
+            m["semantic_similarity"] = round(BrainDB.cosine_similarity(q_vec, m_vec), 3)
+        else:
+            m["semantic_similarity"] = round(min(0.99, 0.72 + int(m.get("importance", 3) or 3) * 0.05), 2)
         filtered_memories.append(m)
 
     nodes: List[Dict[str, Any]] = []
@@ -341,6 +356,7 @@ def build_obsidian_graph_payload(
                 "last_accessed": m.get("last_accessed", ""),
                 "is_match": m["is_match"],
                 "search_score": m["search_score"],
+                "semantic_similarity": m.get("semantic_similarity", 0.85),
             }
         )
 
@@ -577,6 +593,101 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(get_git_status())
             return
 
+        if parsed.path == "/api/symbol":
+            qs = urllib.parse.parse_qs(parsed.query)
+            q = qs.get("q", [""])[0]
+            swarm = SwarmEngine(BrainDB())
+            self._send_json(swarm.lookup_symbol(symbol_query=q, workspace_path=CURRENT_DIR))
+            return
+
+        if parsed.path == "/api/impact":
+            qs = urllib.parse.parse_qs(parsed.query)
+            target = qs.get("target", [""])[0]
+            swarm = SwarmEngine(BrainDB())
+            self._send_json(swarm.analyze_impact_graph(target=target, workspace_path=CURRENT_DIR))
+            return
+
+        if parsed.path == "/api/diet/prune":
+            qs = urllib.parse.parse_qs(parsed.query)
+            q = qs.get("q", ["otimizar codigo python"])[0]
+            ws = qs.get("workspace", ["global"])[0]
+            self._send_json(prune_tools_for_intent(user_query=q, workspace=ws))
+            return
+
+        if parsed.path == "/api/swarm/sandbox":
+            swarm = SwarmEngine(BrainDB())
+            self._send_json(swarm.manage_subagent_sandbox(action="list", workspace_path=CURRENT_DIR))
+            return
+
+        if parsed.path == "/api/ast/watch":
+            qs = urllib.parse.parse_qs(parsed.query)
+            limit = int(qs.get("limit", ["10"])[0] or 10)
+            watcher = get_global_watcher(CURRENT_DIR)
+            self._send_json(watcher.get_watcher_status(limit=limit))
+            return
+
+        if parsed.path == "/api/ast/graphify":
+            qs = urllib.parse.parse_qs(parsed.query)
+            force = qs.get("force", ["0"])[0] == "1"
+            swarm = SwarmEngine(BrainDB())
+            kg = swarm.build_codebase_knowledge_graph(workspace_path=CURRENT_DIR, force_rebuild=force)
+            self._send_json(
+                {
+                    "ok": True,
+                    "build_latency_ms": kg["build_latency_ms"],
+                    "total_nodes": kg["total_nodes"],
+                    "total_edges": kg["total_edges"],
+                    "node_type_counts": kg["node_type_counts"],
+                    "confidence_counts": kg["confidence_counts"],
+                    "god_nodes": kg["god_nodes"],
+                    "communities": kg["communities"],
+                    "token_telemetry": kg["token_telemetry"],
+                }
+            )
+            return
+
+        if parsed.path == "/api/ast/path":
+            qs = urllib.parse.parse_qs(parsed.query)
+            src = qs.get("source", ["triggerAstSaveAuditUI"])[0]
+            tgt = qs.get("target", ["ast_save_audits"])[0]
+            hops = int(qs.get("max_hops", ["6"])[0] or 6)
+            swarm = SwarmEngine(BrainDB())
+            self._send_json(
+                swarm.find_graph_path(
+                    source_query=src,
+                    target_query=tgt,
+                    max_hops=hops,
+                    workspace_path=CURRENT_DIR,
+                )
+            )
+            return
+
+        if parsed.path == "/api/events":
+            db = BrainDB()
+            swarm = SwarmEngine(db)
+            stats = db.get_stats()
+            office = swarm.get_office_state()
+            payload = json.dumps(
+                {
+                    "type": "brain_sse_heartbeat",
+                    "timestamp": int(time.time() * 1000),
+                    "total_memories": stats.get("total_memories", 0),
+                    "tokens_saved": stats.get("estimated_tokens_saved", 0),
+                    "active_agents": len(office.get("agents", [])),
+                },
+                ensure_ascii=False,
+            )
+            body_bytes = f"retry: 5000\nevent: brain_state\ndata: {payload}\n\n".encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Connection", "close")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Length", str(len(body_bytes)))
+            self.end_headers()
+            self.wfile.write(body_bytes)
+            return
+
         self._send_json({"error": "Not found"}, 404)
 
     def do_POST(self) -> None:
@@ -765,6 +876,58 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json({"ok": True, **res})
             return
 
+        if parsed.path == "/api/swarm/sandbox":
+            action = str(body.get("action", "create")).strip()
+            lane = str(body.get("lane", "API")).strip()
+            task_code = str(body.get("task_code", "api-01")).strip()
+            raw_files = body.get("target_files", [])
+            if isinstance(raw_files, str):
+                target_files = [f.strip() for f in raw_files.split(",") if f.strip()]
+            elif isinstance(raw_files, list):
+                target_files = [str(f).strip() for f in raw_files if str(f).strip()]
+            else:
+                target_files = []
+            sandbox_id_raw = body.get("sandbox_id")
+            sandbox_id = int(sandbox_id_raw) if str(sandbox_id_raw or "").isdigit() else None
+            swarm = SwarmEngine(db)
+            res = swarm.manage_subagent_sandbox(
+                action=action,
+                lane=lane,
+                task_code=task_code,
+                target_files=target_files,
+                sandbox_id=sandbox_id,
+                workspace_path=CURRENT_DIR,
+            )
+            self._send_json(res)
+            return
+
+        if parsed.path == "/api/ast/watch":
+            target_file = str(body.get("file", "")).strip()
+            force_flag = bool(body.get("force", True))
+            watcher = get_global_watcher(CURRENT_DIR)
+            if target_file:
+                res = watcher.audit_file_save(
+                    file_path=target_file,
+                    workspace_path=CURRENT_DIR,
+                    force=force_flag,
+                )
+            else:
+                res = watcher.scan_workspace_saves(
+                    workspace_path=CURRENT_DIR,
+                    force_all=force_flag,
+                )
+            self._send_json({**res, "status": watcher.get_watcher_status(limit=10)})
+            return
+
+        if parsed.path == "/api/ast/report":
+            write_disk = bool(body.get("write_to_disk", True))
+            swarm = SwarmEngine(db)
+            rep = swarm.generate_architecture_report(
+                workspace_path=CURRENT_DIR, write_to_disk=write_disk
+            )
+            self._send_json(rep)
+            return
+
         self._send_json({"error": "Endpoint desconhecido"}, 404)
 
     def do_DELETE(self) -> None:
@@ -778,7 +941,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Not found"}, 404)
 
 
-def run_server(port: int = PORT) -> None:
+def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
     import threading
 
     if getattr(sys, "stdout", None) is not None and hasattr(sys.stdout, "reconfigure"):
@@ -787,7 +950,7 @@ def run_server(port: int = PORT) -> None:
         except Exception:
             pass
     db = BrainDB()
-    server = ThreadingHTTPServer(("127.0.0.1", port), BrainDashboardHandler)
+    server = ThreadingHTTPServer((host, port), BrainDashboardHandler)
 
     def _bg_sync() -> None:
         try:
@@ -800,14 +963,18 @@ def run_server(port: int = PORT) -> None:
 
     threading.Thread(target=_bg_sync, daemon=True).start()
     start_auto_update_daemon(interval_seconds=1800)
+    start_ast_impact_watcher_daemon(workspace_path=CURRENT_DIR, interval_seconds=2.0)
     try:
         if getattr(sys, "stdout", None) is not None:
-            print(f"Obsidian Brain Graph Web Server ativo em: http://127.0.0.1:{port}")
+            print(f"Obsidian Brain Graph Web Server ativo em: http://{host}:{port}")
     except Exception:
         pass
     server.serve_forever()
 
 
 if __name__ == "__main__":
-    run_server()
+    env_port = int(os.environ.get("PORT", PORT))
+    env_host = os.environ.get("HOST", "127.0.0.1")
+    run_server(port=env_port, host=env_host)
+
 
