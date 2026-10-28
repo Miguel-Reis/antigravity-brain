@@ -46,6 +46,8 @@ CODE_EXTENSIONS = {
 _INITIALIZED_SWARM_DBS: set[str] = set()
 _DEFAULT_RUN_CACHED: Dict[str, int] = {}
 _OFFICE_SCAN_CACHE: Dict[str, Any] = {"ts": 0.0, "mtime_map": {}, "meta_cache": {}}
+_HEATMAP_CACHE: Dict[str, Any] = {"ts": 0.0, "data": []}
+_OFFICE_MCP_CACHE: Dict[str, Any] = {"ts": 0.0, "data": []}
 
 
 class SwarmEngine:
@@ -387,6 +389,7 @@ class SwarmEngine:
         except Exception:
             pass
 
+        _HEATMAP_CACHE["ts"] = 0.0
         return {
             "workspace": workspace_name,
             "workspace_path": str(ws_root).replace("\\", "/"),
@@ -2439,9 +2442,14 @@ class SwarmEngine:
 
         mcp_list: List[Dict[str, Any]] = []
         try:
-            from token_diet import audit_mcp_servers
+            if _OFFICE_MCP_CACHE["data"] and (now - float(_OFFICE_MCP_CACHE["ts"]) < 8.0):
+                mcp_list = _OFFICE_MCP_CACHE["data"]
+            else:
+                from token_diet import audit_mcp_servers
 
-            mcp_list = audit_mcp_servers()[:8]
+                mcp_list = audit_mcp_servers()[:8]
+                _OFFICE_MCP_CACHE["ts"] = now
+                _OFFICE_MCP_CACHE["data"] = mcp_list
         except Exception:
             pass
 
@@ -2543,11 +2551,15 @@ class SwarmEngine:
             },
         }
 
-    def get_codebase_heatmap(self) -> List[Dict[str, Any]]:
+    def get_codebase_heatmap(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
         """
         Codebase Heatmap (v2.8): Calcula o índice de calor (0.15 a 1.0) de cada ficheiro do projeto
         com base no tamanho (linhas), frequência de edição em memórias e bugfixes registados.
         """
+        now = time.time()
+        if not force_refresh and _HEATMAP_CACHE["data"] and (now - float(_HEATMAP_CACHE["ts"]) < 4.5):
+            return _HEATMAP_CACHE["data"]
+
         with self.db._connect() as conn:
             run_row = conn.execute(
                 "SELECT scout_files_json FROM swarm_runs ORDER BY id DESC LIMIT 1;"
@@ -2563,23 +2575,23 @@ class SwarmEngine:
             except Exception:
                 scout_files = []
 
+        scout_basenames = [(sf, os.path.basename(sf["path"]).lower()) for sf in scout_files]
         edit_counts: Dict[str, int] = {}
         bug_counts: Dict[str, int] = {}
         for m in mem_rows:
             t_low = str(m["topic"] or "").lower()
             f_low = str(m["fact"] or "").lower()
             acc = int(m["access_count"] or 0)
-            for sf in scout_files:
-                fname = os.path.basename(sf["path"]).lower()
+            is_bug_or_opt = "bug" in t_low or "fix" in t_low or m["category"] == "optimization"
+            for _, fname in scout_basenames:
                 if fname in t_low or fname in f_low:
                     edit_counts[fname] = edit_counts.get(fname, 0) + 1 + min(5, acc)
-                    if "bug" in t_low or "fix" in t_low or m["category"] == "optimization":
+                    if is_bug_or_opt:
                         bug_counts[fname] = bug_counts.get(fname, 0) + 1
 
         heatmap: List[Dict[str, Any]] = []
-        for sf in scout_files:
+        for sf, f_key in scout_basenames:
             fname = os.path.basename(sf["path"])
-            f_key = fname.lower()
             lines = int(sf.get("lines") or 100)
             edits = edit_counts.get(f_key, 1)
             bugs = bug_counts.get(f_key, 0)
@@ -2603,6 +2615,8 @@ class SwarmEngine:
                 }
             )
         heatmap.sort(key=lambda x: x["heat_score"], reverse=True)
+        _HEATMAP_CACHE["ts"] = now
+        _HEATMAP_CACHE["data"] = heatmap
         return heatmap
 
     def _execute_real_agent_action(self, directive: str, workspace: str) -> Dict[str, Any]:

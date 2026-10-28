@@ -208,6 +208,9 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
     return {"added_memories": added_memories, "scanned_conversations": harvested_turns}
 
 
+_GRAPH_PAYLOAD_CACHE: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
+
 def build_obsidian_graph_payload(
     db: BrainDB,
     query: str = "",
@@ -216,6 +219,12 @@ def build_obsidian_graph_payload(
     include_tags: bool = True,
 ) -> Dict[str, Any]:
     """Constrói a estrutura de nós e ligações sinápticas (estilo Obsidian Graph View)."""
+    cache_key = f"{db.db_path}|{query.strip()}|{workspace_filter}|{category_filter}|{int(include_tags)}"
+    now_ts = time.time()
+    cached_entry = _GRAPH_PAYLOAD_CACHE.get(cache_key)
+    if cached_entry and (now_ts - cached_entry[0] < 2.5):
+        return cached_entry[1]
+
     with db._connect() as conn:
         all_memories = [
             dict(r)
@@ -455,7 +464,7 @@ def build_obsidian_graph_payload(
     all_ws = sorted({m.get("workspace", "global") or "global" for m in all_memories})
     all_cats = sorted({m.get("category", "general") or "general" for m in all_memories})
 
-    return {
+    result_payload = {
         "nodes": nodes,
         "links": links,
         "stats": db.get_stats(),
@@ -472,6 +481,10 @@ def build_obsidian_graph_payload(
             "categories": all_cats,
         },
     }
+    if len(_GRAPH_PAYLOAD_CACHE) > 24:
+        _GRAPH_PAYLOAD_CACHE.clear()
+    _GRAPH_PAYLOAD_CACHE[cache_key] = (now_ts, result_payload)
+    return result_payload
 
 
 _DIET_CACHE: Dict[str, Any] = {"ts": 0.0, "mcp": [], "plug": {}, "is_lean": False}
@@ -664,16 +677,19 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/events":
             db = BrainDB()
-            swarm = SwarmEngine(db)
             stats = db.get_stats()
-            office = swarm.get_office_state()
+            with db._connect() as conn:
+                try:
+                    ag_cnt = conn.execute("SELECT COUNT(*) as c FROM office_agents;").fetchone()["c"]
+                except Exception:
+                    ag_cnt = 8
             payload = json.dumps(
                 {
                     "type": "brain_sse_heartbeat",
                     "timestamp": int(time.time() * 1000),
                     "total_memories": stats.get("total_memories", 0),
-                    "tokens_saved": stats.get("estimated_tokens_saved", 0),
-                    "active_agents": len(office.get("agents", [])),
+                    "tokens_saved": stats.get("estimated_saved_tokens", 0),
+                    "active_agents": int(ag_cnt or 8),
                 },
                 ensure_ascii=False,
             )
@@ -700,6 +716,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             body = {}
 
         db = BrainDB()
+        _GRAPH_PAYLOAD_CACHE.clear()
 
         if parsed.path == "/api/memories":
             topic = str(body.get("topic", "")).strip()
@@ -931,6 +948,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Endpoint desconhecido"}, 404)
 
     def do_DELETE(self) -> None:
+        _GRAPH_PAYLOAD_CACHE.clear()
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path.startswith("/api/memories/"):
             mem_id = parsed.path.split("/")[-1]
