@@ -24,3 +24,5 @@ venv/
 # Temporary AI Studio media artifacts
 .aistudio/
 
+public/assets/aistudio/
+
