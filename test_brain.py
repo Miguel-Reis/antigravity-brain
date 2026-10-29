@@ -266,9 +266,69 @@ def run_all_tests() -> None:
         f"(Top: {first_tower['file_name']} @ {first_tower['heat_pct']}% [{first_tower['level'].upper()}] · {first_tower['edits']} edits) & Hitboxes/HUD OK"
     )
 
+    # 15. Testar Servidor MCP (server.py) via Subprocess JSON-RPC 2.0 stdio (Handshake initialize + tools/list + tools/call)
+    import subprocess
+    import sys
+
+    server_py = os.path.join(repo_dir, "server.py")
+    mcp_input = "\n".join(
+        [
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "initialize",
+                    "params": {
+                        "protocolVersion": "2024-11-05",
+                        "capabilities": {},
+                        "clientInfo": {"name": "antigravity-client", "version": "1.0.0"},
+                    },
+                }
+            ),
+            json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}),
+            json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}),
+            json.dumps(
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {"name": "brain_stats", "arguments": {}},
+                }
+            ),
+        ]
+    ) + "\n"
+
+    proc = subprocess.run(
+        [sys.executable, "-u", server_py],
+        input=mcp_input,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"server.py falhou com código {proc.returncode}: {proc.stderr}"
+    out_lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    assert len(out_lines) == 3, f"Esperadas 3 respostas JSON-RPC no stdout, obteve {len(out_lines)}: {out_lines}"
+
+    init_resp = json.loads(out_lines[0])
+    assert init_resp.get("id") == 1 and init_resp["result"]["serverInfo"]["name"] == "antigravity-brain"
+
+    tools_resp = json.loads(out_lines[1])
+    tool_names = [t["name"] for t in tools_resp["result"]["tools"]]
+    assert len(tool_names) >= 15 and "store_fact" in tool_names and "swarm_graph_path" in tool_names
+
+    call_resp = json.loads(out_lines[2])
+    assert call_resp.get("id") == 3 and not call_resp["result"].get("isError")
+    stats_payload = json.loads(call_resp["result"]["content"][0]["text"])
+    assert "total_memories" in stats_payload
+    print(
+        f"[PASS] MCP Stdio Server (server.py): Handshake 'initialize' OK, {len(tool_names)} tools registadas & 'brain_stats' executado sem dependências externas"
+    )
+
 
 if __name__ == "__main__":
     run_all_tests()
+
 
 
 

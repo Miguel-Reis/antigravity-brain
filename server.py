@@ -3,15 +3,299 @@
 #   "mcp",
 # ]
 # ///
+import inspect
 import json
 import os
 import sys
-from mcp.server.mcpserver import MCPServer
+import traceback
+from typing import Any, Callable, Dict, List, Optional
+
+# Guardar o stdout original exclusivamente para o protocolo JSON-RPC MCP
+_MCP_RAW_STDOUT = sys.stdout
+# Redirecionar qualquer print acidental de bibliotecas/imports para stderr
+sys.stdout = sys.stderr
 
 # Garantir que o diretório local está no sys.path para importar db_engine
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
+
+
+class StdioMCPServer:
+    """
+    Servidor MCP JSON-RPC 2.0 (stdio) ultra-rápido e zero-dependências.
+    Compatível com todas as versões do Antigravity IDE / Claude / Cursor no Windows, macOS e Linux,
+    sem depender de 'mcp.server.mcpserver' ou versões específicas do pacote 'mcp'.
+    """
+
+    def __init__(self, name: str, version: str = "2.4.0") -> None:
+        self.name = name
+        self.version = version
+        self._tools: Dict[str, Dict[str, Any]] = {}
+
+    def tool(self, name: Optional[str] = None, description: Optional[str] = None) -> Callable:
+        def decorator(fn: Callable) -> Callable:
+            tool_name = name or fn.__name__
+            doc = inspect.getdoc(fn) or description or f"Executes {tool_name}"
+            doc_lines = [line.strip() for line in doc.splitlines() if line.strip()]
+            short_desc = doc_lines[0] if doc_lines else f"Executes {tool_name}"
+
+            # Extrair descrições de parâmetros do bloco Args: na docstring
+            param_docs: Dict[str, str] = {}
+            in_args = False
+            for line in doc.splitlines():
+                stripped = line.strip()
+                if stripped.lower().startswith("args:"):
+                    in_args = True
+                    continue
+                if in_args:
+                    if stripped.endswith(":") and " " not in stripped:
+                        in_args = False
+                        continue
+                    if ":" in stripped:
+                        p_name, p_desc = stripped.split(":", 1)
+                        p_name = p_name.strip()
+                        if p_name.isidentifier():
+                            param_docs[p_name] = p_desc.strip()
+
+            sig = inspect.signature(fn)
+            properties: Dict[str, Any] = {}
+            required: List[str] = []
+
+            type_map = {
+                str: "string",
+                int: "integer",
+                float: "number",
+                bool: "boolean",
+                list: "array",
+                dict: "object",
+            }
+
+            for param_name, param in sig.parameters.items():
+                if param_name == "self":
+                    continue
+                ann = param.annotation
+                json_type = type_map.get(ann, "string")
+                prop_schema: Dict[str, Any] = {"type": json_type}
+                if param_name in param_docs:
+                    prop_schema["description"] = param_docs[param_name]
+                if param.default is inspect.Parameter.empty:
+                    required.append(param_name)
+                else:
+                    prop_schema["default"] = param.default
+                properties[param_name] = prop_schema
+
+            input_schema: Dict[str, Any] = {
+                "type": "object",
+                "properties": properties,
+            }
+            if required:
+                input_schema["required"] = required
+
+            self._tools[tool_name] = {
+                "fn": fn,
+                "signature": sig,
+                "schema": {
+                    "name": tool_name,
+                    "description": doc,
+                    "inputSchema": input_schema,
+                },
+            }
+            return fn
+
+        return decorator
+
+    def _coerce_args(self, sig: inspect.Signature, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        coerced: Dict[str, Any] = {}
+        for k, v in (arguments or {}).items():
+            if k in sig.parameters:
+                ann = sig.parameters[k].annotation
+                try:
+                    if ann is int and not isinstance(v, int):
+                        v = int(v)
+                    elif ann is float and not isinstance(v, (int, float)):
+                        v = float(v)
+                    elif ann is bool and isinstance(v, str):
+                        v = v.strip().lower() in ("1", "true", "yes", "sim")
+                    elif ann is str and v is not None and not isinstance(v, str):
+                        v = str(v)
+                except Exception:
+                    pass
+                coerced[k] = v
+        return coerced
+
+    def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        method = req.get("method", "")
+        req_id = req.get("id")
+        params = req.get("params") or {}
+
+        # Notificações JSON-RPC (sem id) não têm resposta
+        if req_id is None:
+            return None
+
+        if method == "initialize":
+            client_proto = params.get("protocolVersion") if isinstance(params, dict) else None
+            proto_ver = client_proto if isinstance(client_proto, str) and client_proto else "2024-11-05"
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "protocolVersion": proto_ver,
+                    "capabilities": {
+                        "tools": {"listChanged": False},
+                        "resources": {"subscribe": False, "listChanged": False},
+                        "prompts": {"listChanged": False},
+                    },
+                    "serverInfo": {
+                        "name": self.name,
+                        "version": self.version,
+                    },
+                },
+            }
+
+        if method == "ping":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {}}
+
+        if method == "tools/list":
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "tools": [t["schema"] for t in self._tools.values()],
+                },
+            }
+
+        if method == "tools/call":
+            tool_name = params.get("name", "") if isinstance(params, dict) else ""
+            raw_args = params.get("arguments") or {} if isinstance(params, dict) else {}
+            tool_entry = self._tools.get(tool_name)
+            if not tool_entry:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32601,
+                        "message": f"Unknown tool: {tool_name}",
+                    },
+                }
+            try:
+                call_args = self._coerce_args(tool_entry["signature"], raw_args)
+                output = tool_entry["fn"](**call_args)
+                text_out = output if isinstance(output, str) else json.dumps(output, ensure_ascii=False, indent=2)
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [{"type": "text", "text": text_out}],
+                        "isError": False,
+                    },
+                }
+            except Exception as exc:
+                err_msg = f"Error executing {tool_name}: {exc}\n{traceback.format_exc()}"
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "result": {
+                        "content": [{"type": "text", "text": err_msg}],
+                        "isError": True,
+                    },
+                }
+
+        if method == "resources/list":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"resources": []}}
+
+        if method == "resources/templates/list":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"resourceTemplates": []}}
+
+        if method == "prompts/list":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"prompts": []}}
+
+        if method == "logging/setLevel":
+            return {"jsonrpc": "2.0", "id": req_id, "result": {}}
+
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "error": {
+                "code": -32601,
+                "message": f"Method not found: {method}",
+            },
+        }
+
+    def _write_message(self, out_stream: Any, payload: Dict[str, Any], use_content_length: bool = False) -> None:
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        if use_content_length:
+            body_bytes = body.encode("utf-8")
+            header = f"Content-Length: {len(body_bytes)}\r\n\r\n"
+            out_stream.write(header)
+            out_stream.write(body)
+        else:
+            out_stream.write(body + "\n")
+        out_stream.flush()
+
+    def run(self, transport: str = "stdio") -> None:
+        in_stream = sys.stdin
+        out_stream = _MCP_RAW_STDOUT
+
+        for stream in (in_stream, out_stream, sys.stderr):
+            if stream is not None and hasattr(stream, "reconfigure"):
+                try:
+                    stream.reconfigure(encoding="utf-8", errors="replace")
+                except Exception:
+                    pass
+
+        use_content_length = False
+        while True:
+            try:
+                line = in_stream.readline()
+                if not line:
+                    break
+
+                stripped = line.strip()
+                if not stripped:
+                    continue
+
+                # Suporte híbrido: Content-Length (LSP-style) ou JSON-RPC por linha (MCP stdio standard)
+                if stripped.lower().startswith("content-length:"):
+                    use_content_length = True
+                    length = int(stripped.split(":", 1)[1].strip())
+                    while True:
+                        hdr_line = in_stream.readline()
+                        if not hdr_line or hdr_line.strip() == "":
+                            break
+                    raw_body = in_stream.read(length)
+                    if not raw_body:
+                        break
+                    msg = json.loads(raw_body)
+                else:
+                    msg = json.loads(stripped)
+
+                if isinstance(msg, list):
+                    responses = []
+                    for item in msg:
+                        if isinstance(item, dict):
+                            resp = self.handle_request(item)
+                            if resp is not None:
+                                responses.append(resp)
+                    if responses:
+                        self._write_message(out_stream, responses, use_content_length=use_content_length)
+                elif isinstance(msg, dict):
+                    resp = self.handle_request(msg)
+                    if resp is not None:
+                        self._write_message(out_stream, resp, use_content_length=use_content_length)
+            except json.JSONDecodeError:
+                continue
+            except (EOFError, KeyboardInterrupt):
+                break
+            except Exception as exc:
+                try:
+                    sys.stderr.write(f"[antigravity-brain MCP error] {exc}\n")
+                    sys.stderr.flush()
+                except Exception:
+                    pass
+
+
+MCPServer = StdioMCPServer
 
 from ast_impact_watcher import get_global_watcher
 from db_engine import BrainDB, ensure_dashboard_running
@@ -20,10 +304,14 @@ from token_diet import prune_tools_for_intent
 
 db = BrainDB()
 swarm = SwarmEngine(db)
-ensure_dashboard_running()
+try:
+    ensure_dashboard_running()
+except Exception:
+    pass
 
 # Create the MCP server
 mcp = MCPServer("antigravity-brain")
+
 
 
 @mcp.tool()

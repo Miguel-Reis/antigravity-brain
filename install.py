@@ -86,7 +86,35 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
 """
     (RULES_DIR / "AGENTS.md").write_text(agents_md_content, encoding="utf-8")
 
-    # 3. Registar o servidor MCP em ~/.gemini/config/mcp_config.json
+    # 3. Sincronizar automaticamente com ~/.gemini/antigravity/scratch/brain_mcp se existir noutro caminho
+    scratch_brain_dir = GEMINI_DIR / "antigravity" / "scratch" / "brain_mcp"
+    try:
+        if scratch_brain_dir.is_dir() and scratch_brain_dir.resolve() != REPO_DIR.resolve():
+            import shutil
+
+            for fname in (
+                "server.py",
+                "db_engine.py",
+                "swarm_engine.py",
+                "graphify_engine.py",
+                "ast_impact_watcher.py",
+                "token_diet.py",
+                "brain_inject.py",
+                "brain_harvest.py",
+                "web_dashboard.py",
+                "auto_updater.py",
+                "index.html",
+                "install.py",
+                "install.bat",
+                "update.bat",
+            ):
+                src_f = REPO_DIR / fname
+                if src_f.is_file():
+                    shutil.copy2(src_f, scratch_brain_dir / fname)
+    except Exception:
+        pass
+
+    # 4. Registar o servidor MCP em ~/.gemini/config/mcp_config.json
     mcp_cfg_path = CONFIG_DIR / "mcp_config.json"
     mcp_cfg: Dict[str, Any] = {"mcpServers": {}}
     if mcp_cfg_path.is_file():
@@ -98,7 +126,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
     servers = mcp_cfg.setdefault("mcpServers", {})
     servers["antigravity-brain"] = {
         "command": "python",
-        "args": [server_script],
+        "args": ["-u", server_script],
     }
     mcp_cfg_path.write_text(
         json.dumps(mcp_cfg, indent=2, ensure_ascii=False), encoding="utf-8"
