@@ -515,13 +515,15 @@
       font-weight: 600;
     }
 
-    /* CENTER PANE: OBSIDIAN FORCE GRAPH CANVAS */
+    /* CENTER PANE: OBSIDIAN + PLANETARY ASTROLABE GRAPH CANVAS */
     .canvas-container {
       flex: 1;
       position: relative;
-      background-color: var(--bg-canvas);
-      background-image: radial-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px);
-      background-size: 24px 24px;
+      background-color: #03050d;
+      background-image:
+        radial-gradient(circle at 50% 48%, rgba(56, 43, 138, 0.24) 0%, rgba(17, 24, 56, 0.36) 38%, rgba(3, 5, 13, 0.98) 78%),
+        radial-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px);
+      background-size: 100% 100%, 28px 28px;
       overflow: hidden;
     }
 
@@ -538,23 +540,73 @@
 
     .graph-hud-top {
       position: absolute;
-      top: 12px;
+      top: 10px;
       left: 12px;
+      right: 248px;
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 6px;
       z-index: 15;
-      background: rgba(10, 14, 23, 0.94);
-      border: 1px solid var(--border);
-      padding: 4px;
-      border-radius: 9px;
-      box-shadow: var(--shadow-card);
+      background: rgba(6, 9, 20, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(129, 140, 248, 0.18);
+      padding: 5px 10px;
+      border-radius: 10px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    }
+
+    .hud-zoom-tag {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      padding: 3px 7px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      user-select: none;
+    }
+
+    .hud-dues-badge {
+      font-family: var(--font-sans);
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #cbd5e1;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(30, 41, 59, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      user-select: none;
+    }
+
+    .hud-objectives-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #f8fafc;
+      background: linear-gradient(90deg, rgba(30, 27, 75, 0.85), rgba(76, 29, 49, 0.72));
+      border: 1px solid rgba(244, 63, 94, 0.45);
+      box-shadow: 0 0 14px rgba(244, 63, 94, 0.18);
+      cursor: pointer;
+      transition: all 0.16s ease;
+    }
+
+    .hud-objectives-pill:hover {
+      border-color: rgba(251, 113, 133, 0.8);
+      box-shadow: 0 0 18px rgba(244, 63, 94, 0.32);
+      transform: translateY(-1px);
     }
 
     .hud-pill {
       background: transparent;
       border: 1px solid transparent;
-      padding: 5px 10px;
+      padding: 4px 9px;
       border-radius: 6px;
       font-family: var(--font-sans);
       font-size: 11px;
@@ -562,33 +614,35 @@
       color: var(--text-muted);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.14s ease;
     }
 
     .hud-pill:hover {
       color: var(--text-main);
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .hud-pill.active {
-      border-color: rgba(99, 102, 241, 0.42);
+      border-color: rgba(129, 140, 248, 0.48);
       color: #ffffff;
-      background: rgba(99, 102, 241, 0.18);
+      background: rgba(99, 102, 241, 0.22);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.2);
     }
 
     .graph-settings-panel {
       position: absolute;
-      top: 12px;
+      top: 10px;
       right: 12px;
-      width: 224px;
-      background: rgba(10, 14, 23, 0.95);
-      border: 1px solid var(--border);
+      width: 228px;
+      background: rgba(6, 9, 20, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(129, 140, 248, 0.22);
       border-radius: var(--radius-lg);
       padding: 11px 13px;
-      z-index: 15;
+      z-index: 20;
       font-size: 11.5px;
-      box-shadow: var(--shadow-card);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
     }
 
     .settings-title {
@@ -625,9 +679,26 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 3.5px 0;
+      padding: 4.5px 4px;
+      border-radius: 5px;
       font-size: 11px;
       color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.12s ease, color 0.12s ease;
+    }
+
+    .toggle-row:hover {
+      background: rgba(99, 102, 241, 0.12);
+      color: #ffffff;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      accent-color: #818cf8;
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      margin: 0;
     }
 
     /* RIGHT SIDEBAR: NOTE INSPECTOR & CAUSAL LINEAGE */
@@ -2104,25 +2175,42 @@
     <!-- CENTER: INTERACTIVE GRAPH CANVAS -->
     <main class="canvas-container" id="canvasWrap">
       <div class="graph-hud-top">
+        <span class="hud-zoom-tag" id="lblPlanetaryZoom"># ZOOM FAR</span>
+        <span class="hud-dues-badge" id="lblPlanetaryDues">0 dues</span>
+        <button class="hud-objectives-pill" onclick="focusDailyObjectives()" title="Focar nos 3 Objetivos Críticos & Triangulação Causal do Córtex">
+          <span style="width:7px; height:7px; border-radius:50%; background:#f8fafc; box-shadow:0 0 8px #ffffff; display:inline-block;"></span>
+          <span id="lblDailyObjectives">3 objectifs du jour</span>
+          <span style="color:#fb7185; font-weight:700;">→</span>
+        </button>
+        <button class="hud-pill active" id="btnPlanetaryView" onclick="togglePlanetaryAstrolabeMode()" style="cursor:pointer;" title="Alternar estética Astrolábio Planetário Orbital (Obsidian + Jev + NotebookLM)">
+          🪐 Planetary
+        </button>
+        <button class="hud-pill active" id="btnAllLinksHud" onclick="toggleAllLinksHud()" style="cursor:pointer;" title="Mostrar/Ocultar Todos os Links & Filamentos Polares">
+          Tous les liens
+        </button>
+        <button class="hud-pill" id="btnLockOrbitsHud" onclick="toggleLockOrbitsHud()" style="cursor:pointer;" title="Bloquear/Desbloquear órbitas planetárias (Verrouiller)">
+          🔒 Verrouiller
+        </button>
         <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;">
           🌐 Córtex Global
         </button>
         <button class="hud-pill" id="btnLocalGraph" onclick="setGraphMode('local')" style="cursor:pointer;">
-          🎯 Sub-Grafo 1-Hop
+          🎯 1-Hop
         </button>
         <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;">
-          🧭 Centrar Vista
+          🧭 Centrar
         </button>
-        <div class="hud-pill" style="display:flex; align-items:center; gap:8px;" title="Time-Travel: Recue no tempo para ver como o Grafo de Memórias cresceu cronologicamente">
-          <span>⏪ Time-Travel: <strong id="lblTimeTravel" style="color:#a5b4fc; font-family:var(--font-mono);">100% (LIVE)</strong></span>
-          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:84px; accent-color:#6366f1; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
-          <button onclick="replayGraphTimeline()" style="background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; border:none; border-radius:5px; padding:3px 8px; font-size:10px; font-weight:700; cursor:pointer;">▶ Replay</button>
+        <div class="hud-pill" style="display:flex; align-items:center; gap:6px;" title="Time-Travel: Recue no tempo para ver como o Grafo Planetário cresceu cronologicamente">
+          <span>⏪ <strong id="lblTimeTravel" style="color:#a5b4fc; font-family:var(--font-mono);">100%</strong></span>
+          <input type="range" id="rngTimeTravel" min="10" max="100" value="100" style="width:68px; accent-color:#6366f1; cursor:pointer;" oninput="onTimeTravelChange(this.value)" />
+          <button onclick="replayGraphTimeline()" style="background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; border:none; border-radius:5px; padding:2px 7px; font-size:10px; font-weight:700; cursor:pointer;">▶</button>
         </div>
       </div>
 
       <div class="graph-settings-panel">
         <div class="settings-title">
-          <span style="color:#a5b4fc;">⚙️ Física do Córtex</span>
+          <span style="color:#a5b4fc;">⚙️ Física & Órbitas</span>
+          <span id="lblGraphStatusBadge" style="font-size:9px; color:#34d399; font-family:var(--font-mono);">PLANETARY</span>
         </div>
         <div class="control-group">
           <div class="control-label">
@@ -2138,18 +2226,26 @@
           </div>
           <input type="range" min="90" max="420" value="210" class="slider" id="rngDistance" oninput="updatePhysicsParams()" />
         </div>
-        <div class="toggle-row">
+        <label class="toggle-row" for="chkShowTags">
           <span>Mostrar Nós de #Tags</span>
-          <input type="checkbox" id="chkShowTags" checked onchange="fetchGraph()" />
-        </div>
-        <div class="toggle-row">
+          <input type="checkbox" id="chkShowTags" checked onchange="onGraphCheckboxChange('tags', this.checked)" />
+        </label>
+        <label class="toggle-row" for="chkAlwaysLabels">
           <span>Mostrar Rótulos Sempre</span>
-          <input type="checkbox" id="chkAlwaysLabels" checked onchange="graphDirty = true" />
-        </div>
-        <div class="toggle-row">
-          <span>Pulsos Causais</span>
-          <input type="checkbox" id="chkPulses" checked onchange="graphDirty = true" />
-        </div>
+          <input type="checkbox" id="chkAlwaysLabels" checked onchange="onGraphCheckboxChange('labels', this.checked)" />
+        </label>
+        <label class="toggle-row" for="chkPulses">
+          <span>Pulsos & Lasers Causais</span>
+          <input type="checkbox" id="chkPulses" checked onchange="onGraphCheckboxChange('pulses', this.checked)" />
+        </label>
+        <label class="toggle-row" for="chkPlanetaryOrbits">
+          <span>Astrolábio & Ilhas (Îlots)</span>
+          <input type="checkbox" id="chkPlanetaryOrbits" checked onchange="onGraphCheckboxChange('planetary', this.checked)" />
+        </label>
+        <label class="toggle-row" for="chkPolarFilaments">
+          <span>Filamentos Polares (Lótus)</span>
+          <input type="checkbox" id="chkPolarFilaments" checked onchange="onGraphCheckboxChange('filaments', this.checked)" />
+        </label>
       </div>
 
       <canvas id="brainGraph"></canvas>
@@ -3176,9 +3272,111 @@
       }, 220);
     }
 
+    // Estado Planetário & Controlo de Checkboxes
+    let planetaryAstrolabeMode = true;
+    let showAllPlanetaryLinks = true;
+    let planetaryOrbitsLocked = false;
+    let planetaryClustersMeta = [];
+    let planetaryLaserTriangles = [];
+
+    const PLANETARY_CLUSTER_PRESETS = {
+      'brain_mcp':    { title: 'Brain MCP & Jev',    angle: -Math.PI * 0.50, ringR: 255, rx: 145, ry: 82, tilt: -0.24, color: '#818cf8', accent: '#c084fc' },
+      'swarm_24x':    { title: 'Swarm 24x Agents',   angle: -Math.PI * 0.14, ringR: 390, rx: 155, ry: 86, tilt: 0.32,  color: '#38bdf8', accent: '#f43f5e' },
+      'graphify_ast': { title: 'Graphify AST',       angle:  Math.PI * 0.18, ringR: 430, rx: 148, ry: 80, tilt: -0.35, color: '#f43f5e', accent: '#fb7185' },
+      'office_3d':    { title: 'Office 3D Holo',     angle:  Math.PI * 0.50, ringR: 340, rx: 140, ry: 78, tilt: 0.18,  color: '#c084fc', accent: '#f472b6' },
+      'token_diet':   { title: 'Token Diet & Anki',  angle:  Math.PI * 0.82, ringR: 420, rx: 150, ry: 82, tilt: 0.36,  color: '#34d399', accent: '#38bdf8' },
+      'global':       { title: 'Core Architecture',  angle: -Math.PI * 0.82, ringR: 365, rx: 155, ry: 86, tilt: -0.28, color: '#f59e0b', accent: '#a78bfa' }
+    };
+
+    function onGraphCheckboxChange(kind, checked) {
+      if (kind === 'tags') {
+        const oldPos = {};
+        activeNodes.forEach(n => { oldPos[n.id] = { x: n.x, y: n.y }; });
+        rebuildSimulationGraph(oldPos);
+        fetchGraph();
+        showToast(checked ? '🏷️ Nós de #Tags ativados no Córtex' : '🏷️ Nós de #Tags ocultados');
+      } else if (kind === 'labels') {
+        graphDirty = true;
+        showToast(checked ? '🔤 Rótulos visíveis em todos os nós' : '🔤 Rótulos apenas em foco / seleção (Vista Limpa)');
+      } else if (kind === 'pulses') {
+        graphDirty = true;
+        showToast(checked ? '⚡ Pulsos sinápticos & Lasers de triangulação ativos' : '⚡ Pulsos & Lasers pausados');
+      } else if (kind === 'planetary') {
+        planetaryAstrolabeMode = checked;
+        const btn = document.getElementById('btnPlanetaryView');
+        if (btn) btn.classList.toggle('active', checked);
+        const badge = document.getElementById('lblGraphStatusBadge');
+        if (badge) badge.textContent = checked ? 'PLANETARY' : 'FORCE-2D';
+        rebuildSimulationGraph();
+        showToast(checked ? '🪐 Modo Astrolábio Planetário ativado' : '🕸️ Modo Grafo Clássico ativado');
+      } else if (kind === 'filaments') {
+        showAllPlanetaryLinks = checked;
+        const btn = document.getElementById('btnAllLinksHud');
+        if (btn) btn.classList.toggle('active', checked);
+        graphDirty = true;
+        showToast(checked ? '🌌 Filamentos Polares & Todos os Links visíveis' : '🌌 Filamentos Polares simplificados');
+      }
+      graphDirty = true;
+      requestAnimationFrame(renderGraph);
+    }
+
+    function togglePlanetaryAstrolabeMode() {
+      const chk = document.getElementById('chkPlanetaryOrbits');
+      if (chk) {
+        chk.checked = !chk.checked;
+        onGraphCheckboxChange('planetary', chk.checked);
+      }
+    }
+
+    function toggleAllLinksHud() {
+      const chk = document.getElementById('chkPolarFilaments');
+      if (chk) {
+        chk.checked = !chk.checked;
+        onGraphCheckboxChange('filaments', chk.checked);
+      }
+    }
+
+    function toggleLockOrbitsHud() {
+      planetaryOrbitsLocked = !planetaryOrbitsLocked;
+      const btn = document.getElementById('btnLockOrbitsHud');
+      if (btn) {
+        btn.classList.toggle('active', planetaryOrbitsLocked);
+        btn.innerHTML = planetaryOrbitsLocked ? '🔒 Verrouillé' : '🔒 Verrouiller';
+      }
+      if (planetaryOrbitsLocked) {
+        simAlpha = 0;
+        for (const n of activeNodes) { n.vx = 0; n.vy = 0; }
+      } else {
+        simAlpha = 0.35;
+      }
+      graphDirty = true;
+      requestAnimationFrame(renderGraph);
+      showToast(planetaryOrbitsLocked ? '🔒 Órbitas planetárias bloqueadas (Verrouillé)' : '🔓 Órbitas planetárias desbloqueadas');
+    }
+
+    function focusDailyObjectives() {
+      const memNodes = activeNodes
+        .filter(n => n.node_type === 'memory')
+        .sort((a, b) => (b.importance || 3) - (a.importance || 3));
+      if (!memNodes.length) return;
+      const pickIdx = (window._dailyObjCycleIdx = ((window._dailyObjCycleIdx || 0) + 1) % Math.min(3, memNodes.length));
+      const target = memNodes[pickIdx];
+      selectNode(target, true);
+      showToast(`🎯 Objectif du jour #${pickIdx + 1}: ${target._cleanLabel || target.label}`);
+    }
+
     function rebuildSimulationGraph(oldPos = {}) {
+      const showTagsEl = document.getElementById('chkShowTags');
+      const allowTags = showTagsEl ? showTagsEl.checked : true;
+
       let rawNodes = graphData.nodes.map(n => ({ ...n }));
       let links = graphData.links.map(l => ({ ...l }));
+
+      // Filtro imediato de #Tags no cliente quando a checkbox está desmarcada
+      if (!allowTags) {
+        rawNodes = rawNodes.filter(n => n.node_type !== 'tag');
+        links = links.filter(l => l.kind !== 'tag_link');
+      }
 
       // Filtro Time-Travel Cronológico (10% a 100% da linha temporal de memórias)
       if (timeTravelPct < 100) {
@@ -3202,42 +3400,83 @@
         links = links.filter(l => keepIds.has(l.source) && keepIds.has(l.target));
       }
 
-      // Posicionar Hubs de Workspace num anel amplo para separar clusters
+      // Posicionar Hubs de Workspace em Órbitas Planetárias (Ilhas / Îlots estilo Obsidian Planetary)
       const wsNodes = rawNodes.filter(n => n.node_type === 'workspace');
       const wsCenters = {};
+      planetaryClustersMeta = [];
+
       wsNodes.forEach((w, idx) => {
-        const ang = (idx / Math.max(1, wsNodes.length)) * Math.PI * 2 - Math.PI / 2;
-        const rad = wsNodes.length === 1 ? 0 : 480;
-        wsCenters[w.workspace] = {
-          x: Math.cos(ang) * rad,
-          y: Math.sin(ang) * rad
-        };
+        const wsKey = w.workspace || 'global';
+        const preset = PLANETARY_CLUSTER_PRESETS[wsKey];
+        const fallbackAng = (idx / Math.max(1, wsNodes.length)) * Math.PI * 2 - Math.PI / 2;
+        const ang = preset ? preset.angle : fallbackAng;
+        const rad = wsNodes.length === 1 ? 0 : (preset ? preset.ringR : 390);
+        const cx = Math.cos(ang) * rad;
+        const cy = Math.sin(ang) * rad;
+        const rx = preset ? preset.rx : 145;
+        const ry = preset ? preset.ry : 82;
+        const tilt = preset ? preset.tilt : (idx % 2 === 0 ? -0.25 : 0.28);
+        const color = preset ? preset.color : '#818cf8';
+        const accent = preset ? preset.accent : '#f43f5e';
+        const displayTitle = preset ? preset.title : wsKey;
+
+        wsCenters[wsKey] = { x: cx, y: cy, rx, ry, tilt, color, accent, displayTitle, wsKey };
       });
 
-      // Espiral de Ângulo Áureo (Phyllotaxis) por cluster para distribuição espaçada sem sobreposição
+      // Distribuir nós em órbitas elípticas inclinadas em torno de cada Ilha Planetária (Îlot)
       const wsCounters = {};
-      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const wsStats = {};
 
       const nodes = rawNodes.map((n, idx) => {
+        const ws = n.workspace || 'global';
+        if (!wsStats[ws]) wsStats[ws] = { notes: 0, tags: 0, checkpoints: 0, unlinked: 0 };
+        if (n.node_type === 'memory') {
+          wsStats[ws].notes++;
+          if ((n.importance || 3) >= 4) wsStats[ws].unlinked++;
+        } else if (n.node_type === 'tag') {
+          wsStats[ws].tags++;
+        } else if (n.node_type === 'checkpoint') {
+          wsStats[ws].checkpoints++;
+        }
+
         const prev = oldPos[n.id];
         if (prev) {
           return { ...n, x: prev.x, y: prev.y, vx: 0, vy: 0 };
         }
-        const ws = n.workspace || 'global';
-        const center = wsCenters[ws] || { x: 0, y: 0 };
+        const center = wsCenters[ws] || { x: 0, y: 0, rx: 140, ry: 80, tilt: -0.2 };
         if (n.node_type === 'workspace') {
           return { ...n, x: center.x, y: center.y, vx: 0, vy: 0 };
         }
         const cIdx = (wsCounters[ws] = (wsCounters[ws] || 0) + 1);
-        const theta = cIdx * goldenAngle + idx * 0.15;
-        const r = 115 + 78 * Math.sqrt(cIdx);
+        // Colocar notas ao longo de 2 anéis elípticos inclinados dentro do Îlot
+        const orbitLayer = cIdx <= 6 ? 0.62 : (cIdx <= 14 ? 0.96 : 1.24);
+        const localAng = cIdx * 1.18 + idx * 0.21;
+        const ex = Math.cos(localAng) * center.rx * orbitLayer;
+        const ey = Math.sin(localAng) * center.ry * orbitLayer;
+        const cosT = Math.cos(center.tilt || 0);
+        const sinT = Math.sin(center.tilt || 0);
         return {
           ...n,
-          x: center.x + Math.cos(theta) * r,
-          y: center.y + Math.sin(theta) * r,
+          x: center.x + (ex * cosT - ey * sinT),
+          y: center.y + (ex * sinT + ey * cosT),
           vx: 0,
           vy: 0
         };
+      });
+
+      // Construir metadados das Ilhas Planetárias (Îlots) para renderizar cabeçalhos flutuantes estilo foto
+      Object.keys(wsCenters).forEach(wsKey => {
+        const c = wsCenters[wsKey];
+        const st = wsStats[wsKey] || { notes: 4, tags: 2, checkpoints: 1, unlinked: 2 };
+        const ilotsCount = Math.max(2, Math.min(6, (st.checkpoints || 1) + Math.ceil((st.tags || 2) / 2)));
+        const toLinkCount = Math.max(2, st.unlinked || 3);
+        planetaryClustersMeta.push({
+          ...c,
+          notesCount: st.notes || 1,
+          ilotsCount,
+          toLinkCount,
+          subtitle: `${st.notes || 1} notes · ${ilotsCount} îlots · ${toLinkCount} à relier`
+        });
       });
 
       const nodeMap = {};
@@ -3276,16 +3515,45 @@
           };
         });
 
-      // Pré-aquecimento síncrono adaptativo com Spatial Hash Grid: estabiliza em <5ms mesmo com centenas de nós
+      // Selecionar os nós de maior centralidade em diferentes workspaces para os feixes Laser Coral de Triangulação
+      const highCentrality = activeNodes
+        .filter(n => n.node_type === 'memory')
+        .sort((a, b) => ((b._neighbors ? b._neighbors.size : 0) + (b.importance || 3) * 2) - ((a._neighbors ? a._neighbors.size : 0) + (a.importance || 3) * 2));
+      const pickedLaserNodes = [];
+      const usedWs = new Set();
+      for (const cand of highCentrality) {
+        if (!usedWs.has(cand.workspace) || pickedLaserNodes.length < 5) {
+          pickedLaserNodes.push(cand);
+          usedWs.add(cand.workspace);
+          if (pickedLaserNodes.length >= 5) break;
+        }
+      }
+      planetaryLaserTriangles = pickedLaserNodes;
+
+      // Atualizar badges de HUD Planetário
+      const duesEl = document.getElementById('lblPlanetaryDues');
+      if (duesEl) {
+        const totalCausal = activeLinks.filter(l => l.kind === 'causal_link').length;
+        duesEl.textContent = `${Math.max(0, totalCausal)} dues`;
+      }
+      const objEl = document.getElementById('lblDailyObjectives');
+      if (objEl) {
+        const highCount = activeNodes.filter(n => n.node_type === 'memory' && (n.importance || 3) >= 5).length;
+        objEl.textContent = `${Math.max(3, Math.min(9, highCount))} objectifs du jour`;
+      }
+
+      // Em modo Planetário, usar menos passos de prewarm para preservar a geometria orbital elíptica limpa da foto
       const isInitialLoad = Object.keys(oldPos).length === 0;
       const nCount = Math.max(1, activeNodes.length);
-      const prewarmSteps = isInitialLoad
-        ? Math.min(42, Math.max(14, Math.floor(1500 / nCount)))
-        : Math.min(18, Math.max(8, Math.floor(650 / nCount)));
-      simAlpha = 1.0;
-      for (let step = 0; step < prewarmSteps; step++) {
-        simAlpha = Math.max(0.05, 1.0 - step / prewarmSteps);
-        stepPhysics(true);
+      const prewarmSteps = planetaryAstrolabeMode
+        ? (isInitialLoad ? 5 : 2)
+        : (isInitialLoad ? Math.min(42, Math.max(14, Math.floor(1500 / nCount))) : Math.min(18, Math.max(8, Math.floor(650 / nCount))));
+      simAlpha = planetaryOrbitsLocked ? 0.0 : 1.0;
+      if (!planetaryOrbitsLocked) {
+        for (let step = 0; step < prewarmSteps; step++) {
+          simAlpha = Math.max(0.05, 1.0 - step / prewarmSteps);
+          stepPhysics(true);
+        }
       }
       for (const n of activeNodes) {
         n.vx = 0;
@@ -3954,8 +4222,9 @@
         return;
       }
 
-      const showPulses = document.getElementById('chkPulses').checked;
-      const isSimMoving = Boolean(draggedNode) || simAlpha >= 0.003;
+      const chkPulsesEl = document.getElementById('chkPulses');
+      const showPulses = chkPulsesEl ? chkPulsesEl.checked : true;
+      const isSimMoving = Boolean(draggedNode) || (!planetaryOrbitsLocked && simAlpha >= 0.003);
       if (!graphDirty && !isSimMoving) {
         if (!showPulses || (++graphIdleTick % 2 !== 0)) {
           setTimeout(() => requestAnimationFrame(renderGraph), 42);
@@ -3964,7 +4233,9 @@
       }
       graphDirty = false;
 
-      stepPhysics();
+      if (!planetaryOrbitsLocked) {
+        stepPhysics();
+      }
       if (showPulses) pulseTick += 0.022;
 
       const wrap = document.getElementById('canvasWrap');
@@ -3973,12 +4244,18 @@
       ctx.clearRect(0, 0, wrapW, wrapH);
       const isTechRev = document.body.classList.contains('tech-rev');
 
-      // 0A. TECH REVOLUTION v4.0: Grelha Tática 2D + Horizonte Synthwave 3D em Perspetiva (Batched GPU Draw Calls)
+      // Atualizar indicador # ZOOM FAR / # ZOOM CLOSE no HUD superior
+      const zoomLbl = document.getElementById('lblPlanetaryZoom');
+      if (zoomLbl) {
+        zoomLbl.textContent = cam.k < 0.85 ? '# ZOOM FAR' : (cam.k > 1.35 ? '# ZOOM DEEP' : '# ZOOM MID');
+      }
+
+      // 0A. Nebulosa Cósmica Central Subtil + Grelha Tática (se Tech Rev ativo)
       if (isTechRev) {
         ctx.save();
         const cw = wrapW;
         const ch = wrapH;
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.045)';
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.04)';
         ctx.lineWidth = 1;
         ctx.beginPath();
         for (let gx = 0; gx < cw; gx += 48) {
@@ -3986,26 +4263,6 @@
         }
         for (let gy = 0; gy < ch; gy += 48) {
           ctx.moveTo(0, gy); ctx.lineTo(cw, gy);
-        }
-        ctx.stroke();
-
-        const horizonY = Math.round(ch * 0.80);
-        const vpX = cw * 0.5;
-        ctx.strokeStyle = 'rgba(255, 42, 133, 0.14)';
-        ctx.beginPath();
-        for (let rx = -cw * 0.8; rx <= cw * 1.8; rx += 95) {
-          ctx.moveTo(vpX + (rx - vpX) * 0.25, horizonY);
-          ctx.lineTo(rx, ch);
-        }
-        ctx.stroke();
-
-        ctx.strokeStyle = 'rgba(112, 0, 255, 0.18)';
-        ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const t = Math.pow(i / 7, 1.55);
-          const ly = horizonY + t * (ch - horizonY);
-          ctx.moveTo(0, ly);
-          ctx.lineTo(cw, ly);
         }
         ctx.stroke();
         ctx.restore();
@@ -4018,7 +4275,7 @@
       const invSqrtK = 1.0 / Math.sqrt(cam.k);
 
       // Viewport Frustum Culling em coordenadas do mundo (ignora nós e arestas fora do ecrã)
-      const padWorld = 160 / cam.k;
+      const padWorld = 200 / cam.k;
       const viewMinX = -cam.x / cam.k - padWorld;
       const viewMaxX = (wrapW - cam.x) / cam.k + padWorld;
       const viewMinY = -cam.y / cam.k - padWorld;
@@ -4030,45 +4287,168 @@
         n._inView = (n.x >= viewMinX && n.x <= viewMaxX && n.y >= viewMinY && n.y <= viewMaxY);
       }
 
-      // 0B. Anéis Orbitais Concêntricos Subtis & Eixos de Referência no Centro do Grafo
+      const outerPlanetR = 640;
+
+      // 0B. ASTROLÁBIO PLANETÁRIO: Anéis Orbitais Concêntricos, Eixos Meridianos, Filamentos Polares, Ilhas Elípticas (Îlots) & Lótus Polar
       ctx.save();
-      const sonarRings = isTechRev
+      const planetaryRings = planetaryAstrolabeMode
         ? [
-            { r: 210, col: 'rgba(16, 185, 129, 0.24)' },
-            { r: 390, col: 'rgba(236, 72, 153, 0.22)' },
-            { r: 580, col: 'rgba(6, 182, 212, 0.24)' },
-            { r: 780, col: 'rgba(99, 102, 241, 0.16)' }
+            { r: 145, col: 'rgba(199, 210, 254, 0.22)', dash: [] },
+            { r: 265, col: 'rgba(165, 180, 252, 0.24)', dash: [] },
+            { r: 395, col: 'rgba(129, 140, 248, 0.28)', dash: [] },
+            { r: 520, col: 'rgba(99, 102, 241, 0.24)', dash: [6, 6] },
+            { r: outerPlanetR, col: 'rgba(226, 232, 240, 0.46)', dash: [] },
+            { r: outerPlanetR + 18, col: 'rgba(148, 163, 184, 0.16)', dash: [2, 8] }
           ]
         : [
-            { r: 210, col: 'rgba(99, 102, 241, 0.09)' },
-            { r: 390, col: 'rgba(56, 189, 248, 0.07)' },
-            { r: 580, col: 'rgba(139, 92, 246, 0.06)' },
-            { r: 780, col: 'rgba(255, 255, 255, 0.035)' }
+            { r: 210, col: 'rgba(99, 102, 241, 0.10)', dash: [] },
+            { r: 390, col: 'rgba(56, 189, 248, 0.08)', dash: [] },
+            { r: 580, col: 'rgba(139, 92, 246, 0.06)', dash: [] }
           ];
-      ctx.lineWidth = 1.2 * invSqrtK;
-      for (const sr of sonarRings) {
+
+      for (const pr of planetaryRings) {
         ctx.beginPath();
-        ctx.arc(0, 0, sr.r, 0, Math.PI * 2);
-        ctx.strokeStyle = sr.col;
+        ctx.setLineDash(pr.dash || []);
+        ctx.arc(0, 0, pr.r, 0, Math.PI * 2);
+        ctx.strokeStyle = pr.col;
+        ctx.lineWidth = (pr.r === outerPlanetR ? 1.5 : 1.0) * invSqrtK;
         ctx.stroke();
       }
-      ctx.strokeStyle = isTechRev ? 'rgba(6, 182, 212, 0.12)' : 'rgba(255, 255, 255, 0.03)';
-      ctx.lineWidth = 1.0 * invSqrtK;
+      ctx.setLineDash([]);
+
+      // Meridianos Celestes Vertical (Norte-Sul) e Horizontal (Este-Oeste) como na foto
+      ctx.strokeStyle = planetaryAstrolabeMode ? 'rgba(186, 230, 253, 0.34)' : 'rgba(255, 255, 255, 0.04)';
+      ctx.lineWidth = (planetaryAstrolabeMode ? 1.25 : 1.0) * invSqrtK;
       ctx.beginPath();
-      ctx.moveTo(-940, 0); ctx.lineTo(940, 0);
-      ctx.moveTo(0, -940); ctx.lineTo(0, 940);
+      ctx.moveTo(0, -outerPlanetR - 45);
+      ctx.lineTo(0, outerPlanetR + 45);
       ctx.stroke();
+
+      ctx.strokeStyle = planetaryAstrolabeMode ? 'rgba(148, 163, 184, 0.16)' : 'rgba(255, 255, 255, 0.03)';
+      ctx.lineWidth = 0.9 * invSqrtK;
+      ctx.beginPath();
+      ctx.moveTo(-outerPlanetR - 35, 0);
+      ctx.lineTo(outerPlanetR + 35, 0);
+      ctx.stroke();
+
+      // Filamentos Polares Curvos (Harpa Celeste Norte & Sul -> Ilhas e Nós)
+      if (planetaryAstrolabeMode && showAllPlanetaryLinks) {
+        const northPoleY = -outerPlanetR;
+        const southPoleY = outerPlanetR;
+
+        // Filamentos do Polo Norte para os clusters superiores e médios
+        ctx.beginPath();
+        for (let i = 0; i < activeNodes.length; i++) {
+          const n = activeNodes[i];
+          if (n.node_type === 'tag') continue;
+          if (n.y < 140 && (i % 2 === 0 || n.node_type === 'workspace')) {
+            const spreadX = (n.x * 0.22);
+            ctx.moveTo(spreadX * 0.18, northPoleY);
+            ctx.bezierCurveTo(
+              spreadX * 0.85,
+              northPoleY + 145,
+              n.x * 0.72,
+              n.y - 75,
+              n.x,
+              n.y
+            );
+          }
+        }
+        ctx.strokeStyle = 'rgba(224, 231, 255, 0.17)';
+        ctx.lineWidth = 0.85 * invSqrtK;
+        ctx.stroke();
+
+        // Filamentos do Polo Sul (Estrela de Lótus) para os clusters inferiores e centrais
+        ctx.beginPath();
+        for (let i = 0; i < activeNodes.length; i++) {
+          const n = activeNodes[i];
+          if (n.node_type === 'tag') continue;
+          if (n.y > -140 && (i % 2 === 1 || n.node_type === 'workspace')) {
+            const spreadX = (n.x * 0.22);
+            ctx.moveTo(spreadX * 0.15, southPoleY - 12);
+            ctx.bezierCurveTo(
+              spreadX * 0.95,
+              southPoleY - 150,
+              n.x * 0.78,
+              n.y + 85,
+              n.x,
+              n.y
+            );
+          }
+        }
+        ctx.strokeStyle = 'rgba(199, 210, 254, 0.20)';
+        ctx.lineWidth = 0.9 * invSqrtK;
+        ctx.stroke();
+      }
+
+      // Desenhar Ilhas Orbitais Elípticas (Îlots) + Anéis de Poeira Estelar + Títulos Flutuantes estilo foto
+      if (planetaryAstrolabeMode && planetaryClustersMeta.length) {
+        for (let ci = 0; ci < planetaryClustersMeta.length; ci++) {
+          const cl = planetaryClustersMeta[ci];
+          ctx.save();
+          ctx.translate(cl.x, cl.y);
+          ctx.rotate(cl.tilt || 0);
+
+          // Brilho nebuloso suave no interior do Îlot
+          ctx.beginPath();
+          ctx.ellipse(0, 0, cl.rx * 0.92, cl.ry * 0.92, 0, 0, Math.PI * 2);
+          ctx.fillStyle = ci % 2 === 0 ? 'rgba(99, 102, 241, 0.045)' : 'rgba(244, 63, 94, 0.04)';
+          ctx.fill();
+
+          // Órbita Elíptica Principal da Ilha
+          ctx.beginPath();
+          ctx.ellipse(0, 0, cl.rx, cl.ry, 0, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(226, 232, 240, 0.34)';
+          ctx.lineWidth = 1.15 * invSqrtK;
+          ctx.stroke();
+
+          // Segunda Órbita Elíptica Interior Tracejada (Sub-îlot)
+          ctx.beginPath();
+          ctx.setLineDash([4, 6]);
+          ctx.ellipse(0, 0, cl.rx * 0.64, cl.ry * 0.64, 0.18, 0, Math.PI * 2);
+          ctx.strokeStyle = `${cl.color}66`;
+          ctx.lineWidth = 0.95 * invSqrtK;
+          ctx.stroke();
+          ctx.setLineDash([]);
+
+          // Nuvem de micropartículas / satélites de poeira estelar em redor do Îlot (como na foto)
+          ctx.fillStyle = ci % 2 === 0 ? 'rgba(244, 114, 182, 0.45)' : 'rgba(165, 180, 252, 0.45)';
+          const dustCount = 28;
+          for (let d = 0; d < dustCount; d++) {
+            const da = (d / dustCount) * Math.PI * 2 + pulseTick * 0.12 * (ci % 2 === 0 ? 1 : -1);
+            const dr = (d % 3 === 0) ? 1.08 : ((d % 2 === 0) ? 0.82 : 0.48);
+            const dx = Math.cos(da) * cl.rx * dr;
+            const dy = Math.sin(da) * cl.ry * dr;
+            ctx.fillRect(dx - 1, dy - 1, 2 * invSqrtK, 2 * invSqrtK);
+          }
+          ctx.restore();
+
+          // Cabeçalho Tipográfico Flutuante da Ilha ("Brain MCP & Jev" / "12 notes · 3 îlots · 4 à relier")
+          ctx.save();
+          const titleY = cl.y - cl.ry * 0.52 - 14;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.font = `700 ${Math.max(12, Math.min(15, 13.5 * invSqrtK))}px 'Plus Jakarta Sans', -apple-system, sans-serif`;
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillText(cl.displayTitle, cl.x, titleY);
+
+          ctx.textBaseline = 'top';
+          ctx.font = `500 ${Math.max(9.5, Math.min(11.5, 10.2 * invSqrtK))}px 'Plus Jakarta Sans', -apple-system, sans-serif`;
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.88)';
+          ctx.fillText(cl.subtitle, cl.x, titleY + 3);
+          ctx.restore();
+        }
+      }
       ctx.restore();
 
       const focusTarget = hoveredNode || null;
       const neighborSet = focusTarget ? (focusTarget._neighbors || new Set([focusTarget.id])) : null;
 
-      // 1. Desenhar Ligações com Batching GPU por Categoria + Frustum Culling (Reduz ~98% das chamadas ctx.stroke)
+      // 1. Desenhar Ligações com Batching GPU por Categoria + Curvas Orbitais Suaves
       const pulseLinks = [];
       const causalArrows = [];
 
       if (focusTarget) {
-        // Modo Hover Focado: 1 único batch para todas as arestas esmaecidas + destaque nas ligadas ao nó focado
         ctx.beginPath();
         for (let i = 0; i < activeLinks.length; i++) {
           const l = activeLinks[i];
@@ -4095,14 +4475,13 @@
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = isCausal ? '#10b981' : (l.kind === 'synaptic_link' ? '#a78bfa' : '#38bdf8');
-          ctx.lineWidth = (isCausal ? 2.6 : 2.2) * invSqrtK;
+          ctx.strokeStyle = isCausal ? '#fb7185' : (l.kind === 'synaptic_link' ? '#c084fc' : '#38bdf8');
+          ctx.lineWidth = (isCausal ? 2.6 : 2.1) * invSqrtK;
           ctx.stroke();
           if (isCausal) causalArrows.push(l);
           if (showPulses && pulseLinks.length < 64) pulseLinks.push({ l, isHighlighted: true, isCausal });
         }
       } else {
-        // Modo Global Normal: Agrupar arestas visíveis em 5 batches de cor/espessura (5 strokes no total!)
         const bTag = [];
         const bWs = [];
         const bSyn = [];
@@ -4114,6 +4493,7 @@
           const a = l.sourceNode;
           const b = l.targetNode;
           if (!a._inView && !b._inView) continue;
+          if (!showAllPlanetaryLinks && l.kind === 'workspace_link') continue;
           if (l.kind === 'causal_link') {
             if (l.relation === 'fixed_by') bCausalFix.push(l);
             else bCausalEvo.push(l);
@@ -4130,29 +4510,65 @@
         }
 
         ctx.globalAlpha = 1.0;
-        const strokeBatch = (arr, style, width) => {
+        const strokeBatch = (arr, style, width, curved = false) => {
           if (!arr.length) return;
           ctx.beginPath();
           for (let i = 0; i < arr.length; i++) {
             const l = arr[i];
-            ctx.moveTo(l.sourceNode.x, l.sourceNode.y);
-            ctx.lineTo(l.targetNode.x, l.targetNode.y);
+            const ax = l.sourceNode.x;
+            const ay = l.sourceNode.y;
+            const bx = l.targetNode.x;
+            const by = l.targetNode.y;
+            ctx.moveTo(ax, ay);
+            if (curved && planetaryAstrolabeMode) {
+              const mx = (ax + bx) * 0.42;
+              const my = (ay + by) * 0.42;
+              ctx.quadraticCurveTo(mx, my, bx, by);
+            } else {
+              ctx.lineTo(bx, by);
+            }
           }
           ctx.strokeStyle = style;
           ctx.lineWidth = width * invSqrtK;
           ctx.stroke();
         };
 
-        strokeBatch(bTag, 'rgba(100, 116, 139, 0.22)', 1.0);
-        strokeBatch(bWs, 'rgba(56, 189, 248, 0.28)', 1.0);
-        strokeBatch(bSyn, 'rgba(139, 92, 246, 0.42)', 1.5);
-        strokeBatch(bCausalEvo, 'rgba(245, 158, 11, 0.65)', 2.0);
-        strokeBatch(bCausalFix, 'rgba(16, 185, 129, 0.72)', 2.0);
+        strokeBatch(bTag, 'rgba(148, 163, 184, 0.18)', 0.9, false);
+        strokeBatch(bWs, 'rgba(165, 180, 252, 0.22)', 0.95, true);
+        strokeBatch(bSyn, 'rgba(192, 132, 252, 0.36)', 1.35, true);
+        strokeBatch(bCausalEvo, 'rgba(251, 113, 133, 0.62)', 1.85, false);
+        strokeBatch(bCausalFix, 'rgba(52, 211, 153, 0.68)', 1.9, false);
+      }
+
+      // 1B. FEIXES LASER CORAL DE TRIANGULAÇÃO PLANETÁRIA (Triângulo Laser Vermelho/Coral em Destaque na Foto)
+      if (planetaryAstrolabeMode && showPulses && planetaryLaserTriangles.length >= 3 && !focusTarget) {
+        ctx.save();
+        const pts = planetaryLaserTriangles;
+        // Halo exterior vermelho/rosa neon
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        ctx.lineTo(pts[1].x, pts[1].y);
+        ctx.lineTo(pts[2].x, pts[2].y);
+        ctx.closePath();
+        if (pts.length >= 4) {
+          ctx.moveTo(pts[0].x, pts[0].y);
+          ctx.lineTo(pts[3].x, pts[3].y);
+          ctx.lineTo(pts[1].x, pts[1].y);
+        }
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.28)';
+        ctx.lineWidth = 5.5 * invSqrtK;
+        ctx.stroke();
+
+        // Núcleo laser coral vivo
+        ctx.strokeStyle = 'rgba(255, 77, 109, 0.92)';
+        ctx.lineWidth = 1.9 * invSqrtK;
+        ctx.stroke();
+        ctx.restore();
       }
 
       // Desenhar setas direcionais para arestas causais visíveis
       if (causalArrows.length) {
-        const headLen = 6.5 * invSqrtK;
+        const headLen = 6.2 * invSqrtK;
         for (let i = 0; i < causalArrows.length; i++) {
           const l = causalArrows[i];
           const a = l.sourceNode;
@@ -4165,7 +4581,7 @@
           ctx.lineTo(mx - headLen * Math.cos(ang - 0.45), my - headLen * Math.sin(ang - 0.45));
           ctx.lineTo(mx - headLen * Math.cos(ang + 0.45), my - headLen * Math.sin(ang + 0.45));
           ctx.closePath();
-          ctx.fillStyle = l.relation === 'fixed_by' ? '#34d399' : '#fbbf24';
+          ctx.fillStyle = l.relation === 'fixed_by' ? '#34d399' : '#fb7185';
           ctx.fill();
         }
       }
@@ -4180,16 +4596,78 @@
           const px = a.x + (b.x - a.x) * t;
           const py = a.y + (b.y - a.y) * t;
           ctx.beginPath();
-          ctx.arc(px, py, (item.isCausal ? 3.0 : 2.4) * invSqrtK, 0, Math.PI * 2);
-          ctx.fillStyle = item.isCausal ? '#34d399' : (item.isHighlighted ? '#a78bfa' : '#38bdf8');
+          ctx.arc(px, py, (item.isCausal ? 3.1 : 2.3) * invSqrtK, 0, Math.PI * 2);
+          ctx.fillStyle = item.isCausal ? '#ff4d6d' : (item.isHighlighted ? '#c084fc' : '#e0e7ff');
           ctx.fill();
         }
       }
 
-      // 2. Desenhar Nós com Viewport Culling + LOD Adaptativo + Larguras de Texto em Cache
-      const alwaysLabels = document.getElementById('chkAlwaysLabels').checked;
-      const denseLOD = totalNodesCount > 75 && cam.k < 0.62;
-      const labelFontSize = Math.max(9.5, Math.min(12.5, 10.8 / Math.pow(cam.k, 0.2)));
+      // 1C. ESTRELA DE LÓTUS DE 8 PONTAS NO POLO SUL (Emblema Luminoso Rosa/Branco + Rótulo "Argon 4.5 Extra" da Foto)
+      if (planetaryAstrolabeMode) {
+        ctx.save();
+        const starX = 0;
+        const starY = outerPlanetR - 42;
+        const starR = 26 * invSqrtK;
+        const pulseScale = 1 + Math.sin(pulseTick * 2.2) * 0.05;
+
+        // Halo Rosa/Magenta Exterior
+        ctx.beginPath();
+        ctx.arc(starX, starY, starR * 1.95 * pulseScale, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(236, 72, 153, 0.16)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(starX, starY, starR * 1.35 * pulseScale, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(244, 114, 182, 0.32)';
+        ctx.fill();
+
+        // Estrela de 8 Pontas (Octagrama de Lótus)
+        ctx.beginPath();
+        const spikes = 8;
+        for (let s = 0; s < spikes * 2; s++) {
+          const rad = (s % 2 === 0 ? starR : starR * 0.64) * pulseScale;
+          const a = (s * Math.PI) / spikes - Math.PI / 2;
+          const sx = starX + Math.cos(a) * rad;
+          const sy = starY + Math.sin(a) * rad;
+          if (s === 0) ctx.moveTo(sx, sy);
+          else ctx.lineTo(sx, sy);
+        }
+        ctx.closePath();
+        ctx.fillStyle = '#fdf2f8';
+        ctx.fill();
+        ctx.lineWidth = 2.2 * invSqrtK;
+        ctx.strokeStyle = '#ec4899';
+        ctx.stroke();
+
+        // Coroa de Lótus Interior Rosa
+        ctx.beginPath();
+        ctx.moveTo(starX, starY - starR * 0.46);
+        ctx.lineTo(starX + starR * 0.42, starY + starR * 0.25);
+        ctx.lineTo(starX, starY + starR * 0.08);
+        ctx.lineTo(starX - starR * 0.42, starY + starR * 0.25);
+        ctx.closePath();
+        ctx.fillStyle = '#f472b6';
+        ctx.fill();
+
+        // Rótulo "Argon 4.5 Extra" no arco inferior (como "Opus 4.5 Extra" na foto)
+        ctx.font = `600 ${Math.max(10, 11 * invSqrtK)}px 'Plus Jakarta Sans', -apple-system, sans-serif`;
+        ctx.fillStyle = 'rgba(226, 232, 240, 0.85)';
+        ctx.textAlign = 'right';
+        ctx.fillText('Argon 4.5 Extra', starX - 18 * invSqrtK, outerPlanetR + 22 * invSqrtK);
+
+        ctx.beginPath();
+        ctx.arc(starX, outerPlanetR + 18 * invSqrtK, 6 * invSqrtK, 0, Math.PI * 1.65);
+        ctx.strokeStyle = '#60a5fa';
+        ctx.lineWidth = 1.6 * invSqrtK;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 2. Desenhar Nós com Viewport Culling + Respeito Estrito pela Checkbox #chkAlwaysLabels
+      const chkLabelsEl = document.getElementById('chkAlwaysLabels');
+      const alwaysLabels = chkLabelsEl ? chkLabelsEl.checked : true;
+      const denseLOD = totalNodesCount > 85 && cam.k < 0.55;
+      const labelFontSize = Math.max(9.0, Math.min(12.0, 10.2 / Math.pow(cam.k, 0.18)));
       const fontScaleRatio = labelFontSize / 11.0;
 
       for (let i = 0; i < totalNodesCount; i++) {
@@ -4202,24 +4680,33 @@
         const isDimmed = focusTarget && !isNeighbor;
 
         ctx.globalAlpha = isDimmed ? 0.14 : 1.0;
-        const r = (n.val || 12) * 1.15;
+        const r = planetaryAstrolabeMode
+          ? (n.node_type === 'workspace' ? 11 : Math.max(5.5, (n.val || 10) * 0.72))
+          : (n.val || 12) * 1.15;
         let baseColor = CATEGORY_COLORS[n.category] || '#94a3b8';
-        if (n.node_type === 'workspace') baseColor = '#818cf8';
+        if (n.node_type === 'workspace') baseColor = '#c7d2fe';
 
-        // CASO A: Nós de #Tag -> Pílula Cápsula Compacta (com largura em cache)
+        // CASO A: Nós de #Tag -> Pílula Cápsula Compacta ou Ponto Satélite
         if (n.node_type === 'tag') {
           if (denseLOD && !isSelected && !isHovered && !isNeighbor) continue;
+          if (!alwaysLabels && !isSelected && !isHovered && !n.is_match) {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, 3.2 * invSqrtK, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(148, 163, 184, 0.65)';
+            ctx.fill();
+            continue;
+          }
           const textW = n._tagW || 38;
-          const pw = textW + 14;
-          const ph = 18;
-          traceRoundedRect(n.x - pw / 2, n.y - ph / 2, pw, ph, 9);
-          ctx.fillStyle = isSelected || isHovered ? 'rgba(99, 102, 241, 0.25)' : 'rgba(13, 18, 29, 0.92)';
+          const pw = textW + 12;
+          const ph = 16;
+          traceRoundedRect(n.x - pw / 2, n.y - ph / 2, pw, ph, 8);
+          ctx.fillStyle = isSelected || isHovered ? 'rgba(99, 102, 241, 0.28)' : 'rgba(8, 12, 24, 0.88)';
           ctx.fill();
-          ctx.lineWidth = isSelected || isHovered ? 1.5 : 1.0;
-          ctx.strokeStyle = isSelected || isHovered ? '#818cf8' : 'rgba(148, 163, 184, 0.28)';
+          ctx.lineWidth = isSelected || isHovered ? 1.4 : 0.9;
+          ctx.strokeStyle = isSelected || isHovered ? '#818cf8' : 'rgba(148, 163, 184, 0.25)';
           ctx.stroke();
 
-          ctx.font = "600 10px 'JetBrains Mono', monospace";
+          ctx.font = "600 9.5px 'JetBrains Mono', monospace";
           ctx.fillStyle = isSelected || isHovered ? '#ffffff' : '#94a3b8';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -4227,82 +4714,93 @@
           continue;
         }
 
-        // Halo Luminoso Exterior Ultra-Rápido (Zero alocação de CanvasGradient por frame)
-        if (n.is_match || isSelected || isHovered) {
+        // Halo Luminoso Exterior
+        if (n.is_match || isSelected || isHovered || (planetaryAstrolabeMode && (n.importance || 3) >= 5)) {
           ctx.save();
-          const haloCol = n.is_match ? '#facc15' : baseColor;
+          const haloCol = n.is_match ? '#facc15' : (planetaryAstrolabeMode && (n.importance || 3) >= 5 ? '#f43f5e' : baseColor);
           ctx.fillStyle = haloCol;
-          ctx.globalAlpha = (isDimmed ? 0.05 : 0.16);
+          ctx.globalAlpha = (isDimmed ? 0.04 : 0.16);
           ctx.beginPath();
-          ctx.arc(n.x, n.y, r * 2.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.globalAlpha = (isDimmed ? 0.08 : 0.28);
-          ctx.beginPath();
-          ctx.arc(n.x, n.y, r * 1.45, 0, Math.PI * 2);
+          ctx.arc(n.x, n.y, r * 2.3, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
 
-        // Anel Orbital para Workspaces ou Nós Selecionados
-        if (n.node_type === 'workspace' || isSelected) {
-          ctx.save();
+        // Em modo Planetário, desenhar Nós Orbe Estelares com Anel Satélite como na foto
+        if (planetaryAstrolabeMode) {
           ctx.beginPath();
-          ctx.setLineDash([4, 4]);
-          ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
-          ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
-          ctx.lineWidth = 1.2;
+          ctx.arc(n.x, n.y, r + 3.2 * invSqrtK, 0, Math.PI * 2);
+          ctx.strokeStyle = isSelected || isHovered ? '#ffffff' : `${baseColor}66`;
+          ctx.lineWidth = 0.9 * invSqrtK;
           ctx.stroke();
-          ctx.restore();
-        }
 
-        if (n.node_type === 'workspace') {
-          tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
-        } else if (n.node_type === 'checkpoint') {
-          tracePolygon(n.x, n.y, r * 1.15, 4, 0);
-        } else if (n.category === 'architecture' || n.category === 'infra') {
-          tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, r * 0.72, 0, Math.PI * 2);
+          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected || isHovered ? '#ffffff' : (n.importance >= 5 ? '#fb7185' : '#e2e8f0'));
+          ctx.fill();
         } else {
-          const side = r * 1.65;
-          traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.3);
+          if (n.node_type === 'workspace' || isSelected) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.arc(n.x, n.y, r + 5, pulseTick * 2, pulseTick * 2 + Math.PI * 2);
+            ctx.strokeStyle = n.is_match ? '#fde047' : baseColor;
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+            ctx.restore();
+          }
+
+          if (n.node_type === 'workspace') {
+            tracePolygon(n.x, n.y, r, 6, Math.PI / 6);
+          } else if (n.node_type === 'checkpoint') {
+            tracePolygon(n.x, n.y, r * 1.15, 4, 0);
+          } else if (n.category === 'architecture' || n.category === 'infra') {
+            tracePolygon(n.x, n.y, r, 8, Math.PI / 8);
+          } else {
+            const side = r * 1.65;
+            traceRoundedRect(n.x - side / 2, n.y - side / 2, side, side, side * 0.3);
+          }
+
+          ctx.fillStyle = '#0f1523';
+          ctx.fill();
+          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
+          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+          ctx.stroke();
+
+          if (r * cam.k >= 5.2 || isSelected || isHovered) {
+            const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
+            drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
+          }
         }
 
-        ctx.fillStyle = '#0f1523';
-        ctx.fill();
-
-        ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 2.4 : 1.5;
-        ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-        ctx.stroke();
-
-        // Desenhar ícone vetorial interno apenas se o nó tiver tamanho visível no zoom atual
-        if (r * cam.k >= 5.2 || isSelected || isHovered) {
-          const iconColor = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : baseColor);
-          drawNodeVectorIcon(n.x, n.y, r * 0.85, n.category, n.node_type, iconColor);
+        // Rótulo do Nó: respeita estritamente a checkbox "Mostrar Rótulos Sempre" (#chkAlwaysLabels)
+        // Em modo Planetário, os cabeçalhos das Ilhas (workspaces) já são desenhados em cima de cada Îlot
+        if (planetaryAstrolabeMode && n.node_type === 'workspace' && !isHovered && !isSelected) {
+          continue;
         }
-
-        // Rótulo com Pílula Glassmórfica por baixo do Nó (com LOD inteligente quando há muitos nós)
-        const showThisLabel = isHovered || isSelected || n.is_match || n.node_type === 'workspace' || n.node_type === 'checkpoint'
-          || (denseLOD ? (isNeighbor || (n.importance || 3) >= 5) : (alwaysLabels || cam.k > 1.15));
+        const showThisLabel = isHovered || isSelected || n.is_match
+          || (alwaysLabels && (!denseLOD || isNeighbor || (n.importance || 3) >= 4 || n.node_type === 'workspace'));
 
         if (showThisLabel) {
           const useFull = isHovered || isSelected;
           const labelText = useFull ? (n._cleanLabel || n.label) : (n._shortLabel || n.label);
           const cachedW = useFull ? (n._fullLabelW || 80) : (n._labelW || 80);
           const textW = cachedW * fontScaleRatio;
-          const badgeW = textW + 14;
-          const badgeH = labelFontSize + 7;
-          const badgeY = n.y + r + 7;
+          const badgeW = textW + 12;
+          const badgeH = labelFontSize + 6;
+          const badgeY = n.y + r + 5;
 
           traceRoundedRect(n.x - badgeW / 2, badgeY, badgeW, badgeH, 5);
-          ctx.fillStyle = isSelected ? 'rgba(99, 102, 241, 0.26)' : 'rgba(11, 15, 24, 0.92)';
+          ctx.fillStyle = isSelected ? 'rgba(99, 102, 241, 0.28)' : 'rgba(6, 9, 20, 0.84)';
           ctx.fill();
-          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 1.4 : 0.9;
-          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#818cf8' : `${baseColor}66`);
+          ctx.lineWidth = (isSelected || isHovered || n.is_match) ? 1.3 : 0.8;
+          ctx.strokeStyle = n.is_match ? '#fde047' : (isSelected ? '#818cf8' : `${baseColor}55`);
           ctx.stroke();
 
           ctx.font = `${n.node_type === 'workspace' || isSelected ? '700' : '600'} ${labelFontSize}px 'Plus Jakarta Sans', -apple-system, sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : '#e2e8f0');
+          ctx.fillStyle = n.is_match ? '#fde047' : (isSelected ? '#ffffff' : '#cbd5e1');
           ctx.fillText(labelText, n.x, badgeY + badgeH / 2 + 0.5);
         }
       }
@@ -7815,12 +8313,41 @@
       }
     });
 
-    // Controlos de Rato no Escritório 3D (Arrastar para Rodar 360°, Roda para Zoom, Clique para Selecionar Boneco)
+    // Desprojeção exata Ecrã 2D -> Mundo 3D no plano do pavimento (y = 0) para Zoom-to-Cursor e Pan Livre 3D
+    function unprojectOfficeScreenOffset(sx, sy, y = 0) {
+      updateOfficeCamTrig();
+      const zoom = Math.max(0.35, officeCam.zoom || 1.0);
+      const rx = (sx - _camHalfW) / zoom;
+      const rz = ((sy - _camHalfH) / zoom + y * _camCosP) / Math.max(0.18, _camSinP);
+      const dx = rx * _camCosY + rz * _camSinY;
+      const dz = -rx * _camSinY + rz * _camCosY;
+      return { dx, dz, worldX: officeCam.targetX + dx, worldZ: officeCam.targetZ + dz };
+    }
+
+    // Controlos de Rato no Escritório 3D (Arrastar Esq = Rodar 360°; Shift+Arrastar / Botão Direito = Pan Livre 3D; Roda = Zoom-to-Cursor; Duplo Clique = Focar Ponto)
+    officeCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
     officeCanvas.addEventListener('mousedown', (e) => {
       officeCam.dragging = true;
+      officeCam.panning = (e.button === 1 || e.button === 2 || e.shiftKey);
       officeCam.moved = false;
       officeCam.dragStartX = e.clientX;
       officeCam.dragStartY = e.clientY;
+    });
+
+    officeCanvas.addEventListener('dblclick', (e) => {
+      const rect = officeCanvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const hitPt = unprojectOfficeScreenOffset(sx, sy, 0);
+      if (officeCam.followMode) {
+        officeCam.followMode = false;
+        if (typeof updateFollowCamBtnUI === 'function') updateFollowCamBtnUI();
+      }
+      officeCam.targetX = Math.max(-420, Math.min(420, hitPt.worldX));
+      officeCam.targetZ = Math.max(-320, Math.min(320, hitPt.worldZ));
+      officeCam.zoom = Math.min(2.6, Math.max(officeCam.zoom * 1.28, 1.35));
+      showToast('🎯 Câmara 3D focada no ponto selecionado (Roda = Zoom no Cursor · Shift/Botão Direito = Mover)');
     });
 
     let _lastOfficeHoverTs = 0;
@@ -7831,8 +8358,25 @@
         const dx = e.clientX - officeCam.dragStartX;
         const dy = e.clientY - officeCam.dragStartY;
         if (Math.abs(dx) > 2 || Math.abs(dy) > 2) officeCam.moved = true;
-        officeCam.yaw += dx * 0.0065;
-        officeCam.pitch = Math.max(0.28, Math.min(1.15, officeCam.pitch + dy * 0.005));
+
+        if (officeCam.panning || e.shiftKey) {
+          // Pan Livre 3D pelo chão do escritório
+          if (officeCam.followMode) {
+            officeCam.followMode = false;
+            if (typeof updateFollowCamBtnUI === 'function') updateFollowCamBtnUI();
+          }
+          updateOfficeCamTrig();
+          const zoom = Math.max(0.35, officeCam.zoom || 1.0);
+          const drx = -dx / zoom;
+          const drz = -dy / (zoom * Math.max(0.22, _camSinP));
+          const worldDeltaX = drx * _camCosY + drz * _camSinY;
+          const worldDeltaZ = -drx * _camSinY + drz * _camCosY;
+          officeCam.targetX = Math.max(-450, Math.min(450, officeCam.targetX + worldDeltaX));
+          officeCam.targetZ = Math.max(-350, Math.min(350, officeCam.targetZ + worldDeltaZ));
+        } else {
+          officeCam.yaw += dx * 0.0065;
+          officeCam.pitch = Math.max(0.26, Math.min(1.18, officeCam.pitch + dy * 0.005));
+        }
         officeCam.dragStartX = e.clientX;
         officeCam.dragStartY = e.clientY;
         return;
@@ -7887,7 +8431,7 @@
 
     window.addEventListener('mouseup', () => {
       if (activeMainView !== 'office') return;
-      if (officeCam.dragging && !officeCam.moved) {
+      if (officeCam.dragging && !officeCam.moved && !officeCam.panning) {
         if (hoveredOfficeTowerDeskIdx !== null) {
           const prevSel = selectedOfficeTowerDeskIdx === hoveredOfficeTowerDeskIdx;
           selectOfficeHoloTower(hoveredOfficeTowerDeskIdx, { focusCamera: false, toast: true });
@@ -7901,14 +8445,38 @@
         }
       }
       officeCam.dragging = false;
+      officeCam.panning = false;
     });
 
+    // Zoom-to-Cursor 3D: faz zoom exatamente na direção do ponteiro do rato no espaço 3D do escritório
     officeCanvas.addEventListener('wheel', (e) => {
       e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.09 : 0.92;
-      officeCam.zoom = Math.max(0.55, Math.min(2.2, officeCam.zoom * factor));
+      const rect = officeCanvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+
+      const oldZoom = officeCam.zoom || 1.0;
+      const factor = e.deltaY < 0 ? 1.12 : 0.89;
+      const newZoom = Math.max(0.42, Math.min(3.2, oldZoom * factor));
+      if (Math.abs(newZoom - oldZoom) < 0.001) return;
+
+      // Calcular o ponto 3D sob o cursor antes do zoom
+      const cursorWorld = unprojectOfficeScreenOffset(sx, sy, 0);
+
+      // Se o utilizador estiver a fazer zoom fora do centro, desativa Follow Cam automática para permitir dar zoom onde quiser
+      const distFromCenter = Math.hypot(sx - _camHalfW, sy - _camHalfH);
+      if (officeCam.followMode && distFromCenter > 32) {
+        officeCam.followMode = false;
+        if (typeof updateFollowCamBtnUI === 'function') updateFollowCamBtnUI();
+      }
+
+      officeCam.zoom = newZoom;
       if (officeCam.followMode) {
-        officeCam.followZoom = officeCam.zoom;
+        officeCam.followZoom = newZoom;
+      } else {
+        const scaleRatio = 1 - (oldZoom / newZoom);
+        officeCam.targetX = Math.max(-450, Math.min(450, officeCam.targetX + cursorWorld.dx * scaleRatio));
+        officeCam.targetZ = Math.max(-350, Math.min(350, officeCam.targetZ + cursorWorld.dz * scaleRatio));
       }
     }, { passive: false });
 

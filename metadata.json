@@ -1,0 +1,8 @@
+{
+  "name": "Antigravity Brain v4.5 — Planetary Neural Studio & 3D Command Office",
+  "description": "Planetary Second-Brain Graph (Obsidian + Jev-S1 + Graphify AST), 24-Lane Asymmetric Swarm Monitor, and 60 FPS 3D Agent Office with Holographic Heatmap Towers.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

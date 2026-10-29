@@ -36,7 +36,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
     added_memories = seed_initial_memories(db)
     harvested_turns = 0
 
-    # 1. Enriquecer memórias do motor Brain v2 + descobrir projetos em SCRATCH_ROOT
+    # 1. Enriquecer memórias do motor Brain v4.5 em 6 Clusters Planetários ("Îlots")
     project_facts = [
         (
             "Injetor Efémero PreInvocation (brain_inject.py)",
@@ -56,11 +56,107 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         ),
         (
             "Interface Visual Obsidian Brain Graph & Swarm (web_dashboard.py)",
-            "Servidor web local na porta 8765 (http://127.0.0.1:8765) com visualização de grafo interativo estilo Obsidian, monitor Asymmetric Swarm (#swarm), pesquisa FTS5 BM25 em tempo real e Auto-Updater Git.",
+            "Servidor web local com visualização de grafo planetário estilo Obsidian + Jev-S1, monitor Asymmetric Swarm (#swarm), pesquisa FTS5 BM25 em tempo real e Auto-Updater Git.",
             "brain_mcp",
             "architecture",
             "obsidian graph web_dashboard ui swarm visualizacao fts5",
             5,
+        ),
+        (
+            "Jev-Mem System-1 Neural Router & Adaptive Stopping",
+            "Classifica memórias em Working [W], Semantic [S] e Episodic [E] com corte adaptativo (TH=0.28) e vetor semântico bilingue de 32 dimensões.",
+            "brain_mcp",
+            "architecture",
+            "jev_s1 router semantic working episodic fts5 sqlite",
+            5,
+        ),
+        (
+            "Asymmetric Swarm 24 Lanes & Ruflo Pheromone EMA",
+            "Orquestra 4 Lanes paralelas (UI, API, TESTS, DOCS × 6 workers) com Work-Stealing automático e fitness de feromonas EMA em tempo real.",
+            "swarm_24x",
+            "architecture",
+            "swarm lanes ruflo pheromone work_steal verify",
+            5,
+        ),
+        (
+            "Subagent Transactional Sandbox (Copy-on-Write)",
+            "Isola subagentes em sandboxes transacionais com snapshots SHA-256, AST syntax gate e scanner AI-Defence antes do merge.",
+            "swarm_24x",
+            "infra",
+            "swarm sandbox cow verify ast security",
+            4,
+        ),
+        (
+            "Verify Gate 48/48 (AST + HTTP + SQLite WAL)",
+            "Auditoria determinística de 48 verificações automáticas garantindo zero colisões de ficheiros e integridade transacional.",
+            "swarm_24x",
+            "optimization",
+            "verify qa ast sqlite swarm check",
+            4,
+        ),
+        (
+            "Graphify Multi-Modal Knowledge Graph (325 Nodes)",
+            "Constrói o grafo multi-modal da codebase (JS Functions ➔ HTTP Routes ➔ Python AST ➔ SQLite Tables) com arestas EXTRACTED, INFERRED e AMBIGUOUS.",
+            "graphify_ast",
+            "architecture",
+            "graphify ast bfs sqlite routes symbols",
+            5,
+        ),
+        (
+            "Automated File-Save AST & Impact Radius Watcher",
+            "Daemon que deteta alterações em ficheiros, calcula o diff de símbolos AST e sinaliza automaticamente mudanças HIGH/CRITICAL no blast radius.",
+            "graphify_ast",
+            "optimization",
+            "ast watcher impact blast_radius symbols hooks",
+            5,
+        ),
+        (
+            "Graphify BFS Shortest Path & 70x Token Compression",
+            "Pesquisa o caminho relacional mais curto entre qualquer função JS e tabela SQLite em <2ms, poupando mais de 70x em tokens de contexto.",
+            "graphify_ast",
+            "optimization",
+            "graphify bfs tokens compression ast",
+            4,
+        ),
+        (
+            "Ponte de Comando 3D & Bonecos Articulados 60 FPS",
+            "Motor isométrico 3D a 60 FPS com 6 zonas arquitetónicas, câmara Follow & Zoom-to-Cursor no rato, Radar Orbital 2D e sintetizador WebAudio.",
+            "office_3d",
+            "architecture",
+            "office_3d webgl canvas camera zoom radar",
+            5,
+        ),
+        (
+            "Torres Holográficas 3D do Mapa de Calor por Secretária",
+            "Renderiza prismas holográficos 3D interativos sobre as secretárias dos agentes com base na intensidade de edição e calor dos ficheiros.",
+            "office_3d",
+            "optimization",
+            "office_3d heatmap holo_towers ast ui",
+            5,
+        ),
+        (
+            "Sala de Servidores MCP 3D & Portal Quântico",
+            "Controlo interativo 3D dos servidores MCP ativos e chegada cronológica de novos agentes pelo Portal Quântico Noroeste.",
+            "office_3d",
+            "infra",
+            "office_3d mcp portal servers tokens",
+            4,
+        ),
+        (
+            "Dynamic Intent-Based Tool Pruning (-66.7% Tokens)",
+            "Seleciona dinamicamente apenas as 3-4 ferramentas MCP essenciais para a intenção do prompt, cortando 66.7% do overhead de schemas.",
+            "token_diet",
+            "optimization",
+            "token_diet quota 5h mcp prune tokens",
+            5,
+        ),
+        (
+            "5h Quota Reactor & Perfil Lean vs Full",
+            "Monitoriza a janela de 5h do Antigravity e comuta instantaneamente servidores MCP pesados para maximizar turnos disponíveis.",
+            "token_diet",
+            "preference",
+            "token_diet quota 5h lean full mcp",
+            4,
         ),
     ]
     for topic, fact, ws, cat, tags, imp in project_facts:
@@ -69,6 +165,11 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         )
         if is_new:
             added_memories += 1
+
+    try:
+        db.discover_causal_links()
+    except Exception:
+        pass
 
     if os.path.isdir(SCRATCH_ROOT):
         for entry in sorted(os.listdir(SCRATCH_ROOT)):
@@ -232,6 +333,14 @@ def build_obsidian_graph_payload(
                 "SELECT * FROM memories ORDER BY importance DESC, id DESC LIMIT 650;"
             ).fetchall()
         ]
+        if len(all_memories) < 12:
+            harvest_all_workspace_context(db)
+            all_memories = [
+                dict(r)
+                for r in conn.execute(
+                    "SELECT * FROM memories ORDER BY importance DESC, id DESC LIMIT 650;"
+                ).fetchall()
+            ]
         all_checkpoints = [
             dict(r)
             for r in conn.execute("SELECT * FROM checkpoints;").fetchall()
@@ -512,7 +621,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
     def _send_json(self, data: Any, status: int = 200) -> None:
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8")
         etag = f'W/"{hashlib.md5(raw).hexdigest()[:16]}-{len(raw)}"'
-        if status == 200 and self.command == "GET":
+        if status == 200 and self.command in ("GET", "HEAD"):
             inm = self.headers.get("If-None-Match", "")
             if inm and inm == etag:
                 self.send_response(304)
@@ -527,10 +636,36 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
-        self.wfile.write(raw)
+        if self.command != "HEAD":
+            self.wfile.write(raw)
+
+    def do_HEAD(self) -> None:
+        parsed = urllib.parse.urlparse(self.path)
+        if parsed.path in ("/", "/index.html"):
+            size = os.path.getsize(INDEX_HTML_PATH) if os.path.isfile(INDEX_HTML_PATH) else 0
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Content-Length", str(size))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
 
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+        if parsed.path in ("/health", "/api/health"):
+            self._send_json({"status": "ok", "service": "antigravity-brain-v4.5"})
+            return
+
+        if parsed.path == "/favicon.ico":
+            self.send_response(204)
+            self.end_headers()
+            return
+
         if parsed.path in ("/", "/index.html"):
             if not os.path.isfile(INDEX_HTML_PATH):
                 self._send_json({"error": "index.html not found"}, 404)
@@ -542,7 +677,8 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
             self.send_header("Content-Length", str(len(content)))
             self.end_headers()
-            self.wfile.write(content)
+            if self.command != "HEAD":
+                self.wfile.write(content)
             return
 
         if parsed.path == "/api/graph":
@@ -959,6 +1095,11 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Not found"}, 404)
 
 
+class ReusableThreadingHTTPServer(ThreadingHTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
+
+
 def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
     import threading
 
@@ -967,24 +1108,26 @@ def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
             sys.stdout.reconfigure(encoding="utf-8")
         except Exception:
             pass
-    db = BrainDB()
-    server = ThreadingHTTPServer((host, port), BrainDashboardHandler)
+
+    # Bind socket immediately so the dev server port is ready in <10ms
+    server = ReusableThreadingHTTPServer((host, port), BrainDashboardHandler)
 
     def _bg_sync() -> None:
         try:
-            sync_info = harvest_all_workspace_context(BrainDB())
-            SwarmEngine(BrainDB()).ensure_default_run()
+            db = BrainDB()
+            sync_info = harvest_all_workspace_context(db)
+            SwarmEngine(db).ensure_default_run()
+            start_auto_update_daemon(interval_seconds=1800)
+            start_ast_impact_watcher_daemon(workspace_path=CURRENT_DIR, interval_seconds=2.0)
             if getattr(sys, "stdout", None) is not None:
-                print(f"   Sincronizacao inicial concluida: {sync_info}")
+                print(f"   Sincronizacao inicial concluida: {sync_info}", flush=True)
         except Exception:
             pass
 
     threading.Thread(target=_bg_sync, daemon=True).start()
-    start_auto_update_daemon(interval_seconds=1800)
-    start_ast_impact_watcher_daemon(workspace_path=CURRENT_DIR, interval_seconds=2.0)
     try:
         if getattr(sys, "stdout", None) is not None:
-            print(f"Obsidian Brain Graph Web Server ativo em: http://{host}:{port}")
+            print(f"Obsidian Brain Graph Web Server ativo em: http://{host}:{port}", flush=True)
     except Exception:
         pass
     server.serve_forever()
