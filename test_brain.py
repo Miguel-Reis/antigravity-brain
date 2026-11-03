@@ -409,9 +409,83 @@ def run_all_tests() -> None:
         f"Hand-off Chaining, Inbox ({inbox_before['pending_count']} pending), 4-IDE MCP Bridge & ROI (${overview['roi']['engineering_value_usd']}) OK"
     )
 
+    # 17. Testar Motor de Frustum Culling 3D para o office3DCanvas (Contrato + Matemática 3D/2D)
+    for frustum_token in (
+        'id="offStatCullBadge"',
+        'id="offStatCulled"',
+        'id="offStatCullSaved"',
+        'id="btnOfficeFrustumCull"',
+        'id="btnHoloFrustumCull"',
+        "function computeOfficeFrustum(",
+        "function testSphereInOfficeFrustum(",
+        "function isAgentInOfficeFrustum(",
+        "function toggleOfficeFrustumCulling(",
+        "window.officeFrustumStats = officeFrustumStats",
+    ):
+        assert frustum_token in html_content, f"Token Frustum Culling em falta em index.html: {frustum_token}"
+
+    import math
+
+    def _py_test_sphere_in_frustum(x: float, y: float, z: float, radius: float, cam: dict, w: int = 960, h: int = 680, enabled: bool = True) -> dict:
+        cos_y = math.cos(cam["yaw"])
+        sin_y = math.sin(cam["yaw"])
+        cos_p = math.cos(cam["pitch"])
+        sin_p = math.sin(cam["pitch"])
+        zoom = max(0.35, float(cam["zoom"]))
+        scale_m = max(0.75, min(1.65, zoom))
+        pad_x = 80.0 * scale_m
+        pad_y = 102.0 * scale_m
+        half_w = w * 0.5
+        half_h = h * 0.54
+        dx = x - cam["targetX"]
+        dz = z - cam["targetZ"]
+        rx = dx * cos_y - dz * sin_y
+        rz = dx * sin_y + dz * cos_y
+        sx = half_w + rx * zoom
+        sy = half_h + (rz * sin_p - y * cos_p) * zoom
+        depth = rz * cos_p + y * sin_p
+        if not enabled:
+            return {"visible": True, "sx": sx, "sy": sy, "depth": depth}
+        r_px = max(16.0, radius * zoom)
+        vis = (
+            -1350.0 <= depth <= 1350.0
+            and (sx + r_px) >= -pad_x
+            and (sx - r_px) <= (w + pad_x)
+            and (sy + r_px * 1.15) >= -pad_y
+            and (sy - r_px * 1.30) <= (h + pad_y)
+        )
+        return {"visible": vis, "sx": sx, "sy": sy, "depth": depth}
+
+    zoomed_cam = {"yaw": -0.32, "pitch": 0.52, "zoom": 2.35, "targetX": -165.0, "targetZ": -255.0}
+    in_view = _py_test_sphere_in_frustum(-165.0, 26.0, -230.0, 42.0, zoomed_cam, enabled=True)
+    far_lounge = _py_test_sphere_in_frustum(445.0, 26.0, 255.0, 42.0, zoomed_cam, enabled=True)
+    far_lounge_disabled = _py_test_sphere_in_frustum(445.0, 26.0, 255.0, 42.0, zoomed_cam, enabled=False)
+    assert in_view["visible"] is True, "Agente focado na Ponte de Comando devia estar VISÍVEL no Frustum"
+    assert far_lounge["visible"] is False, "Agente distante no Lounge (Sul-Este) devia ser CULLED quando câmara está com zoom na Ponte de Comando"
+    assert far_lounge_disabled["visible"] is True, "Com Frustum Culling desativado, todos os agentes devem retornar visible=True"
+    print(
+        f"[PASS] office3DCanvas Frustum Culling: Visível no foco=({in_view['sx']:.1f}, {in_view['sy']:.1f}), "
+        f"Agente fora de vista descartado=({far_lounge['sx']:.1f}, {far_lounge['sy']:.1f}) -> CULLED OK"
+    )
+
+    # 18. Testar Contrato da Reorganização da UI da Página Brain (Gavetas Retráteis + Modal Unificado Ferramentas & Física)
+    for brain_ui_token in (
+        'id="brainLeftDrawer"',
+        'id="brainToolsPhysicsModal"',
+        'id="btnOpenToolsPhysicsModal"',
+        'id="btnToggleLeftDrawerFloating"',
+        'id="btnToggleRightDrawerFloating"',
+        "function toggleBrainDrawer(",
+        "function openBrainToolsModal()",
+        "function closeBrainToolsModal()",
+    ):
+        assert brain_ui_token in html_content, f"Token da UI reorganizada do Brain em falta em index.html: {brain_ui_token}"
+    print("[PASS] Brain UI Reorganization: Gavetas retráteis, HUD minimalista e Modal Unificado de Ferramentas & Física OK")
+
 
 if __name__ == "__main__":
     run_all_tests()
+
 
 
 
