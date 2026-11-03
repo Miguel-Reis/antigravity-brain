@@ -2052,6 +2052,9 @@
     </div>
 
     <div class="top-actions">
+      <button class="btn" id="btnOpenOrbitModal" onclick="openOrbitOsModal()" style="border-color:rgba(245,158,11,0.45); color:#fde68a; background:rgba(245,158,11,0.12);" title="Orbit Agent OS: Mission Control Inbox (Needs Your Yes), Morning Brief & ROI Calculator, Multi-Scope Broadcast, Agent Chaining & 1-Click Cross-IDE MCP Bridge">
+        🛰️ Orbit OS <span id="topOrbitInboxBadge" style="background:rgba(244,63,94,0.85); color:#fff; padding:1px 5px; border-radius:999px; font-size:9.5px; font-weight:800; margin-left:3px;">2</span>
+      </button>
       <button class="btn" id="btnOpenAstModal" onclick="openAstInspectorModal()" style="border-color:rgba(16,185,129,0.38); color:#6ee7b7; background:rgba(16,185,129,0.1);" title="Explorador Cirúrgico AST Multi-Linguagem, Blast Radius & Graphify BFS">
         🔎 AST &amp; Graphify
       </button>
@@ -2746,10 +2749,18 @@
       <!-- NEURAL DIRECTIVE CONSOLE (BOTTOM-CENTER) -->
       <div class="office-neural-console">
         <div style="display:flex; justify-content:space-between; align-items:center; font-size:9.5px; font-weight:700; color:var(--text-muted); margin-bottom:4px; letter-spacing:0.04em;">
-          <span>DIRETIVA NEURAL · ENVIAR ORDEM REAL AO AGENTE 3D</span>
-          <span style="color:#34d399;">● JEV-S1 LIVE</span>
+          <span>DIRETIVA NEURAL &amp; ORBIT BROADCAST · ENVIAR ORDEM REAL À FROTA 3D</span>
+          <span style="color:#34d399;">● ORBIT OS + JEV-S1 LIVE</span>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
+          <select id="officeBottomScopeSelect" style="background:rgba(15,23,42,0.92); color:#fde68a; border:1px solid rgba(245,158,11,0.38); border-radius:6px; padding:3px 6px; font-size:10.5px; font-family:var(--font-mono); font-weight:700; outline:none;">
+            <option value="selected_agent">🎯 Agente Selecionado</option>
+            <option value="all_fleet">🌐 Broadcast: Toda a Frota</option>
+            <option value="dept:UI">🏢 Broadcast: Dept UI</option>
+            <option value="dept:API">🏢 Broadcast: Dept API</option>
+            <option value="dept:TESTS">🏢 Broadcast: Dept TESTS</option>
+            <option value="dept:DOCS">🏢 Broadcast: Dept DOCS</option>
+          </select>
           <span style="color:#818cf8; font-weight:800; font-size:12.5px;">&gt;</span>
           <input
             type="text"
@@ -3128,6 +3139,125 @@
           </div>
         </div>
         <div id="astWatcherAuditsList" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(245px, 1fr)); gap:6px; max-height:115px; overflow-y:auto; font-size:10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ORBIT AGENT OS: MISSION CONTROL INBOX + TRUST HIERARCHY + MULTI-SCOPE BROADCAST + AGENT CHAINING + 1-CLICK MCP BRIDGE + ROI -->
+  <div class="modal-backdrop" id="orbitOsModal">
+    <div class="modal" style="width:940px; max-width:96vw; max-height:90vh; overflow-y:auto;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <h3 style="margin:0; display:flex; align-items:center; gap:8px; font-size:16px;">
+            🛰️ Orbit Agent OS · Mission Control &amp; Multi-AI Bridge
+            <span style="font-size:10.5px; background:rgba(245,158,11,0.16); color:#fde68a; border:1px solid rgba(245,158,11,0.35); padding:2px 8px; border-radius:999px; font-family:var(--font-mono);">6 Tecnologias Ativas</span>
+          </h3>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+            1. 📬 Mission Control Inbox ("Needs Your Yes") · 2. ⚖️ Human Edits Always Win · 3. 📡 Multi-Scope Broadcast · 4. 🔗 Agent Chaining · 5. 🔌 1-Click Multi-IDE MCP Bridge · 6. 🌅 Morning Brief &amp; ROI
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn" onclick="fetchOrbitOverview(true)">🔄 Atualizar</button>
+          <button class="btn" onclick="closeOrbitOsModal()">✕ Fechar</button>
+        </div>
+      </div>
+
+      <!-- 1. MORNING BRIEF & ENGINEERING SAVINGS / ROI CALCULATOR -->
+      <div style="background:linear-gradient(135deg, rgba(16,185,129,0.12), rgba(15,23,42,0.92), rgba(245,158,11,0.12)); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:12px 14px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <span style="font-size:12px; font-weight:800; color:#6ee7b7; letter-spacing:0.02em;">🌅 MORNING BRIEF · EXECUTIVE DIGEST &amp; ENGINEERING ROI CALCULATOR</span>
+          <span id="orbitBriefHeadline" style="font-size:11px; color:#fde68a; font-family:var(--font-mono); font-weight:700;">A carregar briefing executivo...</span>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">⏱️ Horas de Eng. Poupadas</div>
+            <div id="orbitRoiHours" style="font-size:18px; font-weight:800; color:#34d399; font-family:var(--font-mono); margin-top:2px;">0.0 h</div>
+            <div id="orbitRoiApiSaved" style="font-size:10px; color:#94a3b8; font-family:var(--font-mono);">API Quota: $0.00</div>
+          </div>
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">💰 Valor de Engenharia (ROI)</div>
+            <div id="orbitRoiValueUsd" style="font-size:18px; font-weight:800; color:#fde68a; font-family:var(--font-mono); margin-top:2px;">$0.00</div>
+            <div id="orbitRoiTokens" style="font-size:10px; color:#94a3b8; font-family:var(--font-mono);">0 tokens poupados</div>
+          </div>
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(139,92,246,0.3); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">⚖️ Trust Hierarchy (Human Win)</div>
+            <div id="orbitTrustProtected" style="font-size:18px; font-weight:800; color:#c4b5fd; font-family:var(--font-mono); margin-top:2px;">0 🔒</div>
+            <div id="orbitTrustSubagent" style="font-size:10px; color:#94a3b8; font-family:var(--font-mono);">Edições Humanas Imutáveis</div>
+          </div>
+          <div style="background:rgba(9,13,22,0.85); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:8px 10px;">
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">🔌 Cross-IDE MCP Bridge</div>
+            <div id="orbitBridgeConnected" style="font-size:18px; font-weight:800; color:#38bdf8; font-family:var(--font-mono); margin-top:2px;">1 / 4 IDEs</div>
+            <div style="font-size:10px; color:#94a3b8; font-family:var(--font-mono);">Mesmo brain.db partilhado</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. MULTI-SCOPE BROADCAST DIRECTIVE BAR -->
+      <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(99,102,241,0.35); border-radius:10px; padding:10px 12px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+          <span style="font-size:11.5px; font-weight:700; color:#c7d2fe;">📡 MULTI-SCOPE BROADCAST DIRECTIVES (Frota Inteira, Departamento ou Workspace)</span>
+          <span style="font-size:10px; color:#34d399; font-family:var(--font-mono);">Injetado em PreInvocation + 🔒[HUMAN] Trust=1.0</span>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <select id="orbitBroadcastScope" style="background:rgba(9,13,22,0.95); color:#fde68a; border:1px solid rgba(245,158,11,0.4); border-radius:8px; padding:7px 10px; font-size:11.5px; font-family:var(--font-mono); font-weight:700;">
+            <option value="all_fleet">🌐 Toda a Frota (All Fleet)</option>
+            <option value="dept:UI">🏢 Departamento: UI</option>
+            <option value="dept:API">🏢 Departamento: API</option>
+            <option value="dept:TESTS">🏢 Departamento: TESTS</option>
+            <option value="dept:DOCS">🏢 Departamento: DOCS</option>
+            <option value="ws:brain_mcp">📂 Workspace: brain_mcp</option>
+          </select>
+          <input type="text" id="orbitBroadcastInput" value="Garantir zero regressões AST, preservar docstrings e respeitar memórias 🔒[HUMAN] em todos os commits" style="flex:1; min-width:240px; background:rgba(9,13,22,0.95); color:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:7px 10px; font-size:12px; font-family:var(--font-mono);" onkeydown="if(event.key==='Enter') sendOrbitBroadcastUI()" />
+          <button class="btn btn-primary" onclick="sendOrbitBroadcastUI()">📡 Emitir Broadcast</button>
+        </div>
+        <div id="orbitActiveBroadcastsStrip" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; font-size:10.5px; font-family:var(--font-mono);"></div>
+      </div>
+
+      <!-- 3. TWO-COLUMN GRID: MISSION CONTROL INBOX + (AGENT CHAINING & 1-CLICK MCP BRIDGE) -->
+      <div style="display:grid; grid-template-columns:1.18fr 1fr; gap:12px;">
+        <!-- Left: Mission Control Inbox ("Needs Your Yes") -->
+        <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(244,63,94,0.35); border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:12px; font-weight:800; color:#fda4af;">📬 MISSION CONTROL INBOX · "NEEDS YOUR YES"</div>
+              <div style="font-size:10.5px; color:var(--text-muted);">Aprovações Human-in-the-Loop para CoW Sandboxes, Auditorias AST e Diretivas</div>
+            </div>
+            <button class="btn" id="btnOrbitApproveAll" onclick="orbitApproveAllUI()" style="border-color:rgba(16,185,129,0.5); color:#6ee7b7; background:rgba(16,185,129,0.15); font-weight:700;">
+              ✓ Approve All (<span id="orbitPendingCountLbl">0</span>)
+            </button>
+          </div>
+          <div id="orbitInboxList" style="display:flex; flex-direction:column; gap:8px; max-height:330px; overflow-y:auto;"></div>
+        </div>
+
+        <!-- Right: 1-Click Cross-IDE MCP Bridge + Agent Chaining Hand-offs -->
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <!-- 1-Click Cross-IDE MCP Bridge -->
+          <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(56,189,248,0.35); border-radius:10px; padding:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:6px; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:12px; font-weight:800; color:#7dd3fc;">🔌 1-CLICK CROSS-IDE MCP BRIDGE</div>
+                <div style="font-size:10.5px; color:var(--text-muted);">Partilhar o mesmo <code style="font-family:var(--font-mono);">brain.db</code> entre Antigravity, Cursor, Windsurf &amp; Claude</div>
+              </div>
+              <div style="display:flex; gap:5px;">
+                <button class="quick-ag-btn" style="border-color:rgba(56,189,248,0.5); color:#7dd3fc;" onclick="connectAllMcpBridgeUI()">⚡ Conectar Todos (1-Click)</button>
+                <button class="quick-ag-btn" style="border-color:rgba(165,180,252,0.45); color:#c7d2fe;" onclick="copyUniversalMcpJson()">📋 Copiar JSON</button>
+              </div>
+            </div>
+            <div id="orbitMcpBridgeTargets" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:10.5px; font-family:var(--font-mono);"></div>
+          </div>
+
+          <!-- Agent Chaining & Hand-off Packets -->
+          <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:12px; flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <div>
+                <div style="font-size:12px; font-weight:800; color:#6ee7b7;">🔗 AGENT CHAINING &amp; HAND-OFF PACKETS</div>
+                <div style="font-size:10.5px; color:var(--text-muted);">Transição automática de contexto estruturado entre subagentes (Zero-Copy)</div>
+              </div>
+              <button class="quick-ag-btn" style="border-color:rgba(16,185,129,0.45); color:#6ee7b7;" onclick="triggerDemoHandoffUI()">➕ Simular Hand-off</button>
+            </div>
+            <div id="orbitHandoffsList" style="display:flex; flex-direction:column; gap:6px; max-height:155px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -6473,11 +6603,18 @@
       sendDirectOrderToAgent();
     }
 
-    function sendBottomConsoleDirective() {
+      function sendBottomConsoleDirective() {
       const botInp = document.getElementById('officeBottomConsoleInput');
       if (!botInp) return;
       const val = botInp.value.trim();
       if (!val) return;
+      const scopeSel = document.getElementById('officeBottomScopeSelect');
+      const scopeVal = scopeSel ? scopeSel.value : 'selected_agent';
+      if (scopeVal && scopeVal !== 'selected_agent') {
+        botInp.value = '';
+        sendOrbitBroadcastFromConsole(scopeVal, val);
+        return;
+      }
       if (!selectedOfficeAgentId) selectedOfficeAgentId = 'ARCH-01';
       const inp = document.getElementById('offDirectCmdInput');
       if (inp) inp.value = val;
@@ -8480,6 +8617,292 @@
       }
     }, { passive: false });
 
+    // =========================================================================
+    // ORBIT AGENT OS CONTROLLER (INBOX, TRUST HIERARCHY, BROADCAST, HANDOFF, MCP BRIDGE, ROI)
+    // =========================================================================
+    let lastOrbitOverviewData = null;
+
+    function openOrbitOsModal() {
+      const m = document.getElementById('orbitOsModal');
+      if (m) m.classList.add('open');
+      fetchOrbitOverview(true);
+    }
+
+    function closeOrbitOsModal() {
+      const m = document.getElementById('orbitOsModal');
+      if (m) m.classList.remove('open');
+    }
+
+    async function fetchOrbitOverview(showNotification = false) {
+      try {
+        const res = await fetch('/api/orbit/overview');
+        const data = await res.json();
+        if (data && data.ok) {
+          lastOrbitOverviewData = data;
+          renderOrbitOverviewUI(data);
+          if (showNotification) {
+            showToast('🛰️ Orbit Agent OS sincronizado!');
+          }
+        }
+      } catch (e) {
+        console.warn('Orbit overview fetch error:', e);
+      }
+    }
+
+    function renderOrbitOverviewUI(data) {
+      if (!data) return;
+      const roi = data.roi || {};
+      const th = data.trust_hierarchy || {};
+      const brief = data.morning_brief || {};
+      const inbox = data.inbox || {};
+      const bridge = data.mcp_bridge || {};
+      const handoffs = data.recent_handoffs || [];
+      const broadcasts = data.active_broadcasts || [];
+
+      const topBadge = document.getElementById('topOrbitInboxBadge');
+      if (topBadge) {
+        const pCount = Number(inbox.pending_count || 0);
+        topBadge.textContent = String(pCount);
+        topBadge.style.background = pCount > 0 ? 'rgba(244,63,94,0.9)' : 'rgba(16,185,129,0.85)';
+      }
+
+      const hlEl = document.getElementById('orbitBriefHeadline');
+      if (hlEl) hlEl.textContent = brief.headline || '';
+
+      const hrsEl = document.getElementById('orbitRoiHours');
+      if (hrsEl) hrsEl.textContent = `${roi.hours_saved || 0} h`;
+      const apiEl = document.getElementById('orbitRoiApiSaved');
+      if (apiEl) apiEl.textContent = `Quota API poupada: $${roi.api_cost_saved_usd || 0}`;
+      const valEl = document.getElementById('orbitRoiValueUsd');
+      if (valEl) valEl.textContent = `$${roi.engineering_value_usd || 0}`;
+      const tokEl = document.getElementById('orbitRoiTokens');
+      if (tokEl) tokEl.textContent = `${Number(roi.tokens_saved || 0).toLocaleString()} tokens poupados`;
+
+      const trProtEl = document.getElementById('orbitTrustProtected');
+      if (trProtEl) trProtEl.textContent = `${th.human_locked_memories || 0} 🔒`;
+      const trSubEl = document.getElementById('orbitTrustSubagent');
+      if (trSubEl) trSubEl.textContent = `${th.subagent_memories || 0} memórias de agentes · Human Wins`;
+
+      const brConnEl = document.getElementById('orbitBridgeConnected');
+      if (brConnEl) brConnEl.textContent = `${bridge.connected_count || 1} / ${bridge.total_targets || 4} IDEs`;
+
+      const pendLbl = document.getElementById('orbitPendingCountLbl');
+      if (pendLbl) pendLbl.textContent = String(inbox.pending_count || 0);
+
+      // Broadcasts ativos
+      const bcStrip = document.getElementById('orbitActiveBroadcastsStrip');
+      if (bcStrip) {
+        bcStrip.innerHTML = broadcasts.slice(0, 4).map(b => `
+          <span style="background:rgba(99,102,241,0.16); border:1px solid rgba(99,102,241,0.4); color:#e0e7ff; padding:3px 8px; border-radius:999px;">
+            📡 <strong>[${escapeHtml(b.target_scope)}]</strong> ${escapeHtml(String(b.directive || '').slice(0, 68))}
+          </span>
+        `).join('');
+      }
+
+      // Inbox list ("Needs Your Yes")
+      const inboxEl = document.getElementById('orbitInboxList');
+      if (inboxEl) {
+        const items = inbox.items || [];
+        if (!items.length) {
+          inboxEl.innerHTML = `<div style="color:var(--text-muted); font-size:11.5px; padding:12px; text-align:center;">🎉 Sem aprovações pendentes na Mission Control Inbox!</div>`;
+        } else {
+          inboxEl.innerHTML = items.map(it => {
+            const isPending = it.status === 'pending';
+            const statusBadge = isPending
+              ? `<span style="background:rgba(244,63,94,0.2); color:#fda4af; border:1px solid rgba(244,63,94,0.45); padding:1px 6px; border-radius:999px; font-size:9.5px; font-weight:800;">NEEDS YOUR YES</span>`
+              : `<span style="background:rgba(16,185,129,0.2); color:#6ee7b7; border:1px solid rgba(16,185,129,0.45); padding:1px 6px; border-radius:999px; font-size:9.5px; font-weight:800;">${escapeHtml(String(it.status || '').toUpperCase())}</span>`;
+            return `
+              <div style="background:rgba(9,13,22,0.9); border:1px solid ${isPending ? 'rgba(244,63,94,0.4)' : 'rgba(148,163,184,0.2)'}; border-radius:8px; padding:9px 10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:4px;">
+                  <strong style="font-size:11.5px; color:#f8fafc;">${escapeHtml(it.title)}</strong>
+                  ${statusBadge}
+                </div>
+                <div style="font-size:10.5px; color:#cbd5e1; margin-bottom:6px; line-height:1.4;">${escapeHtml(it.summary)}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; font-size:10px; font-family:var(--font-mono); color:#94a3b8;">
+                  <span>🤖 ${escapeHtml(it.agent_name)} · 📂 ${escapeHtml(it.workspace)}</span>
+                  ${isPending ? `
+                    <div style="display:flex; gap:5px;">
+                      <button class="quick-ag-btn" style="border-color:rgba(16,185,129,0.5); color:#6ee7b7;" onclick="orbitApproveItemUI(${Number(it.id)})">✓ Approve</button>
+                      <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.5); color:#fde68a;" onclick="orbitRedirectItemUI(${Number(it.id)})">↩ Redirect</button>
+                    </div>
+                  ` : `<span>✓ Resolvido</span>`}
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+
+      // Cross-IDE MCP Bridge Targets
+      const bridgeEl = document.getElementById('orbitMcpBridgeTargets');
+      if (bridgeEl) {
+        const targets = bridge.targets || [];
+        bridgeEl.innerHTML = targets.map(t => `
+          <div style="background:rgba(9,13,22,0.9); border:1px solid ${t.connected ? 'rgba(16,185,129,0.4)' : 'rgba(148,163,184,0.25)'}; border-radius:8px; padding:7px 9px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <div>
+              <div style="font-weight:700; color:#f8fafc;">${t.icon || '🔌'} ${escapeHtml(t.label)}</div>
+              <div style="font-size:9.5px; color:${t.connected ? '#34d399' : '#94a3b8'};">${t.connected ? '● CONECTADO AO BRAIN.DB' : '○ Pronto a ligar (1-Click)'}</div>
+            </div>
+            <button class="quick-ag-btn" style="padding:2px 6px; font-size:9.5px;" onclick="connectAllMcpBridgeUI(['${escapeHtml(t.id)}'])">${t.connected ? '🔄 Sync' : '⚡ Ligar'}</button>
+          </div>
+        `).join('');
+      }
+
+      // Agent Chaining Hand-offs
+      const hoEl = document.getElementById('orbitHandoffsList');
+      if (hoEl) {
+        if (!handoffs.length) {
+          hoEl.innerHTML = `<div style="color:var(--text-muted); padding:8px;">Sem pacotes de hand-off registados.</div>`;
+        } else {
+          hoEl.innerHTML = handoffs.slice(0, 6).map(h => `
+            <div style="background:rgba(9,13,22,0.9); border:1px solid rgba(16,185,129,0.3); border-radius:7px; padding:6px 8px;">
+              <div style="display:flex; justify-content:space-between; color:#6ee7b7; font-weight:700;">
+                <span>${escapeHtml(h.from_agent)} ➔ ${escapeHtml(h.to_agent)}</span>
+                <span style="color:#fde68a;">[${escapeHtml(h.task_code)}]</span>
+              </div>
+              <div style="color:#e2e8f0; margin-top:2px;">${escapeHtml(h.summary)}</div>
+              <div style="color:#94a3b8; font-size:9.5px; margin-top:2px;">👉 Next: ${escapeHtml(h.next_action)}</div>
+            </div>
+          `).join('');
+        }
+      }
+    }
+
+    async function orbitApproveItemUI(itemId) {
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve_item', id: itemId })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast(`✅ Item #${itemId} aprovado na Mission Control Inbox!`);
+        fetchGraph();
+      }
+    }
+
+    async function orbitApproveAllUI() {
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'approve_all' })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast(`✅ Todos os itens pendentes (${out.approved_count || 0}) foram aprovados!`);
+        fetchGraph();
+      }
+    }
+
+    async function orbitRedirectItemUI(itemId) {
+      const note = 'Redirecionado pelo humano: executar validação adicional antes do merge e respeitar 🔒[HUMAN]';
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'redirect_item', id: itemId, redirect_note: note })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast(`↩ Item #${itemId} redirecionado com instrução 🔒[HUMAN]!`);
+        fetchGraph();
+      }
+    }
+
+    async function sendOrbitBroadcastUI() {
+      const scopeEl = document.getElementById('orbitBroadcastScope');
+      const inpEl = document.getElementById('orbitBroadcastInput');
+      const scope = scopeEl ? scopeEl.value : 'all_fleet';
+      const directive = inpEl ? inpEl.value.trim() : '';
+      if (!directive) {
+        showToast('⚠️ Escreve uma diretiva para o Broadcast.');
+        return;
+      }
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'broadcast', target_scope: scope, directive, workspace: 'brain_mcp' })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast(`📡 Broadcast enviado para [${scope}] (${out.agents_notified || 0} agentes atualizados + 🔒[HUMAN])!`);
+        if (activeMainView === 'office') fetchOfficeState(true);
+        fetchGraph();
+      }
+    }
+
+    async function sendOrbitBroadcastFromConsole(scope, directive) {
+      OfficeAudio3D.playOrderBeep();
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'broadcast', target_scope: scope, directive, workspace: 'brain_mcp' })
+      });
+      const out = await res.json();
+      if (out.ok) {
+        if (out.overview) {
+          lastOrbitOverviewData = out.overview;
+          renderOrbitOverviewUI(out.overview);
+        }
+        await fetchOfficeState(true);
+        showToast(`📡 Orbit Broadcast [${scope}] enviado a ${out.agents_notified || 0} agentes 3D!`);
+      }
+    }
+
+    async function connectAllMcpBridgeUI(targetIds = null) {
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'connect_mcp_bridge', targets: targetIds })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast('🔌 Cross-IDE MCP Bridge sincronizado (Antigravity, Cursor, Windsurf, Claude Desktop)!');
+      }
+    }
+
+    function copyUniversalMcpJson() {
+      const snippet = lastOrbitOverviewData && lastOrbitOverviewData.mcp_bridge
+        ? lastOrbitOverviewData.mcp_bridge.universal_mcp_json
+        : '';
+      if (snippet && navigator.clipboard) {
+        navigator.clipboard.writeText(snippet);
+        showToast('📋 Configuração Universal MCP JSON copiada para a área de transferência!');
+      }
+    }
+
+    async function triggerDemoHandoffUI() {
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'record_handoff',
+          from_agent: 'Arquiteto (Opus)',
+          to_agent: 'QA Engineer (Flash)',
+          task_code: 'test-orbit',
+          workspace: 'brain_mcp',
+          summary: 'Orbit Agent OS (Inbox + Trust Hierarchy + Multi-Scope Broadcast + MCP Bridge) integrado.',
+          files_touched: ['orbit_engine.py', 'web_dashboard.py', 'index.html'],
+          next_action: 'Executar suite test_brain.py e validar 100% dos checks.'
+        })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+        showToast('🔗 Pacote de Hand-off registado e encadeado para o próximo agente!');
+      }
+    }
+
     // Iniciar aplicação (respeita #swarm ou #office na URL)
     fetchGraph().then(() => {
       requestAnimationFrame(renderGraph);
@@ -8487,6 +8910,7 @@
       initBrainSseStream();
       refreshInlineToolPrune();
       refreshSwarmSandboxesUI();
+      fetchOrbitOverview(false);
       if (window.location.hash === '#swarm') {
         switchMainView('swarm');
       } else if (window.location.hash === '#office') {

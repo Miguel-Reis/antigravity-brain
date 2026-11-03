@@ -126,6 +126,9 @@ class BrainDB:
                 ("superseded_by", "INTEGER DEFAULT NULL"),
                 ("valid_until", "TIMESTAMP DEFAULT NULL"),
                 ("embedding_json", "TEXT DEFAULT '[]'"),
+                ("source_agent", "TEXT DEFAULT 'system'"),
+                ("trust_score", "REAL DEFAULT 0.85"),
+                ("human_locked", "INTEGER DEFAULT 0"),
             ]
             for col_name, col_def in migrations:
                 if col_name not in existing_cols:
@@ -481,10 +484,13 @@ class BrainDB:
         importance: int = 3,
         tier: Optional[str] = None,
         supersedes_id: Optional[int] = None,
+        source_agent: str = "system",
+        trust_score: Optional[float] = None,
+        human_locked: Optional[int] = None,
     ) -> Tuple[int, bool]:
         """
-        Guarda ou atualiza um facto sem duplicar, classificando automaticamente a camada (tier)
-        e inferindo ligações causais / substituição temporal (Ruflo + Jev-Assert).
+        Guarda ou atualiza um facto sem duplicar, classificando automaticamente a camada (tier),
+        aplicando a hierarquia de confiança Orbit ('Human Edits Always Win') e inferindo ligações causais.
         Retorna (row_id, is_new).
         """
         topic = topic.strip()
@@ -494,15 +500,31 @@ class BrainDB:
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
         resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
+        is_human_src = source_agent in ("human_ui", "human") or category == "directive" or "human_verified" in tags.lower()
+        resolved_lock = int(human_locked) if human_locked is not None else (1 if is_human_src else 0)
+        resolved_trust = float(trust_score) if trust_score is not None else (1.0 if resolved_lock else (0.75 if "subagent" in source_agent.lower() else 0.85))
         f_hash = self._compute_hash(topic, fact, ws)
         emb_json = json.dumps(self.compute_semantic_vector(f"{topic} {fact} {tags} {category}"))
 
         with self._connect() as conn:
+            # Regra Orbit 'Human Edits Always Win': se já existe memória bloqueada pelo humano com o mesmo tópico neste workspace,
+            # um subagente/sistema automático (resolved_lock == 0) nunca a pode sobrescrever!
+            if resolved_lock == 0:
+                locked_topic_row = conn.execute(
+                    "SELECT id FROM memories WHERE workspace = ? AND LOWER(topic) = LOWER(?) AND COALESCE(human_locked, 0) = 1 LIMIT 1;",
+                    (ws, topic),
+                ).fetchone()
+                if locked_topic_row:
+                    return int(locked_topic_row["id"]), False
+
             existing = conn.execute(
-                "SELECT id FROM memories WHERE fact_hash = ?;", (f_hash,)
+                "SELECT id, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE fact_hash = ?;",
+                (f_hash,),
             ).fetchone()
             if existing:
                 row_id = int(existing["id"])
+                if int(existing["h_lock"]) == 1 and resolved_lock == 0:
+                    return row_id, False
                 conn.execute(
                     """
                     UPDATE memories
@@ -510,19 +532,47 @@ class BrainDB:
                         tags = CASE WHEN ? != '' THEN ? ELSE tags END,
                         tier = ?,
                         embedding_json = ?,
+                        source_agent = CASE WHEN ? = 1 THEN ? ELSE COALESCE(source_agent, ?) END,
+                        trust_score = MAX(COALESCE(trust_score, 0.85), ?),
+                        human_locked = MAX(COALESCE(human_locked, 0), ?),
                         last_accessed = CURRENT_TIMESTAMP
                     WHERE id = ?;
                     """,
-                    (importance, tags, tags, resolved_tier, emb_json, row_id),
+                    (
+                        importance,
+                        tags,
+                        tags,
+                        resolved_tier,
+                        emb_json,
+                        resolved_lock,
+                        source_agent,
+                        source_agent,
+                        resolved_trust,
+                        resolved_lock,
+                        row_id,
+                    ),
                 )
                 return row_id, False
 
             cur = conn.execute(
                 """
-                INSERT INTO memories (topic, fact, workspace, category, tags, importance, tier, fact_hash, embedding_json, last_accessed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
+                INSERT INTO memories (topic, fact, workspace, category, tags, importance, tier, fact_hash, embedding_json, source_agent, trust_score, human_locked, last_accessed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
                 """,
-                (topic, fact, ws, category, tags, importance, resolved_tier, f_hash, emb_json),
+                (
+                    topic,
+                    fact,
+                    ws,
+                    category,
+                    tags,
+                    importance,
+                    resolved_tier,
+                    f_hash,
+                    emb_json,
+                    source_agent,
+                    resolved_trust,
+                    resolved_lock,
+                ),
             )
             new_id = int(cur.lastrowid)
 
@@ -781,6 +831,11 @@ class BrainDB:
                 overlap_boost = overlap * 1.8
                 sem_boost = sem_sim * 4.5
                 c_boost = min(2.0, causal_deg.get(int(rid), 0) * 0.45)
+                trust_val = float(item.get("trust_score") if item.get("trust_score") is not None else 0.85)
+                h_lock = int(item.get("human_locked") or 0)
+                trust_boost = max(0.0, (trust_val - 0.70) * 3.0) + (2.4 if h_lock else 0.0)
+                item["trust_score"] = round(trust_val, 2)
+                item["human_locked"] = h_lock
                 mem_tier = str(item.get("tier") or self.classify_memory_tier(
                     str(item.get("category", "")), str(item.get("topic", "")), str(item.get("fact", "")), str(item.get("tags", ""))
                 ))
@@ -804,7 +859,7 @@ class BrainDB:
                         recency_mult = 1.1
 
                 raw_final = (
-                    item["score"] + overlap_boost + sem_boost + ws_boost + imp_boost + exact_tech_boost + c_boost
+                    item["score"] + overlap_boost + sem_boost + ws_boost + imp_boost + exact_tech_boost + c_boost + trust_boost
                 )
                 item["final_score"] = round(raw_final * recency_mult * tier_mult, 3)
                 item["causal_degree"] = causal_deg.get(int(rid), 0)

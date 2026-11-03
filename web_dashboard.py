@@ -16,6 +16,7 @@ from ast_impact_watcher import get_global_watcher, start_ast_impact_watcher_daem
 from auto_updater import check_and_apply_update, get_git_status, start_auto_update_daemon
 from brain_harvest import harvest_latest_turn
 from db_engine import BrainDB, seed_initial_memories
+from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
 from token_diet import (
     audit_mcp_servers,
@@ -475,6 +476,9 @@ def build_obsidian_graph_payload(
                 "is_match": m["is_match"],
                 "search_score": m["search_score"],
                 "semantic_similarity": m.get("semantic_similarity", 0.85),
+                "source_agent": m.get("source_agent", "system"),
+                "trust_score": float(m.get("trust_score") or 0.85),
+                "human_locked": int(m.get("human_locked") or 0),
             }
         )
 
@@ -811,6 +815,16 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if parsed.path == "/api/orbit/overview":
+            orbit = OrbitEngine(BrainDB())
+            self._send_json(orbit.get_executive_briefing_and_roi())
+            return
+
+        if parsed.path == "/api/orbit/inbox":
+            orbit = OrbitEngine(BrainDB())
+            self._send_json(orbit.get_mission_control_inbox())
+            return
+
         if parsed.path == "/api/events":
             db = BrainDB()
             stats = db.get_stats()
@@ -872,12 +886,14 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                     conn.execute(
                         """
                         UPDATE memories
-                        SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?, last_accessed = CURRENT_TIMESTAMP
+                        SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?,
+                            source_agent = 'human_ui', trust_score = 1.0, human_locked = 1,
+                            last_accessed = CURRENT_TIMESTAMP
                         WHERE id = ?;
                         """,
                         (topic, fact, workspace.lower(), category.lower(), tags, importance, int(mem_id)),
                     )
-                self._send_json({"ok": True, "id": int(mem_id), "updated": True})
+                self._send_json({"ok": True, "id": int(mem_id), "updated": True, "human_locked": 1})
             else:
                 row_id, is_new = db.store_fact(
                     topic=topic,
@@ -886,8 +902,11 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                     category=category,
                     tags=tags,
                     importance=importance,
+                    source_agent="human_ui",
+                    trust_score=1.0,
+                    human_locked=1,
                 )
-                self._send_json({"ok": True, "id": row_id, "is_new": is_new})
+                self._send_json({"ok": True, "id": row_id, "is_new": is_new, "human_locked": 1})
             return
 
         if parsed.path == "/api/sync":
@@ -1079,6 +1098,42 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 workspace_path=CURRENT_DIR, write_to_disk=write_disk
             )
             self._send_json(rep)
+            return
+
+        if parsed.path == "/api/orbit/action":
+            action = str(body.get("action", "")).strip()
+            orbit = OrbitEngine(db)
+            if action == "approve_item":
+                item_id = int(body.get("id", 0) or 0)
+                res = orbit.approve_inbox_item(item_id=item_id, workspace_path=CURRENT_DIR)
+            elif action == "approve_all":
+                res = orbit.approve_all_inbox(workspace_path=CURRENT_DIR)
+            elif action == "redirect_item":
+                item_id = int(body.get("id", 0) or 0)
+                note = str(body.get("redirect_note", "")).strip()
+                res = orbit.redirect_inbox_item(item_id=item_id, redirect_note=note)
+            elif action == "broadcast":
+                scope = str(body.get("target_scope", "all_fleet")).strip() or "all_fleet"
+                directive = str(body.get("directive", "")).strip()
+                ws = str(body.get("workspace", "brain_mcp")).strip() or "brain_mcp"
+                res = orbit.send_broadcast(target_scope=scope, directive=directive, workspace=ws)
+            elif action == "record_handoff":
+                res = orbit.record_handoff(
+                    from_agent=str(body.get("from_agent", "Arquiteto (Brain)")),
+                    to_agent=str(body.get("to_agent", "Worker UI (Flash)")),
+                    task_code=str(body.get("task_code", "orbit-01")),
+                    workspace=str(body.get("workspace", "brain_mcp")),
+                    summary=str(body.get("summary", "")),
+                    files_touched=body.get("files_touched", []),
+                    next_action=str(body.get("next_action", "")),
+                )
+            elif action == "connect_mcp_bridge":
+                targets = body.get("targets")
+                res = orbit.connect_all_ai_tools(target_ids=targets if isinstance(targets, list) else None)
+            else:
+                self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
+                return
+            self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi()})
             return
 
         self._send_json({"error": "Endpoint desconhecido"}, 404)

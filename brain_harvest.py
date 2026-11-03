@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from brain_inject import resolve_transcript_path
 from db_engine import BrainDB
+from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
 
 
@@ -185,6 +186,15 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
     )
     try:
         SwarmEngine(db).on_turn_complete(modified_files, completed_actions, conversation_id=conv_id)
+        if modified_files or completed_actions or harvested_count > 0:
+            OrbitEngine(db).record_handoff(
+                from_agent=f"conv:{conv_id[:8]}",
+                workspace=workspace,
+                summary=turn_user_goal or ("; ".join(completed_actions[-2:]) if completed_actions else "Turno concluído com memória colhida"),
+                modified_files=", ".join(modified_files[:5]),
+                key_findings="; ".join(completed_actions[-3:])[:240],
+                to_scope="next_agent",
+            )
     except Exception:
         pass
     return harvested_count

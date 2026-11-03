@@ -325,6 +325,90 @@ def run_all_tests() -> None:
         f"[PASS] MCP Stdio Server (server.py): Handshake 'initialize' OK, {len(tool_names)} tools registadas & 'brain_stats' executado sem dependências externas"
     )
 
+    # 16. Testar as 6 Tecnologias Orbit Agent OS (Inbox, Trust Hierarchy, Multi-Scope Broadcast, Agent Chaining, Cross-IDE Bridge & ROI)
+    from orbit_engine import OrbitEngine
+
+    with tempfile.TemporaryDirectory() as orbit_tmp:
+        orbit_db = BrainDB(db_path=os.path.join(orbit_tmp, "orbit_test.db"))
+        SwarmEngine(orbit_db)  # garante office_agents inicializados
+        orbit = OrbitEngine(orbit_db)
+
+        # 16a. Memory Trust Hierarchy ("Human Edits Always Win")
+        mem_id_human, _ = orbit_db.store_fact(
+            topic="Regra Imutável de Produção",
+            fact="Nunca apagar tabelas SQLite em produção sem snapshot CoW.",
+            workspace="brain_mcp",
+            category="preference",
+            tags="human trust lock production",
+            importance=5,
+            source_agent="human_ui",
+            trust_score=1.0,
+            human_locked=1,
+        )
+        # Tentar sobrescrever como subagente (human_locked=0) — deve manter o facto humano intacto!
+        orbit_db.store_fact(
+            topic="Regra Imutável de Produção",
+            fact="Subagente tentou alterar esta regra automaticamente.",
+            workspace="brain_mcp",
+            category="preference",
+            tags="subagent override attempt",
+            importance=3,
+            source_agent="subagent_worker",
+            trust_score=0.6,
+            human_locked=0,
+        )
+        locked_results = orbit_db.search_memories("Regra Imutável de Produção", workspace="brain_mcp", n_results=3)
+        assert any(
+            r["id"] == mem_id_human
+            and "Nunca apagar tabelas SQLite" in r["fact"]
+            and int(r.get("human_locked") or 0) == 1
+            for r in locked_results
+        ), "Falha na Trust Hierarchy: memória human_locked=1 foi sobrescrita por subagente!"
+
+        # 16b. Multi-Scope Broadcast Directives
+        bc_res = orbit.send_broadcast(
+            target_scope="dept:API",
+            directive="Priorizar latência <10ms em todos os endpoints SQLite WAL",
+            workspace="brain_mcp",
+        )
+        assert bc_res["ok"] is True and bc_res["agents_notified"] >= 1
+
+        # 16c. Agent Chaining & Hand-off Packets
+        ho_res = orbit.record_handoff(
+            from_agent="Arquiteto (Brain)",
+            to_agent="Worker API (Flash)",
+            task_code="api-orbit",
+            workspace="brain_mcp",
+            summary="OrbitEngine criado e ligado ao PreInvocation.",
+            files_touched=["orbit_engine.py", "brain_inject.py"],
+            next_action="Validar endpoints /api/orbit/overview e /api/orbit/action.",
+        )
+        assert ho_res["ok"] is True and ho_res["handoff_id"] > 0
+
+        # 16d. Mission Control Inbox ("Needs Your Yes") & Executive Briefing + ROI + MCP Bridge
+        inbox_before = orbit.get_mission_control_inbox()
+        assert inbox_before["ok"] is True and "items" in inbox_before
+        overview = OrbitEngine(prod_db).get_executive_briefing_and_roi()
+        assert overview["ok"] is True
+        assert "roi" in overview and overview["roi"]["hours_saved"] >= 0
+        assert "trust_hierarchy" in overview
+        assert "mcp_bridge" in overview and len(overview["mcp_bridge"]["targets"]) == 4
+
+    for orbit_ui_token in (
+        'id="orbitOsModal"',
+        'id="btnOpenOrbitModal"',
+        "function openOrbitOsModal()",
+        "function orbitApproveAllUI()",
+        "function sendOrbitBroadcastUI()",
+        "function connectAllMcpBridgeUI(",
+    ):
+        assert orbit_ui_token in html_content, f"Token Orbit Agent OS em falta em index.html: {orbit_ui_token}"
+
+    print(
+        f"[PASS] Orbit Agent OS (6 Tecnologias): Trust Hierarchy (Human Wins), Broadcast ({bc_res['agents_notified']} ags), "
+        f"Hand-off Chaining, Inbox ({inbox_before['pending_count']} pending), 4-IDE MCP Bridge & ROI (${overview['roi']['engineering_value_usd']}) OK"
+    )
+
 
 if __name__ == "__main__":
     run_all_tests()

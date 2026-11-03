@@ -299,11 +299,13 @@ MCPServer = StdioMCPServer
 
 from ast_impact_watcher import get_global_watcher
 from db_engine import BrainDB, ensure_dashboard_running
+from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
 from token_diet import prune_tools_for_intent
 
 db = BrainDB()
 swarm = SwarmEngine(db)
+orbit = OrbitEngine(db)
 try:
     ensure_dashboard_running()
 except Exception:
@@ -556,6 +558,44 @@ def swarm_architecture_report(
         write_to_disk=write_to_disk,
     )
     return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def orbit_mission_control(
+    action: str = "inbox",
+    target_scope: str = "all_fleet",
+    directive: str = "",
+    item_id: int = 0,
+    workspace: str = "brain_mcp",
+) -> str:
+    """Orbit Agent OS Mission Control: manage human-in-the-loop Inbox approvals ('inbox', 'approve_all', 'approve_item', 'redirect_item'), send multi-scope fleet broadcasts ('broadcast'), or connect all AI IDEs ('connect_mcp_bridge').
+
+    Args:
+        action: Action to perform: 'inbox', 'approve_all', 'approve_item', 'redirect_item', 'broadcast', or 'connect_mcp_bridge'
+        target_scope: Scope for broadcast: 'all_fleet', 'dept:UI', 'dept:API', 'dept:TESTS', 'dept:DOCS', or 'ws:<workspace>'
+        directive: Directive or redirect note text
+        item_id: Inbox item ID for approve_item or redirect_item
+        workspace: Workspace identifier
+    """
+    if action == "approve_all":
+        res = orbit.approve_all_inbox(workspace_path=CURRENT_DIR)
+    elif action == "approve_item":
+        res = orbit.approve_inbox_item(item_id=item_id, workspace_path=CURRENT_DIR)
+    elif action == "redirect_item":
+        res = orbit.redirect_inbox_item(item_id=item_id, redirect_note=directive)
+    elif action == "broadcast":
+        res = orbit.send_broadcast(target_scope=target_scope, directive=directive, workspace=workspace)
+    elif action == "connect_mcp_bridge":
+        res = orbit.connect_all_ai_tools()
+    else:
+        res = orbit.get_mission_control_inbox()
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def orbit_briefing_roi() -> str:
+    """Returns the Orbit Agent OS Morning Brief, Engineering Savings / ROI Calculator (Hours + USD saved), Memory Trust Hierarchy stats, Agent Chaining Hand-offs, and Cross-IDE MCP Bridge status."""
+    return json.dumps(orbit.get_executive_briefing_and_roi(), indent=2, ensure_ascii=False)
 
 
 if __name__ == "__main__":

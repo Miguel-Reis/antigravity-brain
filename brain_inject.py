@@ -6,6 +6,7 @@ import time
 from typing import Any, Dict, List, Optional
 
 from db_engine import BrainDB, ensure_dashboard_running
+from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
 
 MAX_EPHEMERAL_CHARS = 1350  # ~320 tokens max budget (inclui Scout Shared Map)
@@ -218,14 +219,33 @@ def build_ephemeral_context(
     if scout_map:
         parts.append(scout_map[:480])
 
+    # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining)
+    try:
+        orb = OrbitEngine()
+        bcasts = orb.get_active_broadcasts(workspace=workspace, limit=2)
+        for bc in bcasts:
+            parts.append(f"📡[ORBIT_BROADCAST | {bc['target_scope']}]: {bc['directive'][:160]}")
+        handoffs = orb.get_recent_handoffs(workspace=workspace, limit=1)
+        if handoffs:
+            ho = handoffs[0]
+            parts.append(
+                f"🔗[AGENT_HANDOFF | from={ho['from_agent']} -> {ho['to_scope']} | files={ho['modified_files'][:60]}]: {ho['summary'][:140]}"
+            )
+    except Exception:
+        pass
+
     seen_topics: set[str] = set()
-    # Priorizar memórias Fixadas (Pinned) ou Diretivas Diretas do Escritório 3D no topo!
+    # Priorizar memórias Bloqueadas pelo Humano ('Human Edits Always Win'), Fixadas (Pinned) ou Diretivas no topo!
     sorted_memories = sorted(
         memories,
         key=lambda x: (
-            1
-            if ("pinned" in str(x.get("tags", "")).lower() or x.get("category") == "directive")
-            else 0
+            2
+            if int(x.get("human_locked") or 0) == 1
+            else (
+                1
+                if ("pinned" in str(x.get("tags", "")).lower() or x.get("category") == "directive")
+                else 0
+            )
         ),
         reverse=True,
     )
@@ -239,8 +259,9 @@ def build_ephemeral_context(
             continue
         seen_topics.add(norm_topic)
         fact = (m.get("fact") or "").strip()
-        is_pin = "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
-        pin_prefix = "📌[PIN] " if is_pin else ""
+        is_locked = int(m.get("human_locked") or 0) == 1
+        is_pin = is_locked or "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
+        pin_prefix = "🔒[HUMAN] " if is_locked else ("📌[PIN] " if is_pin else "")
         t_badge = tier_badges.get(str(m.get("tier") or "semantic").lower(), "[S]")
         ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
         entry = f"- {pin_prefix}{t_badge}{ws_tag}{topic}: {fact}"
