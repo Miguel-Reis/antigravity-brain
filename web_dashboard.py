@@ -574,7 +574,11 @@ def build_obsidian_graph_payload(
 
     mcp_audit, plug_audit, is_lean = _get_cached_diet_audit()
 
-    all_ws = sorted({m.get("workspace", "global") or "global" for m in all_memories})
+    ws_counts: Dict[str, int] = {}
+    for m in all_memories:
+        w_key = m.get("workspace", "global") or "global"
+        ws_counts[w_key] = ws_counts.get(w_key, 0) + 1
+    all_ws = sorted(ws_counts.keys(), key=lambda k: (-ws_counts[k], k))
     all_cats = sorted({m.get("category", "general") or "general" for m in all_memories})
 
     result_payload = {
@@ -591,6 +595,7 @@ def build_obsidian_graph_payload(
         },
         "filters": {
             "workspaces": all_ws,
+            "workspace_counts": ws_counts,
             "categories": all_cats,
         },
     }

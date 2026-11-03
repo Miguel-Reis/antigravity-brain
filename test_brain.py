@@ -468,7 +468,7 @@ def run_all_tests() -> None:
         f"Agente fora de vista descartado=({far_lounge['sx']:.1f}, {far_lounge['sy']:.1f}) -> CULLED OK"
     )
 
-    # 18. Testar Contrato da Reorganização da UI da Página Brain (Gavetas Retráteis + Modal Unificado Ferramentas & Física)
+    # 18. Testar Contrato da Reorganização da UI da Página Brain & Layout Planetário de Alta Densidade
     for brain_ui_token in (
         'id="brainLeftDrawer"',
         'id="brainToolsPhysicsModal"',
@@ -478,9 +478,15 @@ def run_all_tests() -> None:
         "function toggleBrainDrawer(",
         "function openBrainToolsModal()",
         "function closeBrainToolsModal()",
+        "function toggleVaultWorkspaceAccordion(",
+        "function resetVaultWorkspaceFilter()",
+        "isPrimaryIsland",
+        "_islandRank",
+        "_culledByLod",
+        "userClickedGraphNode",
     ):
         assert brain_ui_token in html_content, f"Token da UI reorganizada do Brain em falta em index.html: {brain_ui_token}"
-    print("[PASS] Brain UI Reorganization: Gavetas retráteis, HUD minimalista e Modal Unificado de Ferramentas & Física OK")
+    print("[PASS] Brain UI & High-Density Planetary LOD: Top 7 Ilhas, Acordeão de Pastas e Hover/Click Links OK")
 
 
 if __name__ == "__main__":
