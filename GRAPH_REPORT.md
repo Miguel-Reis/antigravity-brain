@@ -3,12 +3,12 @@
 > **Gerado automaticamente por `graphify_engine.py`** (Zero-LLM Deterministic AST + SQL + HTTP + MCP Graph)
 
 ## 1. Telemetria Executiva & Eficiência de Tokens
-- **Total de Nós Multi-Modais**: `384` (`FILE`: 15, `CLASS`: 8, `FUNCTION`: 135, `JS_FUNCTION`: 157, `API_ROUTE`: 35, `MCP_TOOL`: 18, `SQL_TABLE`: 16)
-- **Total de Arestas Tipadas**: `1158`
-  - 🟢 **EXTRACTED (1.00)**: `806` arestas (AST / DDL / Rota literal 100% determinística)
+- **Total de Nós Multi-Modais**: `390` (`FILE`: 15, `CLASS`: 8, `FUNCTION`: 135, `JS_FUNCTION`: 163, `API_ROUTE`: 35, `MCP_TOOL`: 18, `SQL_TABLE`: 16)
+- **Total de Arestas Tipadas**: `1164`
+  - 🟢 **EXTRACTED (1.00)**: `812` arestas (AST / DDL / Rota literal 100% determinística)
   - 🔵 **INFERRED (0.85)**: `312` arestas (Resolução cruzada de métodos e handlers)
   - 🟡 **AMBIGUOUS (0.55)**: `40` arestas (Despacho polimórfico / múltiplos candidatos)
-- **Compressão de Contexto (Graphify Token Diet)**: `225,683` tokens brutos ➔ `360` tokens de índice (**`626.9x` menos tokens**)
+- **Compressão de Contexto (Graphify Token Diet)**: `235,027` tokens brutos ➔ `360` tokens de índice (**`652.9x` menos tokens**)
 
 ## 2. Top God Nodes (Centros de Gravidade Arquitetónica)
 | # | Entidade | Tipo | Ficheiro | Grau (In/Out) | Alcance Ficheiros | Score Centralidade | Comunidade |
@@ -29,12 +29,12 @@
 - **Asymmetric Swarm & CoW Sandbox** (`46` nós) — Exemplos: `swarm_runs`, `swarm_tasks`, `swarm_logs`, `swarm_sandboxes`, `swarm_scout`, `swarm_start`
 - **AST Inspector, Graphify & Save Watcher** (`38` nós) — Exemplos: `ast_save_audits`, `orbit_broadcasts`, `AstImpactWatcher`, `AstImpactWatcher.__init__`, `AstImpactWatcher._init_watcher_schema`, `AstImpactWatcher.extract_symbol_hashes`
 - **HTTP Gateway, MCP Server & Token Diet** (`78` nós) — Exemplos: `_run_git`, `get_git_status`, `check_and_apply_update`, `_schedule_server_hot_reload`, `start_auto_update_daemon`, `configure_hooks_and_plugin`
-- **Obsidian 2D Graph & 3D Agent Office UI** (`171` nós) — Exemplos: `office_agents`, `SwarmEngine._ensure_core_office_agents`, `SwarmEngine._sync_live_conversations_to_office`, `SwarmEngine.get_office_state`, `SwarmEngine.assign_office_agent_directive`, `SwarmEngine.spawn_custom_office_agent`
+- **Obsidian 2D Graph & 3D Agent Office UI** (`177` nós) — Exemplos: `office_agents`, `SwarmEngine._ensure_core_office_agents`, `SwarmEngine._sync_live_conversations_to_office`, `SwarmEngine.get_office_state`, `SwarmEngine.assign_office_agent_directive`, `SwarmEngine.spawn_custom_office_agent`
 
 ## 4. Cadeias Causais Full-Stack Verificadas (BFS Shortest Paths)
-- **triggerAstSaveAuditUI ➔ ast_save_audits** (3 saltos, poupança `1226.5x`):  
+- **triggerAstSaveAuditUI ➔ ast_save_audits** (3 saltos, poupança `1277.3x`):  
   `triggerAstSaveAuditUI` (JS_FUNCTION) ➔ `/api/ast/watch` (API_ROUTE) ➔ `AstImpactWatcher.get_watcher_status` (FUNCTION) ➔ `ast_save_audits` (SQL_TABLE)
-- **swarm_watch_audit ➔ BrainDB** (2 saltos, poupança `1709.7x`):  
+- **swarm_watch_audit ➔ BrainDB** (2 saltos, poupança `1780.5x`):  
   `swarm_watch_audit` (MCP_TOOL) ➔ `server.py` (FILE) ➔ `BrainDB` (CLASS)
-- **createAndVerifySandboxUI ➔ swarm_sandboxes** (3 saltos, poupança `1226.5x`):  
+- **createAndVerifySandboxUI ➔ swarm_sandboxes** (3 saltos, poupança `1277.3x`):  
   `createAndVerifySandboxUI` (JS_FUNCTION) ➔ `/api/swarm/sandbox` (API_ROUTE) ➔ `SwarmEngine.manage_subagent_sandbox` (FUNCTION) ➔ `swarm_sandboxes` (SQL_TABLE)

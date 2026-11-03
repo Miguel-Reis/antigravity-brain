@@ -616,6 +616,92 @@
       cursor: grabbing;
     }
 
+    /* BENTO GALLERY HTML VIEW (ZERO-OVERLAP NATIVE SCROLL ATLAS) */
+    .brain-bento-gallery {
+      position: absolute;
+      inset: 0;
+      padding: 58px 22px 24px;
+      overflow-y: auto;
+      background:
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.12) 0%, rgba(3, 5, 13, 0.98) 65%),
+        #040711;
+      z-index: 8;
+    }
+
+    .bento-top-strip {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px 16px;
+      background: rgba(10, 15, 30, 0.88);
+      border: 1px solid rgba(129, 140, 248, 0.22);
+      border-radius: 12px;
+    }
+
+    .bento-ws-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .bento-ws-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+
+    .bento-ws-chip:hover, .bento-ws-chip.active {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: rgba(129, 140, 248, 0.6);
+      color: #ffffff;
+    }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
+      gap: 14px;
+    }
+
+    .bento-card {
+      background: rgba(11, 16, 32, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      border-radius: 11px;
+      padding: 13px 15px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 9px;
+      transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bento-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(129, 140, 248, 0.55);
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+    }
+
+    .bento-card.active {
+      border-color: #818cf8;
+      background: rgba(30, 41, 82, 0.52);
+      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.45);
+    }
+
     .graph-hud-top {
       position: absolute;
       top: 12px;
@@ -2196,19 +2282,31 @@
         <span id="lblRightDrawerFab">Inspetor ▶</span>
       </button>
 
-      <!-- Minimalist Centered Top HUD Bar -->
+      <!-- Minimalist Centered Top HUD Bar with 3 View Modes: Quadro Blueprint (Zero-Overlap Default), Galeria Bento (Native Scroll), Orbital -->
       <div class="graph-hud-top">
-        <span class="hud-zoom-tag" id="lblPlanetaryZoom"># ZOOM FAR</span>
+        <span class="hud-zoom-tag" id="lblPlanetaryZoom">QUADRO NEURAL</span>
         <span class="hud-dues-badge" id="lblPlanetaryDues">0 dues</span>
         <button class="hud-objectives-pill" onclick="focusDailyObjectives()" title="Focar nos Objetivos Críticos & Triangulação Causal do Córtex">
           <span style="width:6px; height:6px; border-radius:50%; background:#fb7185; display:inline-block;"></span>
           <span id="lblDailyObjectives">3 objectifs</span>
         </button>
         <span class="hud-divider"></span>
-        <button class="hud-pill active" id="btnPlanetaryView" onclick="togglePlanetaryAstrolabeMode()" style="cursor:pointer;" title="Alternar estética Astrolábio Planetário Orbital">
-          🪐 Planetary
+        <button class="hud-pill active" id="btnBlueprintView" onclick="setBrainViewStyle('blueprint')" style="cursor:pointer;" title="Quadro Arquitetónico Estruturado (Zero sobreposição — Cartões de Domínio & Circuitos Ortogonais)">
+          🗺️ Quadro
         </button>
-        <button class="hud-pill" id="btnAllLinksHud" onclick="toggleAllLinksHud()" style="cursor:pointer;" title="Mostrar/Ocultar Amostra de Sinapses Globais (Por defeito: revelar ao passar o rato ou clicar)">
+        <button class="hud-pill" id="btnBentoView" onclick="setBrainViewStyle('bento')" style="cursor:pointer;" title="Galeria Bento HTML com Scroll Nativo para explorar milhares de memórias">
+          🍱 Galeria
+        </button>
+        <button class="hud-pill" id="btnPlanetaryView" onclick="setBrainViewStyle('planetary')" style="cursor:pointer;" title="Estética Astrolábio Planetário Orbital">
+          🪐 Orbital
+        </button>
+        <span class="hud-divider"></span>
+        <span id="blueprintPagerWrap" style="display:inline-flex; align-items:center; gap:2px;">
+          <button class="hud-pill" id="btnBpPrevPage" onclick="changeBlueprintPage(-1)" style="cursor:pointer; padding:2px 6px;" title="Página Anterior">◀</button>
+          <span id="lblBpPage" style="font-family:var(--font-mono); font-size:9.5px; color:#cbd5e1; padding:0 4px; white-space:nowrap;">1/1</span>
+          <button class="hud-pill" id="btnBpNextPage" onclick="changeBlueprintPage(1)" style="cursor:pointer; padding:2px 6px;" title="Próxima Página">▶</button>
+        </span>
+        <button class="hud-pill" id="btnAllLinksHud" onclick="toggleAllLinksHud()" style="cursor:pointer;" title="Mostrar/Ocultar Sinapses Globais (Por defeito: revelar ao passar o rato ou clicar)">
           Links
         </button>
         <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;" title="Vista Global do Córtex">
@@ -2217,19 +2315,20 @@
         <button class="hud-pill" id="btnLocalGraph" onclick="setGraphMode('local')" style="cursor:pointer;" title="Vista Local 1-Hop focada no nó selecionado">
           1-Hop
         </button>
-        <button class="hud-pill active" id="btnLockOrbitsHud" onclick="toggleLockOrbitsHud()" style="cursor:pointer;" title="Bloquear/Desbloquear órbitas planetárias">
+        <button class="hud-pill active" id="btnLockOrbitsHud" onclick="toggleLockOrbitsHud()" style="cursor:pointer; display:none;" title="Bloquear/Desbloquear órbitas planetárias">
           🔒
         </button>
-        <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;" title="Centrar câmara no núcleo">
+        <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;" title="Enquadrar grelha no ecrã">
           🧭
         </button>
         <span class="hud-divider"></span>
-        <button class="hud-pill" onclick="openBrainToolsModal()" style="cursor:pointer; color:#c7d2fe; border-color:rgba(129,140,248,0.35); background:rgba(99,102,241,0.14);" title="Abrir Física de Órbitas, Time-Travel e Ferramentas Avançadas">
+        <button class="hud-pill" onclick="openBrainToolsModal()" style="cursor:pointer; color:#c7d2fe; border-color:rgba(129,140,248,0.35); background:rgba(99,102,241,0.14);" title="Abrir Física, Time-Travel e Ferramentas Avançadas">
           ⚙️ Física
         </button>
       </div>
 
       <canvas id="brainGraph"></canvas>
+      <div id="brainBentoGallery" class="brain-bento-gallery" style="display:none;"></div>
     </main>
 
     <!-- RIGHT DRAWER: CONTEXTUAL MEMORY INSPECTOR -->
@@ -3513,8 +3612,12 @@
         oldPos[n.id] = { x: n.x, y: n.y };
       }
 
+      const isInitial = Object.keys(oldPos).length === 0;
       graphData = data;
       rebuildSimulationGraph(oldPos);
+      if (isInitial) {
+        resetCamera();
+      }
       updateTopbarStats();
       updateFiltersAndLegend();
       renderVaultTree();
@@ -3562,7 +3665,15 @@
       }, 220);
     }
 
-    // Estado Planetário & Controlo de Checkboxes (Alta Densidade: Links globais ocultos por defeito e Órbitas Bloqueadas)
+    // Estado de Visualização do Córtex: 'blueprint' (Quadro Arquitetónico Zero-Overlap por defeito) | 'bento' (Galeria HTML) | 'planetary' (Astrolábio Orbital)
+    let brainViewStyle = 'blueprint';
+    let blueprintPage = 0;
+    let blueprintTotalPages = 1;
+    let blueprintCardsMeta = [];
+    let blueprintDrilldownMeta = null;
+    let blueprintBackBannerRect = null;
+    let bentoPage = 0;
+
     let planetaryAstrolabeMode = true;
     let showAllPlanetaryLinks = false;
     let planetaryOrbitsLocked = true;
@@ -3580,6 +3691,153 @@
       'global':       { title: 'Core Architecture',  angle: -Math.PI * 0.82, ringR: 365, rx: 155, ry: 86, tilt: -0.28, color: '#f59e0b', accent: '#a78bfa' }
     };
 
+    function setBrainViewStyle(style) {
+      brainViewStyle = style;
+      blueprintPage = 0;
+      bentoPage = 0;
+
+      const btnBp = document.getElementById('btnBlueprintView');
+      const btnBento = document.getElementById('btnBentoView');
+      const btnPlan = document.getElementById('btnPlanetaryView');
+      if (btnBp) btnBp.classList.toggle('active', style === 'blueprint');
+      if (btnBento) btnBento.classList.toggle('active', style === 'bento');
+      if (btnPlan) btnPlan.classList.toggle('active', style === 'planetary');
+
+      const lockBtn = document.getElementById('btnLockOrbitsHud');
+      if (lockBtn) lockBtn.style.display = style === 'planetary' ? 'inline-flex' : 'none';
+
+      const pagerWrap = document.getElementById('blueprintPagerWrap');
+      if (pagerWrap) pagerWrap.style.display = style === 'bento' ? 'none' : 'inline-flex';
+
+      const bentoEl = document.getElementById('brainBentoGallery');
+      const canvasEl = document.getElementById('brainGraph');
+      if (bentoEl && canvasEl) {
+        if (style === 'bento') {
+          bentoEl.style.display = 'block';
+          renderBrainBentoGallery();
+        } else {
+          bentoEl.style.display = 'none';
+        }
+      }
+
+      const zoomLbl = document.getElementById('lblPlanetaryZoom');
+      if (zoomLbl) {
+        zoomLbl.textContent = style === 'blueprint' ? 'QUADRO NEURAL' : (style === 'bento' ? 'GALERIA BENTO' : '# ZOOM FAR');
+      }
+
+      if (style === 'planetary') {
+        planetaryAstrolabeMode = true;
+      }
+      rebuildSimulationGraph();
+      resetCamera();
+      graphDirty = true;
+      requestAnimationFrame(renderGraph);
+    }
+
+    function changeBlueprintPage(delta) {
+      const next = blueprintPage + delta;
+      if (next < 0 || next >= blueprintTotalPages) return;
+      blueprintPage = next;
+      rebuildSimulationGraph();
+      resetCamera();
+      graphDirty = true;
+      requestAnimationFrame(renderGraph);
+    }
+
+    function changeBentoPage(delta) {
+      bentoPage = Math.max(0, bentoPage + delta);
+      renderBrainBentoGallery();
+    }
+
+    function renderBrainBentoGallery() {
+      const container = document.getElementById('brainBentoGallery');
+      if (!container || brainViewStyle !== 'bento') return;
+
+      const curWs = document.getElementById('wsFilter') ? document.getElementById('wsFilter').value : 'all';
+      const curCat = document.getElementById('catFilter') ? document.getElementById('catFilter').value : 'all';
+      const allKnownCounts = (graphData.filters && graphData.filters.workspace_counts) || {};
+      const memNodes = activeNodes
+        .filter(n => n.node_type === 'memory')
+        .sort((a, b) => ((b.is_match ? 100 : 0) + (b.importance || 3) * 10 + (b.db_id || 0) * 0.001) - ((a.is_match ? 100 : 0) + (a.importance || 3) * 10 + (a.db_id || 0) * 0.001));
+
+      const PAGE_SIZE = 36;
+      const totalPages = Math.max(1, Math.ceil(memNodes.length / PAGE_SIZE));
+      if (bentoPage >= totalPages) bentoPage = totalPages - 1;
+      const slice = memNodes.slice(bentoPage * PAGE_SIZE, (bentoPage + 1) * PAGE_SIZE);
+
+      const wsEntries = Object.entries(allKnownCounts).sort((a, b) => b[1] - a[1]);
+      const topWsPills = wsEntries.slice(0, 14).map(([ws, cnt]) => {
+        const isAct = curWs === ws;
+        return `<button type="button" class="bento-ws-chip ${isAct ? 'active' : ''}" onclick="toggleVaultWorkspaceAccordion('${escapeHtml(ws)}')">
+          <span>⬡ ${escapeHtml(ws)}</span>
+          <span style="font-family:var(--font-mono); font-size:10px; opacity:0.75;">${cnt}</span>
+        </button>`;
+      }).join('');
+
+      const selId = selectedNode ? selectedNode.id : '';
+      const cardsHtml = slice.map(item => {
+        const isSel = selId === item.id;
+        const color = CATEGORY_COLORS[item.category] || '#818cf8';
+        const glyph = getCategoryGlyph(item.category, item.node_type);
+        const stars = '★'.repeat(Math.max(1, Math.min(5, item.importance || 3)));
+        const factPreview = String(item.fact || '').replace(/\s+/g, ' ').trim().slice(0, 135) + (String(item.fact || '').length > 135 ? '…' : '');
+        const tagsArr = String(item.tags || '').split(/[\s,]+/).map(t => t.trim()).filter(Boolean).slice(0, 2);
+        const linkCount = item._neighbors ? Math.max(0, item._neighbors.size - 1) : 0;
+
+        return `
+          <div class="bento-card ${isSel ? 'active' : ''}" onclick="focusNodeById('${item.id}')">
+            <div style="position:absolute; top:0; left:0; right:0; height:3px; background:${color}; opacity:0.85;"></div>
+            <div>
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px;">
+                <span style="font-size:10px; font-family:var(--font-mono); font-weight:700; color:${color}; background:${color}18; border:1px solid ${color}44; padding:2px 6px; border-radius:5px; text-transform:uppercase;">
+                  ${glyph} ${escapeHtml(item.category || 'memory')}
+                </span>
+                <span style="font-size:10px; font-family:var(--font-mono); color:#fbbf24; letter-spacing:1px;">${stars}</span>
+              </div>
+              <div style="font-size:13px; font-weight:700; color:#f8fafc; line-height:1.35; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                ${escapeHtml(item._cleanLabel || item.label)}
+              </div>
+              <div style="font-size:11.5px; color:#94a3b8; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+                ${escapeHtml(factPreview || 'Sem descrição adicional.')}
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; padding-top:8px; border-top:1px solid rgba(148, 163, 184, 0.12); font-size:10px; font-family:var(--font-mono); color:#64748b;">
+              <span style="color:#a5b4fc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">⬡ ${escapeHtml(item.workspace || 'global')}</span>
+              <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+                ${tagsArr.map(t => `<span style="color:#94a3b8;">#${escapeHtml(t.replace(/^#/, ''))}</span>`).join('')}
+                <span style="color:#38bdf8;">🔗 ${linkCount}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = `
+        <div class="bento-top-strip">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; font-weight:800; color:#f8fafc;">🍱 Atlas Bento do Córtex</span>
+            <span style="font-size:11px; font-family:var(--font-mono); color:#94a3b8;">${memNodes.length} memórias filtradas · Zero sobreposição</span>
+            ${curWs !== 'all' ? `<button type="button" onclick="resetVaultWorkspaceFilter()" style="background:rgba(99,102,241,0.2); border:1px solid #818cf8; color:#fff; border-radius:6px; padding:3px 9px; font-size:10.5px; font-weight:700; cursor:pointer;">🌐 Ver Todos os Workspaces</button>` : ''}
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px;">
+            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(-1)" ${bentoPage <= 0 ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>◀ Anterior</button>
+            <span style="color:#e2e8f0; font-weight:700;">Página ${bentoPage + 1} / ${totalPages}</span>
+            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(1)" ${bentoPage + 1 >= totalPages ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>Próxima ▶</button>
+          </div>
+        </div>
+        <div class="bento-ws-strip">
+          <button type="button" class="bento-ws-chip ${curWs === 'all' ? 'active' : ''}" onclick="resetVaultWorkspaceFilter()">
+            <span>🌐 Todos</span>
+            <span style="font-family:var(--font-mono); font-size:10px; opacity:0.75;">${graphData.stats ? graphData.stats.total_memories : memNodes.length}</span>
+          </button>
+          ${topWsPills}
+        </div>
+        <div class="bento-grid">
+          ${cardsHtml || '<div style="padding:24px; color:#94a3b8; font-size:13px;">Nenhuma memória encontrada para os filtros selecionados.</div>'}
+        </div>
+      `;
+    }
+
     function onGraphCheckboxChange(kind, checked) {
       if (kind === 'tags') {
         const oldPos = {};
@@ -3595,28 +3853,30 @@
         showToast(checked ? '⚡ Pulsos sinápticos & Lasers de triangulação ativos' : '⚡ Pulsos & Lasers pausados');
       } else if (kind === 'planetary') {
         planetaryAstrolabeMode = checked;
-        const btn = document.getElementById('btnPlanetaryView');
-        if (btn) btn.classList.toggle('active', checked);
+        if (checked) {
+          setBrainViewStyle('planetary');
+        } else {
+          setBrainViewStyle('blueprint');
+        }
         const badge = document.getElementById('lblGraphStatusBadge');
-        if (badge) badge.textContent = checked ? 'PLANETARY' : 'FORCE-2D';
-        rebuildSimulationGraph();
-        showToast(checked ? '🪐 Modo Astrolábio Planetário ativado' : '🕸️ Modo Grafo Clássico ativado');
+        if (badge) badge.textContent = checked ? 'PLANETARY' : 'BLUEPRINT';
+        showToast(checked ? '🪐 Modo Astrolábio Planetário ativado' : '🗺️ Modo Quadro Arquitetónico ativado');
       } else if (kind === 'filaments') {
         showAllPlanetaryLinks = checked;
         const btn = document.getElementById('btnAllLinksHud');
         if (btn) btn.classList.toggle('active', checked);
         graphDirty = true;
-        showToast(checked ? '🌌 Filamentos Polares & Todos os Links visíveis' : '🌌 Filamentos Polares simplificados');
+        showToast(checked ? '🌌 Todos os Circuitos / Links visíveis' : '🌌 Circuitos revelados apenas em Hover ou Clique');
       }
       graphDirty = true;
       requestAnimationFrame(renderGraph);
     }
 
     function togglePlanetaryAstrolabeMode() {
-      const chk = document.getElementById('chkPlanetaryOrbits');
-      if (chk) {
-        chk.checked = !chk.checked;
-        onGraphCheckboxChange('planetary', chk.checked);
+      if (brainViewStyle === 'planetary') {
+        setBrainViewStyle('blueprint');
+      } else {
+        setBrainViewStyle('planetary');
       }
     }
 
@@ -3625,6 +3885,12 @@
       if (chk) {
         chk.checked = !chk.checked;
         onGraphCheckboxChange('filaments', chk.checked);
+      } else {
+        showAllPlanetaryLinks = !showAllPlanetaryLinks;
+        const btn = document.getElementById('btnAllLinksHud');
+        if (btn) btn.classList.toggle('active', showAllPlanetaryLinks);
+        graphDirty = true;
+        requestAnimationFrame(renderGraph);
       }
     }
 
@@ -3692,13 +3958,16 @@
         links = links.filter(l => keepIds.has(l.source) && keepIds.has(l.target));
       }
 
-      // 1. Contar estatísticas por Workspace antes de posicionar as Ilhas Planetárias
+      // 1. Contar estatísticas e categorias por Workspace
       const wsStats = {};
+      const allKnownCounts = (graphData.filters && graphData.filters.workspace_counts) || {};
       for (const n of rawNodes) {
         const ws = n.workspace || 'global';
-        if (!wsStats[ws]) wsStats[ws] = { notes: 0, tags: 0, checkpoints: 0, unlinked: 0 };
+        if (!wsStats[ws]) wsStats[ws] = { notes: 0, tags: 0, checkpoints: 0, unlinked: 0, cats: {} };
         if (n.node_type === 'memory') {
           wsStats[ws].notes++;
+          const cKey = n.category || 'architecture';
+          wsStats[ws].cats[cKey] = (wsStats[ws].cats[cKey] || 0) + 1;
           if ((n.importance || 3) >= 4) wsStats[ws].unlinked++;
         } else if (n.node_type === 'tag') {
           wsStats[ws].tags++;
@@ -3713,8 +3982,8 @@
         .sort((a, b) => {
           const wa = a.workspace || 'global';
           const wb = b.workspace || 'global';
-          const ca = (wsStats[wa] ? wsStats[wa].notes : 0) + (PLANETARY_CLUSTER_PRESETS[wa] ? 3 : 0);
-          const cb = (wsStats[wb] ? wsStats[wb].notes : 0) + (PLANETARY_CLUSTER_PRESETS[wb] ? 3 : 0);
+          const ca = (allKnownCounts[wa] ?? (wsStats[wa] ? wsStats[wa].notes : 0)) + (PLANETARY_CLUSTER_PRESETS[wa] ? 3 : 0);
+          const cb = (allKnownCounts[wb] ?? (wsStats[wb] ? wsStats[wb].notes : 0)) + (PLANETARY_CLUSTER_PRESETS[wb] ? 3 : 0);
           if (cb !== ca) return cb - ca;
           return wa.localeCompare(wb);
         });
@@ -3732,21 +4001,18 @@
         let cx = 0, cy = 0, rx = 128, ry = 74, tilt = -0.22;
 
         if (totalWs === 1) {
-          // Modo focado num único Workspace (Drill-down via Acordeão ou Filtro)
           cx = 0;
           cy = 0;
           rx = 240;
           ry = 148;
           tilt = -0.14;
         } else if (wsRank === 0) {
-          // Ilha Central Principal (#1 maior workspace)
           cx = 0;
           cy = 0;
           rx = 116;
           ry = 68;
           tilt = -0.20;
         } else if (isPrimaryIsland) {
-          // Ilhas Principais #2 a #7 distribuídas a 1h, 3h, 5h, 7h, 9h e 11h (livra 12h HUD e 6h Estrela Lótus)
           const ringSlots = Math.min(6, totalWs - 1);
           const ang = -Math.PI / 3 + ((wsRank - 1) / Math.max(1, ringSlots)) * Math.PI * 2;
           const rad = 355;
@@ -3756,7 +4022,6 @@
           ry = 70;
           tilt = (wsRank % 2 === 0 ? -0.26 : 0.28);
         } else {
-          // Workspaces Secundários (> Top 7): Anel Satélite Exterior discreto (revelado ao fazer Zoom / Drill-down)
           const secIdx = wsRank - 7;
           const ang = -Math.PI / 2 + (secIdx / secondaryCount) * Math.PI * 2 + 0.24;
           const rad = 578 + (secIdx % 2) * 28;
@@ -3786,7 +4051,7 @@
         };
       });
 
-      // 3. Ordenar nós por importância dentro de cada Ilha para atribuir _islandRank e órbitas concêntricas limpas
+      // 3. Ordenar nós por importância dentro de cada Ilha para atribuir _islandRank
       const sortedRawNodes = [...rawNodes].sort((a, b) => {
         if (a.node_type === 'workspace' && b.node_type !== 'workspace') return -1;
         if (b.node_type === 'workspace' && a.node_type !== 'workspace') return 1;
@@ -3800,7 +4065,7 @@
         const ws = n.workspace || 'global';
         const center = wsCenters[ws] || { x: 0, y: 0, rx: 120, ry: 70, tilt: -0.2, isPrimaryIsland: false, wsRank: 99 };
 
-        if (!planetaryAstrolabeMode && oldPos[n.id]) {
+        if (!planetaryAstrolabeMode && brainViewStyle !== 'blueprint' && oldPos[n.id]) {
           return {
             ...n,
             x: oldPos[n.id].x,
@@ -3829,7 +4094,6 @@
         let localAng = 0;
 
         if (totalWs === 1) {
-          // Quando filtrado para 1 único workspace, espalhar em 4 anéis espaçosos
           if (cIdx <= 8) {
             orbitLayer = 0.38;
             localAng = ((cIdx - 1) / 8) * Math.PI * 2;
@@ -3844,7 +4108,6 @@
             localAng = ((cIdx - 45) / Math.max(16, (wsStats[ws]?.notes || 60) - 44)) * Math.PI * 2;
           }
         } else {
-          // Vista Global: anéis elípticos concêntricos perfeitamente espaçados dentro da Ilha
           if (cIdx <= 6) {
             orbitLayer = 0.54;
             localAng = ((cIdx - 1) / 6) * Math.PI * 2 + 0.15;
@@ -3877,17 +4140,190 @@
         const wsKey = w.workspace || 'global';
         const c = wsCenters[wsKey];
         if (!c) return;
-        const st = wsStats[wsKey] || { notes: 1, tags: 1, checkpoints: 1, unlinked: 1 };
+        const st = wsStats[wsKey] || { notes: 1, tags: 1, checkpoints: 1, unlinked: 1, cats: {} };
+        const totalInDb = allKnownCounts[wsKey] ?? (st.notes || 1);
         const ilotsCount = Math.max(2, Math.min(6, (st.checkpoints || 1) + Math.ceil((st.tags || 2) / 2)));
         const toLinkCount = Math.max(1, st.unlinked || 2);
         planetaryClustersMeta.push({
           ...c,
-          notesCount: st.notes || 1,
+          notesCount: totalInDb,
+          loadedNotesCount: st.notes || 1,
+          cats: st.cats || {},
           ilotsCount,
           toLinkCount,
-          subtitle: `${st.notes || 1} notes · ${ilotsCount} îlots · ${toLinkCount} à relier`
+          subtitle: `${totalInDb} notes · ${ilotsCount} îlots · ${toLinkCount} à relier`
         });
       });
+
+      // 4B. MODO QUADRO ARQUITETÓNICO (BLUEPRINT BOARD — ZERO SOBREPOSIÇÃO GARANTIDA)
+      blueprintCardsMeta = [];
+      blueprintDrilldownMeta = null;
+      blueprintBackBannerRect = null;
+      const curWsFilter = document.getElementById('wsFilter') ? document.getElementById('wsFilter').value : 'all';
+      const isBlueprintDrilldown = (curWsFilter !== 'all') || (graphMode === 'local') || (wsNodes.length <= 1);
+
+      if (brainViewStyle === 'blueprint') {
+        for (const n of nodes) {
+          n._bpRect = null;
+          n._culledByBp = true;
+        }
+
+        if (!isBlueprintDrilldown) {
+          // VISTA GLOBAL DE WORKSPACES: Cartões de Domínio em Grelha Estrita (4 Colunas × 3 Linhas = 12 Workspaces/página)
+          const WS_PER_PAGE = 12;
+          blueprintTotalPages = Math.max(1, Math.ceil(wsNodes.length / WS_PER_PAGE));
+          if (blueprintPage >= blueprintTotalPages) blueprintPage = blueprintTotalPages - 1;
+          const pageWsNodes = wsNodes.slice(blueprintPage * WS_PER_PAGE, (blueprintPage + 1) * WS_PER_PAGE);
+
+          const cols = Math.min(4, Math.max(1, pageWsNodes.length));
+          const rows = Math.max(1, Math.ceil(pageWsNodes.length / cols));
+          const cardW = 304;
+          const cardH = 216;
+          const gapX = 38;
+          const gapY = 34;
+          const totalW = cols * cardW + (cols - 1) * gapX;
+          const totalH = rows * cardH + (rows - 1) * gapY;
+          const startX = -totalW / 2;
+          const startY = -totalH / 2 + 14;
+
+          const memByWs = {};
+          for (const n of nodes) {
+            if (n.node_type === 'memory' || n.node_type === 'checkpoint') {
+              const wk = n.workspace || 'global';
+              if (!memByWs[wk]) memByWs[wk] = [];
+              memByWs[wk].push(n);
+            }
+          }
+
+          pageWsNodes.forEach((wNode, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            const cx = startX + col * (cardW + gapX);
+            const cy = startY + row * (cardH + gapY);
+            const wsKey = wNode.workspace || 'global';
+            const cMeta = wsCenters[wsKey] || { color: '#818cf8', accent: '#38bdf8', displayTitle: wsKey };
+            const st = wsStats[wsKey] || { notes: 0, cats: {} };
+            const totalInDb = allKnownCounts[wsKey] ?? (st.notes || 0);
+            const wsMems = memByWs[wsKey] || [];
+            const topSlots = wsMems.slice(0, 4);
+
+            // Posicionar nó do Workspace no cabeçalho do Cartão
+            wNode.x = cx + cardW / 2;
+            wNode.y = cy + 24;
+            wNode._culledByBp = false;
+            wNode._bpRect = {
+              x: cx,
+              y: cy,
+              w: cardW,
+              h: cardH,
+              headerH: 48,
+              footerY: cy + cardH - 30,
+              kind: 'ws_card',
+              wsKey
+            };
+
+            const slotRects = [];
+            topSlots.forEach((mNode, sIdx) => {
+              const rx = cx + 10;
+              const ry = cy + 64 + sIdx * 28;
+              const rw = cardW - 20;
+              const rh = 24;
+              mNode.x = rx + rw / 2;
+              mNode.y = ry + rh / 2;
+              mNode._culledByBp = false;
+              mNode._bpRect = {
+                x: rx,
+                y: ry,
+                w: rw,
+                h: rh,
+                kind: 'mem_slot',
+                wsKey,
+                slotIdx: sIdx
+              };
+              slotRects.push({ node: mNode, x: rx, y: ry, w: rw, h: rh });
+            });
+
+            // Ancorar memórias adicionais silenciosamente na porta inferior do Cartão para manter links inter-workspace
+            wsMems.slice(4).forEach((mNode) => {
+              mNode.x = cx + cardW / 2;
+              mNode.y = cy + cardH - 15;
+              mNode._culledByBp = true;
+            });
+
+            blueprintCardsMeta.push({
+              wsKey,
+              wNode,
+              x: cx,
+              y: cy,
+              w: cardW,
+              h: cardH,
+              color: cMeta.color,
+              accent: cMeta.accent,
+              displayTitle: cMeta.displayTitle,
+              totalCount: totalInDb,
+              loadedCount: wsMems.length,
+              cats: st.cats || {},
+              slots: slotRects
+            });
+          });
+        } else {
+          // VISTA DRILL-DOWN DE WORKSPACE / 1-HOP: Grelha de Cartões de Memória Estruturados (Zero Sobreposição)
+          const memNodes = nodes.filter(n => n.node_type === 'memory' || n.node_type === 'checkpoint');
+          const CARDS_PER_PAGE = 20;
+          blueprintTotalPages = Math.max(1, Math.ceil(memNodes.length / CARDS_PER_PAGE));
+          if (blueprintPage >= blueprintTotalPages) blueprintPage = blueprintTotalPages - 1;
+          const pageMems = memNodes.slice(blueprintPage * CARDS_PER_PAGE, (blueprintPage + 1) * CARDS_PER_PAGE);
+
+          const cols = Math.min(4, Math.max(1, pageMems.length));
+          const rows = Math.max(1, Math.ceil(pageMems.length / cols));
+          const cardW = 286;
+          const cardH = 92;
+          const gapX = 28;
+          const gapY = 22;
+          const totalW = cols * cardW + (cols - 1) * gapX;
+          const totalH = rows * cardH + (rows - 1) * gapY;
+          const startX = -totalW / 2;
+          const startY = -totalH / 2 + 28;
+
+          blueprintBackBannerRect = {
+            x: startX,
+            y: startY - 56,
+            w: Math.max(520, totalW),
+            h: 40,
+            wsKey: curWsFilter !== 'all' ? curWsFilter : (wsNodes[0]?.workspace || 'global'),
+            totalMemories: memNodes.length
+          };
+
+          pageMems.forEach((mNode, idx) => {
+            const col = idx % cols;
+            const row = Math.floor(idx / cols);
+            const cx = startX + col * (cardW + gapX);
+            const cy = startY + row * (cardH + gapY);
+            mNode.x = cx + cardW / 2;
+            mNode.y = cy + cardH / 2;
+            mNode._culledByBp = false;
+            mNode._bpRect = {
+              x: cx,
+              y: cy,
+              w: cardW,
+              h: cardH,
+              kind: 'mem_card',
+              wsKey: mNode.workspace || 'global'
+            };
+          });
+
+          blueprintDrilldownMeta = {
+            wsKey: blueprintBackBannerRect.wsKey,
+            pageMems,
+            totalMemories: memNodes.length
+          };
+        }
+
+        const lblPage = document.getElementById('lblBpPage');
+        if (lblPage) {
+          lblPage.textContent = `${blueprintPage + 1}/${blueprintTotalPages}`;
+        }
+      }
 
       const nodeMap = {};
       ctx.save();
@@ -3957,8 +4393,12 @@
         objEl.textContent = `${Math.max(3, Math.min(9, highCount))} objectifs du jour`;
       }
 
-      // Em modo Planetário, preservar estritamente as órbitas elípticas sem dispersão física caótica
-      if (!planetaryAstrolabeMode && !planetaryOrbitsLocked) {
+      if (brainViewStyle === 'bento') {
+        renderBrainBentoGallery();
+      }
+
+      // Em modo Planetário ou Blueprint, preservar estritamente as coordenadas sem dispersão física caótica
+      if (brainViewStyle !== 'blueprint' && !planetaryAstrolabeMode && !planetaryOrbitsLocked) {
         const isInitialLoad = Object.keys(oldPos).length === 0;
         const nCount = Math.max(1, activeNodes.length);
         const prewarmSteps = isInitialLoad
@@ -4312,6 +4752,9 @@
         rebuildSimulationGraph();
       }
       renderVaultTree();
+      if (brainViewStyle === 'bento' && isExplicitUserAction) {
+        renderBrainBentoGallery();
+      }
 
       if (animateCam) {
         const wrap = document.getElementById('canvasWrap');
@@ -4427,9 +4870,18 @@
 
     function resetCamera() {
       const wrap = document.getElementById('canvasWrap');
-      cam.x = wrap.clientWidth / 2;
-      cam.y = wrap.clientHeight / 2;
-      cam.k = 0.68;
+      const w = Math.max(400, wrap.clientWidth);
+      const h = Math.max(320, wrap.clientHeight);
+      cam.x = w / 2;
+      cam.y = h / 2 + (brainViewStyle === 'blueprint' ? 14 : 0);
+      if (brainViewStyle === 'blueprint') {
+        const boardW = blueprintDrilldownMeta ? 1240 : 1340;
+        const boardH = blueprintDrilldownMeta ? 620 : 740;
+        const fitK = Math.min((w - 48) / boardW, (h - 76) / boardH);
+        cam.k = Math.max(0.46, Math.min(1.05, fitK));
+      } else {
+        cam.k = 0.68;
+      }
       graphDirty = true;
     }
 
@@ -4699,16 +5151,356 @@
     }
 
     let graphIdleTick = 0;
+
+    function drawOrthogonalCircuit(ax, ay, bx, by, color, lineW, dashed = false) {
+      ctx.save();
+      ctx.beginPath();
+      if (dashed) ctx.setLineDash([4, 4]);
+      const midX = (ax + bx) * 0.5;
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(midX, ay);
+      ctx.lineTo(midX, by);
+      ctx.lineTo(bx, by);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderBlueprintBoard(wrapW, wrapH, showPulses, invSqrtK) {
+      // 1. Fundo Arquitetónico Escuro + Grelha Subtil
+      ctx.save();
+      ctx.fillStyle = '#040711';
+      ctx.fillRect(-2400, -1800, 4800, 3600);
+      ctx.strokeStyle = 'rgba(99, 102, 241, 0.065)';
+      ctx.lineWidth = 1 * invSqrtK;
+      const gridStep = 68;
+      ctx.beginPath();
+      for (let gx = -952; gx <= 952; gx += gridStep) {
+        ctx.moveTo(gx, -544);
+        ctx.lineTo(gx, 544);
+      }
+      for (let gy = -544; gy <= 544; gy += gridStep) {
+        ctx.moveTo(-952, gy);
+        ctx.lineTo(952, gy);
+      }
+      ctx.stroke();
+
+      // Barramento Arquitetónico Discreto entre Cartões de Workspace na Vista Global
+      if (!blueprintDrilldownMeta && blueprintCardsMeta.length > 1) {
+        for (let i = 0; i < blueprintCardsMeta.length - 1; i++) {
+          const cA = blueprintCardsMeta[i];
+          const cB = blueprintCardsMeta[i + 1];
+          if (Math.abs(cA.y - cB.y) < 10) {
+            drawOrthogonalCircuit(
+              cA.x + cA.w,
+              cA.y + 24,
+              cB.x,
+              cB.y + 24,
+              'rgba(129, 140, 248, 0.22)',
+              1.2 * invSqrtK,
+              true
+            );
+          }
+        }
+      }
+      ctx.restore();
+
+      const focusTarget = hoveredNode || (userClickedGraphNode ? selectedNode : null);
+      const neighborSet = focusTarget && focusTarget._neighbors ? focusTarget._neighbors : new Set();
+
+      // 2. Circuitos Ortogonais de 90° (PCB Traces) — Zero confusão: apenas ativos em Hover/Clique ou se Links Globais estiver ativo
+      if (focusTarget || showAllPlanetaryLinks) {
+        ctx.save();
+        let drawnCircuits = 0;
+        for (let i = 0; i < activeLinks.length; i++) {
+          const l = activeLinks[i];
+          if (l.kind === 'workspace_link' || l.kind === 'tag_link') continue;
+          const a = l.sourceNode;
+          const b = l.targetNode;
+          if (!a || !b) continue;
+          const isFocusedLink = focusTarget && (a.id === focusTarget.id || b.id === focusTarget.id);
+          if (!isFocusedLink && !showAllPlanetaryLinks) continue;
+          if (!isFocusedLink && drawnCircuits > 28) continue;
+          if (a.x === b.x && a.y === b.y) continue;
+
+          drawnCircuits++;
+          const isCausal = l.kind === 'causal_link';
+          const traceColor = isFocusedLink
+            ? (isCausal ? 'rgba(52, 211, 153, 0.85)' : 'rgba(56, 189, 248, 0.82)')
+            : 'rgba(129, 140, 248, 0.18)';
+          const traceW = (isFocusedLink ? 2.0 : 1.0) * invSqrtK;
+          drawOrthogonalCircuit(a.x, a.y, b.x, b.y, traceColor, traceW, !isCausal && !isFocusedLink);
+
+          if (showPulses && isFocusedLink) {
+            const t = (pulseTick + (i * 0.17)) % 1;
+            const midX = (a.x + b.x) * 0.5;
+            let px = a.x, py = a.y;
+            if (t < 0.33) {
+              const u = t / 0.33;
+              px = a.x + (midX - a.x) * u;
+              py = a.y;
+            } else if (t < 0.66) {
+              const u = (t - 0.33) / 0.33;
+              px = midX;
+              py = a.y + (b.y - a.y) * u;
+            } else {
+              const u = (t - 0.66) / 0.34;
+              px = midX + (b.x - midX) * u;
+              py = b.y;
+            }
+            ctx.beginPath();
+            ctx.arc(px, py, 3.2 * invSqrtK, 0, Math.PI * 2);
+            ctx.fillStyle = isCausal ? '#34d399' : '#38bdf8';
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+      }
+
+      // 3A. VISTA GLOBAL DE WORKSPACES: Cartões de Domínio Estruturados (Zero Sobreposição Garantida)
+      if (!blueprintDrilldownMeta) {
+        for (let cIdx = 0; cIdx < blueprintCardsMeta.length; cIdx++) {
+          const card = blueprintCardsMeta[cIdx];
+          const { x, y, w, h, color, displayTitle, wsKey, totalCount, cats, slots, wNode } = card;
+          const isWsHovered = hoveredNode && (hoveredNode.id === wNode.id || hoveredNode.workspace === wsKey);
+          const isWsSelected = selectedNode && selectedNode.workspace === wsKey && userClickedGraphNode;
+
+          ctx.save();
+          // Sombra e corpo do Cartão de Domínio
+          traceRoundedRect(x, y, w, h, 12);
+          ctx.fillStyle = isWsHovered ? 'rgba(13, 20, 38, 0.96)' : 'rgba(9, 14, 28, 0.94)';
+          ctx.fill();
+          ctx.lineWidth = (isWsHovered || isWsSelected ? 1.8 : 1.1) * invSqrtK;
+          ctx.strokeStyle = isWsHovered || isWsSelected ? color : 'rgba(148, 163, 184, 0.22)';
+          ctx.stroke();
+
+          // Barra de Topo Colorida do Cartão
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(x, y, w, 5);
+          ctx.clip();
+          traceRoundedRect(x, y, w, h, 12);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.restore();
+
+          // Cabeçalho do Workspace
+          ctx.font = "700 13px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#f8fafc';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          const titleClean = String(displayTitle || wsKey).length > 22 ? String(displayTitle || wsKey).slice(0, 20) + '…' : String(displayTitle || wsKey);
+          ctx.fillText(`⬡ ${titleClean}`, x + 14, y + 23);
+
+          // Badge de Contagem de Memórias
+          const countTxt = `${totalCount} mems`;
+          ctx.font = "700 10px 'JetBrains Mono', monospace";
+          const bw = ctx.measureText(countTxt).width + 14;
+          traceRoundedRect(x + w - bw - 12, y + 13, bw, 20, 6);
+          ctx.fillStyle = `${color}22`;
+          ctx.fill();
+          ctx.strokeStyle = `${color}66`;
+          ctx.lineWidth = 0.9 * invSqrtK;
+          ctx.stroke();
+          ctx.fillStyle = '#e2e8f0';
+          ctx.textAlign = 'center';
+          ctx.fillText(countTxt, x + w - bw / 2 - 12, y + 23.5);
+
+          // Barra de Distribuição de Categorias (4px)
+          const barX = x + 14;
+          const barY = y + 44;
+          const barW = w - 28;
+          const barH = 4;
+          traceRoundedRect(barX, barY, barW, barH, 2);
+          ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+          ctx.fill();
+
+          const catEntries = Object.entries(cats || {});
+          const sumCats = catEntries.reduce((acc, [, v]) => acc + v, 0) || 1;
+          let curBarX = barX;
+          for (const [catName, catCnt] of catEntries) {
+            const segW = (catCnt / sumCats) * barW;
+            if (segW < 1) continue;
+            ctx.fillStyle = CATEGORY_COLORS[catName] || color;
+            ctx.fillRect(curBarX, barY, segW, barH);
+            curBarX += segW;
+          }
+
+          // Top 4 Slots de Memória dentro do Cartão (Estabilizados e sem qualquer sobreposição)
+          for (let s = 0; s < slots.length; s++) {
+            const sl = slots[s];
+            const m = sl.node;
+            const isSlotHov = hoveredNode && hoveredNode.id === m.id;
+            const isSlotSel = selectedNode && selectedNode.id === m.id;
+            const isSlotNeighbor = focusTarget && neighborSet.has(m.id);
+            const mCol = CATEGORY_COLORS[m.category] || '#94a3b8';
+
+            traceRoundedRect(sl.x, sl.y, sl.w, sl.h, 6);
+            ctx.fillStyle = isSlotSel
+              ? 'rgba(99, 102, 241, 0.28)'
+              : (isSlotHov ? 'rgba(30, 41, 59, 0.95)' : (isSlotNeighbor ? 'rgba(56, 189, 248, 0.14)' : 'rgba(15, 23, 42, 0.78)'));
+            ctx.fill();
+            ctx.lineWidth = (isSlotSel || isSlotHov || isSlotNeighbor ? 1.3 : 0.8) * invSqrtK;
+            ctx.strokeStyle = isSlotSel
+              ? '#818cf8'
+              : (isSlotHov ? '#38bdf8' : (isSlotNeighbor ? 'rgba(56, 189, 248, 0.55)' : 'rgba(148, 163, 184, 0.14)'));
+            ctx.stroke();
+
+            // Indicador lateral de categoria
+            ctx.fillStyle = mCol;
+            ctx.fillRect(sl.x + 4, sl.y + 5, 3, sl.h - 10);
+
+            // Título da memória truncado com precisão
+            ctx.font = `${isSlotSel || isSlotHov ? '700' : '500'} 11px 'Plus Jakarta Sans', -apple-system, sans-serif`;
+            ctx.fillStyle = m.is_match ? '#fde047' : (isSlotSel || isSlotHov ? '#ffffff' : '#cbd5e1');
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const rawLbl = m._cleanLabel || m.label || '';
+            const clippedLbl = rawLbl.length > 31 ? rawLbl.slice(0, 29) + '…' : rawLbl;
+            ctx.fillText(clippedLbl, sl.x + 13, sl.y + sl.h / 2 + 0.5);
+
+            // Estrela de importância à direita
+            ctx.font = "600 9.5px 'JetBrains Mono', monospace";
+            ctx.fillStyle = (m.importance || 3) >= 5 ? '#fbbf24' : '#64748b';
+            ctx.textAlign = 'right';
+            ctx.fillText(`★${m.importance || 3}`, sl.x + sl.w - 7, sl.y + sl.h / 2 + 0.5);
+          }
+
+          // Rodapé Interativo do Cartão ("Abrir Workspace ➔")
+          const footY = y + h - 27;
+          ctx.beginPath();
+          ctx.moveTo(x + 12, footY);
+          ctx.lineTo(x + w - 12, footY);
+          ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+          ctx.lineWidth = 1 * invSqrtK;
+          ctx.stroke();
+
+          ctx.font = "600 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = isWsHovered ? '#ffffff' : '#94a3b8';
+          ctx.textAlign = 'left';
+          ctx.fillText(`📂 Abrir pasta (${totalCount} memórias)`, x + 14, y + h - 13);
+
+          ctx.font = "700 10.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = color;
+          ctx.textAlign = 'right';
+          ctx.fillText('Explorar ➔', x + w - 14, y + h - 13);
+          ctx.restore();
+        }
+      } else {
+        // 3B. VISTA DRILL-DOWN DE WORKSPACE / 1-HOP: Banner de Topo + Grelha Limpa de Cartões de Memória
+        if (blueprintBackBannerRect) {
+          const b = blueprintBackBannerRect;
+          ctx.save();
+          traceRoundedRect(b.x, b.y, b.w, b.h, 10);
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+          ctx.fill();
+          ctx.lineWidth = 1.4 * invSqrtK;
+          ctx.strokeStyle = 'rgba(129, 140, 248, 0.45)';
+          ctx.stroke();
+
+          // Botão Voltar à Esquerda
+          traceRoundedRect(b.x + 8, b.y + 6, 210, b.h - 12, 7);
+          ctx.fillStyle = 'rgba(99, 102, 241, 0.22)';
+          ctx.fill();
+          ctx.strokeStyle = '#818cf8';
+          ctx.lineWidth = 1 * invSqrtK;
+          ctx.stroke();
+
+          ctx.font = "700 11px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#ffffff';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('⬅ Voltar ao Mapa Global', b.x + 18, b.y + b.h / 2);
+
+          ctx.font = "700 12.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#c7d2fe';
+          ctx.fillText(`⬡ Workspace: ${b.wsKey}  ·  ${b.totalMemories} memórias  (Página ${blueprintPage + 1}/${blueprintTotalPages})`, b.x + 234, b.y + b.h / 2);
+          ctx.restore();
+        }
+
+        const pageMems = blueprintDrilldownMeta.pageMems || [];
+        for (let i = 0; i < pageMems.length; i++) {
+          const m = pageMems[i];
+          const r = m._bpRect;
+          if (!r) continue;
+          const isHov = hoveredNode && hoveredNode.id === m.id;
+          const isSel = selectedNode && selectedNode.id === m.id;
+          const isNeighbor = focusTarget && neighborSet.has(m.id);
+          const col = CATEGORY_COLORS[m.category] || '#818cf8';
+          const glyph = getCategoryGlyph(m.category, m.node_type);
+
+          ctx.save();
+          traceRoundedRect(r.x, r.y, r.w, r.h, 10);
+          ctx.fillStyle = isSel
+            ? 'rgba(30, 41, 82, 0.96)'
+            : (isHov ? 'rgba(17, 25, 48, 0.96)' : 'rgba(10, 15, 30, 0.94)');
+          ctx.fill();
+          ctx.lineWidth = (isSel || isHov || isNeighbor ? 1.8 : 1.0) * invSqrtK;
+          ctx.strokeStyle = isSel ? '#ffffff' : (isHov ? col : (isNeighbor ? '#38bdf8' : 'rgba(148, 163, 184, 0.22)'));
+          ctx.stroke();
+
+          // Barra lateral esquerda da categoria
+          ctx.fillStyle = col;
+          ctx.fillRect(r.x + 1, r.y + 8, 3.5, r.h - 16);
+
+          // Linha 1: Categoria + Estrelas de Importância
+          ctx.font = "700 9.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = col;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`${glyph} ${(m.category || 'memory').toUpperCase()}`, r.x + 12, r.y + 16);
+
+          const stars = '★'.repeat(Math.max(1, Math.min(5, m.importance || 3)));
+          ctx.fillStyle = '#fbbf24';
+          ctx.textAlign = 'right';
+          ctx.fillText(stars, r.x + r.w - 10, r.y + 16);
+
+          // Linha 2: Título Principal da Memória
+          ctx.font = "700 12px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = m.is_match ? '#fde047' : '#f8fafc';
+          ctx.textAlign = 'left';
+          const titleClean = m._cleanLabel || m.label || '';
+          const line1 = titleClean.length > 32 ? titleClean.slice(0, 30) + '…' : titleClean;
+          ctx.fillText(line1, r.x + 12, r.y + 39);
+
+          // Linha 3: Excerto do Facto
+          ctx.font = "500 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#94a3b8';
+          const factTxt = String(m.fact || '').replace(/\s+/g, ' ').trim();
+          const line2 = factTxt.length > 38 ? factTxt.slice(0, 36) + '…' : (factTxt || 'Clique para inspecionar detalhes');
+          ctx.fillText(line2, r.x + 12, r.y + 58);
+
+          // Linha 4: Rodapé de Tags & Sinapses (Zero sobreposição entre tag esquerda e contador direito)
+          ctx.font = "600 9.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#64748b';
+          const linkCnt = m._neighbors ? Math.max(0, m._neighbors.size - 1) : 0;
+          const rawTagsTokens = String(m.tags || '').split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
+          const firstTagRaw = rawTagsTokens[0] ? `#${rawTagsTokens[0].replace(/^#/, '')}` : `ID:${m.db_id || m.id}`;
+          const secondTagRaw = rawTagsTokens[1] ? ` #${rawTagsTokens[1].replace(/^#/, '')}` : '';
+          const tagCombined = (firstTagRaw + secondTagRaw);
+          const tagClipped = tagCombined.length > 22 ? tagCombined.slice(0, 20) + '…' : tagCombined;
+          ctx.textAlign = 'left';
+          ctx.fillText(tagClipped, r.x + 12, r.y + 77);
+          ctx.fillStyle = '#38bdf8';
+          ctx.textAlign = 'right';
+          ctx.fillText(`🔗 ${linkCnt} links`, r.x + r.w - 10, r.y + 77);
+          ctx.restore();
+        }
+      }
+    }
+
     function renderGraph() {
-      // Se estiver na vista Swarm Monitor ou Office, pausa completamente a renderização do Canvas (0% CPU/GPU)
-      if (activeMainView !== 'graph') {
+      // Se estiver na vista Swarm Monitor, Office ou Galeria Bento HTML, pausa a renderização do Canvas
+      if (activeMainView !== 'graph' || brainViewStyle === 'bento') {
         setTimeout(() => requestAnimationFrame(renderGraph), 180);
         return;
       }
 
       const chkPulsesEl = document.getElementById('chkPulses');
       const showPulses = chkPulsesEl ? chkPulsesEl.checked : true;
-      const isSimMoving = Boolean(draggedNode) || (!planetaryOrbitsLocked && simAlpha >= 0.003);
+      const isSimMoving = Boolean(draggedNode) || (brainViewStyle !== 'blueprint' && !planetaryOrbitsLocked && simAlpha >= 0.003);
       if (!graphDirty && !isSimMoving) {
         if (!showPulses || (++graphIdleTick % 2 !== 0)) {
           setTimeout(() => requestAnimationFrame(renderGraph), 42);
@@ -4717,7 +5509,7 @@
       }
       graphDirty = false;
 
-      if (!planetaryOrbitsLocked) {
+      if (brainViewStyle !== 'blueprint' && !planetaryOrbitsLocked) {
         stepPhysics();
       }
       if (showPulses) pulseTick += 0.022;
@@ -4728,10 +5520,14 @@
       ctx.clearRect(0, 0, wrapW, wrapH);
       const isTechRev = document.body.classList.contains('tech-rev');
 
-      // Atualizar indicador # ZOOM FAR / # ZOOM CLOSE no HUD superior
+      // Atualizar indicador no HUD superior
       const zoomLbl = document.getElementById('lblPlanetaryZoom');
       if (zoomLbl) {
-        zoomLbl.textContent = cam.k < 0.85 ? '# ZOOM FAR' : (cam.k > 1.35 ? '# ZOOM DEEP' : '# ZOOM MID');
+        if (brainViewStyle === 'blueprint') {
+          zoomLbl.textContent = blueprintDrilldownMeta ? 'QUADRO · PASTA' : 'QUADRO GLOBAL';
+        } else {
+          zoomLbl.textContent = cam.k < 0.85 ? '# ZOOM FAR' : (cam.k > 1.35 ? '# ZOOM DEEP' : '# ZOOM MID');
+        }
       }
 
       // 0A. Nebulosa Cósmica Central Subtil + Grelha Tática (se Tech Rev ativo)
@@ -4757,6 +5553,18 @@
       ctx.scale(cam.k, cam.k);
 
       const invSqrtK = 1.0 / Math.sqrt(cam.k);
+
+      // SE ESTIVER EM MODO QUADRO ARQUITETÓNICO (BLUEPRINT BOARD), DESENHA OS CARTÕES SEM SOBREPOSIÇÃO
+      if (brainViewStyle === 'blueprint') {
+        renderBlueprintBoard(wrapW, wrapH, showPulses, invSqrtK);
+        ctx.restore();
+        if (showPulses || graphDirty) {
+          requestAnimationFrame(renderGraph);
+        } else {
+          setTimeout(() => requestAnimationFrame(renderGraph), 42);
+        }
+        return;
+      }
 
       // Viewport Frustum Culling em coordenadas do mundo (ignora nós e arestas fora do ecrã)
       const padWorld = 200 / cam.k;
@@ -5322,6 +6130,28 @@
     }
 
     function findNodeAt(wx, wy) {
+      if (brainViewStyle === 'blueprint') {
+        // 1. Verificar primeiro Slots de Memória dentro dos Cartões de Workspace ou Cartões de Memória individuais
+        for (let i = activeNodes.length - 1; i >= 0; i--) {
+          const n = activeNodes[i];
+          if (n._culledByBp || !n._bpRect || n.node_type === 'workspace') continue;
+          const r = n._bpRect;
+          if (wx >= r.x && wx <= r.x + r.w && wy >= r.y && wy <= r.y + r.h) {
+            return n;
+          }
+        }
+        // 2. Verificar Cartões de Workspace (cabeçalho / rodapé / corpo)
+        for (let i = activeNodes.length - 1; i >= 0; i--) {
+          const n = activeNodes[i];
+          if (n._culledByBp || !n._bpRect || n.node_type !== 'workspace') continue;
+          const r = n._bpRect;
+          if (wx >= r.x && wx <= r.x + r.w && wy >= r.y && wy <= r.y + r.h) {
+            return n;
+          }
+        }
+        return null;
+      }
+
       for (let i = activeNodes.length - 1; i >= 0; i--) {
         const n = activeNodes[i];
         if (!n._inView || n._culledByLod) continue;
@@ -5337,7 +6167,7 @@
 
     let _lastGraphHoverMs = 0;
     canvas.addEventListener('mousemove', e => {
-      if (draggedNode) {
+      if (draggedNode && brainViewStyle !== 'blueprint') {
         const rect = canvas.getBoundingClientRect();
         const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
         draggedNode.x = w.x;
@@ -5367,15 +6197,35 @@
       if (prevHover !== hoveredNode) {
         graphDirty = true;
       }
-      canvas.style.cursor = hoveredNode ? 'pointer' : 'grab';
+      const onBackBanner = brainViewStyle === 'blueprint' && blueprintBackBannerRect
+        && w.x >= blueprintBackBannerRect.x && w.x <= blueprintBackBannerRect.x + blueprintBackBannerRect.w
+        && w.y >= blueprintBackBannerRect.y && w.y <= blueprintBackBannerRect.y + blueprintBackBannerRect.h;
+      canvas.style.cursor = (hoveredNode || onBackBanner) ? 'pointer' : 'grab';
     });
 
     canvas.addEventListener('mousedown', e => {
       const rect = canvas.getBoundingClientRect();
       const w = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+
+      if (brainViewStyle === 'blueprint' && blueprintBackBannerRect) {
+        const b = blueprintBackBannerRect;
+        if (w.x >= b.x && w.x <= b.x + 225 && w.y >= b.y && w.y <= b.y + b.h) {
+          resetVaultWorkspaceFilter();
+          return;
+        }
+      }
+
       const hit = findNodeAt(w.x, w.y);
 
       if (hit) {
+        if (brainViewStyle === 'blueprint') {
+          if (hit.node_type === 'workspace') {
+            toggleVaultWorkspaceAccordion(hit.workspace || 'global');
+          } else {
+            selectNode(hit, false, true);
+          }
+          return;
+        }
         draggedNode = hit;
         selectNode(hit, false, true);
       } else {
