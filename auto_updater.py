@@ -116,13 +116,45 @@ def check_and_apply_update(force_fetch: bool = True) -> Dict[str, Any]:
     }
 
 
-def _schedule_server_hot_reload() -> None:
-    """Se estivermos dentro do processo web_dashboard.py, agenda um hot-restart limpo em background."""
-    if "web_dashboard" not in " ".join(sys.argv).lower():
+def kill_other_dashboard_processes(exclude_pid: int = 0) -> None:
+    """Termina processos web_dashboard.py antigos para evitar conflito de socket na porta 8765 no Windows."""
+    if os.environ.get("BRAIN_TEST_MODE") == "1":
+        return
+    my_pid = exclude_pid or os.getpid()
+    try:
+        if os.name == "nt":
+            ps_cmd = (
+                "Get-CimInstance Win32_Process -Filter \"Name LIKE 'python%'\" | "
+                f"Where-Object {{ $_.ProcessId -ne {my_pid} -and $_.CommandLine -match 'web_dashboard\\.py' }} | "
+                "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
+            )
+            subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd],
+                capture_output=True,
+                timeout=6,
+                creationflags=0x08000000,
+            )
+    except Exception:
+        pass
+
+
+def _schedule_server_hot_reload(force_external: bool = False) -> None:
+    """
+    Agenda um hot-restart limpo do web_dashboard.py:
+    - Se correr dentro do próprio web_dashboard.py, lança novo processo e faz os._exit(0).
+    - Se correr via update.bat / auto_updater.py externo, substitui o processo antigo em background.
+    """
+    if "test_brain" in " ".join(sys.argv).lower() or os.environ.get("BRAIN_TEST_MODE") == "1":
         return
 
+    inside_dashboard = "web_dashboard" in " ".join(sys.argv).lower()
+    if not inside_dashboard and not force_external:
+        force_external = True
+
     def _restart() -> None:
-        time.sleep(1.2)
+        if inside_dashboard:
+            time.sleep(0.9)
+        kill_other_dashboard_processes(exclude_pid=os.getpid() if inside_dashboard else -1)
         dashboard_py = str(REPO_DIR / "web_dashboard.py")
         py_exe = sys.executable
         if os.name == "nt":
@@ -131,7 +163,7 @@ def _schedule_server_hot_reload() -> None:
                 py_exe = pw
             flags = 0x08000000 | 0x00000200
             subprocess.Popen(
-                [py_exe, dashboard_py],
+                [py_exe, dashboard_py, "--no-browser"],
                 cwd=str(REPO_DIR),
                 creationflags=flags,
                 stdin=subprocess.DEVNULL,
@@ -141,7 +173,7 @@ def _schedule_server_hot_reload() -> None:
             )
         else:
             subprocess.Popen(
-                [py_exe, dashboard_py],
+                [py_exe, dashboard_py, "--no-browser"],
                 cwd=str(REPO_DIR),
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.DEVNULL,
@@ -149,12 +181,16 @@ def _schedule_server_hot_reload() -> None:
                 close_fds=True,
                 start_new_session=True,
             )
-        os._exit(0)
+        if inside_dashboard:
+            os._exit(0)
 
-    threading.Thread(target=_restart, daemon=True).start()
+    if inside_dashboard:
+        threading.Thread(target=_restart, daemon=True).start()
+    else:
+        _restart()
 
 
-def start_auto_update_daemon(interval_seconds: int = 1800) -> None:
+def start_auto_update_daemon(interval_seconds: int = 300) -> None:
     """
     Daemon silencioso que corre dentro do web_dashboard.py:
     Verifica se existem updates no GitHub ao arrancar (após 8s) e a cada 30 minutos.

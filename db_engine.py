@@ -1807,19 +1807,28 @@ def seed_initial_memories(db: BrainDB) -> int:
     return added
 
 
-def ensure_dashboard_running(port: int = 8765) -> bool:
+def ensure_dashboard_running(port: int = 8765, force_restart: bool = False) -> bool:
     """Garante que o servidor web Obsidian Brain (porta 8765 ou 3000) está ativo em background sem janela."""
     import socket
     import subprocess
     import sys
 
     try:
-        check_ports = (port, 3000) if port != 3000 else (3000,)
-        for p in check_ports:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.05)
-                if s.connect_ex(("127.0.0.1", p)) == 0:
-                    return True
+        if force_restart and os.environ.get("BRAIN_TEST_MODE") != "1":
+            try:
+                from auto_updater import kill_other_dashboard_processes
+
+                kill_other_dashboard_processes(exclude_pid=os.getpid())
+                time.sleep(0.25)
+            except Exception:
+                pass
+        else:
+            check_ports = (port, 3000) if port != 3000 else (3000,)
+            for p in check_ports:
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.settimeout(0.05)
+                    if s.connect_ex(("127.0.0.1", p)) == 0:
+                        return True
 
         script_dir = os.path.dirname(os.path.abspath(__file__))
         dashboard_script = os.path.join(script_dir, "web_dashboard.py")

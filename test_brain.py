@@ -848,6 +848,8 @@ def run_all_tests() -> None:
         'id="pfSkillsPickerGrid"',
         "function renderPromptForgeSkillsPicker()",
         "function togglePromptForgeSkill(",
+        "function forgePromptClientSideFallback(",
+        "BUILTIN_ANTIGRAVITY_SKILLS_CATALOG",
         "function forgeAntigravityPromptUI()",
         "function copyForgedPromptUI()",
     ):

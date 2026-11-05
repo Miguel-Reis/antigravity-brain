@@ -12,10 +12,18 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
+import importlib
 from ast_impact_watcher import get_global_watcher, start_ast_impact_watcher_daemon
-from auto_updater import check_and_apply_update, get_git_status, start_auto_update_daemon
+from auto_updater import (
+    _schedule_server_hot_reload,
+    check_and_apply_update,
+    get_git_status,
+    kill_other_dashboard_processes,
+    start_auto_update_daemon,
+)
 from brain_harvest import harvest_latest_turn
 from db_engine import BrainDB, seed_initial_memories
+import orbit_engine as _orbit_engine_mod
 from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
 from token_diet import (
@@ -30,6 +38,28 @@ PORT = 8765
 INDEX_HTML_PATH = os.path.join(CURRENT_DIR, "index.html")
 BRAIN_LOGS_ROOT = os.path.expanduser("~/.gemini/antigravity/brain")
 SCRATCH_ROOT = os.path.expanduser("~/.gemini/antigravity/scratch")
+
+_ORBIT_MTIME: float = (
+    os.path.getmtime(os.path.join(CURRENT_DIR, "orbit_engine.py"))
+    if os.path.isfile(os.path.join(CURRENT_DIR, "orbit_engine.py"))
+    else 0.0
+)
+
+
+def _get_fresh_orbit_engine(db: BrainDB) -> Any:
+    """Recarrega orbit_engine.py automaticamente em memória se o ficheiro mudou no disco (ex: após git pull)."""
+    global _ORBIT_MTIME, OrbitEngine, _orbit_engine_mod
+    try:
+        orb_path = os.path.join(CURRENT_DIR, "orbit_engine.py")
+        if os.path.isfile(orb_path):
+            cur_m = os.path.getmtime(orb_path)
+            if cur_m > _ORBIT_MTIME:
+                _ORBIT_MTIME = cur_m
+                _orbit_engine_mod = importlib.reload(_orbit_engine_mod)
+                OrbitEngine = _orbit_engine_mod.OrbitEngine
+    except Exception:
+        pass
+    return OrbitEngine(db)
 
 
 def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
@@ -859,12 +889,12 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/orbit/overview":
             qs = urllib.parse.parse_qs(parsed.query)
             ws_param = qs.get("workspace", ["all"])[0] or "all"
-            orbit = OrbitEngine(BrainDB())
+            orbit = _get_fresh_orbit_engine(BrainDB())
             self._send_json(orbit.get_executive_briefing_and_roi(workspace=ws_param))
             return
 
         if parsed.path == "/api/orbit/inbox":
-            orbit = OrbitEngine(BrainDB())
+            orbit = _get_fresh_orbit_engine(BrainDB())
             self._send_json(orbit.get_mission_control_inbox())
             return
 
@@ -1171,7 +1201,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/orbit/action":
             action = str(body.get("action", "")).strip()
-            orbit = OrbitEngine(db)
+            orbit = _get_fresh_orbit_engine(db)
             if action == "approve_item":
                 item_id = int(body.get("id", 0) or 0)
                 res = orbit.approve_inbox_item(item_id=item_id, workspace_path=CURRENT_DIR)
@@ -1308,6 +1338,32 @@ def start_self_learn_sentinel_daemon(interval_seconds: float = 90.0) -> None:
     t.start()
 
 
+def start_code_mtime_watchdog_daemon(interval_seconds: float = 4.0) -> None:
+    """
+    Deteta automaticamente quando ficheiros .py são atualizados no disco (ex: git pull externo num PC remoto)
+    e reinicia o processo web_dashboard.py em memória para evitar 'Ação Orbit desconhecida'.
+    """
+    import threading
+
+    this_file = os.path.abspath(__file__)
+    initial_mtime = os.path.getmtime(this_file) if os.path.isfile(this_file) else 0.0
+
+    def _watchdog() -> None:
+        while True:
+            time.sleep(max(2.5, float(interval_seconds)))
+            try:
+                if os.path.isfile(this_file):
+                    cur_m = os.path.getmtime(this_file)
+                    if initial_mtime > 0 and cur_m > initial_mtime + 0.5:
+                        _schedule_server_hot_reload()
+                        return
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_watchdog, name="BrainCodeMtimeWatchdog", daemon=True)
+    t.start()
+
+
 def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
     import threading
 
@@ -1322,10 +1378,12 @@ def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
 
     def _bg_sync() -> None:
         try:
+            kill_other_dashboard_processes(exclude_pid=os.getpid())
             db = BrainDB()
             sync_info = harvest_all_workspace_context(db)
             SwarmEngine(db).ensure_default_run()
-            start_auto_update_daemon(interval_seconds=1800)
+            start_auto_update_daemon(interval_seconds=300)
+            start_code_mtime_watchdog_daemon(interval_seconds=4.0)
             start_ast_impact_watcher_daemon(workspace_path=CURRENT_DIR, interval_seconds=2.0)
             start_self_learn_sentinel_daemon(interval_seconds=90.0)
             if getattr(sys, "stdout", None) is not None:

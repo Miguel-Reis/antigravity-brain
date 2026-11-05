@@ -95,6 +95,8 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
             for fname in (
                 "server.py",
                 "db_engine.py",
+                "orbit_engine.py",
+                "jev_s1_engine.py",
                 "swarm_engine.py",
                 "graphify_engine.py",
                 "ast_impact_watcher.py",
@@ -132,7 +134,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
         json.dumps(mcp_cfg, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    # 4. Registar Auto-Start no arranque do Windows (HKCU\...\Run\AntigravityBrain)
+    # 5. Registar Auto-Start no arranque do Windows (HKCU\...\Run\AntigravityBrain)
     startup_registered = False
     if os.name == "nt":
         try:
@@ -177,6 +179,7 @@ def main() -> None:
             pass
 
     silent = "--silent" in sys.argv
+    no_restart = "--no-restart" in sys.argv or os.environ.get("BRAIN_NO_RESTART") == "1"
     if not silent:
         print("=" * 68)
         print(" 🧠 INSTALADOR & AUTO-CONFIGURADOR — ANTIGRAVITY BRAIN v2.4")
@@ -184,7 +187,7 @@ def main() -> None:
 
     configure_hooks_and_plugin(silent=silent)
 
-    # Inicializar base de dados + Scout + Servidor Web
+    # Inicializar base de dados + Scout + Servidor Web (c/ hot-restart após git pull / update.bat)
     if str(REPO_DIR) not in sys.path:
         sys.path.insert(0, str(REPO_DIR))
 
@@ -194,7 +197,7 @@ def main() -> None:
     db = BrainDB()
     seed_initial_memories(db)
     SwarmEngine(db).ensure_default_run()
-    started = ensure_dashboard_running()
+    started = ensure_dashboard_running(force_restart=not no_restart)
 
     if not silent:
         print(f"✅ Base de dados SQLite FTS5 pronta: {REPO_DIR / 'brain.db'}")
