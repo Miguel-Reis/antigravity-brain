@@ -3429,6 +3429,29 @@
             </div>
           </div>
 
+          <!-- Antigravity Skills Selector (Auto-Match + Manual Pick) -->
+          <div style="background:rgba(6,9,17,0.92); border:1px solid rgba(245,158,11,0.38); border-radius:9px; padding:9px 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap;">
+              <div style="font-size:11px; font-weight:800; color:#fcd34d;">
+                🛠️ 4. Skills do Antigravity (<span id="pfSkillsCountLbl">Auto-Match Ativo</span>)
+              </div>
+              <div style="display:flex; gap:5px; align-items:center;">
+                <input
+                  type="text"
+                  id="pfSkillsFilterInput"
+                  placeholder="🔍 Filtrar skills (ex: m2ui, python, ui, debug)..."
+                  oninput="renderPromptForgeSkillsPicker()"
+                  style="background:#0c1220; border:1px solid rgba(245,158,11,0.35); border-radius:5px; padding:3px 7px; color:#fff; font-size:10px; width:210px; outline:none;"
+                />
+                <button class="quick-ag-btn" style="font-size:9.5px; padding:2px 6px;" onclick="clearPromptForgeSkillsSelection()">↺ Auto</button>
+              </div>
+            </div>
+            <div style="font-size:9.5px; color:#94a3b8; margin-bottom:6px;">
+              O Brain escolhe automaticamente as melhores `SKILL.md` para o teu pedido, mas também podes clicar abaixo para forçar a inclusão de skills específicas:
+            </div>
+            <div id="pfSkillsPickerGrid" style="display:flex; flex-wrap:wrap; gap:5px; max-height:105px; overflow-y:auto;"></div>
+          </div>
+
           <button class="btn btn-primary" style="width:100%; padding:10px; font-size:13px; font-weight:800; justify-content:center; background:linear-gradient(135deg, #4f46e5, #9333ea); border-color:#818cf8;" onclick="forgeAntigravityPromptUI()">
             ✨ Otimizar &amp; Gerar Super-Prompt para o Antigravity
           </button>
@@ -12155,13 +12178,14 @@
     }
 
     // =========================================================================
-    // 05 // PROMPT FORGE STUDIO (CONTEXT-AWARE PROMPT GENERATOR FOR ANTIGRAVITY)
+    // 05 // PROMPT FORGE STUDIO (CONTEXT-AWARE PROMPT + ANTIGRAVITY SKILLS)
     // =========================================================================
     let currentForgedPromptResult = null;
     let currentPromptForgeVariant = 'full';
+    const selectedPfSkills = new Set();
 
     async function initPromptForgePage() {
-      if (!lastOrbitOverviewData) {
+      if (!lastOrbitOverviewData || !lastOrbitOverviewData.available_skills) {
         await fetchOrbitOverview(false);
       }
       const sl = (lastOrbitOverviewData && lastOrbitOverviewData.self_learn) || {};
@@ -12175,8 +12199,78 @@
           </option>
         `).join('');
       }
+      renderPromptForgeSkillsPicker();
       const hist = (lastOrbitOverviewData && lastOrbitOverviewData.prompt_forge_history) || [];
       renderPromptForgeHistoryList(hist);
+    }
+
+    function renderPromptForgeSkillsPicker() {
+      const gridEl = document.getElementById('pfSkillsPickerGrid');
+      const countLbl = document.getElementById('pfSkillsCountLbl');
+      if (!gridEl) return;
+      const allSkills = (lastOrbitOverviewData && lastOrbitOverviewData.available_skills) || [];
+      const q = (document.getElementById('pfSkillsFilterInput')?.value || '').trim().toLowerCase();
+
+      if (countLbl) {
+        countLbl.textContent = selectedPfSkills.size > 0
+          ? `${selectedPfSkills.size} selecionada(s) + Auto-Match (${allSkills.length} disponíveis)`
+          : `${allSkills.length} disponíveis · Auto-Match Ativo`;
+      }
+
+      const filtered = allSkills.filter(sk => {
+        if (!q) return true;
+        return sk.name.toLowerCase().includes(q) || (sk.description || '').toLowerCase().includes(q);
+      });
+
+      // Mostrar primeiro as selecionadas + top skills de engenharia
+      const priorityNames = new Set([
+        'claude-architect-coder', 'systematic-debugging', 'frontend-ui-engineering',
+        'python-programming-expert', 'm2ui', 'graphify', 'ultraplan',
+        'verification-before-completion', 'performance-optimization',
+        'api-and-interface-design', 'autonomous-tdd-debugger', 'web-3d-graphics-expert',
+        'proactive-background-watcher', 'reverse-engineer-anything'
+      ]);
+      filtered.sort((a, b) => {
+        const aSel = selectedPfSkills.has(a.name) ? 1 : 0;
+        const bSel = selectedPfSkills.has(b.name) ? 1 : 0;
+        if (aSel !== bSel) return bSel - aSel;
+        const aPrio = priorityNames.has(a.name) ? 1 : 0;
+        const bPrio = priorityNames.has(b.name) ? 1 : 0;
+        if (aPrio !== bPrio) return bPrio - aPrio;
+        return a.name.localeCompare(b.name);
+      });
+
+      gridEl.innerHTML = filtered.slice(0, 36).map(sk => {
+        const isSel = selectedPfSkills.has(sk.name);
+        return `
+          <button
+            type="button"
+            class="quick-ag-btn"
+            onclick="togglePromptForgeSkill('${escapeHtml(sk.name)}')"
+            title="${escapeHtml(sk.description)} (${escapeHtml(sk.path)})"
+            style="font-size:9.5px; padding:3px 7px; border-color:${isSel ? '#f59e0b' : 'rgba(148,163,184,0.28)'}; background:${isSel ? 'rgba(245,158,11,0.24)' : 'rgba(15,23,42,0.85)'}; color:${isSel ? '#fde68a' : '#cbd5e1'}; font-weight:${isSel ? '800' : '600'};"
+          >
+            ${isSel ? '✓ 🛠️' : '🛠️'} ${escapeHtml(sk.name)}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function togglePromptForgeSkill(skillName) {
+      if (selectedPfSkills.has(skillName)) {
+        selectedPfSkills.delete(skillName);
+      } else {
+        selectedPfSkills.add(skillName);
+      }
+      renderPromptForgeSkillsPicker();
+    }
+
+    function clearPromptForgeSkillsSelection() {
+      selectedPfSkills.clear();
+      const inp = document.getElementById('pfSkillsFilterInput');
+      if (inp) inp.value = '';
+      renderPromptForgeSkillsPicker();
+      showToast('🛠️ Seleção manual limpa — Auto-Match de Skills ativo!');
     }
 
     function fillPromptForgeTemplate(mode, text) {
@@ -12202,7 +12296,8 @@
           action: 'forge_prompt',
           workspace: ws,
           task_mode: mode,
-          raw_request: rawReq
+          raw_request: rawReq,
+          selected_skills: Array.from(selectedPfSkills)
         })
       });
       const out = await res.json();
@@ -12213,7 +12308,8 @@
         }
         renderForgedPromptResultUI(out.prompt_forge);
         renderPromptForgeHistoryList(out.prompt_forge.history || []);
-        showToast(`✨ Super-Prompt gerado com ${out.prompt_forge.matched_files?.length || 0} ficheiros e ${out.prompt_forge.learned_rules_applied?.length || 0} Meta-Regras!`);
+        const skCount = (out.prompt_forge.matched_skills || []).length;
+        showToast(`✨ Super-Prompt gerado com ${skCount} Skills do Antigravity, ${out.prompt_forge.matched_files?.length || 0} ficheiros e ${out.prompt_forge.learned_rules_applied?.length || 0} Meta-Regras!`);
       } else {
         showToast(`⚠️ ${out.error || 'Erro ao gerar prompt.'}`);
       }
@@ -12231,11 +12327,14 @@
       }
       const pillsEl = document.getElementById('pfInjectedContextPills');
       if (pillsEl) {
+        const skillsPills = (pf.matched_skills || []).map(sk => `
+          <span style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.55); color:#fde68a; padding:2px 7px; border-radius:6px; font-weight:700;" title="${escapeHtml(sk.path || '')}">🛠️ Skill: ${escapeHtml(sk.name)}</span>
+        `).join('');
         const filesPills = (pf.matched_files || []).map(f => `
           <span style="background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.45); color:#7dd3fc; padding:2px 7px; border-radius:6px;">📄 ${escapeHtml(f)}</span>
         `).join('');
-        const rulesPill = `<span style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.45); color:#e9d5ff; padding:2px 7px; border-radius:6px;">🧬 ${pf.learned_rules_applied ? pf.learned_rules_applied.length : 0} Meta-Regras Self-Learn injetadas</span>`;
-        pillsEl.innerHTML = filesPills + rulesPill;
+        const rulesPill = `<span style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.45); color:#e9d5ff; padding:2px 7px; border-radius:6px;">🧬 ${pf.learned_rules_applied ? pf.learned_rules_applied.length : 0} Meta-Regras Self-Learn</span>`;
+        pillsEl.innerHTML = skillsPills + filesPills + rulesPill;
       }
       switchPromptForgeVariant(currentPromptForgeVariant || 'full');
     }

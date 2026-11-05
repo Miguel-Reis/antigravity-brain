@@ -874,6 +874,7 @@ class OrbitEngine:
         dots_dag = self.get_dots_dag(workspace=workspace or "all")
         self_learn = self.get_self_learn_status(workspace=workspace if workspace and workspace != "all" else "brain_mcp")
         prompt_history = self.get_prompt_forge_history(workspace=workspace or "all", limit=8)
+        available_skills = self.discover_antigravity_skills()
         return {
             "ok": True,
             "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -895,6 +896,7 @@ class OrbitEngine:
             "dots_dag": dots_dag,
             "self_learn": self_learn,
             "prompt_forge_history": prompt_history,
+            "available_skills": available_skills,
             "recent_trusted_memories": recent_mems,
         }
 
@@ -1447,8 +1449,194 @@ class OrbitEngine:
         }
 
     # =========================================================================
-    # 8. PROMPT FORGE ENGINE (CONTEXT-AWARE PROMPT OPTIMIZER FOR ANTIGRAVITY)
+    # 8. PROMPT FORGE ENGINE (CONTEXT-AWARE PROMPT + ANTIGRAVITY SKILLS OPTIMIZER)
     # =========================================================================
+    _SKILLS_CACHE: List[Dict[str, Any]] = []
+    _SKILLS_CACHE_TS: float = 0.0
+
+    def discover_antigravity_skills(self, force_refresh: bool = False) -> List[Dict[str, Any]]:
+        """
+        Descobre automaticamente todas as Skills instaladas no Antigravity:
+        - ~/.gemini/config/skills/*/SKILL.md
+        - ~/.gemini/config/plugins/*/skills/*/SKILL.md
+        - ~/.gemini/antigravity/builtin/skills/*/SKILL.md
+        Extrai o nome, descrição e caminho exato do SKILL.md com cache em memória (<1ms).
+        """
+        now_ts = time.time()
+        if not force_refresh and OrbitEngine._SKILLS_CACHE and (now_ts - OrbitEngine._SKILLS_CACHE_TS < 300.0):
+            return OrbitEngine._SKILLS_CACHE
+
+        home = Path(os.path.expanduser("~"))
+        search_roots = [
+            (home / ".gemini" / "config" / "skills", "custom"),
+            (home / ".gemini" / "antigravity" / "builtin" / "skills", "builtin"),
+        ]
+        plugins_dir = home / ".gemini" / "config" / "plugins"
+        if plugins_dir.exists():
+            try:
+                for p_dir in plugins_dir.iterdir():
+                    sk_dir = p_dir / "skills"
+                    if sk_dir.exists() and sk_dir.is_dir():
+                        search_roots.append((sk_dir, f"plugin:{p_dir.name}"))
+            except Exception:
+                pass
+
+        seen_names: set[str] = set()
+        skills_found: List[Dict[str, Any]] = []
+
+        for root_path, source_tag in search_roots:
+            if not root_path.exists():
+                continue
+            try:
+                for child in sorted(root_path.iterdir()):
+                    sk_file = child / "SKILL.md"
+                    if not sk_file.exists():
+                        continue
+                    sk_name = child.name.strip()
+                    if sk_name in seen_names:
+                        continue
+                    seen_names.add(sk_name)
+                    desc = ""
+                    try:
+                        raw_head = sk_file.read_text(encoding="utf-8", errors="ignore")[:1200]
+                        m_desc = re.search(r"(?m)^description:\s*[\"']?(.+?)[\"']?\s*$", raw_head)
+                        if m_desc:
+                            desc = m_desc.group(1).strip()
+                        else:
+                            lines = [ln.strip() for ln in raw_head.splitlines() if ln.strip() and not ln.startswith("---") and not ln.startswith("#") and not ln.startswith("name:")]
+                            if lines:
+                                desc = lines[0][:180]
+                    except Exception:
+                        desc = f"Antigravity skill {sk_name}"
+                    skills_found.append(
+                        {
+                            "name": sk_name,
+                            "description": desc[:190] or f"Skill especializada {sk_name}",
+                            "path": str(sk_file).replace("\\", "/"),
+                            "source": source_tag,
+                        }
+                    )
+            except Exception:
+                continue
+
+        if not skills_found:
+            skills_found = [
+                {
+                    "name": "claude-architect-coder",
+                    "description": "Elite autonomous software engineering protocol based on Plan-First Architecture and surgical code execution.",
+                    "path": "~/.gemini/config/skills/claude-architect-coder/SKILL.md",
+                    "source": "custom",
+                },
+                {
+                    "name": "systematic-debugging",
+                    "description": "Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes.",
+                    "path": "~/.gemini/config/plugins/superpowers/skills/systematic-debugging/SKILL.md",
+                    "source": "plugin:superpowers",
+                },
+                {
+                    "name": "frontend-ui-engineering",
+                    "description": "Builds production-quality, accessible, responsive user-facing UIs and interactive components.",
+                    "path": "~/.gemini/config/plugins/agent-skills/skills/frontend-ui-engineering/SKILL.md",
+                    "source": "plugin:agent-skills",
+                },
+                {
+                    "name": "verification-before-completion",
+                    "description": "Requires running verification commands and confirming output before making any success claims.",
+                    "path": "~/.gemini/config/plugins/superpowers/skills/verification-before-completion/SKILL.md",
+                    "source": "plugin:superpowers",
+                },
+            ]
+
+        OrbitEngine._SKILLS_CACHE = skills_found
+        OrbitEngine._SKILLS_CACHE_TS = now_ts
+        return skills_found
+
+    def match_skills_for_prompt(
+        self,
+        raw_request: str,
+        workspace: str = "brain_mcp",
+        task_mode: str = "feature",
+        selected_skills: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """
+        Cruza o pedido do utilizador, o workspace e o modo de missão com todas as Skills instaladas no Antigravity
+        (e adiciona quaisquer skills escolhidas manualmente pelo utilizador).
+        """
+        all_skills = self.discover_antigravity_skills()
+        by_name: Dict[str, Dict[str, Any]] = {s["name"].lower(): s for s in all_skills}
+
+        chosen: List[Dict[str, Any]] = []
+        chosen_names: set[str] = set()
+
+        def _add_skill(name_key: str, reason: str) -> None:
+            k = name_key.strip().lower()
+            if k in by_name and k not in chosen_names:
+                chosen_names.add(k)
+                chosen.append({**by_name[k], "match_reason": reason})
+
+        # 1. Skills selecionadas explicitamente pelo utilizador no Prompt Forge
+        for user_sk in (selected_skills or []):
+            _add_skill(user_sk, "Selecionada pelo utilizador")
+
+        q_lower = f"{raw_request} {workspace}".lower()
+        mode = (task_mode or "feature").strip().lower()
+
+        # 2. Match contextual por domínio / palavras-chave do pedido e projeto
+        keyword_skill_map = [
+            (("metin2", "uiscript", "m2ui", "ui.py"), "m2ui", "Interface cliente Metin2"),
+            (("reverse", "binário", "decompile", "exe", "dll", "rea"), "reverse-engineer-anything", "Engenharia reversa binária/runtime"),
+            (("grafo", "graph", "arquitetura", "god node", "graphify"), "graphify", "Grafo de conhecimento AST"),
+            (("ultraplan", "plano profundo", "fases"), "ultraplan", "Planeamento arquitetural multi-fase"),
+            (("3d", "webgl", "webgpu", "three", "canvas", "fps", "shader"), "web-3d-graphics-expert", "Gráficos 3D / Canvas 60 FPS"),
+            (("python", "sqlite", "fastapi", "pytest", "pydantic", ".py"), "python-programming-expert", "Engenharia Python & SQLite"),
+            (("typescript", "ts", "strict", "generic"), "typescript-expert", "Tipagem avançada TypeScript"),
+            (("nextjs", "app router", "rsc"), "nextjs-app-router-expert", "Next.js App Router"),
+            (("react", "tailwind", "ui", "painel", "modal", "html", "css"), "frontend-ui-engineering", "Engenharia de UI/UX Frontend"),
+            (("api", "endpoint", "rest", "json-rpc", "mcp", "contrato"), "api-and-interface-design", "Design de APIs & Contratos"),
+            (("performance", "lento", "otimizar", "memória", "tokens", "soa"), "performance-optimization", "Otimização de Performance"),
+            (("segurança", "security", "xss", "csrf", "token", "secret", "auth"), "autonomous-red-teamer", "Auditoria e Hardening de Segurança"),
+            (("background", "task", "cron", "schedule", "sentinel", "proativ"), "proactive-background-watcher", "Agendamento & Sentinel Proativo"),
+            (("swarm", "subagent", "paralelo", "enxame"), "dispatching-parallel-agents", "Orquestração de Subagentes em Paralelo"),
+        ]
+        for kw_tuple, sk_id, reason in keyword_skill_map:
+            if any(k in q_lower for k in kw_tuple):
+                _add_skill(sk_id, reason)
+
+        # 3. Match pelo Task Mode escolhido
+        mode_defaults = {
+            "feature": [
+                ("claude-architect-coder", "Protocolo Plan-First & Execução Cirúrgica"),
+                ("incremental-implementation", "Implementação incremental verificável"),
+                ("verification-before-completion", "Verificação real antes de concluir"),
+            ],
+            "bugfix": [
+                ("systematic-debugging", "Diagnóstico sistemático de causa-raiz"),
+                ("debugging-and-error-recovery", "Recuperação e isolamento de falhas"),
+                ("autonomous-tdd-debugger", "Auto-validação de testes no terminal"),
+                ("verification-before-completion", "Prova de correção com testes"),
+            ],
+            "refactor": [
+                ("claude-architect-coder", "Refatoração cirúrgica sem quebrar contratos"),
+                ("code-simplification", "Simplificação e limpeza de complexidade"),
+                ("scalability-clean-code", "Padrões Clean Code & SOLID"),
+            ],
+            "ui_ux": [
+                ("frontend-ui-engineering", "UI de qualidade de produção"),
+                ("hig", "Princípios Human Interface Guidelines (Hierarquia & Harmonia)"),
+                ("performance-web-vitals", "Fluidez visual 60 FPS & Web Vitals"),
+            ],
+            "security": [
+                ("autonomous-red-teamer", "Deteção de vulnerabilidades XSS/SQLi/SSRF"),
+                ("rate-limit-abuse-prevention", "Proteção de endpoints & Rate Limiting"),
+                ("code-review-and-quality", "Revisão multi-eixo de segurança e qualidade"),
+            ],
+        }
+        for sk_id, reason in mode_defaults.get(mode, mode_defaults["feature"]):
+            if len(chosen) < 5:
+                _add_skill(sk_id, reason)
+
+        return chosen[:6]
+
     def get_prompt_forge_history(self, workspace: str = "all", limit: int = 10) -> List[Dict[str, Any]]:
         ws = (workspace or "all").strip().lower()
         with self.db._connect() as conn:
@@ -1477,10 +1665,12 @@ class OrbitEngine:
         raw_request: str,
         workspace: str = "brain_mcp",
         task_mode: str = "feature",
+        selected_skills: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         """
         Transforma um pedido simples do utilizador (ex.: 'criar uma função X num projeto')
         num Super-Prompt estruturado, enriquecido com:
+        - Skills do Antigravity (auto-recomendadas + escolhidas manualmente) com caminho exato SKILL.md;
         - Ficheiros e símbolos AST :Lstart-end reais detetados em brain.db para esse projeto;
         - Meta-Regras Aprendidas pelo Self-Learn (🧬 learned_playbook) do projeto;
         - Trajetória cognitiva ótima DOTS (compute_dots_trajectory) e Roteamento JEV-S1;
@@ -1495,11 +1685,17 @@ class OrbitEngine:
             ws = "brain_mcp"
         mode = (task_mode or "feature").strip().lower()
 
-        # 1. Roteamento JEV System-1 + Trajetória Ótima DOTS
+        # 1. Roteamento JEV System-1 + Trajetória Ótima DOTS + Matching de Skills do Antigravity
         jev_info = self.db.jev_system1_route(req, workspace=ws)
         dots_traj = str(jev_info.get("dots_trajectory") or "[AST_SLICE:L]➔[BLAST_RADIUS]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]")
         intent_name = str(jev_info.get("intent") or "general_engineering")
         model_rec = str(jev_info.get("model_route") or "inherit")
+        matched_skills = self.match_skills_for_prompt(
+            raw_request=req,
+            workspace=ws,
+            task_mode=mode,
+            selected_skills=selected_skills,
+        )
 
         # 2. Pesquisa Híbrida FTS5 BM25 + Vetores 32-D nas memórias do projeto
         rel_mems = self.db.search_memories(req, workspace=ws, n_results=6)
@@ -1554,6 +1750,11 @@ class OrbitEngine:
         files_bullet_str = "\n".join(f"- `{fp}`" for fp in matched_files[:6])
         rules_bullet_str = "\n".join(f"- 🧬 {r}" for r in playbook[:4])
         facts_bullet_str = "\n".join(context_facts[:4]) if context_facts else f"- Projeto alvo: `{ws}` (usar `[BRAIN_MEMORY]` e `[SCOUT_SHARED_MAP]` pré-injetados)."
+        skills_bullet_str = "\n".join(
+            f"- 🛠️ **`{sk['name']}`** (`{sk['path']}`) — *{sk.get('match_reason', 'Recomendada')}*: {sk['description'][:110]}"
+            for sk in matched_skills
+        )
+        skills_names_csv = ", ".join(sk["name"] for sk in matched_skills)
 
         # Variante 1: Prompt Completo de Engenharia (Recomendado para colar no Antigravity)
         full_prompt = (
@@ -1561,6 +1762,8 @@ class OrbitEngine:
             f"**🎯 Objetivo Principal:**\n"
             f"{mode_verb} o seguinte pedido no projeto `{ws}`:\n"
             f"> {req}\n\n"
+            f"**🛠️ Skills do Antigravity Ativadas (Seguir protocolos `SKILL.md`):**\n"
+            f"{skills_bullet_str}\n\n"
             f"**📂 Ficheiros & Ponteiros Cirúrgicos Relevantes (Evitar Re-leituras Globais):**\n"
             f"{files_bullet_str}\n\n"
             f"**🧠 Contexto Arquitetural Recuperado do `brain.db`:**\n"
@@ -1580,6 +1783,7 @@ class OrbitEngine:
         compact_prompt = (
             f"[TASK|{ws}|{mode.upper()}|dots={dots_traj}]\n"
             f"Goal: {req}\n"
+            f"Skills: {skills_names_csv}\n"
             f"TargetFiles: {compact_files}\n"
             f"SelfLearnRule: {compact_rule}\n"
             f"Verify: Edit surgically -> run tests/syntax check -> append <!-- brain: Topic | Fact -->."
@@ -1590,15 +1794,17 @@ class OrbitEngine:
             f"### 🐝 EXECUÇÃO ASYMMETRIC SWARM (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`) — Projeto `{ws}`\n\n"
             f"**Objetivo da Missão:**\n"
             f"> {req}\n\n"
+            f"**Skills Especializadas para os Subagentes:**\n"
+            f"{skills_bullet_str}\n\n"
             f"**Protocolo Obrigatório de Enxame:**\n"
             f"1. **SCOUT (Leitura Única)**: Usa o `[SCOUT_SHARED_MAP]` e foca nos ficheiros `{compact_files}`.\n"
             f"2. **PLAN (Decomposição em Lanes)**: Divide o trabalho em lanes isoladas (`API`, `UI`, `TESTS`, `DOCS`) sem colisões de escrita.\n"
-            f"3. **SWARM**: Delega subtarefas independentes via `invoke_subagent` passando os ficheiros e linhas exatos `:Lstart-end` e as Meta-Regras:\n"
+            f"3. **SWARM**: Delega subtarefas independentes via `invoke_subagent` passando os ficheiros e linhas exatos `:Lstart-end`, as Skills acima e as Meta-Regras:\n"
             f"{rules_bullet_str}\n"
             f"4. **VERIFY**: Corre a suite de testes completa e valida a trajetória `{dots_traj}`."
         )
 
-        est_saved = max(280, len(matched_files) * 145 + len(playbook) * 85)
+        est_saved = max(320, len(matched_files) * 145 + len(playbook) * 85 + len(matched_skills) * 95)
 
         with self.db._connect() as conn:
             cur = conn.execute(
@@ -1633,6 +1839,7 @@ class OrbitEngine:
             "model_route": model_rec,
             "dots_trajectory": dots_traj,
             "matched_files": matched_files[:6],
+            "matched_skills": matched_skills,
             "learned_rules_applied": playbook[:4],
             "brain_iq_score": sl_status.get("brain_iq_score", 94.0),
             "estimated_tokens_saved": est_saved,
