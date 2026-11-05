@@ -246,6 +246,20 @@ class BrainDB:
                 """
             )
 
+            # 4B. Tabela de Injeção Delta por Sessão (Session Delta Memory Cache)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS session_memory_delta (
+                    conversation_id TEXT PRIMARY KEY,
+                    seen_ids_json TEXT DEFAULT '[]',
+                    scout_hash TEXT DEFAULT '',
+                    turn_count INTEGER DEFAULT 0,
+                    saved_tokens_total INTEGER DEFAULT 0,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+
             # 5. Tabela de Telemetria de Economia de Tokens / Quota
             conn.execute(
                 """
@@ -521,6 +535,11 @@ class BrainDB:
                 "SELECT id, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE fact_hash = ?;",
                 (f_hash,),
             ).fetchone()
+            if not existing and not supersedes_id:
+                existing = conn.execute(
+                    "SELECT id, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE workspace = ? AND LOWER(TRIM(topic)) = LOWER(TRIM(?)) AND superseded_by IS NULL ORDER BY id DESC LIMIT 1;",
+                    (ws, topic),
+                ).fetchone()
             if existing:
                 row_id = int(existing["id"])
                 if int(existing["h_lock"]) == 1 and resolved_lock == 0:
@@ -528,7 +547,9 @@ class BrainDB:
                 conn.execute(
                     """
                     UPDATE memories
-                    SET importance = MAX(importance, ?),
+                    SET fact = ?,
+                        fact_hash = ?,
+                        importance = MAX(importance, ?),
                         tags = CASE WHEN ? != '' THEN ? ELSE tags END,
                         tier = ?,
                         embedding_json = ?,
@@ -539,6 +560,8 @@ class BrainDB:
                     WHERE id = ?;
                     """,
                     (
+                        fact,
+                        f_hash,
                         importance,
                         tags,
                         tags,
@@ -960,6 +983,100 @@ class BrainDB:
             )
             return True
 
+    def compute_session_delta(
+        self,
+        conversation_id: str,
+        candidate_memories: List[Dict[str, Any]],
+        scout_map: str = "",
+        update_cache: bool = True,
+    ) -> Dict[str, Any]:
+        """
+        OTIMIZAÇÃO #1 (Session Delta Memory):
+        Regista os IDs de memórias e o hash do SCOUT_MAP já injetados numa conversa.
+        Nos turnos seguintes (>= 2) da mesma conversa, omite memórias repetidas e o SCOUT_MAP
+        inalterado, injetando apenas o DELTA (novas memórias ativadas pela pergunta atual).
+        """
+        cid = (conversation_id or "default").strip() or "default"
+        s_hash = (
+            hashlib.sha256(scout_map.strip().encode("utf-8")).hexdigest()[:16]
+            if scout_map and scout_map.strip()
+            else ""
+        )
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT seen_ids_json, scout_hash, turn_count, saved_tokens_total FROM session_memory_delta WHERE conversation_id = ?;",
+                (cid,),
+            ).fetchone()
+
+            prev_seen: set[int] = set()
+            prev_scout_hash = ""
+            prev_turns = 0
+            prev_saved = 0
+            if row:
+                try:
+                    prev_seen = {int(x) for x in json.loads(row["seen_ids_json"] or "[]")}
+                except Exception:
+                    prev_seen = set()
+                prev_scout_hash = str(row["scout_hash"] or "")
+                prev_turns = int(row["turn_count"] or 0)
+                prev_saved = int(row["saved_tokens_total"] or 0)
+
+            turn_num = prev_turns + 1
+            is_delta = turn_num > 1 and bool(prev_seen or prev_scout_hash)
+
+            delta_memories: List[Dict[str, Any]] = []
+            cached_ids: List[int] = []
+            saved_chars = 0
+
+            for m in candidate_memories:
+                mid = int(m.get("id") or 0)
+                if is_delta and mid > 0 and mid in prev_seen:
+                    cached_ids.append(mid)
+                    saved_chars += len(str(m.get("topic") or "")) + len(str(m.get("fact") or "")) + 18
+                else:
+                    delta_memories.append(m)
+
+            scout_unchanged = bool(is_delta and s_hash and s_hash == prev_scout_hash)
+            if scout_unchanged:
+                saved_chars += len(scout_map)
+
+            delta_saved_tokens = max(0, saved_chars // 4)
+            new_seen = sorted(prev_seen.union({int(m.get("id") or 0) for m in candidate_memories if int(m.get("id") or 0) > 0}))
+
+            if update_cache:
+                conn.execute(
+                    """
+                    INSERT INTO session_memory_delta (conversation_id, seen_ids_json, scout_hash, turn_count, saved_tokens_total, updated_at)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(conversation_id) DO UPDATE SET
+                        seen_ids_json = excluded.seen_ids_json,
+                        scout_hash = excluded.scout_hash,
+                        turn_count = excluded.turn_count,
+                        saved_tokens_total = excluded.saved_tokens_total,
+                        updated_at = CURRENT_TIMESTAMP;
+                    """,
+                    (
+                        cid,
+                        json.dumps(new_seen),
+                        s_hash or prev_scout_hash,
+                        turn_num,
+                        prev_saved + delta_saved_tokens,
+                    ),
+                )
+
+            return {
+                "conversation_id": cid,
+                "turn_number": turn_num,
+                "is_delta_turn": is_delta,
+                "delta_memories": delta_memories,
+                "cached_ids": cached_ids,
+                "cached_count": len(cached_ids),
+                "new_count": len(delta_memories),
+                "scout_unchanged": scout_unchanged,
+                "delta_saved_tokens": delta_saved_tokens,
+                "session_saved_total": prev_saved + delta_saved_tokens,
+            }
+
     def log_telemetry(
         self,
         event_type: str,
@@ -1137,9 +1254,26 @@ class BrainDB:
                 if d.get("tier") != computed_tier:
                     conn.execute("UPDATE memories SET tier = ? WHERE id = ?;", (computed_tier, mid))
 
-                key = (ws, norm_topic)
-                if key in by_key:
-                    primary = by_key[key]
+                # Chave canónica: normaliza sufixos numéricos/timestamps repetidos e agrupa por (workspace, canonical_topic)
+                canon_topic = re.sub(r"\s*(?:\(#?\d+\)|#\d+)\s*$", "", norm_topic)
+                key = (ws, canon_topic)
+                matched_primary = by_key.get(key)
+
+                # Compactação Semântica (>90% similaridade + mesmo prefixo de tópico no mesmo workspace e categoria)
+                if not matched_primary and len(canon_topic) >= 10:
+                    cand_vec = self.compute_semantic_vector(f"{topic} {d.get('fact', '')} {d.get('tags', '')}")
+                    for (b_ws, b_top), b_mem in by_key.items():
+                        if b_ws == ws and b_mem.get("category") == d.get("category") and b_top[:12] == canon_topic[:12]:
+                            b_vec = b_mem.get("_vec")
+                            if not b_vec:
+                                b_vec = self.compute_semantic_vector(f"{b_mem.get('topic', '')} {b_mem.get('fact', '')} {b_mem.get('tags', '')}")
+                                b_mem["_vec"] = b_vec
+                            if self.cosine_similarity(cand_vec, b_vec) >= 0.90:
+                                matched_primary = b_mem
+                                break
+
+                if matched_primary:
+                    primary = matched_primary
                     p_tags = set(str(primary["tags"] or "").split()) | set(str(d["tags"] or "").split())
                     new_tags = " ".join(sorted(p_tags))
                     new_imp = max(int(primary["importance"] or 3), int(d["importance"] or 3))
@@ -1219,6 +1353,62 @@ class BrainDB:
             "total_causal_edges": int(total_edges),
             "healthy_memories": int(healthy_total),
             "fts5_optimized": True,
+        }
+
+    def bulk_manage_memories(
+        self,
+        action: str,
+        memory_ids: List[int],
+        target_workspace: str = "global",
+    ) -> Dict[str, Any]:
+        """Executa ações em massa (delete, pin, unpin, move_workspace) sobre um conjunto de IDs de memória."""
+        clean_ids = [int(i) for i in (memory_ids or []) if str(i).isdigit() and int(i) > 0]
+        if not clean_ids:
+            return {"ok": False, "error": "Nenhuma memória selecionada", "affected": 0}
+        placeholders = ",".join("?" for _ in clean_ids)
+        act = (action or "").strip().lower()
+        affected = 0
+        with self._connect() as conn:
+            if act == "delete":
+                conn.execute(
+                    f"DELETE FROM memory_edges WHERE source_id IN ({placeholders}) OR target_id IN ({placeholders});",
+                    clean_ids + clean_ids,
+                )
+                cur = conn.execute(f"DELETE FROM memories WHERE id IN ({placeholders});", clean_ids)
+                affected = int(cur.rowcount or 0)
+            elif act in ("pin", "unpin"):
+                rows = conn.execute(
+                    f"SELECT id, tags FROM memories WHERE id IN ({placeholders});",
+                    clean_ids,
+                ).fetchall()
+                for r in rows:
+                    mid = int(r["id"])
+                    cur_tags = [t for t in str(r["tags"] or "").split() if t.lower() != "pinned"]
+                    if act == "pin":
+                        cur_tags.append("pinned")
+                        new_imp = 5
+                    else:
+                        new_imp = 4
+                    conn.execute(
+                        "UPDATE memories SET tags = ?, importance = ?, last_accessed = CURRENT_TIMESTAMP WHERE id = ?;",
+                        (" ".join(cur_tags).strip(), new_imp, mid),
+                    )
+                    affected += 1
+            elif act == "move_workspace":
+                ws_clean = (target_workspace or "global").strip().lower() or "global"
+                cur = conn.execute(
+                    f"UPDATE memories SET workspace = ?, last_accessed = CURRENT_TIMESTAMP WHERE id IN ({placeholders});",
+                    [ws_clean] + clean_ids,
+                )
+                affected = int(cur.rowcount or 0)
+            else:
+                return {"ok": False, "error": f"Ação desconhecida: {act}", "affected": 0}
+        return {
+            "ok": True,
+            "action": act,
+            "affected": affected,
+            "ids": clean_ids,
+            "target_workspace": (target_workspace or "global").strip().lower() or "global",
         }
 
     def create_cow_branch(self, label: str = "", workspace: str = "all") -> Dict[str, Any]:

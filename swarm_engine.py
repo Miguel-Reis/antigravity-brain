@@ -228,7 +228,7 @@ class SwarmEngine:
 
     @staticmethod
     def _extract_file_symbols(file_path: Path) -> Tuple[int, List[str]]:
-        """Extrai contagem de linhas e principais classes/funções/rotas sem gastar LLM tokens."""
+        """Extrai contagem de linhas e principais classes/funções/rotas com Pointers Cirúrgicos (:Lstart-end) sem gastar LLM tokens."""
         try:
             content = file_path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
@@ -248,24 +248,31 @@ class SwarmEngine:
             try:
                 tree = ast.parse(content)
                 for node in tree.body:
+                    s_line = getattr(node, "lineno", 1)
+                    e_line = getattr(node, "end_lineno", s_line)
                     if isinstance(node, ast.ClassDef):
                         methods = [
-                            n.name
+                            f"{n.name}:L{getattr(n, 'lineno', s_line)}-{getattr(n, 'end_lineno', getattr(n, 'lineno', s_line))}"
                             for n in node.body
                             if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
                             and not n.name.startswith("_")
                         ][:4]
                         m_str = f"({', '.join(methods)})" if methods else ""
-                        symbols.append(f"class {node.name}{m_str}")
+                        symbols.append(f"class {node.name}:L{s_line}-{e_line}{m_str}")
                     elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                        symbols.append(f"def {node.name}()")
+                        symbols.append(f"def {node.name}():L{s_line}-{e_line}")
             except Exception:
                 for m in re.finditer(r"^(?:class|def)\s+([A-Za-z0-9_]+)", content, re.M):
-                    symbols.append(m.group(1))
+                    lno = content[: m.start()].count("\n") + 1
+                    symbols.append(f"{m.group(1)}:L{lno}")
         elif ext in (".html", ".js", ".ts", ".tsx", ".jsx"):
+            seen_fn: set[str] = set()
             for m in re.finditer(r"function\s+([A-Za-z0-9_]+)\s*\(", content):
-                if m.group(1) not in symbols:
-                    symbols.append(f"fn {m.group(1)}()")
+                fn_name = m.group(1)
+                if fn_name not in seen_fn:
+                    seen_fn.add(fn_name)
+                    lno = content[: m.start()].count("\n") + 1
+                    symbols.append(f"fn {fn_name}():L{lno}")
             for m in re.finditer(r"id=[\"']([A-Za-z0-9_-]+)[\"']", content):
                 if len(symbols) < 8:
                     symbols.append(f"#{m.group(1)}")
@@ -292,7 +299,8 @@ class SwarmEngine:
             ):
                 sym_name = m.group(1)
                 if sym_name not in symbols:
-                    symbols.append(f"{ext[1:]}:{sym_name}")
+                    lno = content[: m.start()].count("\n") + 1
+                    symbols.append(f"{ext[1:]}:{sym_name}:L{lno}")
 
         return line_count, symbols[:6]
 
@@ -954,7 +962,7 @@ class SwarmEngine:
         return rid
 
     def get_latest_scout_map(self, workspace: str = "global") -> str:
-        """Devolve o Mapa Partilhado do Scout para ser injetado automaticamente nos subagentes."""
+        """Devolve o Mapa Partilhado do Scout com pointers cirúrgicos (:Lstart-end) para injeção nos agentes."""
         with self.db._connect() as conn:
             row = conn.execute(
                 """
@@ -965,7 +973,20 @@ class SwarmEngine:
                 (workspace, workspace),
             ).fetchone()
             if row and row["scout_shared_map"]:
-                return str(row["scout_shared_map"])
+                smap = str(row["scout_shared_map"])
+                if ":L" not in smap and workspace in ("brain_mcp", "global", "applet"):
+                    try:
+                        refreshed = self.run_codebase_scout("")
+                        return str(refreshed.get("shared_map") or smap)
+                    except Exception:
+                        return smap
+                return smap
+        if workspace in ("brain_mcp", "global", "applet"):
+            try:
+                refreshed = self.run_codebase_scout("")
+                return str(refreshed.get("shared_map") or "")
+            except Exception:
+                pass
         return ""
 
     def on_turn_start(

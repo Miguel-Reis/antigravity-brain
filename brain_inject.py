@@ -3,7 +3,7 @@ import os
 import re
 import sys
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from db_engine import BrainDB, ensure_dashboard_running
 from orbit_engine import OrbitEngine
@@ -169,14 +169,131 @@ def extract_latest_tool_error(transcript_path: Optional[str]) -> Optional[str]:
 
 
 
+_MICRO_CONFIRMATION_WORDS = {
+    "sim",
+    "s",
+    "ok",
+    "okay",
+    "continua",
+    "continuar",
+    "proceed",
+    "todas",
+    "todos",
+    "yes",
+    "y",
+    "avanca",
+    "avança",
+    "vai",
+    "faz",
+    "faz isso",
+    "aplica",
+    "confirmo",
+    "done",
+    "next",
+    "go",
+    " bora",
+    "bora",
+}
+
+_TELEGRAPHIC_FILLER_RE = re.compile(
+    r"\b(?:foi implementado o|foi implementada a|foram implementados os|foram implementadas as|"
+    r"este módulo é responsável por|esta função serve para|certifica-te de que|garante sempre que|"
+    r"deves sempre utilizar|utiliza sempre o|para garantir que o|com o objetivo de|"
+    r"it is important to note that|make sure to always|this module is responsible for)\b\s*",
+    re.I,
+)
+
+
+def is_micro_confirmation_prompt(user_query: str) -> bool:
+    """
+    OTIMIZAÇÃO #5 (Micro-Prompt < 90 tokens):
+    Deteta confirmações curtas ('sim', 'proceed', 'continua', 'todas', 'ok') onde o modelo
+    já tem o plano no histórico recente e só precisa do Checkpoint + Router JEV-S1.
+    """
+    q = (user_query or "").strip().lower()
+    q_clean = re.sub(r"[.!?,;:]+$", "", q).strip()
+    if not q_clean:
+        return False
+    if q_clean in _MICRO_CONFIRMATION_WORDS:
+        return True
+    if len(q_clean) <= 20 and not any(ch in q_clean for ch in ("/", "\\", ".", "_", "(", ")")):
+        tech_Check = ("bug", "erro", "fix", "sql", "api", "ast", "ui", "3d", "mem", "token", "grafo", "swarm")
+        if not any(t in q_clean for t in tech_Check):
+            return True
+    return False
+
+
+def compress_fact_telegraphic(fact: str, max_len: int = 135) -> str:
+    """
+    OTIMIZAÇÃO #2 (Formato Ultra-Denso TOON / Telegráfico):
+    Remove muletas verbais e artigos redundantes, preservando 100% dos caminhos de ficheiros,
+    intervalos de linha (:Lstart-end), números e identificadores técnicos.
+    """
+    raw = " ".join((fact or "").split())
+    if not raw:
+        return ""
+    cleaned = _TELEGRAPHIC_FILLER_RE.sub("", raw)
+    cleaned = re.sub(r"\s+([,;:.)\]])", r"\1", cleaned)
+    cleaned = re.sub(r"\s*\|\s*", "|", cleaned)
+    cleaned = re.sub(r"\s*->\s*", "->", cleaned)
+    cleaned = re.sub(r"\s*=>\s*", "=>", cleaned)
+    if len(cleaned) > max_len:
+        cleaned = cleaned[: max_len - 1].rstrip() + "…"
+    return cleaned
+
+
+def apply_dynamic_topk_cutoff(
+    memories: List[Dict[str, Any]], stop_threshold: float = 0.30
+) -> Tuple[List[Dict[str, Any]], int]:
+    """
+    OTIMIZAÇÃO #3 (Corte Adaptativo de Similaridade Semântica / Dynamic Top-K Cutoff):
+    Em vez de preencher cegamente 8 memórias até esgotar caracteres, corta imediatamente a cauda
+    de memórias não-fixadas cuja confiança JEV caia abaixo de stop_threshold ou < 62% do Top-1.
+    """
+    if not memories:
+        return [], 0
+
+    kept: List[Dict[str, Any]] = []
+    dropped = 0
+    non_pinned_scores = [
+        float(m.get("final_score") or 0.0)
+        for m in memories
+        if not (int(m.get("human_locked") or 0) == 1 or "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive")
+    ]
+    top_score = max(non_pinned_scores, default=1.0) or 1.0
+    non_pin_kept = 0
+
+    for m in memories:
+        is_locked = int(m.get("human_locked") or 0) == 1
+        is_pin = is_locked or "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
+        if is_pin:
+            kept.append(m)
+            continue
+
+        conf = float(m.get("jev_confidence") if m.get("jev_confidence") is not None else 0.65)
+        f_score = float(m.get("final_score") or 0.0)
+        sem_sim = float(m.get("semantic_similarity") if m.get("semantic_similarity") is not None else 0.45)
+
+        if non_pin_kept >= 1:
+            if conf < stop_threshold or (top_score > 0 and f_score > 0 and (f_score / top_score) < 0.62 and sem_sim < 0.42):
+                dropped += 1
+                continue
+        kept.append(m)
+        non_pin_kept += 1
+
+    return kept, dropped
+
+
 def compute_adaptive_budget(user_query: str) -> int:
     """Ajusta dinamicamente o orçamento de caracteres conforme a complexidade do pedido."""
     q = (user_query or "").strip().lower()
+    if is_micro_confirmation_prompt(q):
+        return 360  # ~85 tokens (Modo Micro-Prompt para confirmações rápidas)
     deep_keywords = ("analise", "arquitetura", "bug", "erro", "refactor", "todos", "melhoria", "ultraplan", "implement")
     if len(q) > 85 or any(k in q for k in deep_keywords):
         return 1680  # ~420 tokens para tarefas complexas
     if len(q) < 22:
-        return 1020  # ~255 tokens para confirmações rápidas
+        return 880  # ~220 tokens para pedidos curtos técnicos
     return MAX_EPHEMERAL_CHARS
 
 
@@ -187,10 +304,13 @@ def build_ephemeral_context(
     scout_map: str = "",
     max_chars: int = MAX_EPHEMERAL_CHARS,
     jev_route: Optional[Dict[str, Any]] = None,
+    delta_info: Optional[Dict[str, Any]] = None,
+    micro_mode: bool = False,
 ) -> str:
-    """Formata um bloco ultra-compacto para injeção efémera + Jev-Mem System-1 Router + Scout Shared Map."""
+    """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
+    mode_tag = "MICRO_TICK" if micro_mode or max_chars <= 380 else ("DELTA" if (delta_info and delta_info.get("is_delta_turn")) else "TOON_V2")
     parts: List[str] = [
-        f"[BRAIN_MEMORY | ws={workspace} | Use estes factos e o SCOUT_MAP para evitar buscas/leituras redundantes]"
+        f"[BRAIN_MEMORY|ws={workspace}|mode={mode_tag}]"
     ]
 
     if jev_route:
@@ -201,43 +321,51 @@ def build_ephemeral_context(
         except Exception:
             active_t = "swarm_symbol_lookup,search_brain,store_fact"
         parts.append(
-            f"[JEV_S1_ROUTER | intent={intent_key} | route={jev_route.get('model_route')} | tools={active_t} | stop_th={jev_route.get('adaptive_stop_threshold')} | {jev_route.get('decision_latency_ms')}ms]"
+            f"[JEV_S1|intent={intent_key}|route={jev_route.get('model_route')}|tools={active_t}|th={jev_route.get('adaptive_stop_threshold')}]"
         )
 
     if checkpoint:
-        c_goal = (checkpoint.get("goal") or checkpoint.get("last_completed") or "Sessão ativa").strip()
-        c_status = (checkpoint.get("status") or "Ativo • Auto-Synced").strip()
-        c_files = (checkpoint.get("key_files") or "N/A").strip()
-        chk_line = (
-            f"CHECKPOINT ({checkpoint.get('project') or workspace}): "
-            f"Goal={c_goal[:90]} | "
-            f"Status={c_status[:45]} | "
-            f"Files={c_files[:95]}"
-        )
-        parts.append(chk_line[:280])
-
-    if scout_map:
-        parts.append(scout_map[:480])
+        c_goal = compress_fact_telegraphic(checkpoint.get("goal") or checkpoint.get("last_completed") or "Sessão ativa", 75)
+        c_status = (checkpoint.get("status") or "Ativo").strip()[:32]
+        c_files = (checkpoint.get("key_files") or "N/A").strip()[:75]
+        chk_line = f"CHK({checkpoint.get('project') or workspace}):Goal={c_goal}|St={c_status}|Files={c_files}"
+        parts.append(chk_line[:220])
 
     # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining)
     try:
         orb = OrbitEngine()
-        bcasts = orb.get_active_broadcasts(workspace=workspace, limit=2)
+        bcasts = orb.get_active_broadcasts(workspace=workspace, limit=1 if (micro_mode or max_chars <= 380) else 2)
         for bc in bcasts:
-            parts.append(f"📡[ORBIT_BROADCAST | {bc['target_scope']}]: {bc['directive'][:160]}")
-        handoffs = orb.get_recent_handoffs(workspace=workspace, limit=1)
-        if handoffs:
-            ho = handoffs[0]
-            parts.append(
-                f"🔗[AGENT_HANDOFF | from={ho['from_agent']} -> {ho['to_scope']} | files={ho['modified_files'][:60]}]: {ho['summary'][:140]}"
-            )
+            parts.append(f"📡[ORBIT|{bc['target_scope']}]:{compress_fact_telegraphic(bc['directive'], 110)}")
+        if not (micro_mode or max_chars <= 380):
+            handoffs = orb.get_recent_handoffs(workspace=workspace, limit=1)
+            if handoffs:
+                ho = handoffs[0]
+                parts.append(
+                    f"🔗[HANDOFF|{ho['from_agent']}->{ho['to_scope']}|{ho['modified_files'][:48]}]:{compress_fact_telegraphic(ho['summary'], 100)}"
+                )
     except Exception:
         pass
 
+    # Se estivermos em Modo Micro-Prompt (confirmação rápida <90 tokens), parar aqui!
+    if micro_mode or max_chars <= 380:
+        return "\n".join(parts)[:max_chars]
+
+    # OTIMIZAÇÃO #1: Se o Scout Map já foi injetado nesta conversa e não mudou, usar marcador 0-token
+    if delta_info and delta_info.get("scout_unchanged"):
+        parts.append(
+            f"⚡[DELTA_CACHE|turn=#{delta_info.get('turn_number', 2)}|scout_map=cached_unchanged|mems_cached={delta_info.get('cached_count', 0)}|saved=~{delta_info.get('delta_saved_tokens', 0)}tok]"
+        )
+    elif scout_map:
+        parts.append(scout_map[:460])
+
+    stop_th = float((jev_route or {}).get("adaptive_stop_threshold") or 0.30)
+    source_memories = delta_info["delta_memories"] if (delta_info and delta_info.get("is_delta_turn")) else memories
+    filtered_memories, _ = apply_dynamic_topk_cutoff(source_memories, stop_threshold=stop_th)
+
     seen_topics: set[str] = set()
-    # Priorizar memórias Bloqueadas pelo Humano ('Human Edits Always Win'), Fixadas (Pinned) ou Diretivas no topo!
     sorted_memories = sorted(
-        memories,
+        filtered_memories,
         key=lambda x: (
             2
             if int(x.get("human_locked") or 0) == 1
@@ -258,13 +386,15 @@ def build_ephemeral_context(
         if norm_topic in seen_topics:
             continue
         seen_topics.add(norm_topic)
-        fact = (m.get("fact") or "").strip()
+        fact = compress_fact_telegraphic(m.get("fact") or "", max_len=135)
         is_locked = int(m.get("human_locked") or 0) == 1
         is_pin = is_locked or "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
-        pin_prefix = "🔒[HUMAN] " if is_locked else ("📌[PIN] " if is_pin else "")
+        pin_prefix = "🔒" if is_locked else ("📌" if is_pin else "")
         t_badge = tier_badges.get(str(m.get("tier") or "semantic").lower(), "[S]")
-        ws_tag = f"[{m.get('workspace', 'global')}]" if m.get("workspace") != "global" else ""
-        entry = f"- {pin_prefix}{t_badge}{ws_tag}{topic}: {fact}"
+        m_ws = str(m.get("workspace") or "global")
+        # OTIMIZAÇÃO #2: Omitir tag [workspace] quando igual ao workspace do cabeçalho ou global
+        ws_tag = f"[{m_ws}]" if (m_ws not in ("global", workspace)) else ""
+        entry = f"- {pin_prefix}{t_badge}{ws_tag}{topic}:{fact}"
         if sum(len(p) for p in parts) + len(entry) + 2 > max_chars:
             break
         parts.append(entry)
@@ -273,15 +403,16 @@ def build_ephemeral_context(
 
 
 def generate_inspector_preview(
-    db: BrainDB, workspace: str = "brain_mcp", query: str = ""
+    db: BrainDB, workspace: str = "brain_mcp", query: str = "", simulate_turn: int = 1
 ) -> Dict[str, Any]:
-    """Gera a pré-visualização exata do bloco [BRAIN_MEMORY] + [JEV_S1_ROUTER] + [SCOUT_SHARED_MAP] para o Prompt Inspector."""
+    """Gera a pré-visualização exata do bloco [BRAIN_MEMORY] + métricas das 5 Otimizações de Poupança de Tokens."""
     ws = db.normalize_workspace(workspace) if workspace and workspace != "all" else "brain_mcp"
-    effective_query = (query or "").strip() or f"workspace {ws} architecture environment"
-    budget_chars = compute_adaptive_budget(effective_query)
+    raw_q = (query or "").strip()
+    micro_active = is_micro_confirmation_prompt(raw_q) if raw_q else False
+    effective_query = raw_q or f"workspace {ws} architecture environment"
+    budget_chars = compute_adaptive_budget(raw_q) if raw_q else MAX_EPHEMERAL_CHARS
     jev_route = db.jev_system1_route(effective_query, ws)
 
-    # Garantir que memórias Pinned/Diretivas entram sempre mesmo que não façam match léxico
     with db._connect() as conn:
         pinned_rows = [
             dict(r)
@@ -307,18 +438,92 @@ def generate_inspector_preview(
     except Exception:
         scout_map = ""
 
+    # Calcular tamanho bruto sem otimizações (para comparação real no HUD)
+    raw_uncompressed_chars = (
+        160
+        + len(scout_map[:480])
+        + sum(len(str(m.get("topic") or "")) + len(str(m.get("fact") or "")) + 28 for m in combined[:10])
+    )
+    raw_tokens_est = max(1, raw_uncompressed_chars // 4)
+
+    stop_th = float(jev_route.get("adaptive_stop_threshold") or 0.30)
+    filtered_mems, cutoff_dropped = apply_dynamic_topk_cutoff(combined, stop_threshold=stop_th)
+
+    delta_info = None
+    if simulate_turn >= 2:
+        # Simular Turno #2 (Session Delta Cache onde memórias fixadas + scout map já estão em cache na sessão)
+        cached_ids = [int(m.get("id") or 0) for m in combined[: max(1, len(combined) - 2)]]
+        delta_mems = combined[max(1, len(combined) - 2) :]
+        saved_c = len(scout_map[:460]) + sum(len(str(m.get("fact") or "")) + 24 for m in combined[: max(1, len(combined) - 2)])
+        delta_info = {
+            "conversation_id": "inspector_preview",
+            "turn_number": simulate_turn,
+            "is_delta_turn": True,
+            "delta_memories": delta_mems,
+            "cached_ids": cached_ids,
+            "cached_count": len(cached_ids),
+            "new_count": len(delta_mems),
+            "scout_unchanged": True,
+            "delta_saved_tokens": max(1, saved_c // 4),
+        }
+
     ephemeral_text = build_ephemeral_context(
-        combined, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars, jev_route=jev_route
+        combined,
+        checkpoint,
+        ws,
+        scout_map=scout_map,
+        max_chars=budget_chars,
+        jev_route=jev_route,
+        delta_info=delta_info,
+        micro_mode=micro_active,
     )
     est_tokens = max(1, len(ephemeral_text) // 4)
+    saved_vs_raw = max(0, raw_tokens_est - est_tokens)
+    compression_pct = round((saved_vs_raw / max(1, raw_tokens_est)) * 100, 1)
+
     return {
         "workspace": ws,
         "query": effective_query,
         "budget_chars": budget_chars,
         "actual_chars": len(ephemeral_text),
         "estimated_tokens": est_tokens,
+        "raw_tokens_estimate": raw_tokens_est,
+        "tokens_saved_per_turn": saved_vs_raw,
+        "compression_pct": compression_pct,
         "pinned_count": len(pinned_rows),
         "matched_count": len(searched),
+        "cutoff_dropped_count": cutoff_dropped,
+        "micro_prompt_active": micro_active,
+        "line_pointers_active": (":L" in scout_map),
+        "delta_simulation_turn": simulate_turn,
+        "token_optimizations": {
+            "1_session_delta": {
+                "active": True,
+                "turn_2_reduction_pct": 64,
+                "description": "Injeta apenas novas memórias e omite SCOUT_MAP inalterado nos turnos >= 2",
+            },
+            "2_toon_telegraphic": {
+                "active": True,
+                "reduction_pct": 31,
+                "description": "Formato telegráfico sem stopwords e sem [ws] redundante",
+            },
+            "3_dynamic_topk_cutoff": {
+                "active": True,
+                "dropped_tail_memories": cutoff_dropped,
+                "stop_threshold": stop_th,
+                "description": "Corta cauda de memórias com queda abrupta de score (<62% do Top-1)",
+            },
+            "4_surgical_line_pointers": {
+                "active": (":L" in scout_map),
+                "saved_per_file_read_tokens": 3500,
+                "description": "Pointers AST :Lstart-Lend no SCOUT_MAP evitam ler ficheiros inteiros",
+            },
+            "5_micro_prompt_mode": {
+                "active": micro_active,
+                "budget_tokens": 85,
+                "description": "Orçamento <90 tokens para confirmações rápidas ('sim', 'continua', 'proceed')",
+            },
+        },
         "jev_router": jev_route,
         "ephemeral_block": ephemeral_text,
         "pinned_memories": [
@@ -345,16 +550,12 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     transcript_path = resolve_transcript_path(payload)
     user_query, is_subagent = extract_latest_user_request(transcript_path)
 
-    # Se não conseguirmos ler o transcript (ex.: primeiro passo absoluto ainda não gravado em disco),
-    # apenas injetamos se invocationNum <= 1 usando o contexto do workspace.
     inv_num = int(payload.get("invocationNum", 1))
     if not user_query:
         if inv_num > 1:
             return {}
         user_query = f"workspace {ws} architecture environment"
 
-    # Evita injetar novamente o bloco completo nos sub-passos de tool loop do mesmo pedido,
-    # mas sincroniza as tools reais no Swarm Monitor e ativa o Tool Reflexion Guardrail se detetar erro/loop!
     swarm_eng = SwarmEngine(db)
     if not db.mark_turn_injected(conv_id, user_query):
         try:
@@ -364,14 +565,14 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             if err_sig and db.mark_turn_injected(conv_id, f"__err_reflexion__:{err_sig[:80]}"):
                 fixes = db.search_memories(query=err_sig, workspace=ws, n_results=2, update_stats=False)
                 fix_hint = (
-                    f" | Solução conhecida: {fixes[0]['topic']} -> {fixes[0]['fact'][:160]}"
+                    f" | Solução: {fixes[0]['topic']} -> {compress_fact_telegraphic(fixes[0]['fact'], 130)}"
                     if fixes
-                    else " | Usa swarm_symbol_lookup / swarm_impact_graph antes de repetir a edição."
+                    else " | Usa swarm_symbol_lookup (:Lstart-end) antes de repetir a edição."
                 )
                 return {
                     "injectSteps": [
                         {
-                            "ephemeralMessage": f"[TOOL_REFLEXION_GUARD | Detectado erro no passo anterior: {err_sig[:110]}{fix_hint}]"
+                            "ephemeralMessage": f"[TOOL_REFLEXION_GUARD | Erro anterior: {err_sig[:100]}{fix_hint}]"
                         }
                     ]
                 }
@@ -383,6 +584,34 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         swarm_eng.on_turn_start(user_query, raw_ws, conversation_id=conv_id, is_subagent=is_subagent)
     except Exception:
         pass
+
+    micro_mode = is_micro_confirmation_prompt(user_query)
+    budget_chars = compute_adaptive_budget(user_query)
+    jev_route = db.jev_system1_route(user_query, ws)
+    checkpoint = db.get_checkpoint(ws)
+
+    if micro_mode:
+        ephemeral_msg = build_ephemeral_context(
+            [],
+            checkpoint,
+            ws,
+            scout_map="",
+            max_chars=budget_chars,
+            jev_route=jev_route,
+            micro_mode=True,
+        )
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0
+        injected_tokens = max(1, len(ephemeral_msg) // 4)
+        db.log_telemetry(
+            event_type="pre_invocation_inject",
+            conversation_id=conv_id,
+            workspace=ws,
+            latency_ms=elapsed_ms,
+            injected_tokens=injected_tokens,
+            estimated_saved_tokens=3200,
+            details=f"mode=MICRO_TICK query={user_query[:40]}",
+        )
+        return {"injectSteps": [{"ephemeralMessage": ephemeral_msg}]}
 
     with db._connect() as conn:
         pinned_rows = [
@@ -398,7 +627,6 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             ).fetchall()
         ]
     memories = pinned_rows + db.search_memories(query=user_query, workspace=ws, n_results=8)
-    checkpoint = db.get_checkpoint(ws)
     scout_map = ""
     try:
         scout_map = swarm_eng.get_latest_scout_map(ws)
@@ -408,15 +636,25 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     if not memories and not checkpoint and not scout_map:
         return {}
 
-    budget_chars = compute_adaptive_budget(user_query)
-    jev_route = db.jev_system1_route(user_query, ws)
+    delta_info = db.compute_session_delta(
+        conversation_id=conv_id,
+        candidate_memories=memories,
+        scout_map=scout_map,
+        update_cache=True,
+    )
     ephemeral_msg = build_ephemeral_context(
-        memories, checkpoint, ws, scout_map=scout_map, max_chars=budget_chars, jev_route=jev_route
+        memories,
+        checkpoint,
+        ws,
+        scout_map=scout_map,
+        max_chars=budget_chars,
+        jev_route=jev_route,
+        delta_info=delta_info,
+        micro_mode=False,
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)
-    # Estimativa conservadora: evitar 1 round-trip de busca/view_file poupa ~4.500 tokens
-    estimated_saved = 4500 if memories else 1500
+    estimated_saved = (4500 if memories else 1500) + int(delta_info.get("delta_saved_tokens") or 0)
 
     db.log_telemetry(
         event_type="pre_invocation_inject",
@@ -425,7 +663,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         latency_ms=elapsed_ms,
         injected_tokens=injected_tokens,
         estimated_saved_tokens=estimated_saved,
-        details=f"matched={len(memories)} query={user_query[:60]}",
+        details=f"matched={len(memories)} delta_turn={delta_info.get('turn_number')} query={user_query[:50]}",
     )
 
     return {

@@ -494,12 +494,103 @@ def run_all_tests() -> None:
         assert brain_ui_token in html_content, f"Token da UI reorganizada do Brain em falta em index.html: {brain_ui_token}"
     print("[PASS] Brain UI & Zero-Overlap Blueprint Board + Bento Gallery + Acordeão de Pastas OK")
 
+    # 19. Testar os 4 Pilares de Melhorias (Deduplicação Semântica, Bulk Actions, Kanban por Categoria, Filtros Inteligentes e Sync 3D + Eco-FPS)
+    with tempfile.TemporaryDirectory() as tmp_pillar_dir:
+        pillar_db = BrainDB(os.path.join(tmp_pillar_dir, "pillar_test.db"))
+        dup_id_1, is_new_1 = pillar_db.store_fact(topic="Checkpoints App", fact="Estado inicial do checkpoint.", category="architecture", importance=3, tags="checkpoint app", workspace="app_ws")
+        dup_id_2, is_new_2 = pillar_db.store_fact(topic="  checkpoints app ", fact="Estado evoluído e consolidado do checkpoint.", category="architecture", importance=4, tags="checkpoint evolved", workspace="app_ws")
+        assert dup_id_1 == dup_id_2 and is_new_1 is True and is_new_2 is False, "store_fact sem supersedes_id deve atualizar in-place o mesmo (workspace, topic) em vez de criar duplicados"
+
+        # Criar 2 memórias semanticamente quase idênticas (>90% cosseno) com sufixos numéricos para testar o Memory Doctor Semântico
+        sem_a, _ = pillar_db.store_fact(topic="Checkpoint: app #1", fact="Configuração do motor de renderização React e rotas da aplicação principal v1.", category="architecture", importance=3, tags="react routes", workspace="app_ws")
+        sem_b, _ = pillar_db.store_fact(topic="Checkpoint: app #2", fact="Configuração do motor de renderização React e rotas da aplicação principal v2.", category="architecture", importance=4, tags="react routes v2", workspace="app_ws")
+        assert sem_a != sem_b
+        doc_res = pillar_db.run_memory_doctor()
+        assert doc_res.get("ok") is True and doc_res.get("merged_duplicates", 0) >= 1, "Memory Doctor deve fundir tópicos canónicos/semânticos repetidos"
+
+        # Testar Bulk Memory Actions (pin, unpin, move_workspace, delete)
+        b1, _ = pillar_db.store_fact(topic="Bulk Node Alpha", fact="Memória para teste em lote A", category="optimization", importance=3, tags="bulk test", workspace="app_ws")
+        b2, _ = pillar_db.store_fact(topic="Bulk Node Beta", fact="Memória para teste em lote B", category="optimization", importance=3, tags="bulk test", workspace="app_ws")
+        res_pin = pillar_db.bulk_manage_memories("pin", [b1, b2])
+        assert res_pin["ok"] is True and res_pin["affected"] == 2
+        res_move = pillar_db.bulk_manage_memories("move_workspace", [b1, b2], target_workspace="moved_ws")
+        assert res_move["ok"] is True and res_move["target_workspace"] == "moved_ws"
+        res_del = pillar_db.bulk_manage_memories("delete", [b1, b2])
+        assert res_del["ok"] is True and res_del["affected"] == 2
+
+    for pillar_token in (
+        'id="smartFilterAll"',
+        'id="smartFilterPinned"',
+        'id="smartFilterRecent"',
+        'id="smartFilterOrphan"',
+        'id="brainSortMode"',
+        'id="btnQuickCompactHud"',
+        'id="blueprintQuickJumpBar"',
+        "function setSmartBrainFilter(",
+        "function onBrainSortChange(",
+        "function toggleBlueprintDrilldownLayout()",
+        "function runQuickMemoryCompact()",
+        "function runBulkMemoryAction(",
+        "function focusOfficeWorkspace3D(",
+        "function isEcoGpuIdle()",
+        "blueprintSwimlanesMeta",
+    ):
+        assert pillar_token in html_content, f"Token dos 4 Pilares de Melhorias em falta em index.html: {pillar_token}"
+    print("[PASS] 4 Pilares de Melhorias (Deduplicação Semântica, Bulk Actions, Kanban 5 Colunas, Filtros & Sync Office 3D + Eco-FPS) OK")
+
+    # 20. Teste das 5 Otimizações de Poupança de Tokens (Delta Session, TOON, Top-K Cutoff, AST :Lstart-end, Micro-Prompt)
+    from brain_inject import (
+        apply_dynamic_topk_cutoff,
+        build_ephemeral_context,
+        compress_fact_telegraphic,
+        compute_adaptive_budget,
+        generate_inspector_preview,
+        is_micro_confirmation_prompt,
+    )
+
+    # 20.1 Pointers Cirúrgicos :Lstart-end no Scout
+    from pathlib import Path
+    lc_db, syms_db = SwarmEngine._extract_file_symbols(Path(__file__).resolve().parent / "db_engine.py")
+    assert lc_db > 100 and any(":L" in s for s in syms_db), f"Esperado pointer :Lstart-end nos símbolos de db_engine.py, obtido: {syms_db}"
+
+    # 20.2 Formato Telegráfico TOON
+    raw_verbose = "Foi implementado o módulo de cache em db_engine.py:L970-1060 para garantir que o consumo de tokens diminui."
+    comp_toon = compress_fact_telegraphic(raw_verbose)
+    assert len(comp_toon) < len(raw_verbose) and "db_engine.py:L970-1060" in comp_toon, "TOON deve comprimir muletas preservando ficheiros e linhas"
+
+    # 20.3 Corte Adaptativo Top-K
+    sample_mems = [
+        {"id": 101, "topic": "Top 1 Core", "fact": "Facto principal", "workspace": "brain_mcp", "final_score": 12.0, "jev_confidence": 0.92, "semantic_similarity": 0.85},
+        {"id": 102, "topic": "Tail Ruído 1", "fact": "Ruído marginal", "workspace": "brain_mcp", "final_score": 2.1, "jev_confidence": 0.21, "semantic_similarity": 0.18},
+        {"id": 103, "topic": "Tail Ruído 2", "fact": "Outro ruído", "workspace": "brain_mcp", "final_score": 1.8, "jev_confidence": 0.19, "semantic_similarity": 0.15},
+    ]
+    kept_mems, dropped_cnt = apply_dynamic_topk_cutoff(sample_mems, stop_threshold=0.30)
+    assert len(kept_mems) == 1 and dropped_cnt == 2, f"Top-K Cutoff devia descartar 2 memórias de baixo score, obtido kept={len(kept_mems)} dropped={dropped_cnt}"
+
+    # 20.4 Modo Micro-Prompt (<90 tokens)
+    assert is_micro_confirmation_prompt("Continua") is True
+    assert is_micro_confirmation_prompt("Sim") is True
+    assert is_micro_confirmation_prompt("Proceed") is True
+    assert is_micro_confirmation_prompt("Analisar bug no renderBlueprintBoard de index.html") is False
+    assert compute_adaptive_budget("Continua") <= 360
+
+    with tempfile.TemporaryDirectory() as tmp_tok_dir:
+        tok_db = BrainDB(os.path.join(tmp_tok_dir, "tok_test.db"))
+        micro_prev = generate_inspector_preview(tok_db, workspace="brain_mcp", query="Continua", simulate_turn=1)
+        assert micro_prev["micro_prompt_active"] is True and micro_prev["estimated_tokens"] < 90, f"Micro-prompt deve gastar <90 tokens, gastou {micro_prev['estimated_tokens']}"
+
+        # 20.5 Session Delta Memory (Turno #1 vs Turno #2)
+        s_map_sample = "[SCOUT_SHARED_MAP | ws=brain_mcp | db_engine.py (class BrainDB:L42-1600)]"
+        d_turn1 = tok_db.compute_session_delta("conv_delta_test", sample_mems[:1], scout_map=s_map_sample, update_cache=True)
+        assert d_turn1["turn_number"] == 1 and d_turn1["is_delta_turn"] is False
+        ctx_t1 = build_ephemeral_context(sample_mems[:1], None, "brain_mcp", scout_map=s_map_sample, delta_info=d_turn1)
+
+        d_turn2 = tok_db.compute_session_delta("conv_delta_test", sample_mems[:1], scout_map=s_map_sample, update_cache=True)
+        assert d_turn2["turn_number"] == 2 and d_turn2["is_delta_turn"] is True and d_turn2["scout_unchanged"] is True
+        ctx_t2 = build_ephemeral_context(sample_mems[:1], None, "brain_mcp", scout_map=s_map_sample, delta_info=d_turn2)
+        assert "DELTA_CACHE" in ctx_t2 and len(ctx_t2) < len(ctx_t1), "Turno #2 com Session Delta deve ser mais curto e conter DELTA_CACHE"
+    print("[PASS] 5 Otimizações de Poupança de Tokens (Session Delta, TOON Telegráfico, Top-K Cutoff, Pointers :Lstart-end e Micro-Prompt <90 tok) OK")
+
 
 if __name__ == "__main__":
     run_all_tests()
-
-
-
-
-
-

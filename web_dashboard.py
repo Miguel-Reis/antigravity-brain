@@ -730,14 +730,15 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(swarm.get_office_state())
             return
 
-        if parsed.path == "/api/inspector":
+        if parsed.path in ("/api/inspector", "/api/inspector_preview"):
             from brain_inject import generate_inspector_preview
 
             qs = urllib.parse.parse_qs(parsed.query)
             ws = qs.get("workspace", ["brain_mcp"])[0]
             q = qs.get("q", [""])[0]
+            sim_turn = int(qs.get("turn", ["1"])[0] or 1)
             db = BrainDB()
-            self._send_json(generate_inspector_preview(db=db, workspace=ws, query=q))
+            self._send_json(generate_inspector_preview(db=db, workspace=ws, query=q, simulate_turn=sim_turn))
             return
 
         if parsed.path == "/api/export":
@@ -1023,8 +1024,16 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(res)
             return
 
-        if parsed.path == "/api/doctor":
+        if parsed.path in ("/api/doctor", "/api/memories/doctor"):
             res = db.run_memory_doctor()
+            self._send_json(res)
+            return
+
+        if parsed.path == "/api/memories/bulk":
+            action = str(body.get("action", "")).strip()
+            ids = body.get("memory_ids") or body.get("ids") or []
+            target_ws = str(body.get("target_workspace") or body.get("workspace") or "global").strip() or "global"
+            res = db.bulk_manage_memories(action=action, memory_ids=ids, target_workspace=target_ws)
             self._send_json(res)
             return
 
