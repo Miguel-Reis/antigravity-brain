@@ -1498,14 +1498,24 @@ class OrbitEngine:
                     seen_names.add(sk_name)
                     desc = ""
                     try:
-                        raw_head = sk_file.read_text(encoding="utf-8", errors="ignore")[:1200]
+                        raw_head = sk_file.read_text(encoding="utf-8", errors="ignore")[:1500]
                         m_desc = re.search(r"(?m)^description:\s*[\"']?(.+?)[\"']?\s*$", raw_head)
                         if m_desc:
-                            desc = m_desc.group(1).strip()
-                        else:
-                            lines = [ln.strip() for ln in raw_head.splitlines() if ln.strip() and not ln.startswith("---") and not ln.startswith("#") and not ln.startswith("name:")]
+                            cand_d = m_desc.group(1).strip()
+                            if cand_d not in (">", "|", ">-", "|-"):
+                                desc = cand_d
+                        if not desc:
+                            lines = [
+                                ln.strip()
+                                for ln in raw_head.splitlines()
+                                if ln.strip()
+                                and not ln.strip().startswith("---")
+                                and not ln.strip().startswith("#")
+                                and not ln.strip().startswith("name:")
+                                and not ln.strip().startswith("description:")
+                            ]
                             if lines:
-                                desc = lines[0][:180]
+                                desc = " ".join(lines[:2])[:180]
                     except Exception:
                         desc = f"Antigravity skill {sk_name}"
                     skills_found.append(
@@ -1706,11 +1716,21 @@ class OrbitEngine:
         file_ptr_re = re.compile(r"\b([a-zA-Z0-9_\-/\\]+\.(?:py|html|js|ts|tsx|json|md|sql|css)(?::L\d+(?:-\d+)?)?)\b")
         matched_files: List[str] = []
         context_facts: List[str] = []
+
+        def _normalize_file_ptr(raw_fp: str) -> str:
+            s = re.sub(r"[/\\]+", "/", raw_fp).strip("/")
+            parts = [p for p in s.split("/") if p]
+            if len(parts) > 2:
+                s = "/".join(parts[-2:])
+            if len(s) > 42 and "/" in s:
+                s = parts[-1]
+            return s
+
         for m in rel_mems[:5]:
             txt = f"{m.get('topic', '')}: {m.get('fact', '')}"
             for fp in file_ptr_re.findall(txt):
-                clean_fp = fp.replace("\\", "/")
-                if clean_fp not in matched_files:
+                clean_fp = _normalize_file_ptr(fp)
+                if clean_fp and clean_fp not in matched_files:
                     matched_files.append(clean_fp)
             if m.get("category") != "learned_rule":
                 short_f = str(m.get("fact") or "").strip()
@@ -1721,8 +1741,8 @@ class OrbitEngine:
         chk = self.db.get_checkpoint(ws)
         if chk and chk.get("key_files"):
             for fp in file_ptr_re.findall(str(chk.get("key_files"))):
-                clean_fp = fp.replace("\\", "/")
-                if clean_fp not in matched_files:
+                clean_fp = _normalize_file_ptr(fp)
+                if clean_fp and clean_fp not in matched_files:
                     matched_files.append(clean_fp)
 
         if not matched_files:

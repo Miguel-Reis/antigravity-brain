@@ -850,6 +850,10 @@ def run_all_tests() -> None:
         "function togglePromptForgeSkill(",
         "function forgePromptClientSideFallback(",
         "BUILTIN_ANTIGRAVITY_SKILLS_CATALOG",
+        "function syncStudioWorkspaceSelectsUI()",
+        "function getAllKnownProjectsUI()",
+        "function normalizeShortFilePtrUI(",
+        "minmax(0, 5fr) minmax(0, 7fr)",
         "function forgeAntigravityPromptUI()",
         "function copyForgedPromptUI()",
     ):
