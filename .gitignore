@@ -20,6 +20,8 @@ __pycache__/
 .venv/
 venv/
 .env
+.dots/
+.swarm_sandboxes/
 
 # Temporary AI Studio media artifacts
 .aistudio/

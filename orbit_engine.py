@@ -1,6 +1,7 @@
 import datetime
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -171,6 +172,82 @@ class OrbitEngine:
                         "Trust Hierarchy (human_locked=1) evita sobrescrita por subagentes; Broadcast injeta diretivas por departamento/workspace em <1ms.",
                     ),
                 )
+
+            # 4. DOTS Git-Native DAG Task Tracker (Estilo .dots/ + OpenAI Dots c/ dependências blocks/depends_on)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS dots_tasks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    dot_id TEXT UNIQUE NOT NULL,
+                    title TEXT NOT NULL,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    lane TEXT DEFAULT 'API',
+                    status TEXT DEFAULT 'open',
+                    depends_on_json TEXT DEFAULT '[]',
+                    claimed_by TEXT DEFAULT '',
+                    priority INTEGER DEFAULT 4,
+                    summary TEXT DEFAULT '',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            cnt_dots = conn.execute("SELECT COUNT(*) as c FROM dots_tasks;").fetchone()["c"]
+            if int(cnt_dots or 0) == 0:
+                seed_dots = [
+                    (
+                        "dot-01",
+                        "SCOUT AST & Mapeamento :Lstart-end da Codebase",
+                        "brain_mcp",
+                        "DOCS",
+                        "done",
+                        "[]",
+                        "scout-01",
+                        5,
+                        "Indexação AST única partilhada em brain.db para zero re-leituras.",
+                    ),
+                    (
+                        "dot-02",
+                        "DOTS Dynamic Trajectory Search no JEV-S1 Router",
+                        "brain_mcp",
+                        "API",
+                        "done",
+                        '["dot-01"]',
+                        "arch-01",
+                        5,
+                        "Composição dinâmica de trajetórias cognitivas ótimas em <0.05ms.",
+                    ),
+                    (
+                        "dot-03",
+                        "DOTS ECS Float32Array SoA Physics & 3D Projection Pool",
+                        "brain_mcp",
+                        "UI",
+                        "open",
+                        '["dot-01", "dot-02"]',
+                        "",
+                        5,
+                        "Buffers contíguos Float32Array sem alocações GC por frame a 60 FPS.",
+                    ),
+                    (
+                        "dot-04",
+                        "Validação Full-Stack Test #22 (DOTS Pack Completo)",
+                        "brain_mcp",
+                        "TESTS",
+                        "open",
+                        '["dot-03"]',
+                        "",
+                        4,
+                        "Bloqueada até dot-03 concluir; valida DAG ready/claim/complete e SoA.",
+                    ),
+                ]
+                for did, dtitle, dws, dlane, dst, ddeps, dclaim, dprio, dsum in seed_dots:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO dots_tasks
+                        (dot_id, title, workspace, lane, status, depends_on_json, claimed_by, priority, summary)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+                        """,
+                        (did, dtitle, dws, dlane, dst, ddeps, dclaim, dprio, dsum),
+                    )
 
     # =========================================================================
     # 1. MISSION CONTROL INBOX ('WAITING FOR YOUR YES' / APPROVE ALL / REDIRECT)
@@ -637,7 +714,7 @@ class OrbitEngine:
     # =========================================================================
     # 5. MORNING BRIEF / EXECUTIVE DIGEST & SAVINGS / ROI CALCULATOR
     # =========================================================================
-    def get_executive_briefing_and_roi(self) -> Dict[str, Any]:
+    def get_executive_briefing_and_roi(self, workspace: str = "all") -> Dict[str, Any]:
         stats = self.db.get_stats()
         inbox = self.get_mission_control_inbox(limit=15)
         broadcasts = self.get_active_broadcasts(limit=6)
@@ -718,6 +795,7 @@ class OrbitEngine:
             "total_memories": int(stats.get("total_memories", 0)),
             "policy": "Human Edits Always Win (trust_score=1.0, immutable by subagents)",
         }
+        dots_dag = self.get_dots_dag(workspace="all")
         return {
             "ok": True,
             "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -736,5 +814,204 @@ class OrbitEngine:
             "handoffs": handoffs,
             "recent_handoffs": handoffs,
             "mcp_bridge": bridge,
+            "dots_dag": dots_dag,
             "recent_trusted_memories": recent_mems,
         }
+
+    # =========================================================================
+    # 6. DOTS GIT-NATIVE DAG TASK TRACKER (.dots/*.md + dot_ready UNBLOCKED RESOLVER)
+    # =========================================================================
+    def get_dots_dag(self, workspace: str = "all") -> Dict[str, Any]:
+        """
+        Calcula o Grafo Acíclico Dirigido (DAG) de tarefas DOTS:
+        - Uma tarefa 'open' só está READY (desbloqueada) quando todas as tarefas em 'depends_on' estão 'done'.
+        - Permite injeção Zero-Token apenas das tarefas READY no PreInvocation.
+        """
+        ws = (workspace or "all").strip().lower()
+        with self.db._connect() as conn:
+            if ws and ws not in ("all", "global"):
+                rows = conn.execute(
+                    "SELECT * FROM dots_tasks WHERE LOWER(workspace) IN (?, 'global', 'brain_mcp') ORDER BY priority DESC, id ASC;",
+                    (ws,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM dots_tasks ORDER BY priority DESC, id ASC;"
+                ).fetchall()
+
+        all_dots = [dict(r) for r in rows]
+        status_by_id: Dict[str, str] = {str(d["dot_id"]): str(d["status"]) for d in all_dots}
+
+        ready_dots: List[Dict[str, Any]] = []
+        blocked_dots: List[Dict[str, Any]] = []
+        claimed_dots: List[Dict[str, Any]] = []
+        done_dots: List[Dict[str, Any]] = []
+
+        for d in all_dots:
+            try:
+                deps = json.loads(d.get("depends_on_json") or "[]")
+                if not isinstance(deps, list):
+                    deps = []
+            except Exception:
+                deps = []
+            d["depends_on"] = [str(x) for x in deps if x]
+            unresolved = [dep_id for dep_id in d["depends_on"] if status_by_id.get(dep_id, "open") != "done"]
+            d["blocked_by"] = unresolved
+            st = str(d.get("status") or "open").lower()
+            if st == "done":
+                d["dag_state"] = "done"
+                d["is_ready"] = False
+                done_dots.append(d)
+            elif st == "claimed":
+                d["dag_state"] = "claimed"
+                d["is_ready"] = False
+                claimed_dots.append(d)
+            elif len(unresolved) == 0:
+                d["dag_state"] = "ready"
+                d["is_ready"] = True
+                ready_dots.append(d)
+            else:
+                d["dag_state"] = "blocked"
+                d["is_ready"] = False
+                blocked_dots.append(d)
+            d["assignee"] = d.get("claimed_by") or d.get("lane") or "unassigned"
+
+        return {
+            "ok": True,
+            "total_count": len(all_dots),
+            "ready_count": len(ready_dots),
+            "blocked_count": len(blocked_dots),
+            "claimed_count": len(claimed_dots),
+            "done_count": len(done_dots),
+            "ready_dots": ready_dots,
+            "ready_tasks": ready_dots,
+            "blocked_dots": blocked_dots,
+            "claimed_dots": claimed_dots,
+            "done_dots": done_dots,
+            "items": all_dots,
+            "tasks": all_dots,
+        }
+
+    def manage_dot_task(
+        self,
+        action: str = "ready",
+        dot_id: str = "",
+        title: str = "",
+        workspace: str = "brain_mcp",
+        lane: str = "API",
+        depends_on: Optional[List[str]] = None,
+        agent_id: str = "arch-01",
+        assignee: str = "",
+        close_reason: str = "",
+        priority: int = 4,
+        summary: str = "",
+        export_dir: str = "",
+    ) -> Dict[str, Any]:
+        """
+        Gere tarefas no DAG DOTS:
+        - 'ready': devolve apenas tarefas 100% desbloqueadas (zero dependências pendentes).
+        - 'create': cria novo Dot no DAG com lista de dependências 'depends_on'.
+        - 'claim': reclama uma tarefa READY para um agente (recusa se estiver BLOCKED no DAG).
+        - 'complete' / 'done': conclui um Dot e desbloqueia automaticamente os seus dependentes no DAG.
+        - 'sync_md': exporta as tarefas como ficheiros Markdown + YAML frontmatter em .dots/*.md.
+        """
+        act = (action or "ready").strip().lower()
+        effective_agent = (assignee or agent_id or "arch-01").strip()
+        if act == "ready":
+            return self.get_dots_dag(workspace=workspace)
+
+        with self.db._connect() as conn:
+            if act == "create":
+                clean_title = (title or "Nova Tarefa DOTS").strip()
+                did = (dot_id or "").strip()
+                if not did:
+                    cnt = conn.execute("SELECT COUNT(*) as c FROM dots_tasks;").fetchone()["c"]
+                    did = f"dot-{int(cnt or 0) + 1:02d}"
+                deps_list = [str(x).strip() for x in (depends_on or []) if str(x).strip()]
+                conn.execute(
+                    """
+                    INSERT INTO dots_tasks (dot_id, title, workspace, lane, status, depends_on_json, claimed_by, priority, summary, updated_at)
+                    VALUES (?, ?, ?, ?, 'open', ?, '', ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(dot_id) DO UPDATE SET
+                        title = excluded.title,
+                        depends_on_json = excluded.depends_on_json,
+                        priority = excluded.priority,
+                        summary = excluded.summary,
+                        updated_at = CURRENT_TIMESTAMP;
+                    """,
+                    (
+                        did,
+                        clean_title,
+                        (workspace or "brain_mcp").strip().lower(),
+                        (lane or "API").strip().upper(),
+                        json.dumps(deps_list),
+                        max(1, min(5, int(priority or 4))),
+                        (summary or "").strip(),
+                    ),
+                )
+            elif act == "claim":
+                target_id = (dot_id or "").strip()
+                dag_now = self.get_dots_dag(workspace="all")
+                target_item = next((x for x in dag_now["items"] if x["dot_id"] == target_id), None)
+                if not target_item:
+                    return {"ok": False, "error": f"Dot '{target_id}' não encontrado."}
+                if target_item.get("blocked_by"):
+                    return {
+                        "ok": False,
+                        "error": f"Dot '{target_id}' está BLOQUEADO no DAG por: {', '.join(target_item['blocked_by'])}",
+                        "blocked_by": target_item["blocked_by"],
+                    }
+                conn.execute(
+                    "UPDATE dots_tasks SET status = 'claimed', claimed_by = ?, updated_at = CURRENT_TIMESTAMP WHERE dot_id = ?;",
+                    (effective_agent, target_id),
+                )
+            elif act in ("complete", "done"):
+                target_id = (dot_id or "").strip()
+                if close_reason:
+                    conn.execute(
+                        "UPDATE dots_tasks SET status = 'done', summary = CASE WHEN summary = '' THEN ? ELSE summary END, updated_at = CURRENT_TIMESTAMP WHERE dot_id = ?;",
+                        (close_reason.strip(), target_id),
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE dots_tasks SET status = 'done', updated_at = CURRENT_TIMESTAMP WHERE dot_id = ?;",
+                        (target_id,),
+                    )
+            elif act == "reopen":
+                target_id = (dot_id or "").strip()
+                conn.execute(
+                    "UPDATE dots_tasks SET status = 'open', claimed_by = '', updated_at = CURRENT_TIMESTAMP WHERE dot_id = ?;",
+                    (target_id,),
+                )
+
+        dag_after = self.get_dots_dag(workspace=workspace)
+
+        if act == "sync_md":
+            base_dir = Path(export_dir) if export_dir else (Path(os.path.dirname(os.path.abspath(__file__))) / ".dots")
+            base_dir.mkdir(parents=True, exist_ok=True)
+            written_files: List[str] = []
+            for item in dag_after["items"]:
+                safe_id = re.sub(r"[^a-zA-Z0-9_\-]", "", str(item["dot_id"])) or "dot"
+                md_path = base_dir / f"{safe_id}.md"
+                md_content = (
+                    "---\n"
+                    f"id: {item['dot_id']}\n"
+                    f"title: \"{str(item['title']).replace('\"', '')}\"\n"
+                    f"status: {item['status']}\n"
+                    f"dag_state: {item['dag_state']}\n"
+                    f"lane: {item['lane']}\n"
+                    f"workspace: {item['workspace']}\n"
+                    f"priority: {item['priority']}\n"
+                    f"depends_on: {json.dumps(item['depends_on'])}\n"
+                    f"claimed_by: \"{item.get('claimed_by') or ''}\"\n"
+                    "---\n\n"
+                    f"# {item['dot_id']} — {item['title']}\n\n"
+                    f"{item.get('summary') or 'Tarefa gerida pelo motor DOTS DAG do Antigravity Brain.'}\n"
+                )
+                md_path.write_text(md_content, encoding="utf-8")
+                written_files.append(str(md_path))
+            dag_after["synced_md_files"] = written_files
+            dag_after["exported_count"] = len(written_files)
+            dag_after["dots_dir"] = str(base_dir)
+
+        return dag_after

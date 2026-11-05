@@ -333,9 +333,11 @@ def build_ephemeral_context(
     jev_route: Optional[Dict[str, Any]] = None,
     delta_info: Optional[Dict[str, Any]] = None,
     micro_mode: bool = False,
+    orbit_brief: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
-    mode_tag = "MICRO_TICK" if micro_mode or max_chars <= 380 else ("DELTA" if (delta_info and delta_info.get("is_delta_turn")) else "TOON_V2")
+    is_micro = bool(micro_mode or max_chars <= 380)
+    mode_tag = "MICRO_TICK" if is_micro else ("DELTA" if (delta_info and delta_info.get("is_delta_turn")) else "TOON_V2")
     parts: List[str] = [
         f"[BRAIN_MEMORY|ws={workspace}|mode={mode_tag}]"
     ]
@@ -347,9 +349,15 @@ def build_ephemeral_context(
             active_t = ",".join(INTENT_TOOL_ROUTING.get(intent_key, INTENT_TOOL_ROUTING["general_engineering"])["active_tools"])
         except Exception:
             active_t = "swarm_symbol_lookup,search_brain,store_fact"
-        parts.append(
-            f"[JEV_S1|intent={intent_key}|route={jev_route.get('model_route')}|tools={active_t}|th={jev_route.get('adaptive_stop_threshold')}]"
-        )
+        if is_micro:
+            parts.append(
+                f"[JEV_S1|intent={intent_key}|route={jev_route.get('model_route')}|tools={active_t}|th={jev_route.get('adaptive_stop_threshold')}]"
+            )
+        else:
+            dots_traj_str = str(jev_route.get("dots_trajectory") or "[MEM_BM25_32D]➔[BLAST_RADIUS]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]")
+            parts.append(
+                f"[JEV_S1|intent={intent_key}|route={jev_route.get('model_route')}|dots={dots_traj_str}|tools={active_t}|th={jev_route.get('adaptive_stop_threshold')}]"
+            )
 
     if checkpoint:
         c_goal = compress_fact_telegraphic(checkpoint.get("goal") or checkpoint.get("last_completed") or "Sessão ativa", 75)
@@ -362,7 +370,7 @@ def build_ephemeral_context(
     is_delta = bool(delta_info and delta_info.get("is_delta_turn"))
     try:
         orb = OrbitEngine()
-        if not is_delta:
+        if not is_delta and not is_micro:
             bcasts = orb.get_active_broadcasts(workspace=workspace, limit=1)
             seen_bc: set[str] = set()
             for bc in bcasts:
@@ -371,18 +379,23 @@ def build_ephemeral_context(
                     continue
                 seen_bc.add(bc_txt.lower())
                 parts.append(f"📡[ORBIT|{bc['target_scope']}]:{bc_txt}")
-        if not (micro_mode or max_chars <= 380) and not is_delta:
+        if not is_micro and not is_delta:
             handoffs = orb.get_recent_handoffs(workspace=workspace, limit=1)
             if handoffs:
                 ho = handoffs[0]
                 parts.append(
                     f"🔗[HANDOFF|{ho['from_agent']}->{ho['to_scope']}|{ho['modified_files'][:40]}]:{compress_fact_telegraphic(ho['summary'], 85)}"
                 )
+            dots_dag = (orbit_brief or {}).get("dots_dag") if orbit_brief else orb.get_dots_dag(workspace=workspace)
+            ready_list = (dots_dag or {}).get("ready_tasks") or (dots_dag or {}).get("ready_dots") or []
+            if ready_list:
+                r_str = "; ".join(f"{d['dot_id']}(P{d.get('priority', 2)}):{d['title'][:38]}" for d in ready_list[:2])
+                parts.append(f"🎯[DOTS_READY|unblocked={len(ready_list)}]:{r_str}")
     except Exception:
         pass
 
     # Se estivermos em Modo Micro-Prompt (confirmação rápida <90 tokens), parar aqui!
-    if micro_mode or max_chars <= 380:
+    if is_micro:
         return "\n".join(parts)[:max_chars]
 
     # OTIMIZAÇÃO #1: Se o Scout Map já foi injetado nesta conversa e não mudou, usar marcador 0-token

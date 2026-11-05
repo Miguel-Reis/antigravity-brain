@@ -585,6 +585,12 @@ def orbit_mission_control(
         res = orbit.send_broadcast(target_scope=target_scope, directive=directive, workspace=workspace)
     elif action == "connect_mcp_bridge":
         res = orbit.connect_all_ai_tools()
+    elif action in ("dot_ready", "dot_claim", "dot_complete", "dot_sync_md"):
+        res = orbit.manage_dot_task(
+            action=action.replace("dot_", ""),
+            dot_id=directive or target_scope,
+            workspace=workspace,
+        )
     else:
         res = orbit.get_mission_control_inbox()
     return json.dumps(res, indent=2, ensure_ascii=False)

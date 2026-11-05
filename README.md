@@ -1,15 +1,15 @@
 <div align="center">
 
-# 🧠 Antigravity Brain v4.6
+# 🧠 Antigravity Brain v4.7
 
-**Zero-Round-Trip Persistent Memory Engine, Asymmetric Swarm Orchestrator, Orbit Agent OS & 60 FPS 3D Command Studio for AI Coding Agents**
+**Zero-Round-Trip Persistent Memory Engine, DOTS 3-Layer Stack, Asymmetric Swarm Orchestrator, Orbit Agent OS & 60 FPS 3D Command Studio for AI Coding Agents**
 
-[![Version](https://img.shields.io/badge/version-4.6.0-6366f1?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
+[![Version](https://img.shields.io/badge/version-4.7.0-6366f1?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
 [![Python](https://img.shields.io/badge/python-3.10%2B%20(Zero--Deps)-38bdf8?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/SQLite_WAL-FTS5_BM25_%2B_32D_Vectors-10b981?style=for-the-badge&logo=sqlite&logoColor=white)](./db_engine.py)
-[![MCP](https://img.shields.io/badge/MCP-JSON--RPC_2.0_Stdio_(18_Tools)-f59e0b?style=for-the-badge)](./server.py)
+[![DOTS](https://img.shields.io/badge/DOTS-DAG_%C2%B7_Trajectory_Search_%C2%B7_ECS_SoA-f59e0b?style=for-the-badge)](./orbit_engine.py)
 [![Audit Score](https://img.shields.io/badge/360%C2%BA_Audit-99.0%2F100_PASS-34d399?style=for-the-badge)](./test_brain.py)
-[![Tests](https://img.shields.io/badge/Tests-21%2F21_Passing-22c55e?style=for-the-badge)](./test_brain.py)
+[![Tests](https://img.shields.io/badge/Tests-22%2F22_Passing-22c55e?style=for-the-badge)](./test_brain.py)
 
 *Built with 100% Python Standard Library (`sqlite3`, `ast`, `http.server`, `threading`) and Vanilla HTML5/Canvas2D/WebAudio — zero `pip` packages required, zero cloud telemetry, sub-10ms local execution.*
 
@@ -29,6 +29,10 @@ AI coding agents lose context between sessions, repeatedly re-read the same file
 - 🕰️ **Time-Travel Memory Revisions & 1-Click Rollback**: Every update to an existing memory automatically snapshots the previous state in `memory_revisions`, allowing instant 1-click restoration and human-lock protection.
 - 🕸️ **Graphify Multi-Modal AST Knowledge Graph**: Indexes Python, JavaScript/HTML, API routes, MCP tools, and SQLite tables into a unified graph (`420+` nodes, `1,260+` edges) with `EXTRACTED`, `INFERRED`, and `AMBIGUOUS` confidence levels, God Node detection, and **BFS Shortest Path** queries (`1,390x` token compression vs. raw codebase reads).
 - 🛡️ **Transactional CoW Sandboxes & AI-Defence v2**: Subagents operate in Copy-on-Write sandboxes with SHA-256 verification, multi-language AST syntax gates, strict path-traversal confinement, and automatic redaction across **12 modern secret formats** (`sk-ant-`, `sk-proj-`, `github_pat_`, `ghp_`, `AIza`, `ya29.`, `AKIA`, `xoxb-`, `hf_`, JWT, Private Keys).
+- 🎯 **Full-Stack DOTS Engine (3 Layers)**:
+  1. **Git-Native DAG Task Tracker (`.dots/*.md` + `dot_ready`)**: Tracks explicit `depends_on` / `blocked_by` DAG dependencies in SQLite and `.dots/*.md` YAML frontmatter, injecting only 100% unblocked `🎯[DOTS_READY]` tasks into `PreInvocation` and auto-unlocking dependent tasks on completion.
+  2. **Dynamic Optimal Reasoning Trajectories Search (`compute_dots_trajectory`)**: Dynamically composes optimal atomic cognitive trajectories (`[AST_SLICE:L]➔[CAUSAL_LINEAGE]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]`) in `<0.05ms` inside `[JEV_S1]`.
+  3. **Data-Oriented Technology Stack (ECS + `Float32Array` SoA Physics)**: Pre-allocated contiguous `Float32Array` and `Int32Array` linked-grid buffers (`dotsEcsSoA`) for **zero GC allocations per frame** at 60 FPS.
 
 ---
 
@@ -196,13 +200,13 @@ You can also connect any MCP-compatible IDE manually or via the **1-Click Cross-
 
 ## 🧪 Verification & Test Suite
 
-Antigravity Brain ships with an exhaustive, self-contained **21-suite integration test runner** ([`test_brain.py`](./test_brain.py)) that validates FTS5 BM25 prefix queries, 32-D bilingual vectors, PreInvocation/Stop hooks, AST symbol lookup, Graphify BFS paths, CoW sandboxes, Orbit Agent OS, Frustum Culling, Time-Travel memory rollbacks, and security gates:
+Antigravity Brain ships with an exhaustive, self-contained **22-suite integration test runner** ([`test_brain.py`](./test_brain.py)) that validates FTS5 BM25 prefix queries, 32-D bilingual vectors, PreInvocation/Stop hooks, AST symbol lookup, Graphify BFS paths, CoW sandboxes, Orbit Agent OS, Frustum Culling, Time-Travel memory rollbacks, security gates, and the 3-Layer DOTS Stack:
 
 ```bash
 python test_brain.py
 ```
 
-Expected output (`21/21 PASS`):
+Expected output (`22/22 PASS`):
 
 ```text
 [PASS] Pesquisa FTS5 BM25: 2 resultados em 5.61ms
@@ -211,14 +215,14 @@ Expected output (`21/21 PASS`):
 [PASS] Guarda Anti-Repetição de Turno verificada ({})
 [PASS] Stop Hook verificado ({'decision': 'allow'})
 [PASS] Contrato HTML/JS do Modo Follow 3D verificado
-[PASS] AST Symbol Lookup (Python + JS): brain_inject.py:L573 & index.html:L7790
-[PASS] Reverse Call/Impact Graph: 14 ficheiros afetados (94 referências, Risco: HIGH)
+[PASS] AST Symbol Lookup (Python + JS): brain_inject.py:L586 & index.html:L7878
+[PASS] Reverse Call/Impact Graph: 14 ficheiros afetados (96 referências, Risco: HIGH)
 [PASS] Opção A (Hybrid Semantic Vector 32-D + BM25): cosine_bilingue=0.801
 [PASS] Opção C (Dynamic Tool Pruning): 4/16 tools ativas (-96.4% / ~5992 tokens poupados)
 [PASS] Opção D (Subagent Transactional Sandbox): Sandbox -> MERGED (AST Gate=True, Secret Scan=True)
 [PASS] Contrato das 6 Melhorias de UI/UX verificado em index.html
 [PASS] Automated File-Save AST & Impact Watcher: db_engine.py -> HIGH & CRITICAL Gate OK
-[PASS] Graphify Engine: 424 nós multi-modais, 1264 arestas, BFS Path em 3 saltos (1392.2x) & GRAPH_REPORT.md OK
+[PASS] Graphify Engine: 430 nós multi-modais, 1286 arestas, BFS Path em 3 saltos (1434.1x) & GRAPH_REPORT.md OK
 [PASS] 3D Holographic Desk Heatmap Towers: 18 secretárias mapeadas & Hitboxes/HUD OK
 [PASS] MCP Stdio Server (server.py): Handshake 'initialize' OK, 18 tools registadas
 [PASS] Orbit Agent OS (6 Tecnologias): Trust Hierarchy, Broadcast, Hand-off, Inbox, 4-IDE Bridge & ROI OK
@@ -227,6 +231,7 @@ Expected output (`21/21 PASS`):
 [PASS] 4 Pilares de Melhorias (Deduplicação Semântica, Bulk Actions, Kanban 5 Colunas, Filtros & Sync Office 3D) OK
 [PASS] 5 Otimizações de Poupança de Tokens (Session Delta, TOON, Top-K Cutoff, Pointers :Lstart-end e Micro-Prompt) OK
 [PASS] Auditoria Total v4.6 (FTS5 BM25 Prefix Fix, AST-Safe Scout Slice, Arrow Regex, Time-Travel Rollback & Security Hardening) OK
+[PASS] Pack Completo DOTS v4.7 (DAG .dots/*.md + Trajetórias Cognitivas DOTS + Motor Físico ECS Float32Array SoA) OK
 ```
 
 ---

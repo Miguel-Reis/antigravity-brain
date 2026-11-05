@@ -1197,6 +1197,29 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             elif action == "connect_mcp_bridge":
                 targets = body.get("targets")
                 res = orbit.connect_all_ai_tools(target_ids=targets if isinstance(targets, list) else None)
+            elif action in ("dot_ready", "dot_create", "dot_claim", "dot_complete", "dot_reopen", "dot_sync_md"):
+                sub_act = action.replace("dot_", "")
+                deps_raw = body.get("depends_on") or []
+                if isinstance(deps_raw, str):
+                    deps_list = [x.strip() for x in deps_raw.split(",") if x.strip()]
+                elif isinstance(deps_raw, list):
+                    deps_list = [str(x).strip() for x in deps_raw if str(x).strip()]
+                else:
+                    deps_list = []
+                dot_res = orbit.manage_dot_task(
+                    action=sub_act,
+                    dot_id=str(body.get("dot_id", "")),
+                    title=str(body.get("title", "")),
+                    workspace=str(body.get("workspace", "brain_mcp")),
+                    lane=str(body.get("lane", "API")),
+                    depends_on=deps_list,
+                    agent_id=str(body.get("agent_id", "arch-01")),
+                    assignee=str(body.get("assignee", "")),
+                    close_reason=str(body.get("close_reason", "")),
+                    priority=int(body.get("priority", 4) or 4),
+                    summary=str(body.get("summary", "")),
+                )
+                res = {**dot_res, "dot": dot_res}
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return

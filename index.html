@@ -3686,7 +3686,7 @@
           </div>
 
           <!-- Agent Chaining & Hand-off Packets -->
-          <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:12px; flex:1;">
+          <div style="background:rgba(17,23,37,0.92); border:1px solid rgba(16,185,129,0.35); border-radius:10px; padding:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
               <div>
                 <div style="font-size:12px; font-weight:800; color:#6ee7b7;">🔗 AGENT CHAINING &amp; HAND-OFF PACKETS</div>
@@ -3694,7 +3694,24 @@
               </div>
               <button class="quick-ag-btn" style="border-color:rgba(16,185,129,0.45); color:#6ee7b7;" onclick="triggerDemoHandoffUI()">➕ Simular Hand-off</button>
             </div>
-            <div id="orbitHandoffsList" style="display:flex; flex-direction:column; gap:6px; max-height:155px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
+            <div id="orbitHandoffsList" style="display:flex; flex-direction:column; gap:6px; max-height:110px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
+          </div>
+
+          <!-- DOTS Git-Native DAG Task Tracker (.dots/*.md + dot_ready) -->
+          <div style="background:rgba(17,23,37,0.94); border:1px solid rgba(245,158,11,0.4); border-radius:10px; padding:12px; flex:1;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+              <div>
+                <div style="font-size:12px; font-weight:800; color:#fcd34d; display:flex; align-items:center; gap:6px;">
+                  <span>🎯 DOTS GIT-NATIVE DAG TRACKER</span>
+                  <span id="orbitDotsStatsBadge" style="background:rgba(245,158,11,0.2); border:1px solid rgba(245,158,11,0.45); color:#fde68a; padding:1px 7px; border-radius:999px; font-size:9.5px;">READY: 0</span>
+                </div>
+                <div style="font-size:10.5px; color:var(--text-muted);">Grafo acíclico de dependências (`blocks/depends_on`) · Injeção Zero-Token `🎯[DOTS_READY]`</div>
+              </div>
+              <div style="display:flex; gap:5px;">
+                <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.5); color:#fde68a;" onclick="orbitDotActionUI('dot_sync_md', '')">📂 Sync `.dots/*.md`</button>
+              </div>
+            </div>
+            <div id="orbitDotsDagList" style="display:flex; flex-direction:column; gap:6px; max-height:175px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
           </div>
         </div>
       </div>
@@ -5489,7 +5506,44 @@
       graphDirty = true;
     }
 
-    // MOTOR FÍSICO FORCE-DIRECTED COM ARREFECIMENTO + SEPARAÇÃO ANTI-COLISÃO
+    // DOTS ENGINE (ECS + Structure-of-Arrays Float32Array Zero-GC Allocation Physics)
+    const DOTS_HASH_BUCKETS = 1024; // Potência de 2 para máscara bitwise rápida
+    const DOTS_HASH_MASK = DOTS_HASH_BUCKETS - 1;
+    const dotsEcsSoA = {
+      cap: 0,
+      posX: new Float32Array(0),
+      posY: new Float32Array(0),
+      velX: new Float32Array(0),
+      velY: new Float32Array(0),
+      radius: new Float32Array(0),
+      gravityMult: new Float32Array(0),
+      pinned: new Uint8Array(0),
+      cellNext: new Int32Array(0),
+      cellHead: new Int32Array(DOTS_HASH_BUCKETS)
+    };
+    window.dotsEngineStats = {
+      ecsActive: true,
+      soaCapacity: 0,
+      zeroAllocSteps: 0,
+      lastEntitiesCount: 0
+    };
+
+    function ensureDotsSoACapacity(minN) {
+      if (dotsEcsSoA.cap >= minN) return;
+      const nextCap = Math.max(128, Math.pow(2, Math.ceil(Math.log2(minN + 16))));
+      dotsEcsSoA.cap = nextCap;
+      dotsEcsSoA.posX = new Float32Array(nextCap);
+      dotsEcsSoA.posY = new Float32Array(nextCap);
+      dotsEcsSoA.velX = new Float32Array(nextCap);
+      dotsEcsSoA.velY = new Float32Array(nextCap);
+      dotsEcsSoA.radius = new Float32Array(nextCap);
+      dotsEcsSoA.gravityMult = new Float32Array(nextCap);
+      dotsEcsSoA.pinned = new Uint8Array(nextCap);
+      dotsEcsSoA.cellNext = new Int32Array(nextCap);
+      window.dotsEngineStats.soaCapacity = nextCap;
+    }
+
+    // MOTOR FÍSICO FORCE-DIRECTED DOTS (ECS Float32Array SoA + Spatial Int32 Linked-Grid Zero-Alloc)
     function stepPhysics(isPrewarm = false) {
       const N = activeNodes.length;
       if (N === 0) return;
@@ -5499,120 +5553,154 @@
         return;
       }
 
+      ensureDotsSoACapacity(N);
+      const pxArr = dotsEcsSoA.posX;
+      const pyArr = dotsEcsSoA.posY;
+      const vxArr = dotsEcsSoA.velX;
+      const vyArr = dotsEcsSoA.velY;
+      const rArr = dotsEcsSoA.radius;
+      const gArr = dotsEcsSoA.gravityMult;
+      const pinArr = dotsEcsSoA.pinned;
+      const nextArr = dotsEcsSoA.cellNext;
+      const headArr = dotsEcsSoA.cellHead;
+
+      // Sync AoS -> DOTS SoA contíguo (Zero-GC)
+      for (let i = 0; i < N; i++) {
+        const n = activeNodes[i];
+        n._sIdx = i;
+        pxArr[i] = n.x;
+        pyArr[i] = n.y;
+        vxArr[i] = n.vx || 0;
+        vyArr[i] = n.vy || 0;
+        rArr[i] = (n.val || 12) * 1.2;
+        gArr[i] = n.node_type === 'workspace' ? 1.5 : 1.0;
+        pinArr[i] = n === draggedNode ? 1 : 0;
+      }
+
       const alpha = isPrewarm ? simAlpha : (draggedNode ? 0.28 : simAlpha);
+      const repStrength = physics.repulsion;
 
-      // 1. Repulsão Coulomb + Spatial Hash Grid O(N) para grafos densos (evita O(N^2) quando há muitas memórias)
-      const applyPairRepulsion = (a, b) => {
-        let dx = b.x - a.x;
+      // 1. Repulsão Coulomb + Anti-Colisão sobre buffers Float32Array contíguos
+      const applyPairRepulsionSoA = (i, j) => {
+        const dx = pxArr[j] - pxArr[i];
         if (dx > 480 || dx < -480) return;
-        let dy = b.y - a.y;
+        const dy = pyArr[j] - pyArr[i];
         if (dy > 480 || dy < -480) return;
-        const rA = (a.val || 12) * 1.2;
-        const rB = (b.val || 12) * 1.2;
-        let distSq = dx * dx + dy * dy + 1.0;
+        const distSq = dx * dx + dy * dy + 1.0;
         if (distSq > 230400) return; // > 480^2
-        let dist = Math.sqrt(distSq);
+        const dist = Math.sqrt(distSq);
 
-        let repForce = Math.min(28.0, (physics.repulsion / distSq)) * alpha;
-        let fx = (dx / dist) * repForce;
-        let fy = (dy / dist) * repForce;
-        if (a !== draggedNode) { a.vx -= fx; a.vy -= fy; }
-        if (b !== draggedNode) { b.vx += fx; b.vy += fy; }
+        const repForce = Math.min(28.0, (repStrength / distSq)) * alpha;
+        const fx = (dx / dist) * repForce;
+        const fy = (dy / dist) * repForce;
+        if (!pinArr[i]) { vxArr[i] -= fx; vyArr[i] -= fy; }
+        if (!pinArr[j]) { vxArr[j] += fx; vyArr[j] += fy; }
 
-        const minSep = rA + rB + 64;
+        const minSep = rArr[i] + rArr[j] + 64;
         if (dist < minSep && dist > 0.01) {
           const push = (minSep - dist) * 0.35;
-          const px = (dx / dist) * push;
-          const py = (dy / dist) * push;
-          if (a !== draggedNode) { a.x -= px; a.y -= py; }
-          if (b !== draggedNode) { b.x += px; b.y += py; }
+          const pushX = (dx / dist) * push;
+          const pushY = (dy / dist) * push;
+          if (!pinArr[i]) { pxArr[i] -= pushX; pyArr[i] -= pushY; }
+          if (!pinArr[j]) { pxArr[j] += pushX; pyArr[j] += pushY; }
         }
       };
 
       if (N <= 65) {
         for (let i = 0; i < N; i++) {
-          const a = activeNodes[i];
           for (let j = i + 1; j < N; j++) {
-            applyPairRepulsion(a, activeNodes[j]);
+            applyPairRepulsionSoA(i, j);
           }
         }
       } else {
-        const CELL = 480;
-        const grid = new Map();
+        // Spatial Hash Grid Int32Array Linked-List (0 alocações por frame — sem new Map() nem arrays)
+        const INV_CELL = 1.0 / 480.0;
+        headArr.fill(-1);
         for (let i = 0; i < N; i++) {
-          const n = activeNodes[i];
-          n._sIdx = i;
-          const gx = Math.floor(n.x / CELL);
-          const gy = Math.floor(n.y / CELL);
-          const key = (gx << 16) ^ (gy & 0xffff);
-          let bucket = grid.get(key);
-          if (!bucket) {
-            bucket = [];
-            grid.set(key, bucket);
-          }
-          bucket.push(n);
+          const gx = Math.floor(pxArr[i] * INV_CELL);
+          const gy = Math.floor(pyArr[i] * INV_CELL);
+          const h = (((gx * 73856093) ^ (gy * 19349663)) & DOTS_HASH_MASK);
+          nextArr[i] = headArr[h];
+          headArr[h] = i;
         }
         for (let i = 0; i < N; i++) {
-          const a = activeNodes[i];
-          const gx = Math.floor(a.x / CELL);
-          const gy = Math.floor(a.y / CELL);
+          const gx = Math.floor(pxArr[i] * INV_CELL);
+          const gy = Math.floor(pyArr[i] * INV_CELL);
           for (let ox = -1; ox <= 1; ox++) {
             for (let oy = -1; oy <= 1; oy++) {
-              const key = ((gx + ox) << 16) ^ ((gy + oy) & 0xffff);
-              const bucket = grid.get(key);
-              if (!bucket) continue;
-              for (let k = 0; k < bucket.length; k++) {
-                const b = bucket[k];
-                if (b._sIdx > i) {
-                  applyPairRepulsion(a, b);
+              const h = ((((gx + ox) * 73856093) ^ ((gy + oy) * 19349663)) & DOTS_HASH_MASK);
+              let j = headArr[h];
+              while (j !== -1) {
+                if (j > i) {
+                  applyPairRepulsionSoA(i, j);
                 }
+                j = nextArr[j];
               }
             }
           }
         }
       }
 
-      // 2. Força de Mola Suave (Hooke) nas ligações sinápticas
-      for (const l of activeLinks) {
-        const a = l.sourceNode;
-        const b = l.targetNode;
-        let dx = b.x - a.x;
-        let dy = b.y - a.y;
-        let dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        let targetLen = l.kind === 'tag_link'
+      // 2. Força de Mola Suave (Hooke) nas ligações sinápticas (via índices SoA)
+      for (let k = 0, L = activeLinks.length; k < L; k++) {
+        const l = activeLinks[k];
+        const i = l.sourceNode._sIdx;
+        const j = l.targetNode._sIdx;
+        if (i === undefined || j === undefined) continue;
+        const dx = pxArr[j] - pxArr[i];
+        const dy = pyArr[j] - pyArr[i];
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1.0;
+        const targetLen = l.kind === 'tag_link'
           ? physics.springLength * 0.85
           : (l.kind === 'workspace_link' ? physics.springLength * 1.2 : physics.springLength);
-        let displacement = dist - targetLen;
-        let force = displacement * physics.springK * alpha;
-        let fx = (dx / dist) * force;
-        let fy = (dy / dist) * force;
-        if (a !== draggedNode) { a.vx += fx; a.vy += fy; }
-        if (b !== draggedNode) { b.vx -= fx; b.vy -= fy; }
+        const force = (dist - targetLen) * physics.springK * alpha;
+        const fx = (dx / dist) * force;
+        const fy = (dy / dist) * force;
+        if (!pinArr[i]) { vxArr[i] += fx; vyArr[i] += fy; }
+        if (!pinArr[j]) { vxArr[j] -= fx; vyArr[j] -= fy; }
       }
 
-      // 3. Gravidade central suave, limite de velocidade (Clamp) e arrefecimento
+      // 3. Gravidade central suave, limite de velocidade (Clamp) e sync DOTS SoA -> AoS
       const maxSpeed = isPrewarm ? 25.0 : 8.0;
-      for (const n of activeNodes) {
-        if (n === draggedNode) continue;
-        const gFactor = (n.node_type === 'workspace' ? physics.gravity * 1.5 : physics.gravity) * alpha;
-        n.vx = (n.vx - n.x * gFactor) * physics.damping;
-        n.vy = (n.vy - n.y * gFactor) * physics.damping;
+      const baseGrav = physics.gravity * alpha;
+      const damp = physics.damping;
+      for (let i = 0; i < N; i++) {
+        if (pinArr[i]) continue;
+        const gFactor = baseGrav * gArr[i];
+        let vx = (vxArr[i] - pxArr[i] * gFactor) * damp;
+        let vy = (vyArr[i] - pyArr[i] * gFactor) * damp;
 
-        const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy);
+        const speed = Math.sqrt(vx * vx + vy * vy);
         if (speed > maxSpeed) {
-          n.vx = (n.vx / speed) * maxSpeed;
-          n.vy = (n.vy / speed) * maxSpeed;
+          vx = (vx / speed) * maxSpeed;
+          vy = (vy / speed) * maxSpeed;
         }
 
-        n.x += n.vx;
-        n.y += n.vy;
+        const nx = pxArr[i] + vx;
+        const ny = pyArr[i] + vy;
+        pxArr[i] = nx;
+        pyArr[i] = ny;
+        vxArr[i] = vx;
+        vyArr[i] = vy;
+
+        const n = activeNodes[i];
+        n.x = nx;
+        n.y = ny;
+        n.vx = vx;
+        n.vy = vy;
       }
+
+      window.dotsEngineStats.zeroAllocSteps++;
+      window.dotsEngineStats.lastEntitiesCount = N;
 
       if (!isPrewarm && !draggedNode) {
         simAlpha *= 0.91;
         if (simAlpha < 0.003) {
           simAlpha = 0;
-          for (const n of activeNodes) { n.vx = 0; n.vy = 0; }
+          for (let i = 0; i < N; i++) {
+            activeNodes[i].vx = 0;
+            activeNodes[i].vy = 0;
+          }
         }
       }
     }
@@ -11096,6 +11184,93 @@
             </div>
           `).join('');
         }
+      }
+
+      // DOTS Git-Native DAG Task Tracker (.dots/*.md + dot_ready)
+      const dotsDag = data.dots_dag || {};
+      const dotsStatsBadge = document.getElementById('orbitDotsStatsBadge');
+      if (dotsStatsBadge) {
+        dotsStatsBadge.textContent = `READY: ${dotsDag.ready_count || 0} · BLOCKED: ${dotsDag.blocked_count || 0} · DONE: ${dotsDag.done_count || 0}`;
+      }
+      const dotsListEl = document.getElementById('orbitDotsDagList');
+      if (dotsListEl) {
+        const dotTasks = dotsDag.tasks || [];
+        if (!dotTasks.length) {
+          dotsListEl.innerHTML = `<div style="color:var(--text-muted); padding:8px;">Sem Dots registados neste workspace.</div>`;
+        } else {
+          dotsListEl.innerHTML = dotTasks.map(d => {
+            const st = d.dag_state || 'ready';
+            const badgeColor = st === 'ready'
+              ? 'background:rgba(16,185,129,0.22); color:#6ee7b7; border:1px solid rgba(16,185,129,0.5);'
+              : (st === 'blocked'
+                ? 'background:rgba(244,63,94,0.2); color:#fda4af; border:1px solid rgba(244,63,94,0.45);'
+                : (st === 'claimed'
+                  ? 'background:rgba(56,189,248,0.22); color:#7dd3fc; border:1px solid rgba(56,189,248,0.5);'
+                  : 'background:rgba(148,163,184,0.18); color:#cbd5e1; border:1px solid rgba(148,163,184,0.35);'));
+            const blockedTxt = (d.blocked_by && d.blocked_by.length)
+              ? `<div style="color:#fda4af; font-size:9.5px; margin-top:2px;">⛔ Bloqueado por: ${escapeHtml(d.blocked_by.join(', '))}</div>`
+              : (d.depends_on && d.depends_on.length
+                ? `<div style="color:#94a3b8; font-size:9.5px; margin-top:2px;">🔗 Depende de: ${escapeHtml(d.depends_on.join(', '))} (✓ resolvido)</div>`
+                : '');
+            let actionBtns = '';
+            if (st === 'ready') {
+              actionBtns = `
+                <button class="quick-ag-btn" style="padding:2px 6px; font-size:9.5px; border-color:rgba(56,189,248,0.5); color:#7dd3fc;" onclick="orbitDotActionUI('dot_claim', '${escapeHtml(d.dot_id)}')">⚡ Claim</button>
+                <button class="quick-ag-btn" style="padding:2px 6px; font-size:9.5px; border-color:rgba(16,185,129,0.5); color:#6ee7b7;" onclick="orbitDotActionUI('dot_complete', '${escapeHtml(d.dot_id)}')">✓ Done</button>
+              `;
+            } else if (st === 'claimed') {
+              actionBtns = `
+                <button class="quick-ag-btn" style="padding:2px 6px; font-size:9.5px; border-color:rgba(16,185,129,0.5); color:#6ee7b7;" onclick="orbitDotActionUI('dot_complete', '${escapeHtml(d.dot_id)}')">✓ Done (Unlock DAG)</button>
+              `;
+            } else if (st === 'done') {
+              actionBtns = `
+                <button class="quick-ag-btn" style="padding:2px 6px; font-size:9.5px;" onclick="orbitDotActionUI('dot_reopen', '${escapeHtml(d.dot_id)}')">↺ Reopen</button>
+              `;
+            }
+            return `
+              <div style="background:rgba(9,13,22,0.92); border:1px solid ${st === 'ready' ? 'rgba(16,185,129,0.38)' : 'rgba(148,163,184,0.2)'}; border-radius:7px; padding:6px 8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                  <div style="font-weight:700; color:#f8fafc;">
+                    <span style="color:#fcd34d;">[${escapeHtml(d.dot_id)}]</span> ${escapeHtml(d.title)}
+                  </div>
+                  <span style="${badgeColor} padding:1px 6px; border-radius:999px; font-size:9px; font-weight:800;">${escapeHtml(st.toUpperCase())}</span>
+                </div>
+                ${blockedTxt}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; color:#94a3b8; font-size:9.5px;">
+                  <span>🤖 ${escapeHtml(d.assignee || 'unassigned')} · P${Number(d.priority || 2)}</span>
+                  <div style="display:flex; gap:4px;">${actionBtns}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    async function orbitDotActionUI(action, dotId) {
+      const ws = currentWorkspaceFilter !== 'ALL' ? currentWorkspaceFilter : 'brain_mcp';
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: action,
+          dot_id: dotId,
+          workspace: ws,
+          assignee: 'architect_lead',
+          close_reason: 'Concluído via Orbit DOTS Mission Control'
+        })
+      });
+      const out = await res.json();
+      if (out.ok && out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+      }
+      if (action === 'dot_sync_md' && out.dot && out.dot.ok) {
+        showToast(`📂 Exportados ${out.dot.exported_count || 0} ficheiros Git-Native para .dots/*.md!`);
+      } else if (out.dot && out.dot.ok) {
+        showToast(`🎯 DOTS [${dotId}] atualizado (${action})!`);
+      } else if (out.dot && out.dot.error) {
+        showToast(`⛔ DOTS Bloqueado: ${out.dot.error}`);
       }
     }
 

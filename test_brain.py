@@ -704,6 +704,65 @@ def run_all_tests() -> None:
         assert v46_ui_token in html_content, f"Token v4.6 em falta em index.html: {v46_ui_token}"
     print("[PASS] Auditoria Total v4.6 (FTS5 BM25 Prefix Fix, AST-Safe Scout Slice, Arrow Regex, Time-Travel Rollback & Security Hardening) OK")
 
+    # 22. Testar Pack Completo DOTS v4.7 (Camada 1: Git-Native DAG .dots/*.md, Camada 2: Dynamic Optimal Trajectory Search, Camada 3: ECS Float32Array SoA)
+    with tempfile.TemporaryDirectory() as tmp_dots_dir:
+        dots_db = BrainDB(os.path.join(tmp_dots_dir, "dots_v47.db"))
+        dots_orbit = OrbitEngine(dots_db)
+
+        # 22.1 Camada 2 — DOTS Dynamic Optimal Reasoning Trajectories Search (JEV System-1)
+        jev_dots = dots_db.jev_system1_route("Corrigir bug em index.html:L5520 e correr pytest para verificar", workspace="brain_mcp")
+        assert "dots_trajectory" in jev_dots and "➔" in jev_dots["dots_trajectory"], f"Trajetória DOTS ausente em jev_system1_route: {jev_dots}"
+        assert "[AST_SLICE:L]" in jev_dots["dots_trajectory"] and "[VERIFY_AST_TESTS]" in jev_dots["dots_trajectory"], (
+            f"Módulos atómicos esperados em falta na trajetória DOTS: {jev_dots['dots_trajectory']}"
+        )
+
+        # 22.2 Camada 1 — Git-Native DAG Task Tracker (bloqueio de dependências + desbloqueio automático + export .dots/*.md)
+        dag_init = dots_orbit.get_dots_dag("brain_mcp")
+        assert dag_init["ready_count"] >= 1 and dag_init["blocked_count"] >= 1, f"DAG inicial inválido: {dag_init}"
+
+        # Tentar fazer claim de dot-04 (que depende de dot-03 ainda open) -> deve bloquear!
+        blocked_claim = dots_orbit.manage_dot_task(action="claim", dot_id="dot-04", assignee="worker_tests", workspace="brain_mcp")
+        assert blocked_claim["ok"] is False and "dot-03" in blocked_claim.get("blocked_by", []), (
+            f"dot-04 devia estar bloqueado por dot-03: {blocked_claim}"
+        )
+
+        # Concluir dot-03 -> deve desbloquear automaticamente dot-04 para READY!
+        comp_03 = dots_orbit.manage_dot_task(action="complete", dot_id="dot-03", close_reason="SoA Float32Array concluído", workspace="brain_mcp")
+        assert comp_03["ok"] is True
+        ready_after = dots_orbit.manage_dot_task(action="ready", workspace="brain_mcp")
+        ready_ids = [t["dot_id"] for t in ready_after["ready_tasks"]]
+        assert "dot-04" in ready_ids, f"dot-04 devia passar a READY após conclusão de dot-03: {ready_ids}"
+
+        # Exportar para .dots/*.md com YAML frontmatter Git-Native
+        dots_md_dir = os.path.join(tmp_dots_dir, ".dots")
+        sync_res = dots_orbit.manage_dot_task(action="sync_md", workspace="brain_mcp", export_dir=dots_md_dir)
+        assert sync_res["ok"] is True and sync_res["exported_count"] >= 4
+        md_files = os.listdir(dots_md_dir)
+        assert any(f.startswith("dot-02") and f.endswith(".md") for f in md_files), f"Ficheiros .dots/*.md não gerados: {md_files}"
+
+        # Verificar injeção Zero-Token de dots= e 🎯[DOTS_READY] no contexto efémero
+        brief_dots = dots_orbit.get_executive_briefing_and_roi("brain_mcp")
+        ctx_dots = build_ephemeral_context(
+            [],
+            None,
+            "brain_mcp",
+            jev_route=jev_dots,
+            orbit_brief=brief_dots,
+        )
+        assert "dots=" in ctx_dots and "🎯[DOTS_READY|" in ctx_dots, f"Injeção DOTS em falta em build_ephemeral_context: {ctx_dots}"
+
+    # 22.3 Camada 3 — DOTS Engine ECS Float32Array SoA + UI Tracker em index.html
+    for dots_ui_token in (
+        "const dotsEcsSoA =",
+        "new Float32Array(",
+        "applyPairRepulsionSoA(",
+        "window.dotsEngineStats",
+        'id="orbitDotsDagList"',
+        "function orbitDotActionUI(",
+    ):
+        assert dots_ui_token in html_content, f"Token DOTS v4.7 em falta em index.html: {dots_ui_token}"
+    print("[PASS] Pack Completo DOTS v4.7 (DAG .dots/*.md + Trajetórias Cognitivas DOTS + Motor Físico ECS Float32Array SoA) OK")
+
 
 if __name__ == "__main__":
     run_all_tests()
