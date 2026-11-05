@@ -602,6 +602,8 @@ def orbit_mission_control(
         res = orbit.toggle_project_self_learn(workspace=workspace, enabled=en_arg)
     elif action == "self_learn_evolve":
         res = orbit.run_self_learn_evolution_cycle(workspace=workspace, force=True)
+    elif action == "forge_prompt":
+        res = orbit.generate_optimized_prompt(raw_request=directive, workspace=workspace, task_mode=target_scope or "feature")
     else:
         res = orbit.get_mission_control_inbox()
     return json.dumps(res, indent=2, ensure_ascii=False)

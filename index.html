@@ -2318,6 +2318,13 @@
         <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')" title="Atalho: Tecla 3">
           🏢 Office 3D
         </button>
+        <button class="view-tab" id="tabBtnSelfLearn" onclick="switchMainView('selflearn')" title="Ver onde o Self-Learn está ativo e o Pipeline Neural Gráfico a trabalhar em tempo real (Atalho: Tecla 4)">
+          <span class="pulse-dot" style="background:#a855f7;"></span>
+          🧬 Self-Learn
+        </button>
+        <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
+          ✨ Prompt Forge
+        </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
           <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
           Tasks (<span id="topTabTasksCount">0</span>)
@@ -2337,7 +2344,7 @@
       <button type="button" class="metric-pill" id="btnTokenDietHud" onclick="openInspectorModal()" style="cursor:pointer; border-color:rgba(16,185,129,0.38); background:rgba(16,185,129,0.1); color:#6ee7b7;" title="5 Otimizações de Poupança de Tokens Ativas: Session Delta (-64%), TOON Telegráfico (-31%), Corte Top-K, Pointers AST :Lstart-end e Modo Micro-Prompt (<90 tok). Clique para inspecionar e simular!">
         ⚡ <strong id="statTokenDietBadge">-64% Tokens</strong> · <span style="font-size:9.5px; color:#a7f3d0;">TOON+Delta</span>
       </button>
-      <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="openOrbitOsModal()" style="cursor:pointer; border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.12); color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.8 · '1 task running'). Clique para ativar/desativar por projeto ou evoluir agora!">
+      <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="switchMainView('selflearn')" style="cursor:pointer; border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.12); color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.9 · '1 task running'). Clique para abrir a página gráfica do Self-Learn!">
         🧬 <strong id="topSelfLearnBadgeTxt">Self-Learn ON · IQ 94.2%</strong>
       </button>
       <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
@@ -3266,6 +3273,214 @@
       <!-- Live Roster -->
       <div class="office-roster-list" id="officeRosterList"></div>
     </aside>
+  </div>
+
+  <!-- =========================================================================
+       04 // SELF-LEARN STUDIO (GRAPHICAL NEURAL PIPELINE & PER-PROJECT SENTINEL)
+       ========================================================================= -->
+  <div class="swarm-workspace" id="selfLearnWorkspace" style="padding:14px 18px; gap:12px;">
+    <!-- Top Header & Live Reactor Controls -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:linear-gradient(90deg, rgba(88,28,135,0.28), rgba(15,23,42,0.92)); border:1px solid rgba(168,85,247,0.45); border-radius:12px; padding:12px 16px;">
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:10px; font-family:var(--font-mono); color:#d8b4fe; font-weight:800; letter-spacing:0.08em;">04 // RECURSIVE SELF-IMPROVEMENT &amp; PROACTIVE SENTINEL ENGINE</div>
+          <div style="font-size:16px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:10px; margin-top:2px;">
+            <span>🧬 Estúdio Gráfico de Auto-Aprendizagem</span>
+            <span id="slPageActiveTaskPill" style="font-size:10.5px; font-family:var(--font-mono); background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.55); color:#6ee7b7; padding:2px 9px; border-radius:999px;">● 1 task running · Sentinel Ativo (0 tok/h)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:6px; background:rgba(9,13,22,0.85); border:1px solid rgba(168,85,247,0.4); border-radius:8px; padding:5px 10px;">
+          <span style="font-size:11px; color:#cbd5e1;">Projeto em Foco:</span>
+          <select id="slPageWorkspaceSelect" class="select-sm" style="min-width:140px; font-weight:700; color:#f3e8ff;" onchange="onSelfLearnWorkspaceChange(this.value)"></select>
+        </div>
+        <button class="btn" id="slPageToggleBtn" style="background:rgba(16,185,129,0.2); border-color:#10b981; color:#6ee7b7; font-weight:800;" onclick="toggleProjectSelfLearnUI(document.getElementById('slPageWorkspaceSelect')?.value || 'brain_mcp')">
+          🟢 Self-Learn: ATIVO
+        </button>
+        <button class="btn btn-primary" style="background:linear-gradient(135deg, #9333ea, #6366f1); border-color:#c084fc; font-weight:800;" onclick="triggerGraphicalSelfLearnCycle()">
+          ⚡ Disparar Ciclo de Auto-Melhoria Agora
+        </button>
+      </div>
+    </div>
+
+    <!-- Graphical Neural Pipeline Canvas (4-Stage Synaptic Reactor at 60 FPS) -->
+    <div style="position:relative; background:radial-gradient(circle at 50% 50%, rgba(59,7,100,0.32), rgba(6,9,17,0.98)); border:1px solid rgba(168,85,247,0.4); border-radius:12px; height:245px; overflow:hidden; box-shadow:inset 0 0 40px rgba(0,0,0,0.75);">
+      <canvas id="selfLearnPipelineCanvas" style="width:100%; height:100%; display:block;"></canvas>
+      <div style="position:absolute; top:10px; left:14px; display:flex; gap:8px; pointer-events:none; flex-wrap:wrap;">
+        <span style="background:rgba(9,13,22,0.86); border:1px solid rgba(56,189,248,0.45); color:#7dd3fc; padding:3px 9px; border-radius:6px; font-size:10px; font-family:var(--font-mono); font-weight:700;">
+          ESTÁGIO 1: 📥 Memórias Episódicas (<span id="slStage1Count">0</span>)
+        </span>
+        <span style="background:rgba(9,13,22,0.86); border:1px solid rgba(168,85,247,0.45); color:#d8b4fe; padding:3px 9px; border-radius:6px; font-size:10px; font-family:var(--font-mono); font-weight:700;">
+          ESTÁGIO 2: ⚗️ Destilador de Padrões AST (:Lstart-end)
+        </span>
+        <span style="background:rgba(9,13,22,0.86); border:1px solid rgba(245,158,11,0.45); color:#fde68a; padding:3px 9px; border-radius:6px; font-size:10px; font-family:var(--font-mono); font-weight:700;">
+          ESTÁGIO 3: 🔗 Forja Sináptica Hebbiana (+<span id="slStage3Synapses">0</span> co_learned)
+        </span>
+        <span style="background:rgba(9,13,22,0.86); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; padding:3px 9px; border-radius:6px; font-size:10px; font-family:var(--font-mono); font-weight:700;">
+          ESTÁGIO 4: 🧬 Meta-Regras (<span id="slStage4Rules">0</span>) &amp; IQ <span id="slStage4Iq">99.8%</span>
+        </span>
+      </div>
+      <div id="slCanvasLastPulseBanner" style="position:absolute; bottom:10px; left:14px; right:14px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; font-family:var(--font-mono); font-size:10.5px; color:#e9d5ff; background:rgba(9,13,22,0.78); border:1px solid rgba(168,85,247,0.3); padding:5px 10px; border-radius:7px;">
+        <span id="slCanvasLastPulseTxt">⚡ Sentinel a trabalhar em background: a consolidar memórias e reforçar sinapses...</span>
+        <span style="color:#34d399; font-weight:700;">CONSUMO LLM EM BACKGROUND: 0 TOKENS</span>
+      </div>
+    </div>
+
+    <!-- Section: Onde o Self-Learn está Ativo (Cards Visuais de Todos os Projetos) -->
+    <div style="background:rgba(13,18,30,0.94); border:1px solid var(--border-strong); border-radius:11px; padding:12px 14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div style="font-size:12px; font-weight:800; color:#f8fafc;">🛰️ RADAR DE PROJETOS — ONDE O SELF-LEARN &amp; SENTINEL ESTÃO ATIVOS</div>
+          <div style="font-size:10.5px; color:var(--text-muted);">Escolha em que projetos a task em background (`1 task running`) deve aprender sozinha e injetar `🧬[SELF_LEARN]`</div>
+        </div>
+        <div id="slProjectsSummaryCounter" style="font-size:11px; font-family:var(--font-mono); color:#6ee7b7; font-weight:700;">1 Projeto Ativo em Background</div>
+      </div>
+      <div id="slPageProjectsGrid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(265px, 1fr)); gap:10px;"></div>
+    </div>
+
+    <!-- Bottom 2 Columns: Distilled Meta-Rules Playbook + Live Evolution Timeline -->
+    <div style="display:grid; grid-template-columns:1.25fr 1fr; gap:12px; flex:1; min-height:210px;">
+      <div style="background:rgba(13,18,30,0.94); border:1px solid rgba(168,85,247,0.38); border-radius:11px; padding:12px 14px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:12px; font-weight:800; color:#e9d5ff;">🧬 META-REGRAS APRENDIDAS PELO BRAIN (`learned_rule` + Playbook)</div>
+          <button class="quick-ag-btn" style="border-color:rgba(56,189,248,0.5); color:#7dd3fc;" onclick="switchMainView('promptforge')">✨ Usar no Prompt Forge →</button>
+        </div>
+        <div id="slPageRulesList" style="display:flex; flex-direction:column; gap:7px; overflow-y:auto; max-height:240px; font-size:11px; font-family:var(--font-mono);"></div>
+      </div>
+
+      <div style="background:rgba(13,18,30,0.94); border:1px solid rgba(16,185,129,0.35); border-radius:11px; padding:12px 14px; display:flex; flex-direction:column;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:12px; font-weight:800; color:#6ee7b7;">⚡ LOG EM TEMPO REAL DE AUTO-MELHORIA (TASK WORKER)</div>
+          <span style="font-size:10px; font-family:var(--font-mono); color:#94a3b8;">Auto-refresh ativo</span>
+        </div>
+        <div id="slPageEventsList" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; max-height:240px; font-size:10.5px; font-family:var(--font-mono);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       05 // PROMPT FORGE (CONTEXT-AWARE SUPER-PROMPT GENERATOR FOR ANTIGRAVITY)
+       ========================================================================= -->
+  <div class="swarm-workspace" id="promptForgeWorkspace" style="padding:14px 18px; gap:14px;">
+    <!-- Header -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:linear-gradient(90deg, rgba(30,58,138,0.32), rgba(88,28,135,0.28), rgba(15,23,42,0.95)); border:1px solid rgba(99,102,241,0.48); border-radius:12px; padding:12px 16px;">
+      <div>
+        <div style="font-size:10px; font-family:var(--font-mono); color:#93c5fd; font-weight:800; letter-spacing:0.08em;">05 // CONTEXT-AWARE PROMPT ARCHITECT &amp; SELF-LEARN INJECTOR</div>
+        <div style="font-size:16px; font-weight:800; color:#ffffff; margin-top:2px;">
+          ✨ Prompt Forge — Otimizador de Prompts para o Chat do Antigravity
+        </div>
+        <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">
+          Escreva o que pretende criar ou corrigir. O Brain cruza automaticamente as memórias do projeto, os ficheiros/linhas AST (`:Lstart-end`), as Meta-Regras do Self-Learn e a trajetória DOTS para devolver o prompt perfeito pronto a colar no chat.
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <span id="pfSavedTokensBadge" style="background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; padding:5px 10px; border-radius:8px; font-family:var(--font-mono); font-size:11px; font-weight:700;">
+          🪙 Poupança estimada: +580 tokens/pedido
+        </span>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Studio -->
+    <div style="display:grid; grid-template-columns:1fr 1.35fr; gap:14px; flex:1;">
+      <!-- Left Column: Input Builder + Templates + History -->
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:rgba(13,18,30,0.95); border:1px solid var(--border-strong); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#a5b4fc; margin-bottom:4px;">📂 1. Projeto Alvo (Workspace)</label>
+              <select id="pfWorkspaceSelect" class="select-sm" style="width:100%; height:34px; font-weight:700;"></select>
+            </div>
+            <div>
+              <label style="display:block; font-size:11px; font-weight:700; color:#a5b4fc; margin-bottom:4px;">🧭 2. Tipo de Missão / Engenharia</label>
+              <select id="pfTaskModeSelect" class="select-sm" style="width:100%; height:34px; font-weight:700;">
+                <option value="feature">⚡ Criar Nova Função / Feature</option>
+                <option value="bugfix">🐛 Diagnosticar &amp; Corrigir Bug Cirúrgico</option>
+                <option value="refactor">🏗️ Refatoração Arquitetural / Clean Code</option>
+                <option value="ui_ux">🎨 UI/UX, Canvas 3D &amp; 60 FPS Performance</option>
+                <option value="security">🛡️ Auditoria de Segurança &amp; Hardening</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+              <label style="font-size:11px; font-weight:700; color:#f8fafc;">✍️ 3. O que queres pedir ao Antigravity? (Ideia Simples)</label>
+              <span style="font-size:10px; color:var(--text-muted);">Atalho: Ctrl+Enter para gerar</span>
+            </div>
+            <textarea
+              id="pfRawInput"
+              rows="4"
+              placeholder="Ex: Quero criar uma função que valide o limite de rate-limit por utilizador, guarde métricas no SQLite e mostre um alerta no dashboard..."
+              style="width:100%; background:#060911; border:1px solid rgba(99,102,241,0.45); border-radius:8px; padding:10px; color:#ffffff; font-size:12px; font-family:var(--font-sans); resize:vertical; outline:none;"
+              onkeydown="if((event.ctrlKey || event.metaKey) && event.key==='Enter') forgeAntigravityPromptUI()"
+            ></textarea>
+          </div>
+
+          <!-- Quick Starter Chips -->
+          <div>
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:5px; font-weight:600;">💡 Exemplos Rápidos (1-Click):</div>
+            <div style="display:flex; flex-wrap:wrap; gap:5px;">
+              <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('feature', 'Criar uma nova função no backend com cache em SQLite WAL, endpoint REST e validação automática em test_brain.py')">⚡ Nova Função Backend + Teste</button>
+              <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('bugfix', 'Investigar e corrigir um bug cirurgicamente verificando os ficheiros afetados no Blast Radius AST sem quebrar contratos existentes')">🐛 Corrigir Bug c/ Blast Radius</button>
+              <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('ui_ux', 'Criar um novo painel interativo em index.html com atualização em tempo real, escape XSS seguro e validação node --check')">🎨 Novo Painel UI 60 FPS</button>
+              <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('refactor', 'Otimizar performance e reduzir consumo de tokens aplicando ponteiros :Lstart-end e boas práticas aprendidas no Self-Learn')">🪙 Otimizar Código &amp; Tokens</button>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%; padding:10px; font-size:13px; font-weight:800; justify-content:center; background:linear-gradient(135deg, #4f46e5, #9333ea); border-color:#818cf8;" onclick="forgeAntigravityPromptUI()">
+            ✨ Otimizar &amp; Gerar Super-Prompt para o Antigravity
+          </button>
+        </div>
+
+        <!-- Prompt History -->
+        <div style="background:rgba(13,18,30,0.95); border:1px solid var(--border); border-radius:12px; padding:12px 14px; flex:1; display:flex; flex-direction:column;">
+          <div style="font-size:11.5px; font-weight:800; color:#cbd5e1; margin-bottom:8px;">🕒 HISTÓRICO DE PROMPTS GERADOS (CLIQUE PARA CARREGAR)</div>
+          <div id="pfHistoryList" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; max-height:220px; font-size:10.5px; font-family:var(--font-mono);"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Generated Prompt Output & Context Telemetry -->
+      <div style="background:rgba(13,18,30,0.96); border:1px solid rgba(99,102,241,0.5); border-radius:12px; padding:14px; display:flex; flex-direction:column; gap:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <div>
+            <div style="font-size:12.5px; font-weight:800; color:#ffffff;">📋 PROMPT OTIMIZADO PRONTO PARA O CHAT DO ANTIGRAVITY</div>
+            <div id="pfTelemetryMeta" style="font-size:10px; font-family:var(--font-mono); color:#93c5fd; margin-top:2px;">
+              Trajetória DOTS: [AST_SLICE:L]➔[BLAST_RADIUS]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]
+            </div>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-primary" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#6ee7b7; font-weight:800; padding:6px 12px;" onclick="copyForgedPromptUI()">
+              📋 Copiar Texto Completo
+            </button>
+          </div>
+        </div>
+
+        <!-- 3 Output Format Tabs -->
+        <div style="display:flex; gap:6px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+          <button class="quick-ag-btn" id="pfTabFull" style="background:rgba(99,102,241,0.28); border-color:#818cf8; color:#fff; font-weight:700; padding:5px 10px;" onclick="switchPromptForgeVariant('full')">
+            🚀 Completo de Engenharia (Recomendado)
+          </button>
+          <button class="quick-ag-btn" id="pfTabCompact" style="padding:5px 10px;" onclick="switchPromptForgeVariant('compact')">
+            ⚡ Ultra-Compacto (Token Diet TOON)
+          </button>
+          <button class="quick-ag-btn" id="pfTabSwarm" style="padding:5px 10px;" onclick="switchPromptForgeVariant('swarm')">
+            🐝 Enxame Multi-Agente (Swarm 24x)
+          </button>
+        </div>
+
+        <!-- Injected Files & Self-Learn Badges -->
+        <div id="pfInjectedContextPills" style="display:flex; flex-wrap:wrap; gap:6px; font-size:10px; font-family:var(--font-mono);"></div>
+
+        <!-- Output Textarea -->
+        <textarea
+          id="pfOutputTextarea"
+          style="flex:1; min-height:280px; width:100%; background:#050811; border:1px solid rgba(129,140,248,0.35); border-radius:9px; padding:12px; color:#e2e8f0; font-size:11.5px; font-family:var(--font-mono); line-height:1.55; resize:vertical; outline:none;"
+          placeholder="O seu Super-Prompt enriquecido com ficheiros :Lstart-end, memória do projeto, regras do Self-Learn e trajetória DOTS aparecerá aqui pronto a copiar..."
+        ></textarea>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL CRIAR / EDITAR MEMÓRIA -->
@@ -7188,25 +7403,38 @@
     let swarmFetchInFlight = false;
     let lastSwarmHash = '';
 
+    let selfLearnPollTimer = null;
+    let selfLearnAnimRunning = false;
+
     function switchMainView(viewName) {
       if (viewName === 'swarm') activeMainView = 'swarm';
       else if (viewName === 'office') activeMainView = 'office';
+      else if (viewName === 'selflearn') activeMainView = 'selflearn';
+      else if (viewName === 'promptforge') activeMainView = 'promptforge';
       else activeMainView = 'graph';
 
       const gWs = document.getElementById('graphWorkspace');
       const sWs = document.getElementById('swarmWorkspace');
       const oWs = document.getElementById('officeWorkspace');
+      const slWs = document.getElementById('selfLearnWorkspace');
+      const pfWs = document.getElementById('promptForgeWorkspace');
       const btnG = document.getElementById('tabBtnGraph');
       const btnS = document.getElementById('tabBtnSwarm');
       const btnO = document.getElementById('tabBtnOffice');
+      const btnSL = document.getElementById('tabBtnSelfLearn');
+      const btnPF = document.getElementById('tabBtnPromptForge');
 
       gWs.style.display = activeMainView === 'graph' ? 'flex' : 'none';
       sWs.classList.toggle('active', activeMainView === 'swarm');
       oWs.classList.toggle('active', activeMainView === 'office');
+      if (slWs) slWs.classList.toggle('active', activeMainView === 'selflearn');
+      if (pfWs) pfWs.classList.toggle('active', activeMainView === 'promptforge');
 
       btnG.classList.toggle('active', activeMainView === 'graph');
       btnS.classList.toggle('active', activeMainView === 'swarm');
       if (btnO) btnO.classList.toggle('active', activeMainView === 'office');
+      if (btnSL) btnSL.classList.toggle('active', activeMainView === 'selflearn');
+      if (btnPF) btnPF.classList.toggle('active', activeMainView === 'promptforge');
 
       const subConceptEl = document.getElementById('lblTopSubConcept');
       if (subConceptEl) {
@@ -7214,6 +7442,10 @@
           subConceptEl.textContent = 'Swarm 24x · Scout AST';
         } else if (activeMainView === 'office') {
           subConceptEl.textContent = '3D Command Studio · 60 FPS';
+        } else if (activeMainView === 'selflearn') {
+          subConceptEl.textContent = 'Self-Learn Pipeline · Brain IQ';
+        } else if (activeMainView === 'promptforge') {
+          subConceptEl.textContent = 'Prompt Forge · Antigravity Architect';
         } else {
           subConceptEl.textContent = 'Neural Cortex · JEV-S1';
         }
@@ -7226,6 +7458,10 @@
       if (officePollTimer) {
         clearInterval(officePollTimer);
         officePollTimer = null;
+      }
+      if (selfLearnPollTimer) {
+        clearInterval(selfLearnPollTimer);
+        selfLearnPollTimer = null;
       }
 
       if (activeMainView === 'swarm') {
@@ -7242,6 +7478,17 @@
           officeAnimRunning = true;
           requestAnimationFrame(renderOffice3DLoop);
         }
+      } else if (activeMainView === 'selflearn') {
+        window.location.hash = 'selflearn';
+        fetchSelfLearnStudioPage();
+        selfLearnPollTimer = setInterval(() => fetchSelfLearnStudioPage(), 3500);
+        if (!selfLearnAnimRunning) {
+          selfLearnAnimRunning = true;
+          requestAnimationFrame(renderSelfLearnPipelineCanvasLoop);
+        }
+      } else if (activeMainView === 'promptforge') {
+        window.location.hash = 'promptforge';
+        initPromptForgePage();
       } else {
         window.location.hash = 'graph';
         resizeCanvas();
@@ -11390,6 +11637,9 @@
       if (out.overview) {
         lastOrbitOverviewData = out.overview;
         renderOrbitOverviewUI(out.overview);
+        if (activeMainView === 'selflearn') {
+          renderSelfLearnStudioPage(out.overview);
+        }
       }
       const isNowOn = out.self_learn && out.self_learn.enabled;
       showToast(`🧬 Self-Learn & Proatividade ${isNowOn ? 'ATIVADOS 🟢' : 'DESATIVADOS ⚫'} para o projeto [${ws}]!`);
@@ -11410,8 +11660,12 @@
       if (out.overview) {
         lastOrbitOverviewData = out.overview;
         renderOrbitOverviewUI(out.overview);
+        if (activeMainView === 'selflearn') {
+          renderSelfLearnStudioPage(out.overview);
+        }
       }
       if (out.ok) {
+        selfLearnBurstBoost = 2.8;
         showToast(`🧬 Auto-Melhoria Concluída [${ws}]: IQ=${out.brain_iq_score}% (+${out.iq_gain}%) · +${out.new_rules_created} Meta-Regras · +${out.synapses_boosted} Sinapses!`);
         fetchGraph();
       } else {
@@ -11581,7 +11835,485 @@
       }
     }
 
-    // Iniciar aplicação (respeita #swarm ou #office na URL)
+    // =========================================================================
+    // 04 // SELF-LEARN STUDIO PAGE & 60 FPS NEURAL PIPELINE REACTOR CANVAS
+    // =========================================================================
+    let selectedSelfLearnWs = 'brain_mcp';
+    let selfLearnBurstBoost = 1.0;
+    const selfLearnParticles = Array.from({ length: 42 }, (_, i) => ({
+      t: (i / 42),
+      speed: 0.0022 + (i % 5) * 0.00045,
+      laneOffset: ((i % 7) - 3) * 11,
+      size: 2.2 + (i % 3) * 0.9,
+      colorIdx: i % 4
+    }));
+
+    async function fetchSelfLearnStudioPage() {
+      try {
+        const res = await fetch(`/api/orbit/overview?workspace=${encodeURIComponent(selectedSelfLearnWs || 'brain_mcp')}`);
+        const data = await res.json();
+        if (data && data.ok) {
+          lastOrbitOverviewData = data;
+          renderOrbitOverviewUI(data);
+          renderSelfLearnStudioPage(data);
+        }
+      } catch (e) {
+        console.error('Erro ao atualizar Self-Learn Studio:', e);
+      }
+    }
+
+    function onSelfLearnWorkspaceChange(ws) {
+      selectedSelfLearnWs = ws || 'brain_mcp';
+      fetchSelfLearnStudioPage();
+    }
+
+    function triggerGraphicalSelfLearnCycle() {
+      selfLearnBurstBoost = 3.2;
+      const ws = document.getElementById('slPageWorkspaceSelect')?.value || selectedSelfLearnWs || 'brain_mcp';
+      runSelfLearnEvolutionUI(ws);
+    }
+
+    function renderSelfLearnStudioPage(data) {
+      const sl = (data && data.self_learn) || {};
+      const projs = sl.projects || [];
+      const curWs = sl.workspace || selectedSelfLearnWs || 'brain_mcp';
+      selectedSelfLearnWs = curWs;
+
+      // Populate Workspace Select
+      const wsSel = document.getElementById('slPageWorkspaceSelect');
+      if (wsSel && projs.length) {
+        wsSel.innerHTML = projs.map(p => `
+          <option value="${escapeHtml(p.workspace)}" ${p.workspace === curWs ? 'selected' : ''}>
+            ${p.enabled ? '🟢' : '⚫'} ${escapeHtml(p.workspace)} (IQ ${Number(p.brain_iq_score || 85).toFixed(1)}%)
+          </option>
+        `).join('');
+      }
+
+      const isEn = Boolean(sl.enabled);
+      const toggleBtn = document.getElementById('slPageToggleBtn');
+      if (toggleBtn) {
+        toggleBtn.textContent = isEn ? `🟢 Self-Learn [${curWs}]: ATIVO` : `⚫ Self-Learn [${curWs}]: PAUSADO`;
+        toggleBtn.style.background = isEn ? 'rgba(16,185,129,0.22)' : 'rgba(148,163,184,0.16)';
+        toggleBtn.style.borderColor = isEn ? '#10b981' : '#64748b';
+        toggleBtn.style.color = isEn ? '#6ee7b7' : '#cbd5e1';
+      }
+
+      const actCnt = Number(sl.active_projects_count || 0);
+      const taskPill = document.getElementById('slPageActiveTaskPill');
+      if (taskPill) {
+        taskPill.textContent = actCnt > 0
+          ? `● 1 task running · ${actCnt} Projeto(s) c/ Sentinel Ativo (0 tok/h)`
+          : `○ Task em Standby (0 projetos ativos)`;
+      }
+      const sumCounter = document.getElementById('slProjectsSummaryCounter');
+      if (sumCounter) {
+        sumCounter.textContent = `${actCnt} de ${projs.length} Projetos com Self-Learn Ativo em Background`;
+      }
+
+      // Stage Counters on Canvas Header
+      const st1 = document.getElementById('slStage1Count');
+      if (st1) st1.textContent = String((data.trust_hierarchy && data.trust_hierarchy.total_memories) || activeNodes.length || 0);
+      const st3 = document.getElementById('slStage3Synapses');
+      if (st3) st3.textContent = String(sl.synapses_reinforced || 0);
+      const st4r = document.getElementById('slStage4Rules');
+      if (st4r) st4r.textContent = String(sl.rules_distilled || 0);
+      const st4iq = document.getElementById('slStage4Iq');
+      if (st4iq) st4iq.textContent = `${Number(sl.brain_iq_score || 94.2).toFixed(1)}%`;
+
+      const pulseTxt = document.getElementById('slCanvasLastPulseTxt');
+      if (pulseTxt) {
+        pulseTxt.textContent = sl.last_evolution_summary
+          ? `⚡ Última Evolução [${curWs}]: ${sl.last_evolution_summary}`
+          : `⚡ Sentinel ativo em [${curWs}] — pronto para destilar Meta-Regras.`;
+      }
+
+      // Projects Grid ("Onde o Self-Learn está Ativo")
+      const gridEl = document.getElementById('slPageProjectsGrid');
+      if (gridEl) {
+        gridEl.innerHTML = projs.map(p => {
+          const pOn = Boolean(p.enabled);
+          const iq = Number(p.brain_iq_score || 85).toFixed(1);
+          const isSelected = p.workspace === curWs;
+          return `
+            <div onclick="onSelfLearnWorkspaceChange('${escapeHtml(p.workspace)}')" style="cursor:pointer; background:${isSelected ? 'rgba(88,28,135,0.24)' : 'rgba(9,13,22,0.92)'}; border:1px solid ${pOn ? 'rgba(168,85,247,0.55)' : 'rgba(148,163,184,0.22)'}; border-radius:10px; padding:10px 12px; display:flex; flex-direction:column; gap:7px; transition:all 0.15s ease;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:12.5px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:6px;">
+                  <span>${pOn ? '🟢' : '⚫'}</span>
+                  <span>📂 ${escapeHtml(p.workspace)}</span>
+                </div>
+                <span style="background:${pOn ? 'rgba(16,185,129,0.2)' : 'rgba(148,163,184,0.15)'}; border:1px solid ${pOn ? 'rgba(16,185,129,0.5)' : 'rgba(148,163,184,0.3)'}; color:${pOn ? '#6ee7b7' : '#94a3b8'}; padding:2px 7px; border-radius:999px; font-size:9.5px; font-family:var(--font-mono); font-weight:800;">
+                  ${pOn ? 'SENTINEL ON' : 'STANDBY OFF'}
+                </span>
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:10px; font-family:var(--font-mono); color:#d8b4fe; margin-bottom:3px;">
+                  <span>Maturidade Cognitiva (Brain IQ)</span>
+                  <strong>${iq}%</strong>
+                </div>
+                <div style="height:6px; background:rgba(15,23,42,0.9); border-radius:999px; overflow:hidden; border:1px solid rgba(168,85,247,0.3);">
+                  <div style="width:${Math.min(100, Math.max(15, Number(iq)))}%; height:100%; background:linear-gradient(90deg, #6366f1, #a855f7, #10b981);"></div>
+                </div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:9.5px; font-family:var(--font-mono); color:#94a3b8;">
+                <span>🔄 Ciclos: <strong style="color:#f8fafc;">${p.cycles_run || 0}</strong></span>
+                <span>🧬 Regras: <strong style="color:#c084fc;">${p.rules_distilled || 0}</strong></span>
+                <span>🔗 Sinapses: <strong style="color:#34d399;">+${p.synapses_reinforced || 0}</strong></span>
+              </div>
+              <div style="display:flex; gap:6px; margin-top:2px;">
+                <button class="quick-ag-btn" style="flex:1; justify-content:center; border-color:${pOn ? 'rgba(244,63,94,0.45)' : 'rgba(16,185,129,0.5)'}; color:${pOn ? '#fda4af' : '#6ee7b7'};" onclick="event.stopPropagation(); toggleProjectSelfLearnUI('${escapeHtml(p.workspace)}')">
+                  ${pOn ? '⏸ Desativar' : '▶ Ativar Neste Projeto'}
+                </button>
+                <button class="quick-ag-btn" style="flex:1; justify-content:center; border-color:rgba(192,132,252,0.55); color:#e9d5ff;" onclick="event.stopPropagation(); runSelfLearnEvolutionUI('${escapeHtml(p.workspace)}')">
+                  ⚡ Evoluir Agora
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Distilled Meta-Rules List
+      const rulesEl = document.getElementById('slPageRulesList');
+      if (rulesEl) {
+        const lMems = sl.learned_memories || [];
+        const pb = sl.learned_playbook || [];
+        if (!lMems.length && !pb.length) {
+          rulesEl.innerHTML = `<div style="color:var(--text-muted); padding:10px;">Ainda sem Meta-Regras para [${escapeHtml(curWs)}]. Clique em "⚡ Disparar Ciclo de Auto-Melhoria Agora".</div>`;
+        } else {
+          let htmlR = pb.map((ax, i) => `
+            <div style="background:rgba(9,13,22,0.92); border-left:3px solid #a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:7px; padding:7px 10px;">
+              <div style="color:#d8b4fe; font-weight:800; font-size:10px;">🧬 AXIOMA OPERACIONAL #${i + 1} · [${escapeHtml(curWs)}]</div>
+              <div style="color:#f8fafc; margin-top:2px;">${escapeHtml(ax)}</div>
+            </div>
+          `).join('');
+          htmlR += lMems.map(m => `
+            <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(56,189,248,0.28); border-radius:7px; padding:7px 10px;">
+              <div style="display:flex; justify-content:space-between; color:#7dd3fc; font-weight:700;">
+                <span>${escapeHtml(m.topic)}</span>
+                <span style="color:#34d399;">Trust ${Math.round(Number(m.synaptic_weight || 0.96) * 100)}%</span>
+              </div>
+              <div style="color:#cbd5e1; margin-top:3px; font-size:10px;">${escapeHtml(m.fact)}</div>
+            </div>
+          `).join('');
+          rulesEl.innerHTML = htmlR;
+        }
+      }
+
+      // Live Evolution Events List
+      const evEl = document.getElementById('slPageEventsList');
+      if (evEl) {
+        const evs = sl.recent_events || [];
+        evEl.innerHTML = evs.length ? evs.map(ev => `
+          <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(16,185,129,0.28); border-radius:7px; padding:7px 10px;">
+            <div style="display:flex; justify-content:space-between; color:#6ee7b7; font-weight:700;">
+              <span>${escapeHtml(ev.title)}</span>
+              <span style="color:#fde68a;">+${Number(ev.iq_delta || 0).toFixed(1)}% IQ</span>
+            </div>
+            <div style="color:#cbd5e1; margin-top:2px;">${escapeHtml(ev.detail)}</div>
+            <div style="color:#64748b; font-size:9px; margin-top:2px;">🕒 ${escapeHtml(ev.created_at || '')}</div>
+          </div>
+        `).join('') : `<div style="color:var(--text-muted); padding:10px;">Sem eventos registados.</div>`;
+      }
+    }
+
+    function renderSelfLearnPipelineCanvasLoop() {
+      if (activeMainView !== 'selflearn') {
+        selfLearnAnimRunning = false;
+        return;
+      }
+      const cvs = document.getElementById('selfLearnPipelineCanvas');
+      if (cvs) {
+        const rect = cvs.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        if (cvs.width !== Math.floor(rect.width * dpr) || cvs.height !== Math.floor(rect.height * dpr)) {
+          cvs.width = Math.max(300, Math.floor(rect.width * dpr));
+          cvs.height = Math.max(180, Math.floor(rect.height * dpr));
+        }
+        const c = cvs.getContext('2d');
+        c.save();
+        c.scale(dpr, dpr);
+        const W = rect.width;
+        const H = rect.height;
+        c.clearRect(0, 0, W, H);
+
+        const sl = (lastOrbitOverviewData && lastOrbitOverviewData.self_learn) || {};
+        const isEn = sl.enabled !== false;
+        const iqVal = Number(sl.brain_iq_score || 99.8).toFixed(1);
+        const now = performance.now() * 0.001;
+        if (selfLearnBurstBoost > 1.0) {
+          selfLearnBurstBoost = Math.max(1.0, selfLearnBurstBoost * 0.97);
+        }
+
+        // Background Neural Grid
+        c.strokeStyle = 'rgba(148, 163, 184, 0.06)';
+        c.lineWidth = 1;
+        for (let gx = 40; gx < W; gx += 48) {
+          c.beginPath(); c.moveTo(gx, 0); c.lineTo(gx, H); c.stroke();
+        }
+        for (let gy = 30; gy < H; gy += 48) {
+          c.beginPath(); c.moveTo(0, gy); c.lineTo(W, gy); c.stroke();
+        }
+
+        const cy = H * 0.52;
+        const stations = [
+          { x: W * 0.13, y: cy, r: 34, color: '#38bdf8', glow: 'rgba(56,189,248,0.28)', icon: '📥', title: 'RAW MEMORIES', sub: `${sl.workspace || 'brain_mcp'}` },
+          { x: W * 0.37, y: cy, r: 36, color: '#a855f7', glow: 'rgba(168,85,247,0.32)', icon: '⚗️', title: 'AST CLUSTER', sub: '32-D Vectors' },
+          { x: W * 0.62, y: cy, r: 36, color: '#f59e0b', glow: 'rgba(245,158,11,0.28)', icon: '🔗', title: 'HEBBIAN FORGE', sub: `+${sl.synapses_reinforced || 46} Synapses` },
+          { x: W * 0.86, y: cy, r: 44, color: '#10b981', glow: 'rgba(16,185,129,0.36)', icon: '🧬', title: `IQ ${iqVal}%`, sub: `${sl.rules_distilled || 17} Meta-Rules` }
+        ];
+
+        // Draw multi-lane synaptic conduits between stations
+        for (let s = 0; s < stations.length - 1; s++) {
+          const A = stations[s];
+          const B = stations[s + 1];
+          for (let lane = -2; lane <= 2; lane++) {
+            const offY = lane * 10;
+            c.beginPath();
+            c.moveTo(A.x + A.r, A.y + offY * 0.4);
+            c.bezierCurveTo(
+              (A.x + B.x) * 0.5, A.y + offY * 1.45 + Math.sin(now * 2 + lane + s) * 5,
+              (A.x + B.x) * 0.5, B.y - offY * 1.45 + Math.cos(now * 2 + lane + s) * 5,
+              B.x - B.r, B.y + offY * 0.4
+            );
+            c.strokeStyle = isEn ? 'rgba(168, 85, 247, 0.24)' : 'rgba(100, 116, 139, 0.15)';
+            c.lineWidth = lane === 0 ? 2.2 : 1.1;
+            c.stroke();
+          }
+        }
+
+        // Animate knowledge particles along the pipeline
+        const pColors = ['#38bdf8', '#c084fc', '#fbbf24', '#34d399'];
+        if (isEn) {
+          const minX = stations[0].x;
+          const maxX = stations[3].x;
+          for (let i = 0; i < selfLearnParticles.length; i++) {
+            const p = selfLearnParticles[i];
+            p.t = (p.t + p.speed * selfLearnBurstBoost) % 1.0;
+            const px = minX + (maxX - minX) * p.t;
+            const wave = Math.sin(p.t * Math.PI * 6 + now * 3 + i) * p.laneOffset;
+            const py = cy + wave;
+            c.beginPath();
+            c.arc(px, py, p.size, 0, Math.PI * 2);
+            c.fillStyle = pColors[p.colorIdx];
+            c.shadowColor = pColors[p.colorIdx];
+            c.shadowBlur = 10;
+            c.fill();
+            c.shadowBlur = 0;
+          }
+        }
+
+        // Draw the 4 Reactor Stations
+        stations.forEach((st, idx) => {
+          const pulseR = st.r + Math.sin(now * 3.2 + idx) * (isEn ? 4.5 : 1.0);
+          const grad = c.createRadialGradient(st.x, st.y, 4, st.x, st.y, pulseR * 1.45);
+          grad.addColorStop(0, st.glow);
+          grad.addColorStop(1, 'rgba(0,0,0,0)');
+          c.fillStyle = grad;
+          c.beginPath();
+          c.arc(st.x, st.y, pulseR * 1.45, 0, Math.PI * 2);
+          c.fill();
+
+          // Outer rotating orbital ring
+          c.save();
+          c.translate(st.x, st.y);
+          c.rotate(now * (idx % 2 === 0 ? 0.9 : -0.9));
+          c.strokeStyle = st.color;
+          c.lineWidth = 1.6;
+          c.setLineDash([8, 6]);
+          c.beginPath();
+          c.arc(0, 0, st.r + 5, 0, Math.PI * 2);
+          c.stroke();
+          c.restore();
+
+          // Core circle
+          c.beginPath();
+          c.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+          c.fillStyle = 'rgba(9, 13, 24, 0.94)';
+          c.fill();
+          c.lineWidth = 2.2;
+          c.strokeStyle = st.color;
+          c.stroke();
+
+          // Icon + labels
+          c.fillStyle = '#ffffff';
+          c.font = '16px sans-serif';
+          c.textAlign = 'center';
+          c.fillText(st.icon, st.x, st.y - 3);
+
+          c.font = 'bold 10px JetBrains Mono, monospace';
+          c.fillStyle = st.color;
+          c.fillText(st.title, st.x, st.y + 13);
+
+          c.font = '9.5px Inter, sans-serif';
+          c.fillStyle = '#cbd5e1';
+          c.fillText(st.sub, st.x, st.y + st.r + 17);
+        });
+
+        c.restore();
+      }
+      requestAnimationFrame(renderSelfLearnPipelineCanvasLoop);
+    }
+
+    // =========================================================================
+    // 05 // PROMPT FORGE STUDIO (CONTEXT-AWARE PROMPT GENERATOR FOR ANTIGRAVITY)
+    // =========================================================================
+    let currentForgedPromptResult = null;
+    let currentPromptForgeVariant = 'full';
+
+    async function initPromptForgePage() {
+      if (!lastOrbitOverviewData) {
+        await fetchOrbitOverview(false);
+      }
+      const sl = (lastOrbitOverviewData && lastOrbitOverviewData.self_learn) || {};
+      const projs = sl.projects || [{ workspace: 'brain_mcp', enabled: true, brain_iq_score: 99.8 }];
+      const wsSel = document.getElementById('pfWorkspaceSelect');
+      if (wsSel) {
+        const curVal = wsSel.value || (currentWorkspaceFilter !== 'ALL' ? currentWorkspaceFilter : 'brain_mcp');
+        wsSel.innerHTML = projs.map(p => `
+          <option value="${escapeHtml(p.workspace)}" ${p.workspace === curVal ? 'selected' : ''}>
+            📂 ${escapeHtml(p.workspace)} ${p.enabled ? `(🧬 Self-Learn ON · IQ ${Number(p.brain_iq_score || 94).toFixed(1)}%)` : '(Self-Learn OFF)'}
+          </option>
+        `).join('');
+      }
+      const hist = (lastOrbitOverviewData && lastOrbitOverviewData.prompt_forge_history) || [];
+      renderPromptForgeHistoryList(hist);
+    }
+
+    function fillPromptForgeTemplate(mode, text) {
+      const mSel = document.getElementById('pfTaskModeSelect');
+      if (mSel) mSel.value = mode;
+      const inp = document.getElementById('pfRawInput');
+      if (inp) inp.value = text;
+      forgeAntigravityPromptUI();
+    }
+
+    async function forgeAntigravityPromptUI() {
+      const ws = document.getElementById('pfWorkspaceSelect')?.value || 'brain_mcp';
+      const mode = document.getElementById('pfTaskModeSelect')?.value || 'feature';
+      const rawReq = (document.getElementById('pfRawInput')?.value || '').trim();
+      if (!rawReq) {
+        showToast('⚠️ Escreve primeiro o que queres criar ou melhorar no projeto!');
+        return;
+      }
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'forge_prompt',
+          workspace: ws,
+          task_mode: mode,
+          raw_request: rawReq
+        })
+      });
+      const out = await res.json();
+      if (out.ok && out.prompt_forge) {
+        currentForgedPromptResult = out.prompt_forge;
+        if (out.overview) {
+          lastOrbitOverviewData = out.overview;
+        }
+        renderForgedPromptResultUI(out.prompt_forge);
+        renderPromptForgeHistoryList(out.prompt_forge.history || []);
+        showToast(`✨ Super-Prompt gerado com ${out.prompt_forge.matched_files?.length || 0} ficheiros e ${out.prompt_forge.learned_rules_applied?.length || 0} Meta-Regras!`);
+      } else {
+        showToast(`⚠️ ${out.error || 'Erro ao gerar prompt.'}`);
+      }
+    }
+
+    function renderForgedPromptResultUI(pf) {
+      if (!pf) return;
+      const metaEl = document.getElementById('pfTelemetryMeta');
+      if (metaEl) {
+        metaEl.textContent = `Trajetória DOTS: ${pf.dots_trajectory || ''} · Intenção: ${pf.intent || 'engineering'} · Rota: ${pf.model_route || 'inherit'}`;
+      }
+      const savEl = document.getElementById('pfSavedTokensBadge');
+      if (savEl) {
+        savEl.textContent = `🪙 Poupança estimada: +${pf.estimated_tokens_saved || 480} tokens (Evita re-leituras da codebase)`;
+      }
+      const pillsEl = document.getElementById('pfInjectedContextPills');
+      if (pillsEl) {
+        const filesPills = (pf.matched_files || []).map(f => `
+          <span style="background:rgba(56,189,248,0.16); border:1px solid rgba(56,189,248,0.45); color:#7dd3fc; padding:2px 7px; border-radius:6px;">📄 ${escapeHtml(f)}</span>
+        `).join('');
+        const rulesPill = `<span style="background:rgba(168,85,247,0.18); border:1px solid rgba(168,85,247,0.45); color:#e9d5ff; padding:2px 7px; border-radius:6px;">🧬 ${pf.learned_rules_applied ? pf.learned_rules_applied.length : 0} Meta-Regras Self-Learn injetadas</span>`;
+        pillsEl.innerHTML = filesPills + rulesPill;
+      }
+      switchPromptForgeVariant(currentPromptForgeVariant || 'full');
+    }
+
+    function switchPromptForgeVariant(variant) {
+      currentPromptForgeVariant = variant || 'full';
+      const tFull = document.getElementById('pfTabFull');
+      const tComp = document.getElementById('pfTabCompact');
+      const tSwarm = document.getElementById('pfTabSwarm');
+      [
+        [tFull, 'full'],
+        [tComp, 'compact'],
+        [tSwarm, 'swarm']
+      ].forEach(([btn, key]) => {
+        if (!btn) return;
+        const active = key === currentPromptForgeVariant;
+        btn.style.background = active ? 'rgba(99,102,241,0.28)' : '';
+        btn.style.borderColor = active ? '#818cf8' : '';
+        btn.style.color = active ? '#ffffff' : '';
+      });
+      const outArea = document.getElementById('pfOutputTextarea');
+      if (!outArea || !currentForgedPromptResult) return;
+      if (currentPromptForgeVariant === 'compact') {
+        outArea.value = currentForgedPromptResult.compact_prompt || '';
+      } else if (currentPromptForgeVariant === 'swarm') {
+        outArea.value = currentForgedPromptResult.swarm_prompt || '';
+      } else {
+        outArea.value = currentForgedPromptResult.full_prompt || '';
+      }
+    }
+
+    function renderPromptForgeHistoryList(hist) {
+      const el = document.getElementById('pfHistoryList');
+      if (!el) return;
+      if (!hist || !hist.length) {
+        el.innerHTML = `<div style="color:var(--text-muted); padding:8px;">Ainda sem prompts guardados neste projeto.</div>`;
+        return;
+      }
+      el.innerHTML = hist.map((h, idx) => `
+        <div onclick="loadPromptForgeHistoryIdx(${idx})" style="cursor:pointer; background:rgba(9,13,22,0.92); border:1px solid rgba(99,102,241,0.28); border-radius:7px; padding:7px 9px; transition:border-color 0.14s ease;">
+          <div style="display:flex; justify-content:space-between; color:#a5b4fc; font-weight:700;">
+            <span>[${escapeHtml(h.workspace)}] · ${escapeHtml((h.task_mode || 'feature').toUpperCase())}</span>
+            <span style="color:#6ee7b7;">+${h.estimated_tokens_saved || 420} tok</span>
+          </div>
+          <div style="color:#f8fafc; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(h.raw_request)}</div>
+        </div>
+      `).join('');
+      window._lastPromptForgeHistory = hist;
+    }
+
+    function loadPromptForgeHistoryIdx(idx) {
+      const hist = window._lastPromptForgeHistory || [];
+      const item = hist[idx];
+      if (!item) return;
+      currentForgedPromptResult = {
+        ...item,
+        learned_rules_applied: Array.from({ length: Number(item.rules_applied_count || 2) })
+      };
+      const inp = document.getElementById('pfRawInput');
+      if (inp) inp.value = item.raw_request || '';
+      renderForgedPromptResultUI(currentForgedPromptResult);
+      showToast('🕒 Prompt carregado do histórico!');
+    }
+
+    function copyForgedPromptUI() {
+      const outArea = document.getElementById('pfOutputTextarea');
+      const txt = outArea ? outArea.value.trim() : '';
+      if (!txt) {
+        showToast('⚠️ Gere primeiro um prompt antes de copiar.');
+        return;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt);
+      }
+      showToast('📋 Prompt copiado! Agora é só colar (Ctrl+V) no chat do Antigravity.');
+    }
+
+    // Iniciar aplicação (respeita #swarm, #office, #selflearn ou #promptforge na URL)
     fetchGraph().then(() => {
       requestAnimationFrame(renderGraph);
       loadGitStatus();
@@ -11593,6 +12325,10 @@
         switchMainView('swarm');
       } else if (window.location.hash === '#office') {
         switchMainView('office');
+      } else if (window.location.hash === '#selflearn') {
+        switchMainView('selflearn');
+      } else if (window.location.hash === '#promptforge') {
+        switchMainView('promptforge');
       }
       setTimeout(renderOfficeQuickAgentDock, 450);
     });

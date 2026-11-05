@@ -1241,6 +1241,16 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 force_flag = bool(body.get("force", False))
                 sl_res = orbit.run_self_learn_evolution_cycle(workspace=ws, force=force_flag)
                 res = {**sl_res, "self_learn": sl_res.get("self_learn")}
+            elif action == "forge_prompt":
+                ws = str(body.get("workspace", "brain_mcp"))
+                raw_req = str(body.get("raw_request", ""))
+                t_mode = str(body.get("task_mode", "feature"))
+                pf_res = orbit.generate_optimized_prompt(raw_request=raw_req, workspace=ws, task_mode=t_mode)
+                res = {**pf_res, "prompt_forge": pf_res}
+            elif action == "prompt_history":
+                ws = str(body.get("workspace", "all"))
+                hist = orbit.get_prompt_forge_history(workspace=ws, limit=10)
+                res = {"ok": True, "history": hist}
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return

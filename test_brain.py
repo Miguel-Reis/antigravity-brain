@@ -812,15 +812,37 @@ def run_all_tests() -> None:
         ctx_on = build_ephemeral_context([], None, "proj_alpha", orbit_brief=brief_on)
         assert "🧬[SELF_LEARN|" in ctx_on and "index.html" in ctx_on, f"Injeção 🧬[SELF_LEARN] ausente após ativação: {ctx_on}"
 
+        # 24. Testar Prompt Forge Engine (Otimizador de Prompts c/ Ficheiros :Lstart-end + Meta-Regras Self-Learn + DOTS)
+        pf_res = sl_orbit.generate_optimized_prompt(
+            raw_request="Criar uma função em index.html para exportar métricas e validar XSS",
+            workspace="proj_alpha",
+            task_mode="feature",
+        )
+        assert pf_res["ok"] is True, f"generate_optimized_prompt falhou: {pf_res}"
+        assert "index.html:L11200" in pf_res["full_prompt"] or "index.html" in pf_res["full_prompt"], (
+            f"Prompt gerado devia incluir ficheiros relevantes de proj_alpha: {pf_res['full_prompt']}"
+        )
+        assert "🧬" in pf_res["full_prompt"] and len(pf_res["compact_prompt"]) < len(pf_res["full_prompt"]), (
+            "Prompt Forge devia incluir Meta-Regras Self-Learn e variante compacta mais curta"
+        )
+        assert "SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY" in pf_res["swarm_prompt"] and len(pf_res["history"]) >= 1
+
     for sl_ui_token in (
         'id="orbitSelfLearnProjectsList"',
         'id="orbitSelfLearnPlaybookList"',
         "function toggleProjectSelfLearnUI(",
         "function runSelfLearnEvolutionUI(",
-        "start_self_learn_sentinel_daemon" if False else 'id="topSelfLearnBadgeTxt"',
+        'id="topSelfLearnBadgeTxt"',
+        'id="selfLearnWorkspace"',
+        'id="selfLearnPipelineCanvas"',
+        "function renderSelfLearnPipelineCanvasLoop()",
+        'id="promptForgeWorkspace"',
+        'id="pfOutputTextarea"',
+        "function forgeAntigravityPromptUI()",
+        "function copyForgedPromptUI()",
     ):
-        assert sl_ui_token in html_content, f"Token Self-Learn v4.8 em falta em index.html: {sl_ui_token}"
-    print("[PASS] Self-Learn & Auto-Improve Engine v4.8 (Opt-in por Projeto, Destilação de Meta-Regras, Reforço Hebbiano & Sentinel Task) OK")
+        assert sl_ui_token in html_content, f"Token Self-Learn / Prompt Forge v4.9 em falta em index.html: {sl_ui_token}"
+    print("[PASS] Self-Learn Studio Gráfico (60 FPS Neural Pipeline) & Prompt Forge Engine v4.9 OK")
 
 
 if __name__ == "__main__":

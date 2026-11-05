@@ -305,6 +305,26 @@ class OrbitEngine:
                     """
                 )
 
+            # 7. Tabela do Prompt Forge (Histórico de Prompts Otimizados com Contexto do Brain + Self-Learn)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS prompt_forge_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    workspace TEXT NOT NULL,
+                    task_mode TEXT DEFAULT 'feature',
+                    raw_request TEXT NOT NULL,
+                    full_prompt TEXT NOT NULL,
+                    compact_prompt TEXT NOT NULL,
+                    swarm_prompt TEXT NOT NULL,
+                    dots_trajectory TEXT DEFAULT '',
+                    matched_files_json TEXT DEFAULT '[]',
+                    rules_applied_count INTEGER DEFAULT 0,
+                    estimated_tokens_saved INTEGER DEFAULT 420,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+
     # =========================================================================
     # 1. MISSION CONTROL INBOX ('WAITING FOR YOUR YES' / APPROVE ALL / REDIRECT)
     # =========================================================================
@@ -853,6 +873,7 @@ class OrbitEngine:
         }
         dots_dag = self.get_dots_dag(workspace=workspace or "all")
         self_learn = self.get_self_learn_status(workspace=workspace if workspace and workspace != "all" else "brain_mcp")
+        prompt_history = self.get_prompt_forge_history(workspace=workspace or "all", limit=8)
         return {
             "ok": True,
             "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -873,6 +894,7 @@ class OrbitEngine:
             "mcp_bridge": bridge,
             "dots_dag": dots_dag,
             "self_learn": self_learn,
+            "prompt_forge_history": prompt_history,
             "recent_trusted_memories": recent_mems,
         }
 
@@ -1422,4 +1444,200 @@ class OrbitEngine:
             "brain_iq_score": new_iq,
             "evolution_summary": evo_summary,
             "self_learn": updated_status,
+        }
+
+    # =========================================================================
+    # 8. PROMPT FORGE ENGINE (CONTEXT-AWARE PROMPT OPTIMIZER FOR ANTIGRAVITY)
+    # =========================================================================
+    def get_prompt_forge_history(self, workspace: str = "all", limit: int = 10) -> List[Dict[str, Any]]:
+        ws = (workspace or "all").strip().lower()
+        with self.db._connect() as conn:
+            if ws and ws not in ("all", "global"):
+                rows = conn.execute(
+                    "SELECT * FROM prompt_forge_history WHERE LOWER(workspace) IN (?, 'brain_mcp') ORDER BY id DESC LIMIT ?;",
+                    (ws, max(1, int(limit))),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM prompt_forge_history ORDER BY id DESC LIMIT ?;",
+                    (max(1, int(limit)),),
+                ).fetchall()
+        out: List[Dict[str, Any]] = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["matched_files"] = json.loads(d.get("matched_files_json") or "[]")
+            except Exception:
+                d["matched_files"] = []
+            out.append(d)
+        return out
+
+    def generate_optimized_prompt(
+        self,
+        raw_request: str,
+        workspace: str = "brain_mcp",
+        task_mode: str = "feature",
+    ) -> Dict[str, Any]:
+        """
+        Transforma um pedido simples do utilizador (ex.: 'criar uma função X num projeto')
+        num Super-Prompt estruturado, enriquecido com:
+        - Ficheiros e símbolos AST :Lstart-end reais detetados em brain.db para esse projeto;
+        - Meta-Regras Aprendidas pelo Self-Learn (🧬 learned_playbook) do projeto;
+        - Trajetória cognitiva ótima DOTS (compute_dots_trajectory) e Roteamento JEV-S1;
+        - 3 variantes prontas a colar no chat do Antigravity: Completa, Compacta (Token Diet) e Swarm Multi-Agente.
+        """
+        req = (raw_request or "").strip()
+        if not req:
+            return {"ok": False, "error": "Escreva uma descrição do que pretende criar ou melhorar."}
+
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("all", ""):
+            ws = "brain_mcp"
+        mode = (task_mode or "feature").strip().lower()
+
+        # 1. Roteamento JEV System-1 + Trajetória Ótima DOTS
+        jev_info = self.db.jev_system1_route(req, workspace=ws)
+        dots_traj = str(jev_info.get("dots_trajectory") or "[AST_SLICE:L]➔[BLAST_RADIUS]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]")
+        intent_name = str(jev_info.get("intent") or "general_engineering")
+        model_rec = str(jev_info.get("model_route") or "inherit")
+
+        # 2. Pesquisa Híbrida FTS5 BM25 + Vetores 32-D nas memórias do projeto
+        rel_mems = self.db.search_memories(req, workspace=ws, n_results=6)
+        if len(rel_mems) < 2 and ws != "brain_mcp":
+            rel_mems.extend(self.db.search_memories(req, workspace="global", n_results=3))
+
+        # 3. Extrair ficheiros e ponteiros :Lstart-end reais das memórias + Checkpoint + Scout Map
+        file_ptr_re = re.compile(r"\b([a-zA-Z0-9_\-/\\]+\.(?:py|html|js|ts|tsx|json|md|sql|css)(?::L\d+(?:-\d+)?)?)\b")
+        matched_files: List[str] = []
+        context_facts: List[str] = []
+        for m in rel_mems[:5]:
+            txt = f"{m.get('topic', '')}: {m.get('fact', '')}"
+            for fp in file_ptr_re.findall(txt):
+                clean_fp = fp.replace("\\", "/")
+                if clean_fp not in matched_files:
+                    matched_files.append(clean_fp)
+            if m.get("category") != "learned_rule":
+                short_f = str(m.get("fact") or "").strip()
+                if len(short_f) > 135:
+                    short_f = short_f[:132].rstrip() + "..."
+                context_facts.append(f"- **{m.get('topic', 'Memória')}**: {short_f}")
+
+        chk = self.db.get_checkpoint(ws)
+        if chk and chk.get("key_files"):
+            for fp in file_ptr_re.findall(str(chk.get("key_files"))):
+                clean_fp = fp.replace("\\", "/")
+                if clean_fp not in matched_files:
+                    matched_files.append(clean_fp)
+
+        if not matched_files:
+            matched_files = ["db_engine.py", "orbit_engine.py", "index.html"] if ws == "brain_mcp" else [f"src/main ({ws})"]
+
+        # 4. Obter Meta-Regras Aprendidas pelo Self-Learn do projeto
+        sl_status = self.get_self_learn_status(workspace=ws)
+        playbook = list(sl_status.get("learned_playbook") or [])
+        if not playbook:
+            playbook = [
+                "Fazer alterações cirúrgicas preservando docstrings, tipos e comentários existentes.",
+                "Validar sintaxe AST e correr a suite de testes antes de concluir.",
+            ]
+
+        # 5. Especificação conforme o Task Mode escolhido
+        mode_headers = {
+            "feature": ("⚡ IMPLEMENTAÇÃO DE NOVA FUNÇÃO / FEATURE", "Desenha e implementa de forma cirúrgica e modular"),
+            "bugfix": ("🐛 DIAGNÓSTICO CAUSAL & CORREÇÃO DE BUG", "Identifica a causa-raiz exata sem adivinhar e corrige sem regressões"),
+            "refactor": ("🏗️ REFATORAÇÃO ARQUITETURAL & CLEAN CODE", "Refatora mantendo 100% de compatibilidade nos contratos públicos"),
+            "ui_ux": ("🎨 ENGENHARIA UI/UX & PERFORMANCE 60 FPS", "Implementa na interface mantendo zero-allocations / 60 FPS e escape XSS seguro"),
+            "security": ("🛡️ AUDITORIA DE SEGURANÇA & HARDENING", "Valida controlo de acessos, path traversal, CSRF/XSS e redação de segredos"),
+        }
+        mode_title, mode_verb = mode_headers.get(mode, mode_headers["feature"])
+
+        files_bullet_str = "\n".join(f"- `{fp}`" for fp in matched_files[:6])
+        rules_bullet_str = "\n".join(f"- 🧬 {r}" for r in playbook[:4])
+        facts_bullet_str = "\n".join(context_facts[:4]) if context_facts else f"- Projeto alvo: `{ws}` (usar `[BRAIN_MEMORY]` e `[SCOUT_SHARED_MAP]` pré-injetados)."
+
+        # Variante 1: Prompt Completo de Engenharia (Recomendado para colar no Antigravity)
+        full_prompt = (
+            f"### {mode_title} — Projeto `{ws}`\n\n"
+            f"**🎯 Objetivo Principal:**\n"
+            f"{mode_verb} o seguinte pedido no projeto `{ws}`:\n"
+            f"> {req}\n\n"
+            f"**📂 Ficheiros & Ponteiros Cirúrgicos Relevantes (Evitar Re-leituras Globais):**\n"
+            f"{files_bullet_str}\n\n"
+            f"**🧠 Contexto Arquitetural Recuperado do `brain.db`:**\n"
+            f"{facts_bullet_str}\n\n"
+            f"**🧬 Regras Aprendidas do Projeto (`Self-Learn IQ {sl_status.get('brain_iq_score', 94.0)}%`):**\n"
+            f"{rules_bullet_str}\n\n"
+            f"**🧭 Trajetória de Execução DOTS & Verificação Obrigatória:**\n"
+            f"1. Seguir a trajetória cognitiva `{dots_traj}` (Intenção: `{intent_name}`).\n"
+            f"2. Efetuar edições cirúrgicas (`edit_file`) apenas nos blocos necessários.\n"
+            f"3. Executar verificação real no terminal (`node --check` / `python test_brain.py` / testes do projeto) antes de declarar concluído.\n"
+            f"4. No final, registar a decisão em `<!-- brain: Tópico | Facto com ficheiros:Lstart-end -->`."
+        )
+
+        # Variante 2: Prompt Ultra-Compacto (Modo Token Diet / TOON)
+        compact_files = ", ".join(matched_files[:4])
+        compact_rule = playbook[0][:90] if playbook else "Validar AST + testes"
+        compact_prompt = (
+            f"[TASK|{ws}|{mode.upper()}|dots={dots_traj}]\n"
+            f"Goal: {req}\n"
+            f"TargetFiles: {compact_files}\n"
+            f"SelfLearnRule: {compact_rule}\n"
+            f"Verify: Edit surgically -> run tests/syntax check -> append <!-- brain: Topic | Fact -->."
+        )
+
+        # Variante 3: Prompt Multi-Agente (Protocolo Asymmetric Swarm 24x)
+        swarm_prompt = (
+            f"### 🐝 EXECUÇÃO ASYMMETRIC SWARM (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`) — Projeto `{ws}`\n\n"
+            f"**Objetivo da Missão:**\n"
+            f"> {req}\n\n"
+            f"**Protocolo Obrigatório de Enxame:**\n"
+            f"1. **SCOUT (Leitura Única)**: Usa o `[SCOUT_SHARED_MAP]` e foca nos ficheiros `{compact_files}`.\n"
+            f"2. **PLAN (Decomposição em Lanes)**: Divide o trabalho em lanes isoladas (`API`, `UI`, `TESTS`, `DOCS`) sem colisões de escrita.\n"
+            f"3. **SWARM**: Delega subtarefas independentes via `invoke_subagent` passando os ficheiros e linhas exatos `:Lstart-end` e as Meta-Regras:\n"
+            f"{rules_bullet_str}\n"
+            f"4. **VERIFY**: Corre a suite de testes completa e valida a trajetória `{dots_traj}`."
+        )
+
+        est_saved = max(280, len(matched_files) * 145 + len(playbook) * 85)
+
+        with self.db._connect() as conn:
+            cur = conn.execute(
+                """
+                INSERT INTO prompt_forge_history
+                (workspace, task_mode, raw_request, full_prompt, compact_prompt, swarm_prompt,
+                 dots_trajectory, matched_files_json, rules_applied_count, estimated_tokens_saved)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                """,
+                (
+                    ws,
+                    mode,
+                    req,
+                    full_prompt,
+                    compact_prompt,
+                    swarm_prompt,
+                    dots_traj,
+                    json.dumps(matched_files[:6], ensure_ascii=False),
+                    len(playbook[:4]),
+                    est_saved,
+                ),
+            )
+            new_id = int(cur.lastrowid or 0)
+
+        return {
+            "ok": True,
+            "id": new_id,
+            "workspace": ws,
+            "task_mode": mode,
+            "raw_request": req,
+            "intent": intent_name,
+            "model_route": model_rec,
+            "dots_trajectory": dots_traj,
+            "matched_files": matched_files[:6],
+            "learned_rules_applied": playbook[:4],
+            "brain_iq_score": sl_status.get("brain_iq_score", 94.0),
+            "estimated_tokens_saved": est_saved,
+            "full_prompt": full_prompt,
+            "compact_prompt": compact_prompt,
+            "swarm_prompt": swarm_prompt,
+            "history": self.get_prompt_forge_history(workspace=ws, limit=8),
         }
