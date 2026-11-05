@@ -159,6 +159,14 @@ def run_all_tests() -> None:
     )
     assert sb_verify["ok"] and sb_verify["syntax_ok"] and sb_verify["secrets_ok"]
     assert sb_verify["status"] == "merged"
+    # Limpar sandbox sintética criada pelo teste na BD de produção para evitar acumulação
+    with prod_db._connect() as conn:
+        conn.execute("DELETE FROM swarm_sandboxes WHERE id = ?;", (sb_create["sandbox_id"],))
+        conn.execute("DELETE FROM orbit_inbox WHERE external_ref = ?;", (f"sandbox:{sb_create['sandbox_id']}",))
+    sb_dir_cleanup = os.path.join(repo_dir, ".swarm_sandboxes", f"sb_{sb_create['sandbox_id']}_API_api-01")
+    if os.path.isdir(sb_dir_cleanup):
+        import shutil
+        shutil.rmtree(sb_dir_cleanup, ignore_errors=True)
     print(
         f"[PASS] Opção D (Subagent Transactional Sandbox): Sandbox #{sb_verify['sandbox_id']} -> {sb_verify['status'].upper()} "
         f"(AST Gate={sb_verify['syntax_ok']}, Secret Scan={sb_verify['secrets_ok']})"
@@ -590,6 +598,111 @@ def run_all_tests() -> None:
         ctx_t2 = build_ephemeral_context(sample_mems[:1], None, "brain_mcp", scout_map=s_map_sample, delta_info=d_turn2)
         assert "DELTA_CACHE" in ctx_t2 and len(ctx_t2) < len(ctx_t1), "Turno #2 com Session Delta deve ser mais curto e conter DELTA_CACHE"
     print("[PASS] 5 Otimizações de Poupança de Tokens (Session Delta, TOON Telegráfico, Top-K Cutoff, Pointers :Lstart-end e Micro-Prompt <90 tok) OK")
+
+    # 21. Testar Correções da Auditoria Total v4.6 & Novas Tecnologias (FTS5 BM25 Prefix, AST-Safe Scout Slice, Arrow Regex, Time-Travel Revisions & Security Gates)
+    from brain_inject import slice_scout_map_ast_safe
+    from brain_harvest import harvest_latest_turn
+
+    # 21.1 AST-Bounded Slicing do [SCOUT_SHARED_MAP] (nunca corta identificadores a meio)
+    long_scout = (
+        "[SCOUT_SHARED_MAP | ws=brain_mcp | "
+        "db_engine.py (class BrainDB:L42-1600, def check_and_apply_decay:L880-920, def compute_session_delta:L970-1060); "
+        "orbit_engine.py (class OrbitEngine:L16-710, def send_broadcast:L240-310)]"
+    )
+    sliced_scout = slice_scout_map_ast_safe(long_scout, 115)
+    assert sliced_scout.endswith("]") and "check_and_app]" not in sliced_scout and len(sliced_scout) <= 115, (
+        f"slice_scout_map_ast_safe cortou identificador a meio ou excedeu limite: {sliced_scout}"
+    )
+
+    # 21.2 Time-Travel Memory Revisions + Rollback 1-Click + FTS5 BM25 Prefix + Arrow Regex + Broadcast Deduplication
+    with tempfile.TemporaryDirectory() as tmp_v46_dir:
+        v46_db = BrainDB(os.path.join(tmp_v46_dir, "v46_audit.db"))
+
+        # Testar harvest_latest_turn com setas (->, =>, <)
+        sample_jsonl = os.path.join(tmp_v46_dir, "transcript.jsonl")
+        with open(sample_jsonl, "w", encoding="utf-8") as fj:
+            fj.write(json.dumps({"type": "USER_INPUT", "content": "<USER_REQUEST>Testar harvest</USER_REQUEST>"}) + "\n")
+            fj.write(
+                json.dumps(
+                    {
+                        "type": "PLANNER_RESPONSE",
+                        "content": "Concluído.\n<!-- brain: Pipeline Arrow Test | Fluxo A -> B => C validado em < 5ms sem truncagem -->",
+                    }
+                )
+                + "\n"
+            )
+        h_cnt = harvest_latest_turn(sample_jsonl, "brain_mcp", "conv_v46", v46_db)
+        assert h_cnt >= 1
+        arrow_hits = v46_db.search_memories("Pipeline Arrow Test", workspace="brain_mcp", n_results=3)
+        assert any("A -> B => C" in m["fact"] and "< 5ms" in m["fact"] for m in arrow_hits), (
+            f"harvest_latest_turn falhou ao capturar setas -> / => / <: {arrow_hits}"
+        )
+        m_id, is_new = v46_db.store_fact(
+            topic="Configuração Crítica WAL",
+            fact="Usar synchronous=NORMAL e busy_timeout=5000ms.",
+            workspace="brain_mcp",
+            category="architecture",
+            importance=5,
+            tags="sqlite wal timeout",
+        )
+        assert is_new is True
+        # Atualizar a mesma memória para gerar revisão automática em memory_revisions
+        v46_db.store_fact(
+            topic="Configuração Crítica WAL",
+            fact="Usar synchronous=NORMAL e busy_timeout=30000ms com lock.",
+            workspace="brain_mcp",
+            category="architecture",
+            importance=5,
+            tags="sqlite wal timeout lock",
+            source_agent="subagent_api",
+        )
+        revs = v46_db.get_memory_revisions(memory_id=m_id)
+        assert len(revs) >= 1 and "5000ms" in revs[0]["old_fact"], f"Revisão não registada em memory_revisions: {revs}"
+
+        # Executar Rollback Time-Travel para a revisão anterior
+        rb = v46_db.rollback_memory(int(revs[0]["id"]))
+        assert rb["ok"] is True and rb["memory_id"] == m_id and "5000ms" in rb["restored_fact"]
+
+        # Verificar que FTS5 BM25 Prefix Search funciona sem OperationalError (e devolve bm25_raw != 0 ou match FTS)
+        fts_hits = v46_db.search_memories("Configuração Crítica busy_timeout", workspace="brain_mcp", n_results=3)
+        assert len(fts_hits) >= 1 and fts_hits[0]["id"] == m_id
+
+        # Verificar Deduplicação de Orbit Broadcasts & Delta Turn Suppression
+        v46_orbit = OrbitEngine(v46_db)
+        v46_orbit.send_broadcast(directive="Diretiva Unificada v4.6", target_scope="all_fleet", workspace="brain_mcp")
+        v46_orbit.send_broadcast(directive="Diretiva Unificada v4.6", target_scope="all_fleet", workspace="brain_mcp")
+        active_bcs = v46_orbit.get_active_broadcasts("brain_mcp")
+        fleet_bcs = [b for b in active_bcs if b["target_scope"] == "all_fleet"]
+        assert len(fleet_bcs) == 1, f"Orbit broadcast duplicado para o mesmo target_scope: {fleet_bcs}"
+
+        ctx_delta = build_ephemeral_context(
+            fts_hits,
+            None,
+            "brain_mcp",
+            delta_info={"is_delta_turn": True, "turn_number": 2, "unchanged_topics": ["Configuração Crítica WAL"], "unchanged_count": 1, "delta_memories": []},
+        )
+        assert "📡[ORBIT]" not in ctx_delta, "Turno Delta não deve repetir cabeçalho estático 📡[ORBIT]"
+
+        # 21.4 Security Gates: Path Traversal Confinement + 12-Format Secret Redaction
+        v46_watcher = AstImpactWatcher(db=v46_db, workspace_path=tmp_v46_dir)
+        traversal_res = v46_watcher.audit_file_save("../../Windows/win.ini", workspace_path=tmp_v46_dir, force=True)
+        assert traversal_res["ok"] is False, f"AstImpactWatcher devia bloquear Path Traversal fora do workspace: {traversal_res}"
+
+        sec_sample = "Token Anthropic sk-ant-api03-abcdef1234567890abcdef1234567890 e GitHub github_pat_11ABCDEF0123456789_abcdef0123456789abcdef"
+        redacted_sample = BrainDB.redact_secrets(sec_sample)
+        assert "sk-ant-" not in redacted_sample and "github_pat_" not in redacted_sample and "[REDACTED_SECRET]" in redacted_sample
+
+    for v46_ui_token in (
+        ".replace(/'/g, '&#39;')",
+        "function closeAnyOpenModalOnEscape()",
+        "function hasAnyModalOpen()",
+        "function loadMemoryRevisionsUI()",
+        "function rollbackMemoryRevisionUI(",
+        'id="memoryRevisionsList"',
+        "_lastOfficeDsSig",
+    ):
+        assert v46_ui_token in html_content, f"Token v4.6 em falta em index.html: {v46_ui_token}"
+    print("[PASS] Auditoria Total v4.6 (FTS5 BM25 Prefix Fix, AST-Safe Scout Slice, Arrow Regex, Time-Travel Rollback & Security Hardening) OK")
 
 
 if __name__ == "__main__":

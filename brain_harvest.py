@@ -37,17 +37,24 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
     if not steps:
         return 0
 
-    # Isola apenas os passos após o último USER_INPUT
+    # Isola apenas os passos após o último USER_INPUT (ou SYSTEM_MESSAGE inicial em subagentes)
     last_user_idx = 0
     turn_user_goal = ""
     for idx in range(len(steps) - 1, -1, -1):
-        if steps[idx].get("type") == "USER_INPUT":
+        st_type = steps[idx].get("type")
+        if st_type == "USER_INPUT":
             last_user_idx = idx
             raw_u = str(steps[idx].get("content") or "")
             m_req = re.search(r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", raw_u, flags=re.DOTALL)
             if m_req:
                 turn_user_goal = " ".join(m_req.group(1).split())[:110]
             break
+        if st_type == "SYSTEM_MESSAGE" and last_user_idx == 0:
+            raw_sys = str(steps[idx].get("content") or "")
+            if "sender=" in raw_sys and "sender=system" not in raw_sys:
+                last_user_idx = idx
+                turn_user_goal = " ".join(raw_sys.split())[:110]
+                break
 
     turn_steps = steps[last_user_idx:]
     harvested_count = 0
@@ -62,7 +69,7 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         if step.get("type") == "TOOL_RESPONSE":
             t_out = str(step.get("content") or "")
             err_match = re.search(
-                r"(SyntaxError: [^\n]+|TypeError: [^\n]+|ValueError: [^\n]+|KeyError: [^\n]+|ModuleNotFoundError: [^\n]+)",
+                r"((?:SyntaxError|TypeError|ValueError|KeyError|ModuleNotFoundError|ImportError|FileNotFoundError|AssertionError|AttributeError|OperationalError): [^\n]+)",
                 t_out,
             )
             if err_match:
@@ -78,15 +85,15 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         turn_cached_tokens += int(step.get("cache_read_tokens", 0) or 0)
         turn_output_tokens += int(step.get("output_tokens", 0) or 0)
 
-        # 1. Extrai marcadores explícitos <!-- brain: Topico | Facto --> no texto da resposta (linha única segura)
+        # 1. Extrai marcadores explícitos <!-- brain: Topico | Facto --> (suporta setas ->, =>, <, >)
         content = step.get("content", "") or ""
         explicit_matches = re.findall(
-            r"<!--\s*brain:\s*([^|\n`<>{}]{3,85}?)\s*\|\s*([^\n<>]{6,420}?)\s*-->",
+            r"<!--\s*brain:\s*([^|\n`{}]{3,85}?)\s*\|\s*(.{6,450}?)\s*-->",
             content,
         )
         for topic, fact in explicit_matches:
             t_clean = topic.strip()
-            f_clean = fact.strip()
+            f_clean = " ".join(fact.strip().split())
             if any(x in t_clean.lower() for x in ("topico", "short topic", "\\s*")):
                 continue
             _, is_new = db.store_fact(
@@ -105,8 +112,15 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         for tc in tool_calls:
             t_name = tc.get("name", "")
             args = tc.get("args") or {}
-            if t_name in ("write_to_file", "replace_file_content", "write_file", "edit_file"):
-                target_file = str(args.get("TargetFile") or args.get("Path") or "").strip('"').replace("\\\\", "/")
+            if t_name in ("write_to_file", "replace_file_content", "multi_replace_file_content", "write_file", "edit_file"):
+                target_file = str(
+                    args.get("TargetFile")
+                    or args.get("Path")
+                    or args.get("AbsolutePath")
+                    or args.get("filePath")
+                    or args.get("file_path")
+                    or ""
+                ).strip('"').replace("\\\\", "/")
                 desc = str(args.get("Description") or args.get("Instruction") or "Atualização de código").strip('"')[:160]
                 if target_file and "/brain/" not in target_file:
                     bname = os.path.basename(target_file)

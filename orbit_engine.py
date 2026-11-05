@@ -6,8 +6,10 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import threading
 from db_engine import BrainDB
 
+_ORBIT_INIT_LOCK = threading.Lock()
 _INITIALIZED_ORBIT_DBS: set[str] = set()
 
 
@@ -26,8 +28,10 @@ class OrbitEngine:
         self.db = db or BrainDB()
         db_key = str(self.db.db_path)
         if db_key not in _INITIALIZED_ORBIT_DBS:
-            self._init_orbit_schema()
-            _INITIALIZED_ORBIT_DBS.add(db_key)
+            with _ORBIT_INIT_LOCK:
+                if db_key not in _INITIALIZED_ORBIT_DBS:
+                    self._init_orbit_schema()
+                    _INITIALIZED_ORBIT_DBS.add(db_key)
 
     def _init_orbit_schema(self) -> None:
         with self.db._connect() as conn:
@@ -82,6 +86,20 @@ class OrbitEngine:
                     status TEXT DEFAULT 'ready',
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+                """
+            )
+
+            # Desativar broadcasts duplicados por escopo ou diretiva (mantém apenas o mais recente por escopo)
+            conn.execute(
+                """
+                UPDATE orbit_broadcasts
+                SET active = 0
+                WHERE active = 1
+                  AND id NOT IN (
+                      SELECT MAX(id) FROM orbit_broadcasts
+                      WHERE active = 1
+                      GROUP BY target_scope
+                  );
                 """
             )
 
@@ -357,6 +375,11 @@ class OrbitEngine:
         now = time.time()
         affected_agents = 0
         with self.db._connect() as conn:
+            # Desativar broadcasts anteriores do mesmo scope ou com a mesma diretiva para evitar duplicação de tokens
+            conn.execute(
+                "UPDATE orbit_broadcasts SET active = 0 WHERE active = 1 AND (target_scope = ? OR LOWER(TRIM(directive)) = LOWER(TRIM(?)));",
+                (scope, clean_dir),
+            )
             conn.execute(
                 """
                 INSERT INTO orbit_broadcasts (target_scope, directive, author, active, memory_id)
@@ -408,9 +431,20 @@ class OrbitEngine:
                   AND (target_scope = 'all_fleet' OR target_scope LIKE 'dept:%' OR LOWER(target_scope) = ?)
                 ORDER BY id DESC LIMIT ?;
                 """,
-                (f"ws:{ws}", int(limit)),
+                (f"ws:{ws}", int(limit) * 2),
             ).fetchall()
-            return [dict(r) for r in rows]
+            deduped: List[Dict[str, Any]] = []
+            seen_keys: set[str] = set()
+            for r in rows:
+                d = dict(r)
+                k = f"{str(d.get('target_scope', '')).lower()}|{str(d.get('directive', '')).strip().lower()}"
+                if k in seen_keys:
+                    continue
+                seen_keys.add(k)
+                deduped.append(d)
+                if len(deduped) >= int(limit):
+                    break
+            return deduped
 
     # =========================================================================
     # 3. AGENT CHAINING & AUTOMATIC HAND-OFF PACKETS (agent_handoffs)

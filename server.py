@@ -77,8 +77,6 @@ class StdioMCPServer:
                 ann = param.annotation
                 json_type = type_map.get(ann, "string")
                 prop_schema: Dict[str, Any] = {"type": json_type}
-                if param_name in param_docs:
-                    prop_schema["description"] = param_docs[param_name]
                 if param.default is inspect.Parameter.empty:
                     required.append(param_name)
                 else:
@@ -97,7 +95,7 @@ class StdioMCPServer:
                 "signature": sig,
                 "schema": {
                     "name": tool_name,
-                    "description": doc,
+                    "description": short_desc[:115],
                     "inputSchema": input_schema,
                 },
             }

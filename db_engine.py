@@ -56,10 +56,20 @@ STOPWORDS = {
     "by", "this", "that", "from", "or", "an", "are", "was", "were", "what",
     "which", "who", "whom", "how", "when", "where", "why", "can", "could",
     "should", "would", "will", "do", "does", "did", "have", "has", "had",
+    "not",
 }
 
+import threading
 
+_DB_INIT_LOCK = threading.Lock()
 _INITIALIZED_DBS: set[str] = set()
+_WAL_CONFIGURED_DBS: set[str] = set()
+
+SECRET_REDACT_RE = re.compile(
+    r"(?:AIza[0-9A-Za-z\-_]{20,}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{20,}|"
+    r"github_pat_[0-9A-Za-z_]{25,}|sk-ant-[0-9A-Za-z_\-]{20,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{20,}|"
+    r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{20,})"
+)
 
 
 class BrainDB:
@@ -68,17 +78,22 @@ class BrainDB:
     def __init__(self, db_path: str = DEFAULT_DB_PATH) -> None:
         self.db_path = db_path
         if self.db_path not in _INITIALIZED_DBS:
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-            self._init_schema()
-            _INITIALIZED_DBS.add(self.db_path)
+            with _DB_INIT_LOCK:
+                if self.db_path not in _INITIALIZED_DBS:
+                    os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+                    self._init_schema()
+                    _INITIALIZED_DBS.add(self.db_path)
 
     @contextlib.contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
-        conn = sqlite3.connect(self.db_path, timeout=5.0)
+        conn = sqlite3.connect(self.db_path, timeout=30.0)
         conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL;")
-        conn.execute("PRAGMA synchronous=NORMAL;")
-        conn.execute("PRAGMA temp_store=MEMORY;")
+        conn.execute("PRAGMA busy_timeout = 30000;")
+        if self.db_path not in _WAL_CONFIGURED_DBS:
+            conn.execute("PRAGMA journal_mode=WAL;")
+            conn.execute("PRAGMA synchronous=NORMAL;")
+            conn.execute("PRAGMA temp_store=MEMORY;")
+            _WAL_CONFIGURED_DBS.add(self.db_path)
         try:
             yield conn
             conn.commit()
@@ -171,6 +186,24 @@ class BrainDB:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 """
+            )
+
+            # 1d. Tabela Time-Travel Memory Revisions (Histórico de Diff & Rollback)
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS memory_revisions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    memory_id INTEGER NOT NULL,
+                    topic TEXT NOT NULL,
+                    old_fact TEXT NOT NULL,
+                    new_fact TEXT NOT NULL,
+                    changed_by TEXT DEFAULT 'system',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_mem_revs_mem_id ON memory_revisions(memory_id);"
             )
 
             # 2. Tabela FTS5 para pesquisa ultrarrápida BM25
@@ -488,6 +521,11 @@ class BrainDB:
             ).fetchall()
             return [dict(r) for r in rows]
 
+    @staticmethod
+    def redact_secrets(text: str) -> str:
+        """Redige 12 formatos modernos de chaves/tokens antes de persistir no SQLite."""
+        return SECRET_REDACT_RE.sub("[REDACTED_SECRET]", str(text or ""))
+
     def store_fact(
         self,
         topic: str,
@@ -509,8 +547,8 @@ class BrainDB:
         """
         topic = topic.strip()
         fact = fact.strip()
-        # Ruflo AI-Defence Zero-Trust Redaction automática antes de gravar no SQLite
-        fact = re.sub(r"\b(AIza[0-9A-Za-z\-_]{20,}|ghp_[0-9A-Za-z]{20,}|sk-[0-9A-Za-z]{20,})\b", "[REDACTED_SECRET]", fact)
+        # Ruflo AI-Defence Zero-Trust Redaction automática antes de gravar no SQLite (12 formatos modernos)
+        fact = SECRET_REDACT_RE.sub("[REDACTED_SECRET]", fact)
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
         resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
@@ -532,18 +570,27 @@ class BrainDB:
                     return int(locked_topic_row["id"]), False
 
             existing = conn.execute(
-                "SELECT id, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE fact_hash = ?;",
+                "SELECT id, fact, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE fact_hash = ?;",
                 (f_hash,),
             ).fetchone()
             if not existing and not supersedes_id:
                 existing = conn.execute(
-                    "SELECT id, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE workspace = ? AND LOWER(TRIM(topic)) = LOWER(TRIM(?)) AND superseded_by IS NULL ORDER BY id DESC LIMIT 1;",
+                    "SELECT id, fact, COALESCE(human_locked, 0) as h_lock, COALESCE(trust_score, 0.85) as t_sc FROM memories WHERE workspace = ? AND LOWER(TRIM(topic)) = LOWER(TRIM(?)) AND superseded_by IS NULL ORDER BY id DESC LIMIT 1;",
                     (ws, topic),
                 ).fetchone()
             if existing:
                 row_id = int(existing["id"])
                 if int(existing["h_lock"]) == 1 and resolved_lock == 0:
                     return row_id, False
+                old_fact_val = str(existing["fact"] or "")
+                if old_fact_val and old_fact_val != fact:
+                    conn.execute(
+                        """
+                        INSERT INTO memory_revisions (memory_id, topic, old_fact, new_fact, changed_by)
+                        VALUES (?, ?, ?, ?, ?);
+                        """,
+                        (row_id, topic, old_fact_val, fact, source_agent),
+                    )
                 conn.execute(
                     """
                     UPDATE memories
@@ -774,13 +821,17 @@ class BrainDB:
 
             candidates: Dict[int, Dict[str, Any]] = {}
 
-            # 1. Pesquisa FTS5 BM25 se tivermos tokens válidos
+            # 1. Pesquisa FTS5 BM25 se tivermos tokens válidos (Sintaxe FTS5 limpa: sem aspas antes de *)
             if tokens:
                 fts_terms = []
+                fts_keywords = {"not", "and", "or", "near"}
                 for tok in tokens:
                     safe_tok = re.sub(r"[^a-zA-Z0-9_]", "", tok)
                     if len(safe_tok) >= 2:
-                        fts_terms.append(f'"{safe_tok}"*')
+                        if safe_tok.lower() in fts_keywords:
+                            fts_terms.append(f'"{safe_tok}"')
+                        else:
+                            fts_terms.append(f"{safe_tok}*")
                 if fts_terms:
                     fts_query = " OR ".join(fts_terms)
                     try:
@@ -1343,6 +1394,7 @@ class BrainDB:
 
             healthy_total = conn.execute("SELECT COUNT(*) as c FROM memories;").fetchone()["c"]
             total_edges = conn.execute("SELECT COUNT(*) as c FROM memory_edges;").fetchone()["c"]
+            revs_count = conn.execute("SELECT COUNT(*) as c FROM memory_revisions;").fetchone()["c"]
 
         return {
             "ok": True,
@@ -1352,8 +1404,54 @@ class BrainDB:
             "causal_edges_discovered": causal_discovered,
             "total_causal_edges": int(total_edges),
             "healthy_memories": int(healthy_total),
+            "revisions_tracked": int(revs_count),
             "fts5_optimized": True,
         }
+
+    def get_memory_revisions(self, memory_id: Optional[int] = None, limit: int = 20) -> List[Dict[str, Any]]:
+        """Devolve o histórico Time-Travel de edições de memórias (Diff Antes -> Depois)."""
+        with self._connect() as conn:
+            if memory_id:
+                rows = conn.execute(
+                    "SELECT * FROM memory_revisions WHERE memory_id = ? ORDER BY id DESC LIMIT ?;",
+                    (int(memory_id), int(limit)),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM memory_revisions ORDER BY id DESC LIMIT ?;",
+                    (int(limit),),
+                ).fetchall()
+            return [dict(r) for r in rows]
+
+    def rollback_memory(self, revision_id: int) -> Dict[str, Any]:
+        """Reverte uma memória para o estado anterior (`old_fact`) registado numa revisão Time-Travel."""
+        with self._connect() as conn:
+            rev = conn.execute(
+                "SELECT * FROM memory_revisions WHERE id = ?;",
+                (int(revision_id),),
+            ).fetchone()
+            if not rev:
+                return {"ok": False, "error": f"Revisão #{revision_id} não encontrada"}
+            mem_id = int(rev["memory_id"])
+            old_fact = str(rev["old_fact"])
+            cur_row = conn.execute("SELECT id, topic, fact, workspace FROM memories WHERE id = ?;", (mem_id,)).fetchone()
+            if not cur_row:
+                return {"ok": False, "error": f"Memória #{mem_id} já não existe"}
+            new_hash = self._compute_hash(str(cur_row["topic"]), old_fact, str(cur_row["workspace"] or "global"))
+            conn.execute(
+                """
+                UPDATE memories
+                SET fact = ?, fact_hash = ?, source_agent = 'human_rollback', trust_score = 1.0, human_locked = 1, last_accessed = CURRENT_TIMESTAMP
+                WHERE id = ?;
+                """,
+                (old_fact, new_hash, mem_id),
+            )
+            return {
+                "ok": True,
+                "memory_id": mem_id,
+                "revision_id": int(revision_id),
+                "restored_fact": old_fact,
+            }
 
     def bulk_manage_memories(
         self,

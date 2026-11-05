@@ -158,7 +158,12 @@ class AstImpactWatcher:
                 syntax_ok = False
                 syntax_err = "Unclosed <script> tag in HTML"
 
-        secret_re = re.compile(r"(AIza[0-9A-Za-z\-_]{35}|ghp_[0-9A-Za-z]{36}|sk-[0-9A-Za-z]{32,})")
+        secret_re = re.compile(
+            r"(?:AIza[0-9A-Za-z\-_]{35}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{36}|"
+            r"github_pat_[0-9A-Za-z_]{50,}|sk-ant-[0-9A-Za-z_\-]{25,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{32,}|"
+            r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|eyJ[a-zA-Z0-9_\-]{10,}\.eyJ[a-zA-Z0-9_\-]{10,}\.[a-zA-Z0-9_\-]+|"
+            r"-----BEGIN (?:RSA|EC|DSA|OPENSSH|PGP)?\s?PRIVATE KEY-----|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{30,})"
+        )
         secrets_ok = not bool(secret_re.search(content))
         return syntax_ok, syntax_err, secrets_ok
 
@@ -177,18 +182,17 @@ class AstImpactWatcher:
         4. Preemptively flags HIGH/CRITICAL changes in SQLite and BrainDB.
         """
         t0 = time.perf_counter()
-        ws_root = Path(workspace_path).resolve() if workspace_path else self.workspace_root
-        target_p = Path(file_path)
-        if not target_p.is_absolute():
-            target_p = (ws_root / target_p).resolve()
-
-        if not target_p.is_file():
-            return {"ok": False, "error": f"Ficheiro não encontrado: {file_path}"}
+        ws_root = Path(workspace_path).resolve() if workspace_path else self.workspace_root.resolve()
+        raw_p = Path(file_path)
+        target_p = (ws_root / raw_p).resolve() if not raw_p.is_absolute() else raw_p.resolve()
 
         try:
             rel_path = str(target_p.relative_to(ws_root)).replace("\\", "/")
         except ValueError:
-            rel_path = target_p.name
+            return {"ok": False, "error": "Acesso negado: o ficheiro reside fora dos limites autorizados do workspace."}
+
+        if not target_p.is_file():
+            return {"ok": False, "error": f"Ficheiro não encontrado: {file_path}"}
 
         content = target_p.read_text(encoding="utf-8", errors="ignore")
         file_sha = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]

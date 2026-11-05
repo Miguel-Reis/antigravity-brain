@@ -47,6 +47,7 @@ _INITIALIZED_SWARM_DBS: set[str] = set()
 _DEFAULT_RUN_CACHED: Dict[str, int] = {}
 _OFFICE_SCAN_CACHE: Dict[str, Any] = {"ts": 0.0, "mtime_map": {}, "meta_cache": {}}
 _HEATMAP_CACHE: Dict[str, Any] = {"ts": 0.0, "data": []}
+_SWARM_INIT_LOCK = threading.Lock()
 _OFFICE_MCP_CACHE: Dict[str, Any] = {"ts": 0.0, "data": []}
 
 
@@ -63,8 +64,10 @@ class SwarmEngine:
     def __init__(self, db: Optional[BrainDB] = None) -> None:
         self.db = db or BrainDB()
         if self.db.db_path not in _INITIALIZED_SWARM_DBS:
-            self._init_swarm_schema()
-            _INITIALIZED_SWARM_DBS.add(self.db.db_path)
+            with _SWARM_INIT_LOCK:
+                if self.db.db_path not in _INITIALIZED_SWARM_DBS:
+                    self._init_swarm_schema()
+                    _INITIALIZED_SWARM_DBS.add(self.db.db_path)
 
     def _init_swarm_schema(self) -> None:
         with self.db._connect() as conn:
@@ -3227,13 +3230,20 @@ class SwarmEngine:
             if act == "create":
                 files = target_files or ["db_engine.py", "swarm_engine.py"]
                 snapshot_map: Dict[str, Any] = {}
+                ws_resolved = ws_root.resolve()
                 for rel_f in files[:8]:
-                    clean_f = os.path.basename(rel_f.strip())
-                    fp = ws_root / clean_f
+                    rel_norm = os.path.normpath(rel_f.strip()).replace("\\", "/").lstrip("/")
+                    if rel_norm.startswith("../"):
+                        continue
+                    fp = (ws_resolved / rel_norm).resolve()
+                    try:
+                        clean_rel = str(fp.relative_to(ws_resolved)).replace("\\", "/")
+                    except ValueError:
+                        continue
                     if fp.is_file():
                         raw_txt = fp.read_text(encoding="utf-8", errors="ignore")
                         sha = hashlib.sha256(raw_txt.encode("utf-8")).hexdigest()[:16]
-                        snapshot_map[clean_f] = {
+                        snapshot_map[clean_rel] = {
                             "sha256": sha,
                             "lines": len(raw_txt.splitlines()),
                         }
@@ -3273,7 +3283,11 @@ class SwarmEngine:
                 files_list = json.loads(row["files_json"] or "[]")
                 ast_ok = True
                 secrets_ok = True
-                secret_re = re.compile(r"(AIza[0-9A-Za-z\-_]{35}|ghp_[0-9A-Za-z]{36}|sk-[0-9A-Za-z]{32,})")
+                secret_re = re.compile(
+                    r"(?:AIza[0-9A-Za-z\-_]{35}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{36}|"
+                    r"github_pat_[0-9A-Za-z_]{50,}|sk-ant-[0-9A-Za-z_\-]{25,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{32,}|"
+                    r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|-----BEGIN (?:RSA|EC|DSA|OPENSSH|PGP)?\s?PRIVATE KEY-----|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{30,})"
+                )
 
                 for fname in files_list:
                     fp = ws_root / fname

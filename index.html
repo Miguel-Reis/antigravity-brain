@@ -3410,7 +3410,16 @@
       <div style="font-size:10.5px; color:var(--text-muted); margin-bottom:4px; text-transform:uppercase; font-weight:700;">
         ⚡ Bloco Exato Injetado no Antigravity (`ephemeralMessage` + `[SCOUT_SHARED_MAP :Lstart-end]` + `TOON/Delta`):
       </div>
-      <pre id="inspPreviewBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:330px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+      <pre id="inspPreviewBody" style="background:#080a10; color:#e2e8f0; padding:12px; border-radius:7px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:240px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+
+      <!-- Time-Travel Memory Revisions & 1-Click Rollback -->
+      <div style="margin-top:10px; background:rgba(15,23,42,0.88); border:1px solid rgba(139,92,246,0.35); border-radius:8px; padding:9px 11px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; font-weight:800; color:#c4b5fd;">🕰️ TIME-TRAVEL MEMORY REVISIONS (Histórico Diff Antes ➔ Depois &amp; Rollback 1-Click)</span>
+          <button type="button" class="quick-ag-btn" onclick="loadMemoryRevisionsUI()">🔄 Atualizar Histórico</button>
+        </div>
+        <div id="memoryRevisionsList" style="display:flex; flex-direction:column; gap:5px; max-height:110px; overflow-y:auto; font-size:10px; font-family:var(--font-mono);"></div>
+      </div>
     </div>
   </div>
 
@@ -6154,12 +6163,14 @@
       }
     }
 
+    let graphAnimRunning = false;
     function renderGraph() {
-      // Se estiver na vista Swarm Monitor, Office ou Galeria Bento HTML, pausa a renderização do Canvas
+      // Se estiver na vista Swarm Monitor, Office ou Galeria Bento HTML, suspende a 100% o loop do Canvas (0% CPU/GPU)
       if (activeMainView !== 'graph' || brainViewStyle === 'bento') {
-        setTimeout(() => requestAnimationFrame(renderGraph), 180);
+        graphAnimRunning = false;
         return;
       }
+      graphAnimRunning = true;
 
       const ecoIdle = isEcoGpuIdle();
       const chkPulsesEl = document.getElementById('chkPulses');
@@ -7035,7 +7046,8 @@
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     // =========================================================================
@@ -7104,6 +7116,10 @@
         window.location.hash = 'graph';
         resizeCanvas();
         graphDirty = true;
+        if (!graphAnimRunning && brainViewStyle !== 'bento') {
+          graphAnimRunning = true;
+          requestAnimationFrame(renderGraph);
+        }
       }
     }
 
@@ -8584,6 +8600,7 @@
 
     async function openInspectorModal() {
       document.getElementById('inspectorModal').classList.add('open');
+      loadMemoryRevisionsUI();
       await refreshInspectorPreview();
     }
 
@@ -9957,10 +9974,14 @@
       officeFrustumStats.frameTimeMs = frameElapsed;
 
       if (officeCanvas) {
-        officeCanvas.dataset.frustumCulling = officeFrustumCullingEnabled ? 'true' : 'false';
-        officeCanvas.dataset.visibleAgents = String(visibleAgentsCount);
-        officeCanvas.dataset.culledAgents = String(culledAgentsCount);
-        officeCanvas.dataset.culledProps = String(culledPropsCount);
+        const dsSig = `${officeFrustumCullingEnabled}|${visibleAgentsCount}|${culledAgentsCount}|${culledPropsCount}`;
+        if (window._lastOfficeDsSig !== dsSig) {
+          window._lastOfficeDsSig = dsSig;
+          officeCanvas.dataset.frustumCulling = officeFrustumCullingEnabled ? 'true' : 'false';
+          officeCanvas.dataset.visibleAgents = String(visibleAgentsCount);
+          officeCanvas.dataset.culledAgents = String(culledAgentsCount);
+          officeCanvas.dataset.culledProps = String(culledPropsCount);
+        }
       }
 
       if (officeFpsFrames % 4 === 0) {
@@ -10654,7 +10675,90 @@
       }
     }
 
+    function closeAnyOpenModalOnEscape() {
+      const modalIds = [
+        'cmdPaletteModal',
+        'orbitOsModal',
+        'astInspectorModal',
+        'brainToolsPhysicsModal',
+        'inspectorModal',
+        'diffModal',
+        'memModal'
+      ];
+      let closedAny = false;
+      for (const mid of modalIds) {
+        const el = document.getElementById(mid);
+        if (el && el.classList.contains('open')) {
+          el.classList.remove('open');
+          closedAny = true;
+          break;
+        }
+      }
+      return closedAny;
+    }
+
+    function hasAnyModalOpen() {
+      const modalIds = [
+        'cmdPaletteModal',
+        'orbitOsModal',
+        'astInspectorModal',
+        'brainToolsPhysicsModal',
+        'inspectorModal',
+        'diffModal',
+        'memModal'
+      ];
+      return modalIds.some(mid => {
+        const el = document.getElementById(mid);
+        return Boolean(el && el.classList.contains('open'));
+      });
+    }
+
+    async function loadMemoryRevisionsUI() {
+      const box = document.getElementById('memoryRevisionsList');
+      if (!box) return;
+      try {
+        const res = await fetch('/api/memories/revisions');
+        const data = await res.json();
+        const revs = (data && data.revisions) || [];
+        if (!revs.length) {
+          box.innerHTML = `<div style="color:var(--text-muted); padding:4px;">Sem revisões anteriores registadas ainda.</div>`;
+          return;
+        }
+        box.innerHTML = revs.slice(0, 8).map(rv => `
+          <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(139,92,246,0.28); border-radius:6px; padding:5px 8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <div style="flex:1; min-width:0;">
+              <div style="color:#e2e8f0; font-weight:700;">#${Number(rv.id)} · ${escapeHtml(rv.topic)} <span style="color:#94a3b8; font-weight:400;">(${escapeHtml(rv.changed_by || 'system')})</span></div>
+              <div style="color:#fda4af; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Antes: ${escapeHtml(String(rv.old_fact || '').slice(0, 85))}</div>
+            </div>
+            <button type="button" class="quick-ag-btn" style="border-color:rgba(16,185,129,0.5); color:#6ee7b7;" onclick="rollbackMemoryRevisionUI(${Number(rv.id)})">⏪ Rollback</button>
+          </div>
+        `).join('');
+      } catch (_) {}
+    }
+
+    async function rollbackMemoryRevisionUI(revisionId) {
+      const res = await fetch('/api/memories/rollback', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ revision_id: revisionId })
+      });
+      const out = await res.json();
+      if (out && out.ok) {
+        showToast(`⏪ Memória #${out.memory_id} revertida com sucesso (Time-Travel Rollback)!`);
+        await loadMemoryRevisionsUI();
+        await fetchGraph();
+      } else {
+        showToast('⚠️ Erro ao reverter revisão: ' + (out.error || 'Desconhecido'));
+      }
+    }
+
     window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (closeAnyOpenModalOnEscape()) {
+          e.preventDefault();
+          return;
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const modal = document.getElementById('cmdPaletteModal');
@@ -10662,6 +10766,7 @@
         else openCommandPalette();
         return;
       }
+      if (hasAnyModalOpen()) return;
       const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
       if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
       if (!e.ctrlKey && !e.metaKey && !e.altKey) {

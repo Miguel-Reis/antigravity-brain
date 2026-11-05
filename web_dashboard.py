@@ -627,15 +627,31 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         # Silenciar logs HTTP verbosos
         pass
 
+    def _allowed_origin(self) -> str:
+        origin = str(self.headers.get("Origin") or "").strip()
+        if origin in ("http://127.0.0.1:8765", "http://localhost:8765", "http://127.0.0.1:3000", "http://localhost:3000"):
+            return origin
+        return "http://127.0.0.1:8765"
+
+    def _is_trusted_local_origin(self) -> bool:
+        origin = str(self.headers.get("Origin") or "").strip()
+        if not origin:
+            sec_site = str(self.headers.get("Sec-Fetch-Site") or "").strip().lower()
+            return sec_site in ("", "same-origin", "none")
+        return origin in ("http://127.0.0.1:8765", "http://localhost:8765", "http://127.0.0.1:3000", "http://localhost:3000")
+
     def _send_json(self, data: Any, status: int = 200) -> None:
         raw = json.dumps(data, ensure_ascii=False).encode("utf-8")
         etag = f'W/"{hashlib.md5(raw).hexdigest()[:16]}-{len(raw)}"'
+        cors_origin = self._allowed_origin()
         if status == 200 and self.command in ("GET", "HEAD"):
             inm = self.headers.get("If-None-Match", "")
             if inm and inm == etag:
                 self.send_response(304)
                 self.send_header("ETag", etag)
-                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Access-Control-Allow-Origin", cors_origin)
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("X-Frame-Options", "DENY")
                 self.end_headers()
                 return
         self.send_response(status)
@@ -643,25 +659,32 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("ETag", etag)
         self.send_header("Cache-Control", "no-cache")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", cors_origin)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
         self.end_headers()
         if self.command != "HEAD":
             self.wfile.write(raw)
 
     def do_HEAD(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
+        cors_origin = self._allowed_origin()
         if parsed.path in ("/", "/index.html"):
             size = os.path.getsize(INDEX_HTML_PATH) if os.path.isfile(INDEX_HTML_PATH) else 0
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("Cache-Control", "no-cache")
             self.send_header("Content-Length", str(size))
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", cors_origin)
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
             self.end_headers()
             return
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
-        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Origin", cors_origin)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
         self.end_headers()
 
     def do_GET(self) -> None:
@@ -679,11 +702,23 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             if not os.path.isfile(INDEX_HTML_PATH):
                 self._send_json({"error": "index.html not found"}, 404)
                 return
+            st = os.stat(INDEX_HTML_PATH)
+            html_etag = f'W/"{int(st.st_mtime)}-{st.st_size}"'
+            if self.headers.get("If-None-Match", "") == html_etag:
+                self.send_response(304)
+                self.send_header("ETag", html_etag)
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("X-Frame-Options", "DENY")
+                self.end_headers()
+                return
             with open(INDEX_HTML_PATH, "rb") as f:
                 content = f.read()
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
-            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+            self.send_header("ETag", html_etag)
+            self.send_header("Cache-Control", "no-cache")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("X-Frame-Options", "DENY")
             self.send_header("Content-Length", str(len(content)))
             self.end_headers()
             if self.command != "HEAD":
@@ -831,6 +866,14 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(orbit.get_mission_control_inbox())
             return
 
+        if parsed.path == "/api/memories/revisions":
+            qs = urllib.parse.parse_qs(parsed.query)
+            mid_raw = qs.get("memory_id", [""])[0]
+            mid = int(mid_raw) if mid_raw.isdigit() else None
+            db = BrainDB()
+            self._send_json({"ok": True, "revisions": db.get_memory_revisions(memory_id=mid, limit=25)})
+            return
+
         if parsed.path == "/api/events":
             db = BrainDB()
             stats = db.get_stats()
@@ -849,12 +892,13 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 },
                 ensure_ascii=False,
             )
-            body_bytes = f"retry: 5000\nevent: brain_state\ndata: {payload}\n\n".encode("utf-8")
+            body_bytes = f"retry: 25000\nevent: brain_state\ndata: {payload}\n\n".encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("Connection", "close")
-            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Access-Control-Allow-Origin", self._allowed_origin())
+            self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("Content-Length", str(len(body_bytes)))
             self.end_headers()
             self.wfile.write(body_bytes)
@@ -863,6 +907,9 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         self._send_json({"error": "Not found"}, 404)
 
     def do_POST(self) -> None:
+        if not self._is_trusted_local_origin():
+            self._send_json({"error": "Origem cruzada não autorizada (CSRF Protection)"}, 403)
+            return
         parsed = urllib.parse.urlparse(self.path)
         length = int(self.headers.get("Content-Length", 0) or 0)
         body_raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
@@ -1035,6 +1082,12 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             target_ws = str(body.get("target_workspace") or body.get("workspace") or "global").strip() or "global"
             res = db.bulk_manage_memories(action=action, memory_ids=ids, target_workspace=target_ws)
             self._send_json(res)
+            return
+
+        if parsed.path == "/api/memories/rollback":
+            rev_id = int(body.get("revision_id") or body.get("id") or 0)
+            res = db.rollback_memory(revision_id=rev_id)
+            self._send_json(res, 200 if res.get("ok") else 400)
             return
 
         if parsed.path == "/api/cow_branch":

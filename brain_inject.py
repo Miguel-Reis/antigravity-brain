@@ -284,6 +284,33 @@ def apply_dynamic_topk_cutoff(
     return kept, dropped
 
 
+def slice_scout_map_ast_safe(scout_map: str, max_len: int = 380) -> str:
+    """
+    OTIMIZAÇÃO #6 (AST-Bounded Context Slicing):
+    Corta o [SCOUT_SHARED_MAP] apenas em fronteiras sintáticas seguras (;, |, ), ,)
+    sem nunca truncar identificadores a meio (ex: 'def check_and_app') e garantindo o fecho ']'.
+    """
+    raw = (scout_map or "").strip()
+    if not raw:
+        return ""
+    if len(raw) <= max_len:
+        return raw if raw.endswith("]") else raw + "]"
+    window = raw[: max_len - 2]
+    best_cut = -1
+    for sep in (" | ", "; ", "), ", ", ", ")"):
+        idx = window.rfind(sep)
+        if idx > max_len // 2:
+            cut_pos = idx + (1 if sep == ")" else 0)
+            if cut_pos > best_cut:
+                best_cut = cut_pos
+    if best_cut == -1:
+        best_cut = window.rfind(" ")
+    sliced = (window[:best_cut] if best_cut > 40 else window).rstrip(" ,;|")
+    if not sliced.endswith("]"):
+        sliced += "]"
+    return sliced
+
+
 def compute_adaptive_budget(user_query: str) -> int:
     """Ajusta dinamicamente o orçamento de caracteres conforme a complexidade do pedido."""
     q = (user_query or "").strip().lower()
@@ -331,18 +358,25 @@ def build_ephemeral_context(
         chk_line = f"CHK({checkpoint.get('project') or workspace}):Goal={c_goal}|St={c_status}|Files={c_files}"
         parts.append(chk_line[:220])
 
-    # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining)
+    # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining c/ Delta Dedupe)
+    is_delta = bool(delta_info and delta_info.get("is_delta_turn"))
     try:
         orb = OrbitEngine()
-        bcasts = orb.get_active_broadcasts(workspace=workspace, limit=1 if (micro_mode or max_chars <= 380) else 2)
-        for bc in bcasts:
-            parts.append(f"📡[ORBIT|{bc['target_scope']}]:{compress_fact_telegraphic(bc['directive'], 110)}")
-        if not (micro_mode or max_chars <= 380):
+        if not is_delta:
+            bcasts = orb.get_active_broadcasts(workspace=workspace, limit=1)
+            seen_bc: set[str] = set()
+            for bc in bcasts:
+                bc_txt = compress_fact_telegraphic(bc.get("directive", ""), 95)
+                if bc_txt.lower() in seen_bc:
+                    continue
+                seen_bc.add(bc_txt.lower())
+                parts.append(f"📡[ORBIT|{bc['target_scope']}]:{bc_txt}")
+        if not (micro_mode or max_chars <= 380) and not is_delta:
             handoffs = orb.get_recent_handoffs(workspace=workspace, limit=1)
             if handoffs:
                 ho = handoffs[0]
                 parts.append(
-                    f"🔗[HANDOFF|{ho['from_agent']}->{ho['to_scope']}|{ho['modified_files'][:48]}]:{compress_fact_telegraphic(ho['summary'], 100)}"
+                    f"🔗[HANDOFF|{ho['from_agent']}->{ho['to_scope']}|{ho['modified_files'][:40]}]:{compress_fact_telegraphic(ho['summary'], 85)}"
                 )
     except Exception:
         pass
@@ -357,10 +391,10 @@ def build_ephemeral_context(
             f"⚡[DELTA_CACHE|turn=#{delta_info.get('turn_number', 2)}|scout_map=cached_unchanged|mems_cached={delta_info.get('cached_count', 0)}|saved=~{delta_info.get('delta_saved_tokens', 0)}tok]"
         )
     elif scout_map:
-        parts.append(scout_map[:460])
+        parts.append(slice_scout_map_ast_safe(scout_map, max_len=min(380, max(180, max_chars // 3))))
 
     stop_th = float((jev_route or {}).get("adaptive_stop_threshold") or 0.30)
-    source_memories = delta_info["delta_memories"] if (delta_info and delta_info.get("is_delta_turn")) else memories
+    source_memories = delta_info.get("delta_memories", []) if (delta_info and delta_info.get("is_delta_turn")) else memories
     filtered_memories, _ = apply_dynamic_topk_cutoff(source_memories, stop_threshold=stop_th)
 
     seen_topics: set[str] = set()
@@ -382,6 +416,8 @@ def build_ephemeral_context(
         topic = (m.get("topic") or "Fact").strip()
         if topic.startswith("Scout Shared Codebase Map") and scout_map:
             continue
+        if topic.startswith("📡 Broadcast") or "[ORBIT BROADCAST" in str(m.get("fact") or ""):
+            continue
         norm_topic = re.sub(r"\s+", " ", topic.lower())
         if norm_topic in seen_topics:
             continue
@@ -399,7 +435,8 @@ def build_ephemeral_context(
             break
         parts.append(entry)
 
-    return "\n".join(parts)
+    out_text = "\n".join(parts)
+    return out_text[:max_chars] if len(out_text) > max_chars else out_text
 
 
 def generate_inspector_preview(
