@@ -763,6 +763,65 @@ def run_all_tests() -> None:
         assert dots_ui_token in html_content, f"Token DOTS v4.7 em falta em index.html: {dots_ui_token}"
     print("[PASS] Pack Completo DOTS v4.7 (DAG .dots/*.md + Trajetórias Cognitivas DOTS + Motor Físico ECS Float32Array SoA) OK")
 
+    # 23. Testar Motor de Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.8)
+    with tempfile.TemporaryDirectory() as tmp_sl_dir:
+        sl_db = BrainDB(os.path.join(tmp_sl_dir, "self_learn_v48.db"))
+        sl_orbit = OrbitEngine(sl_db)
+
+        # Guardar memórias episódicas num projeto 'proj_alpha' sobre o mesmo ficheiro (index.html)
+        sl_db.store_fact(
+            topic="Bug Fix Aspas em index.html",
+            fact="Em index.html:L11200 usar sempre &#39; em escapeHtml para evitar quebra de onclick.",
+            workspace="proj_alpha",
+            category="bug_fix",
+            tags="ui,index,xss,escape",
+            importance=5,
+        )
+        sl_db.store_fact(
+            topic="Otimização SoA em index.html",
+            fact="Em index.html:L5510 usar Float32Array em stepPhysics e validar sintaxe com node --check.",
+            workspace="proj_alpha",
+            category="optimization",
+            tags="ui,index,physics,dots",
+            importance=5,
+        )
+
+        # 23.1 Novo projeto 'proj_alpha' começa com Self-Learn OFF por omissão (Opt-in por projeto)
+        st_alpha_init = sl_orbit.get_self_learn_status("proj_alpha")
+        assert st_alpha_init["enabled"] is False, f"Novo projeto devia iniciar com Self-Learn OFF (Opt-in): {st_alpha_init}"
+        skipped_cycle = sl_orbit.run_self_learn_evolution_cycle("proj_alpha", force=False)
+        assert skipped_cycle["ok"] is False and skipped_cycle.get("skipped") is True, "Ciclo devia ser ignorado quando Self-Learn está OFF"
+
+        # Verificar que quando está OFF não injeta 🧬[SELF_LEARN] no contexto
+        brief_off = sl_orbit.get_executive_briefing_and_roi("proj_alpha")
+        ctx_off = build_ephemeral_context([], None, "proj_alpha", orbit_brief=brief_off)
+        assert "🧬[SELF_LEARN|" not in ctx_off, f"Não devia injetar 🧬[SELF_LEARN| quando desativado no projeto: {ctx_off}"
+
+        # 23.2 Ativar Self-Learn em 'proj_alpha' e correr Ciclo de Auto-Melhoria Recursiva
+        st_alpha_on = sl_orbit.toggle_project_self_learn("proj_alpha", enabled=True)
+        assert st_alpha_on["enabled"] is True and st_alpha_on["proactive_enabled"] is True
+
+        evo_res = sl_orbit.run_self_learn_evolution_cycle("proj_alpha", force=False)
+        assert evo_res["ok"] is True and evo_res["new_rules_created"] >= 1 and evo_res["synapses_boosted"] >= 1, (
+            f"Ciclo de Auto-Melhoria falhou ao destilar Meta-Regras ou reforçar sinapses: {evo_res}"
+        )
+        assert evo_res["brain_iq_score"] > 85.0 and len(evo_res["self_learn"]["learned_playbook"]) >= 1
+
+        # Verificar que a Meta-Regra Aprendida foi guardada em brain.db e é injetada em 🧬[SELF_LEARN]
+        brief_on = sl_orbit.get_executive_briefing_and_roi("proj_alpha")
+        ctx_on = build_ephemeral_context([], None, "proj_alpha", orbit_brief=brief_on)
+        assert "🧬[SELF_LEARN|" in ctx_on and "index.html" in ctx_on, f"Injeção 🧬[SELF_LEARN] ausente após ativação: {ctx_on}"
+
+    for sl_ui_token in (
+        'id="orbitSelfLearnProjectsList"',
+        'id="orbitSelfLearnPlaybookList"',
+        "function toggleProjectSelfLearnUI(",
+        "function runSelfLearnEvolutionUI(",
+        "start_self_learn_sentinel_daemon" if False else 'id="topSelfLearnBadgeTxt"',
+    ):
+        assert sl_ui_token in html_content, f"Token Self-Learn v4.8 em falta em index.html: {sl_ui_token}"
+    print("[PASS] Self-Learn & Auto-Improve Engine v4.8 (Opt-in por Projeto, Destilação de Meta-Regras, Reforço Hebbiano & Sentinel Task) OK")
+
 
 if __name__ == "__main__":
     run_all_tests()

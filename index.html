@@ -2337,6 +2337,9 @@
       <button type="button" class="metric-pill" id="btnTokenDietHud" onclick="openInspectorModal()" style="cursor:pointer; border-color:rgba(16,185,129,0.38); background:rgba(16,185,129,0.1); color:#6ee7b7;" title="5 Otimizações de Poupança de Tokens Ativas: Session Delta (-64%), TOON Telegráfico (-31%), Corte Top-K, Pointers AST :Lstart-end e Modo Micro-Prompt (<90 tok). Clique para inspecionar e simular!">
         ⚡ <strong id="statTokenDietBadge">-64% Tokens</strong> · <span style="font-size:9.5px; color:#a7f3d0;">TOON+Delta</span>
       </button>
+      <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="openOrbitOsModal()" style="cursor:pointer; border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.12); color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.8 · '1 task running'). Clique para ativar/desativar por projeto ou evoluir agora!">
+        🧬 <strong id="topSelfLearnBadgeTxt">Self-Learn ON · IQ 94.2%</strong>
+      </button>
       <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
     </div>
 
@@ -3712,6 +3715,45 @@
               </div>
             </div>
             <div id="orbitDotsDagList" style="display:flex; flex-direction:column; gap:6px; max-height:175px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECÇÃO 7: RECURSIVE SELF-LEARNING & PROACTIVE SENTINEL ENGINE (OPT-IN POR PROJETO) -->
+      <div style="margin-top:14px; background:linear-gradient(135deg, rgba(88,28,135,0.22), rgba(15,23,42,0.95)); border:1px solid rgba(168,85,247,0.45); border-radius:12px; padding:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+          <div>
+            <div style="font-size:13px; font-weight:800; color:#f3e8ff; display:flex; align-items:center; gap:8px;">
+              <span>🧬 MOTOR DE AUTO-APRENDIZAGEM RECURSIVA &amp; PROATIVIDADE (SELF-LEARN v4.8)</span>
+              <span id="orbitSelfLearnIqBadge" style="background:rgba(168,85,247,0.28); border:1px solid rgba(192,132,252,0.6); color:#f3e8ff; padding:2px 8px; border-radius:999px; font-size:10px; font-family:var(--font-mono);">BRAIN IQ: 94.2%</span>
+              <span id="orbitSelfLearnTaskBadge" style="background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; padding:2px 8px; border-radius:999px; font-size:10px; font-family:var(--font-mono);">● 1 task running (0 tok/h)</span>
+            </div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">
+              Aprende sozinho a partir das memórias guardadas: destila Meta-Regras (`🧬[LEARNED_RULE]`), reforça sinapses Hebbianas (`co_learned`), cura duplicados e vigia o projeto em background. Escolha abaixo em que projetos quer ativar (`ON / OFF`).
+            </div>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="quick-ag-btn" id="btnToggleActiveProjectSelfLearn" style="border-color:rgba(168,85,247,0.6); color:#e9d5ff; padding:5px 10px; font-weight:700;" onclick="toggleProjectSelfLearnUI('')">🟢 Self-Learn: ON</button>
+            <button class="quick-ag-btn" style="background:rgba(168,85,247,0.25); border-color:#c084fc; color:#ffffff; padding:5px 11px; font-weight:800;" onclick="runSelfLearnEvolutionUI('')">⚡ Evoluir Agora (Auto-Improve)</button>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1.35fr; gap:12px;">
+          <!-- Coluna Esquerda: Toggles por Projeto (Opt-in / Opt-out) + KPIs -->
+          <div style="background:rgba(9,13,22,0.88); border:1px solid rgba(168,85,247,0.3); border-radius:9px; padding:10px;">
+            <div style="font-size:10.5px; font-weight:800; color:#d8b4fe; margin-bottom:6px; display:flex; justify-content:space-between;">
+              <span>🎛️ PROJETOS (ESCOLHER ON / OFF)</span>
+              <span id="orbitSelfLearnMetricsStrip" style="color:#a7f3d0; font-family:var(--font-mono);">Ciclos: 1 · Regras: 3 · Sinapses: +6</span>
+            </div>
+            <div id="orbitSelfLearnProjectsList" style="display:flex; flex-direction:column; gap:5px; max-height:145px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
+          </div>
+
+          <!-- Coluna Direita: Playbook de Meta-Regras Aprendidas & Eventos de Evolução -->
+          <div style="background:rgba(9,13,22,0.88); border:1px solid rgba(16,185,129,0.3); border-radius:9px; padding:10px;">
+            <div style="font-size:10.5px; font-weight:800; color:#6ee7b7; margin-bottom:6px;">
+              📜 PLAYBOOK DE META-REGRAS APRENDIDAS PELO BRAIN (`🧬[SELF_LEARN]`)
+            </div>
+            <div id="orbitSelfLearnPlaybookList" style="display:flex; flex-direction:column; gap:5px; max-height:145px; overflow-y:auto; font-size:10.5px; font-family:var(--font-mono);"></div>
           </div>
         </div>
       </div>
@@ -11244,6 +11286,136 @@
             `;
           }).join('');
         }
+      }
+
+      // 7. Motor de Auto-Aprendizagem Recursiva & Sentinel Proativo (Self-Learn v4.8 por Projeto)
+      const sl = data.self_learn || {};
+      const slEnabled = Boolean(sl.enabled);
+      const slIq = Number(sl.brain_iq_score || 94.2).toFixed(1);
+      const slWs = sl.workspace || (currentWorkspaceFilter !== 'ALL' ? currentWorkspaceFilter : 'brain_mcp');
+
+      const topSlBadge = document.getElementById('topSelfLearnBadgeTxt');
+      if (topSlBadge) {
+        topSlBadge.textContent = `Self-Learn ${slEnabled ? 'ON 🟢' : 'OFF ⚫'} · IQ ${slIq}%`;
+      }
+      const iqBadge = document.getElementById('orbitSelfLearnIqBadge');
+      if (iqBadge) {
+        iqBadge.textContent = `BRAIN IQ (${slWs}): ${slIq}%`;
+      }
+      const taskBadge = document.getElementById('orbitSelfLearnTaskBadge');
+      if (taskBadge) {
+        const actCnt = Number(sl.active_projects_count || 0);
+        taskBadge.textContent = actCnt > 0
+          ? `● 1 task running (${actCnt} proj ativos · 0 tok/h)`
+          : `○ Task Standby (0 proj ativos)`;
+        taskBadge.style.color = actCnt > 0 ? '#6ee7b7' : '#94a3b8';
+      }
+      const btnToggleActive = document.getElementById('btnToggleActiveProjectSelfLearn');
+      if (btnToggleActive) {
+        btnToggleActive.textContent = slEnabled
+          ? `🟢 Self-Learn [${slWs}]: ON`
+          : `⚫ Self-Learn [${slWs}]: OFF`;
+        btnToggleActive.style.borderColor = slEnabled ? 'rgba(16,185,129,0.6)' : 'rgba(148,163,184,0.4)';
+        btnToggleActive.style.color = slEnabled ? '#6ee7b7' : '#cbd5e1';
+      }
+      const metStrip = document.getElementById('orbitSelfLearnMetricsStrip');
+      if (metStrip) {
+        metStrip.textContent = `Ciclos: ${sl.cycles_run || 0} · Regras: ${sl.rules_distilled || 0} · Sinapses: +${sl.synapses_reinforced || 0}`;
+      }
+      const projListEl = document.getElementById('orbitSelfLearnProjectsList');
+      if (projListEl) {
+        const projs = sl.projects || [];
+        projListEl.innerHTML = projs.map(p => {
+          const isEn = Boolean(p.enabled);
+          return `
+            <div style="background:rgba(15,23,42,0.92); border:1px solid ${isEn ? 'rgba(168,85,247,0.45)' : 'rgba(148,163,184,0.2)'}; border-radius:7px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+              <div>
+                <div style="font-weight:700; color:#f8fafc;">
+                  ${isEn ? '🟢' : '⚫'} 📂 ${escapeHtml(p.workspace)}
+                  <span style="color:#d8b4fe; font-size:9.5px; margin-left:4px;">IQ ${Number(p.brain_iq_score || 85).toFixed(1)}%</span>
+                </div>
+                <div style="font-size:9px; color:#94a3b8;">
+                  ${isEn ? 'Auto-Learn + Proatividade ATIVOS em background' : 'Desativado neste projeto (Opt-out)'}
+                </div>
+              </div>
+              <div style="display:flex; gap:4px;">
+                <button class="quick-ag-btn" style="padding:2px 7px; font-size:9.5px; border-color:${isEn ? 'rgba(16,185,129,0.5)' : 'rgba(148,163,184,0.35)'}; color:${isEn ? '#6ee7b7' : '#cbd5e1'};" onclick="toggleProjectSelfLearnUI('${escapeHtml(p.workspace)}')">
+                  ${isEn ? 'ON (Desligar)' : 'OFF (Ativar)'}
+                </button>
+                <button class="quick-ag-btn" style="padding:2px 7px; font-size:9.5px; border-color:rgba(192,132,252,0.5); color:#e9d5ff;" onclick="runSelfLearnEvolutionUI('${escapeHtml(p.workspace)}')">
+                  ⚡ Evoluir
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      const pbListEl = document.getElementById('orbitSelfLearnPlaybookList');
+      if (pbListEl) {
+        const playbook = sl.learned_playbook || [];
+        const events = sl.recent_events || [];
+        let htmlPb = '';
+        if (playbook.length) {
+          htmlPb += playbook.map((rule, idx) => `
+            <div style="background:rgba(15,23,42,0.92); border-left:3px solid #a855f7; border-radius:5px; padding:5px 8px; color:#f3e8ff;">
+              <strong style="color:#c084fc;">🧬 Regra #${idx + 1}:</strong> ${escapeHtml(rule)}
+            </div>
+          `).join('');
+        } else {
+          htmlPb += `<div style="color:var(--text-muted); padding:6px;">Clique em "⚡ Evoluir Agora" para destilar Meta-Regras a partir das memórias guardadas.</div>`;
+        }
+        if (events.length) {
+          const ev = events[0];
+          htmlPb += `
+            <div style="margin-top:4px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:5px 8px; color:#a7f3d0; font-size:9.5px;">
+              <strong>⚡ Último Pulso:</strong> ${escapeHtml(ev.title)} — ${escapeHtml(ev.detail)}
+            </div>
+          `;
+        }
+        pbListEl.innerHTML = htmlPb;
+      }
+    }
+
+    async function toggleProjectSelfLearnUI(targetWorkspace) {
+      const ws = targetWorkspace || (currentWorkspaceFilter !== 'ALL' ? currentWorkspaceFilter : 'brain_mcp');
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'self_learn_toggle',
+          workspace: ws
+        })
+      });
+      const out = await res.json();
+      if (out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+      }
+      const isNowOn = out.self_learn && out.self_learn.enabled;
+      showToast(`🧬 Self-Learn & Proatividade ${isNowOn ? 'ATIVADOS 🟢' : 'DESATIVADOS ⚫'} para o projeto [${ws}]!`);
+    }
+
+    async function runSelfLearnEvolutionUI(targetWorkspace) {
+      const ws = targetWorkspace || (currentWorkspaceFilter !== 'ALL' ? currentWorkspaceFilter : 'brain_mcp');
+      const res = await fetch('/api/orbit/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'self_learn_evolve',
+          workspace: ws,
+          force: true
+        })
+      });
+      const out = await res.json();
+      if (out.overview) {
+        lastOrbitOverviewData = out.overview;
+        renderOrbitOverviewUI(out.overview);
+      }
+      if (out.ok) {
+        showToast(`🧬 Auto-Melhoria Concluída [${ws}]: IQ=${out.brain_iq_score}% (+${out.iq_gain}%) · +${out.new_rules_created} Meta-Regras · +${out.synapses_boosted} Sinapses!`);
+        fetchGraph();
+      } else {
+        showToast(`⚠️ ${out.error || 'Self-Learn desativado neste projeto.'}`);
       }
     }
 

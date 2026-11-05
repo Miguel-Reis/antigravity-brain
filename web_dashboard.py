@@ -857,8 +857,10 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/orbit/overview":
+            qs = urllib.parse.parse_qs(parsed.query)
+            ws_param = qs.get("workspace", ["all"])[0] or "all"
             orbit = OrbitEngine(BrainDB())
-            self._send_json(orbit.get_executive_briefing_and_roi())
+            self._send_json(orbit.get_executive_briefing_and_roi(workspace=ws_param))
             return
 
         if parsed.path == "/api/orbit/inbox":
@@ -1220,10 +1222,30 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                     summary=str(body.get("summary", "")),
                 )
                 res = {**dot_res, "dot": dot_res}
+            elif action == "self_learn_status":
+                ws = str(body.get("workspace", "brain_mcp"))
+                sl_res = orbit.get_self_learn_status(workspace=ws)
+                res = {**sl_res, "self_learn": sl_res}
+            elif action == "self_learn_toggle":
+                ws = str(body.get("workspace", "brain_mcp"))
+                en_val = body.get("enabled")
+                pro_val = body.get("proactive_enabled")
+                sl_res = orbit.toggle_project_self_learn(
+                    workspace=ws,
+                    enabled=bool(en_val) if en_val is not None else None,
+                    proactive_enabled=bool(pro_val) if pro_val is not None else None,
+                )
+                res = {**sl_res, "self_learn": sl_res}
+            elif action == "self_learn_evolve":
+                ws = str(body.get("workspace", "brain_mcp"))
+                force_flag = bool(body.get("force", False))
+                sl_res = orbit.run_self_learn_evolution_cycle(workspace=ws, force=force_flag)
+                res = {**sl_res, "self_learn": sl_res.get("self_learn")}
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return
-            self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi()})
+            req_ws = str(body.get("workspace", "all"))
+            self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi(workspace=req_ws)})
             return
 
         self._send_json({"error": "Endpoint desconhecido"}, 404)
@@ -1245,6 +1267,30 @@ class ReusableThreadingHTTPServer(ThreadingHTTPServer):
     daemon_threads = True
 
 
+def start_self_learn_sentinel_daemon(interval_seconds: float = 90.0) -> None:
+    """
+    Task de Auto-Aprendizagem Recursiva & Sentinel Proativo em background ('1 task running'):
+    Ronda periodicamente todos os projetos onde o utilizador ativou 'enabled = 1' e executa
+    consolidação de Meta-Regras, reforço sináptico Hebbiano e deteção proativa a 0 tokens LLM.
+    """
+    import threading
+
+    def _sentinel_worker() -> None:
+        while True:
+            time.sleep(max(15.0, float(interval_seconds)))
+            try:
+                orb = OrbitEngine(BrainDB())
+                st = orb.get_self_learn_status("brain_mcp")
+                for proj in st.get("projects", []):
+                    if proj.get("enabled"):
+                        orb.run_self_learn_evolution_cycle(workspace=str(proj["workspace"]), force=False)
+            except Exception:
+                pass
+
+    t = threading.Thread(target=_sentinel_worker, name="BrainSelfLearnSentinel", daemon=True)
+    t.start()
+
+
 def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
     import threading
 
@@ -1264,6 +1310,7 @@ def run_server(port: int = PORT, host: str = "127.0.0.1") -> None:
             SwarmEngine(db).ensure_default_run()
             start_auto_update_daemon(interval_seconds=1800)
             start_ast_impact_watcher_daemon(workspace_path=CURRENT_DIR, interval_seconds=2.0)
+            start_self_learn_sentinel_daemon(interval_seconds=90.0)
             if getattr(sys, "stdout", None) is not None:
                 print(f"   Sincronizacao inicial concluida: {sync_info}", flush=True)
         except Exception:

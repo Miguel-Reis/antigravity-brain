@@ -1,15 +1,15 @@
 <div align="center">
 
-# 🧠 Antigravity Brain v4.7
+# 🧠 Antigravity Brain v4.8
 
-**Zero-Round-Trip Persistent Memory Engine, DOTS 3-Layer Stack, Asymmetric Swarm Orchestrator, Orbit Agent OS & 60 FPS 3D Command Studio for AI Coding Agents**
+**Zero-Round-Trip Persistent Memory Engine, Recursive Self-Learning & Proactive Sentinel, DOTS 3-Layer Stack, Orbit Agent OS & 60 FPS 3D Command Studio for AI Coding Agents**
 
-[![Version](https://img.shields.io/badge/version-4.7.0-6366f1?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
+[![Version](https://img.shields.io/badge/version-4.8.0-6366f1?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
 [![Python](https://img.shields.io/badge/python-3.10%2B%20(Zero--Deps)-38bdf8?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/SQLite_WAL-FTS5_BM25_%2B_32D_Vectors-10b981?style=for-the-badge&logo=sqlite&logoColor=white)](./db_engine.py)
+[![Self-Learn](https://img.shields.io/badge/Self--Learn-Recursive_Meta--Rules_%C2%B7_Per--Project_Opt--In-a855f7?style=for-the-badge)](./orbit_engine.py)
 [![DOTS](https://img.shields.io/badge/DOTS-DAG_%C2%B7_Trajectory_Search_%C2%B7_ECS_SoA-f59e0b?style=for-the-badge)](./orbit_engine.py)
-[![Audit Score](https://img.shields.io/badge/360%C2%BA_Audit-99.0%2F100_PASS-34d399?style=for-the-badge)](./test_brain.py)
-[![Tests](https://img.shields.io/badge/Tests-22%2F22_Passing-22c55e?style=for-the-badge)](./test_brain.py)
+[![Tests](https://img.shields.io/badge/Tests-23%2F23_Passing-22c55e?style=for-the-badge)](./test_brain.py)
 
 *Built with 100% Python Standard Library (`sqlite3`, `ast`, `http.server`, `threading`) and Vanilla HTML5/Canvas2D/WebAudio — zero `pip` packages required, zero cloud telemetry, sub-10ms local execution.*
 
@@ -33,6 +33,9 @@ AI coding agents lose context between sessions, repeatedly re-read the same file
   1. **Git-Native DAG Task Tracker (`.dots/*.md` + `dot_ready`)**: Tracks explicit `depends_on` / `blocked_by` DAG dependencies in SQLite and `.dots/*.md` YAML frontmatter, injecting only 100% unblocked `🎯[DOTS_READY]` tasks into `PreInvocation` and auto-unlocking dependent tasks on completion.
   2. **Dynamic Optimal Reasoning Trajectories Search (`compute_dots_trajectory`)**: Dynamically composes optimal atomic cognitive trajectories (`[AST_SLICE:L]➔[CAUSAL_LINEAGE]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]`) in `<0.05ms` inside `[JEV_S1]`.
   3. **Data-Oriented Technology Stack (ECS + `Float32Array` SoA Physics)**: Pre-allocated contiguous `Float32Array` and `Int32Array` linked-grid buffers (`dotsEcsSoA`) for **zero GC allocations per frame** at 60 FPS.
+- 🧬 **Recursive Self-Learning & Proactive Sentinel (Per-Project Opt-In)**:
+  - Choose which projects (`workspace`) have autonomous **Self-Learning & Proactivity (`ON / OFF`)** enabled via the Command Studio UI or MCP (`orbit_mission_control`).
+  - Runs a background Sentinel daemon (`0 LLM tokens/hour` in idle) that distills **Meta-Rules (`🧬[LEARNED_RULE]`)** from episodic bug-fixes and optimizations, reinforces **Hebbian synaptic edges (`co_learned`)**, heals duplicate memories with Time-Travel snapshots, and tracks each project's **Brain IQ Score (`%`)**.
 
 ---
 
@@ -232,6 +235,7 @@ Expected output (`22/22 PASS`):
 [PASS] 5 Otimizações de Poupança de Tokens (Session Delta, TOON, Top-K Cutoff, Pointers :Lstart-end e Micro-Prompt) OK
 [PASS] Auditoria Total v4.6 (FTS5 BM25 Prefix Fix, AST-Safe Scout Slice, Arrow Regex, Time-Travel Rollback & Security Hardening) OK
 [PASS] Pack Completo DOTS v4.7 (DAG .dots/*.md + Trajetórias Cognitivas DOTS + Motor Físico ECS Float32Array SoA) OK
+[PASS] Self-Learn & Auto-Improve Engine v4.8 (Opt-in por Projeto, Destilação de Meta-Regras, Reforço Hebbiano & Sentinel Task) OK
 ```
 
 ---

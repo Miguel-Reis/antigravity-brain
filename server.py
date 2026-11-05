@@ -591,6 +591,17 @@ def orbit_mission_control(
             dot_id=directive or target_scope,
             workspace=workspace,
         )
+    elif action == "self_learn_status":
+        res = orbit.get_self_learn_status(workspace=workspace)
+    elif action == "self_learn_toggle":
+        en_arg = None
+        if directive.lower() in ("on", "true", "1", "enable"):
+            en_arg = True
+        elif directive.lower() in ("off", "false", "0", "disable"):
+            en_arg = False
+        res = orbit.toggle_project_self_learn(workspace=workspace, enabled=en_arg)
+    elif action == "self_learn_evolve":
+        res = orbit.run_self_learn_evolution_cycle(workspace=workspace, force=True)
     else:
         res = orbit.get_mission_control_inbox()
     return json.dumps(res, indent=2, ensure_ascii=False)

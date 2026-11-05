@@ -391,6 +391,14 @@ def build_ephemeral_context(
             if ready_list:
                 r_str = "; ".join(f"{d['dot_id']}(P{d.get('priority', 2)}):{d['title'][:38]}" for d in ready_list[:2])
                 parts.append(f"🎯[DOTS_READY|unblocked={len(ready_list)}]:{r_str}")
+            sl_state = (orbit_brief or {}).get("self_learn") if orbit_brief else orb.get_self_learn_status(workspace=workspace)
+            if sl_state and sl_state.get("enabled"):
+                playbook = sl_state.get("learned_playbook") or []
+                if playbook:
+                    pb_str = " | ".join(compress_fact_telegraphic(str(p), 65) for p in playbook[:2])
+                    parts.append(
+                        f"🧬[SELF_LEARN|iq={sl_state.get('brain_iq_score', 90)}%|cycles={sl_state.get('cycles_run', 1)}]:{pb_str}"
+                    )
     except Exception:
         pass
 
