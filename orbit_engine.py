@@ -1114,21 +1114,37 @@ class OrbitEngine:
             ws = "brain_mcp"
 
         with self.db._connect() as conn:
-            # Descobrir todos os workspaces com memórias e garantir entrada em self_learn_projects
+            # Descobrir todos os workspaces com memórias e garantir entrada em self_learn_projects (Ativo por defeito / Opt-Out)
             ws_rows = conn.execute(
                 "SELECT DISTINCT LOWER(TRIM(workspace)) as w FROM memories WHERE workspace IS NOT NULL AND TRIM(workspace) != '';"
             ).fetchall()
             known_ws = sorted({str(r["w"]) for r in ws_rows if r["w"]} | {"brain_mcp", ws})
             for kws in known_ws:
-                default_en = 1 if kws == "brain_mcp" else 0
+                default_en = 1
                 conn.execute(
                     """
                     INSERT OR IGNORE INTO self_learn_projects
                     (workspace, enabled, proactive_enabled, cycles_run, rules_distilled, synapses_reinforced, duplicates_healed, brain_iq_score, learned_playbook_json, last_evolution_summary)
-                    VALUES (?, ?, ?, 0, 0, 0, 0, 85.0, '[]', 'Pronto para iniciar auto-aprendizagem neste projeto.');
+                    VALUES (?, ?, ?, 0, 0, 0, 0, 88.0, '[]', 'Auto-aprendizagem ativa por defeito neste projeto.');
                     """,
                     (kws, default_en, default_en),
                 )
+
+            # Migração automática: ativar projetos existentes que tinham ficado em standby por defeito (sem desligamento manual)
+            conn.execute(
+                """
+                UPDATE self_learn_projects
+                SET enabled = 1,
+                    proactive_enabled = 1
+                WHERE enabled = 0
+                  AND cycles_run = 0
+                  AND LOWER(workspace) NOT IN (
+                      SELECT DISTINCT LOWER(workspace)
+                      FROM self_learn_events
+                      WHERE event_type = 'toggle_state' AND detail LIKE '%Auto-aprendizagem=OFF%'
+                  );
+                """
+            )
 
             all_proj_rows = conn.execute(
                 "SELECT * FROM self_learn_projects ORDER BY enabled DESC, brain_iq_score DESC, workspace ASC;"
@@ -1233,6 +1249,60 @@ class OrbitEngine:
                 ),
             )
         return self.get_self_learn_status(workspace=ws)
+
+    def enable_and_evolve_all_projects(self, workspace: str = "brain_mcp") -> Dict[str, Any]:
+        """
+        Ativa o Self-Learn & Sentinel Proativo em TODOS os projetos conhecidos e executa
+        um ciclo de auto-melhoria recursiva em cada um (0 tokens LLM).
+        """
+        focus_ws = (workspace or "brain_mcp").strip().lower()
+        if focus_ws in ("all", ""):
+            focus_ws = "brain_mcp"
+
+        st_init = self.get_self_learn_status(workspace=focus_ws)
+        projs = st_init.get("projects") or []
+
+        with self.db._connect() as conn:
+            conn.execute(
+                "UPDATE self_learn_projects SET enabled = 1, proactive_enabled = 1, updated_at = CURRENT_TIMESTAMP;"
+            )
+
+        projects_evolved = 0
+        total_new_rules = 0
+        total_synapses_boosted = 0
+        total_healed = 0
+
+        for p in projs:
+            p_ws = str(p.get("workspace") or "").strip().lower()
+            if not p_ws:
+                continue
+            evo = self.run_self_learn_evolution_cycle(workspace=p_ws, force=True)
+            if evo.get("ok"):
+                projects_evolved += 1
+                total_new_rules += int(evo.get("new_rules_created") or 0)
+                total_synapses_boosted += int(evo.get("synapses_boosted") or 0)
+                total_healed += int(evo.get("healed_duplicates") or 0)
+
+        final_st = self.get_self_learn_status(workspace=focus_ws)
+        all_projs_after = final_st.get("projects") or []
+        avg_iq = (
+            round(
+                sum(float(x.get("brain_iq_score") or 90.0) for x in all_projs_after) / max(1, len(all_projs_after)),
+                1,
+            )
+            if all_projs_after
+            else 94.0
+        )
+        return {
+            "ok": True,
+            "workspace": focus_ws,
+            "projects_evolved": projects_evolved,
+            "total_new_rules": total_new_rules,
+            "total_synapses_boosted": total_synapses_boosted,
+            "total_healed": total_healed,
+            "avg_iq_score": avg_iq,
+            "self_learn": final_st,
+        }
 
     def run_self_learn_evolution_cycle(
         self,

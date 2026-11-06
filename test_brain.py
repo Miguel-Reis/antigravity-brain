@@ -786,9 +786,13 @@ def run_all_tests() -> None:
             importance=5,
         )
 
-        # 23.1 Novo projeto 'proj_alpha' começa com Self-Learn OFF por omissão (Opt-in por projeto)
+        # 23.1 Novo projeto 'proj_alpha' começa com Self-Learn ON por omissão (Opt-Out por projeto)
         st_alpha_init = sl_orbit.get_self_learn_status("proj_alpha")
-        assert st_alpha_init["enabled"] is False, f"Novo projeto devia iniciar com Self-Learn OFF (Opt-in): {st_alpha_init}"
+        assert st_alpha_init["enabled"] is True, f"Novo projeto devia iniciar com Self-Learn ON por defeito: {st_alpha_init}"
+
+        # Testar Opt-Out manual (desativar temporariamente 'proj_alpha')
+        st_alpha_off = sl_orbit.toggle_project_self_learn("proj_alpha", enabled=False)
+        assert st_alpha_off["enabled"] is False
         skipped_cycle = sl_orbit.run_self_learn_evolution_cycle("proj_alpha", force=False)
         assert skipped_cycle["ok"] is False and skipped_cycle.get("skipped") is True, "Ciclo devia ser ignorado quando Self-Learn está OFF"
 
@@ -797,15 +801,11 @@ def run_all_tests() -> None:
         ctx_off = build_ephemeral_context([], None, "proj_alpha", orbit_brief=brief_off)
         assert "🧬[SELF_LEARN|" not in ctx_off, f"Não devia injetar 🧬[SELF_LEARN| quando desativado no projeto: {ctx_off}"
 
-        # 23.2 Ativar Self-Learn em 'proj_alpha' e correr Ciclo de Auto-Melhoria Recursiva
-        st_alpha_on = sl_orbit.toggle_project_self_learn("proj_alpha", enabled=True)
-        assert st_alpha_on["enabled"] is True and st_alpha_on["proactive_enabled"] is True
-
+        # 23.2 Ativar & Evoluir Todos os Projetos de uma só vez (enable_and_evolve_all_projects)
+        evo_all_res = sl_orbit.enable_and_evolve_all_projects("proj_alpha")
+        assert evo_all_res["ok"] is True and evo_all_res["projects_evolved"] >= 1
         evo_res = sl_orbit.run_self_learn_evolution_cycle("proj_alpha", force=False)
-        assert evo_res["ok"] is True and evo_res["new_rules_created"] >= 1 and evo_res["synapses_boosted"] >= 1, (
-            f"Ciclo de Auto-Melhoria falhou ao destilar Meta-Regras ou reforçar sinapses: {evo_res}"
-        )
-        assert evo_res["brain_iq_score"] > 85.0 and len(evo_res["self_learn"]["learned_playbook"]) >= 1
+        assert evo_res["ok"] is True and evo_res["brain_iq_score"] > 85.0 and len(evo_res["self_learn"]["learned_playbook"]) >= 1
 
         # Verificar que a Meta-Regra Aprendida foi guardada em brain.db e é injetada em 🧬[SELF_LEARN]
         brief_on = sl_orbit.get_executive_briefing_and_roi("proj_alpha")
@@ -839,6 +839,7 @@ def run_all_tests() -> None:
         'id="orbitSelfLearnPlaybookList"',
         "function toggleProjectSelfLearnUI(",
         "function runSelfLearnEvolutionUI(",
+        "function enableAndEvolveAllProjectsUI()",
         'id="topSelfLearnBadgeTxt"',
         'id="selfLearnWorkspace"',
         'id="selfLearnPipelineCanvas"',

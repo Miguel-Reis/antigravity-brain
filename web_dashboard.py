@@ -1271,6 +1271,10 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 force_flag = bool(body.get("force", False))
                 sl_res = orbit.run_self_learn_evolution_cycle(workspace=ws, force=force_flag)
                 res = {**sl_res, "self_learn": sl_res.get("self_learn")}
+            elif action in ("self_learn_enable_all", "self_learn_evolve_all"):
+                ws = str(body.get("workspace", "brain_mcp"))
+                sl_res = orbit.enable_and_evolve_all_projects(workspace=ws)
+                res = {**sl_res, "self_learn": sl_res.get("self_learn")}
             elif action == "forge_prompt":
                 ws = str(body.get("workspace", "brain_mcp"))
                 raw_req = str(body.get("raw_request", ""))
@@ -1323,10 +1327,12 @@ def start_self_learn_sentinel_daemon(interval_seconds: float = 90.0) -> None:
     import threading
 
     def _sentinel_worker() -> None:
+        first_boot = True
         while True:
-            time.sleep(max(15.0, float(interval_seconds)))
+            time.sleep(3.0 if first_boot else max(15.0, float(interval_seconds)))
+            first_boot = False
             try:
-                orb = OrbitEngine(BrainDB())
+                orb = _get_fresh_orbit_engine(BrainDB())
                 st = orb.get_self_learn_status("brain_mcp")
                 for proj in st.get("projects", []):
                     if proj.get("enabled"):
