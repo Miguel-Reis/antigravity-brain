@@ -1740,6 +1740,243 @@ class OrbitEngine:
             out.append(d)
         return out
 
+    def _extract_skill_directives(self, skill_path: str, max_rules: int = 3) -> List[str]:
+        """
+        Abre o ficheiro SKILL.md real no disco e extrai as regras/diretivas operacionais mais importantes
+        para injetar diretamente no Super-Prompt (evitando referências vagas).
+        """
+        if not skill_path:
+            return []
+        try:
+            resolved = os.path.expanduser(skill_path.replace("/", os.sep))
+            if not os.path.isfile(resolved):
+                return []
+            with open(resolved, "r", encoding="utf-8", errors="ignore") as fh:
+                content = fh.read(8192)
+            # Remover frontmatter YAML se existir
+            if content.startswith("---"):
+                parts = content.split("---", 2)
+                if len(parts) >= 3:
+                    content = parts[2]
+            directives: List[str] = []
+            for raw_line in content.splitlines():
+                line = raw_line.strip()
+                if not line or len(line) < 22:
+                    continue
+                if line.startswith(("- ", "* ", "1. ", "2. ", "3. ", "4. ")):
+                    clean = re.sub(r"^[-*0-9.]+\s*", "", line).strip()
+                    if 24 <= len(clean) <= 185 and not clean.startswith("http"):
+                        directives.append(clean)
+                        if len(directives) >= max_rules:
+                            break
+            return directives
+        except Exception:
+            return []
+
+    def _synthesize_deep_engineering_spec(
+        self,
+        req: str,
+        ws: str,
+        mode: str,
+        matched_files: List[str],
+        rel_mems: List[Dict[str, Any]],
+    ) -> Dict[str, Any]:
+        """
+        Sintetizador Profundo de Especificações de Engenharia (Nível Gemini 4 / Claude Opus Architect):
+        Transforma uma frase curta/vaga do utilizador numa especificação técnica completa com:
+        - Reescrita expandida do pedido (Contexto + Fluxo Ponta-a-Ponta + Integração);
+        - Stack tecnológica e Persona de Arquiteto inferidas do projeto;
+        - Assinaturas de funções, endpoints e contratos de dados propostos;
+        - Símbolos AST reais (:Lstart-end) extraídos do projeto;
+        - Plano de execução em 5 fases e Casos-Limite (Edge Cases) específicos do domínio.
+        """
+        q_low = f"{req} {ws} {' '.join(matched_files)}".lower()
+
+        # 1. Inferir Stack Tecnológica, Persona e Comando de Verificação Real do Projeto
+        if any(k in q_low for k in ("mt2", "metin", "uiscript", "modulelist", ".inl", "packet.h", "locale_")):
+            stack_name = "C++17 Client/Server Engine + Python 2.7 Root/UIScript (Metin2 Architecture)"
+            persona = "Principal C++/Python Metin2 Client & Game-Server Engine Architect"
+            verify_cmd = "Validar dicionários UIScript, referências em root/ui*.py (Destroy/ClearDictionary sem memory leaks) e headers em Packet.h / ModuleList.inl"
+        elif ws == "brain_mcp" or any(k in q_low for k in ("orbit_engine", "web_dashboard", "db_engine", "brain_inject")):
+            stack_name = "Python 3.12+ (ThreadingHTTPServer + SQLite3 WAL/FTS5/32-D Vectors) + Vanilla JS/HTML5 Canvas 60 FPS"
+            persona = "Principal Autonomous AI Systems & Fullstack Python/JS Architect"
+            verify_cmd = "Executar `node --check` no JS extraído de `index.html` e correr `$env:BRAIN_TEST_MODE='1'; python test_brain.py` (100% PASS obrigatório)"
+        elif any(k in q_low for k in (".tsx", ".ts", "nextjs", "react", "tailwind", "prisma")):
+            stack_name = "TypeScript 5.8+ Strict Mode + React 19 / Next.js App Router + Tailwind CSS"
+            persona = "Principal Fullstack TypeScript & UI/UX Systems Architect"
+            verify_cmd = "Executar `npx tsc --noEmit`, linter e suite de testes (`npm test` / `vitest`)"
+        else:
+            stack_name = f"Arquitetura Modular de Produção ({ws})"
+            persona = f"Principal Software Architect & Senior Systems Engineer ({ws})"
+            verify_cmd = "Executar linter, verificação de tipos/sintaxe AST e a suite de testes automatizados do projeto"
+
+        # 2. Extrair substantivos/conceitos técnicos do pedido para propor identificadores concretos
+        stop_words = {
+            "criar", "cria", "fazer", "faz", "adicionar", "adiciona", "implementar", "implementa",
+            "corrigir", "corrige", "arranjar", "melhorar", "melhora", "otimizar", "otimiza", "para",
+            "uma", "um", "uns", "umas", "que", "com", "sem", "nos", "nas", "dos", "das", "por",
+            "como", "quando", "onde", "este", "esta", "isso", "isto", "função", "funcao", "sistema",
+            "página", "pagina", "botão", "botao", "projeto", "código", "codigo", "the", "and", "for", "with"
+        }
+        raw_tokens = [
+            re.sub(r"[^a-z0-9]", "", w.lower())
+            for w in re.findall(r"[a-zA-ZÀ-ÿ0-9_]+", req)
+        ]
+        meaningful = [w for w in raw_tokens if len(w) >= 3 and w not in stop_words][:4]
+        if not meaningful:
+            meaningful = ["custom", mode, "handler"]
+
+        snake_id = "_".join(meaningful)
+        camel_id = meaningful[0] + "".join(w.capitalize() for w in meaningful[1:])
+        pascal_id = "".join(w.capitalize() for w in meaningful)
+
+        # 3. Extrair símbolos reais (funções/classes) mencionados nas memórias ou nos ficheiros do projeto
+        sym_re = re.compile(r"\b(?:def|function|class|async\s+function)\s+([a-zA-Z0-9_]+)|\b([a-zA-Z0-9_]+\([a-zA-Z0-9_,=\s]*\))")
+        discovered_symbols: List[str] = []
+        for m in rel_mems:
+            txt = f"{m.get('topic', '')} {m.get('fact', '')}"
+            for sm in sym_re.findall(txt):
+                cand = (sm[0] or sm[1] or "").strip()
+                if cand and len(cand) >= 4 and cand not in discovered_symbols:
+                    discovered_symbols.append(cand)
+        if not discovered_symbols:
+            if ws == "brain_mcp":
+                discovered_symbols = ["OrbitEngine.generate_optimized_prompt()", "BrainDashboardHandler.do_POST()", "renderOrbitOverviewUI()"]
+            else:
+                discovered_symbols = [f"{snake_id}()", f"{camel_id}UI()", f"{pascal_id}Controller"]
+
+        # 4. Construir a Reescrita Expandida (Deep Prompt Expansion) + Contratos + Plano de 5 Fases + Edge Cases
+        primary_file = matched_files[0] if matched_files else f"src/{snake_id}.py"
+        secondary_file = matched_files[1] if len(matched_files) > 1 else primary_file
+
+        if mode == "bugfix":
+            expanded_narrative = (
+                f"Atua como **{persona}** no projeto **`{ws}`** ({stack_name}).\n"
+                f"O objetivo desta intervenção é realizar um **diagnóstico determinístico de causa-raiz e correção definitiva** para o seguinte problema reportado:\n"
+                f"**\"{req}\"**.\n\n"
+                f"**Análise Esperada Ponta-a-Ponta:**\n"
+                f"- Não apliques paliativos superficiais: rastreia o fluxo completo de execução desde o ponto de entrada (evento UI / chamada de função em `{primary_file}`) até à camada de estado/dados (`{secondary_file}`).\n"
+                f"- Identifica exatamente que variável não inicializada, condição de corrida, falha de contrato JSON/SQL ou regra CSS/layout está a provocar o comportamento anómalo.\n"
+                f"- Corrige o defeito preservando 100% da retrocompatibilidade com os símbolos existentes (`{', '.join(discovered_symbols[:3])}`) e adiciona blindagem defensiva para que o erro nunca volte a ocorrer."
+            )
+            contracts_block = (
+                f"- **Alvo Primário do Diagnóstico**: `{primary_file}` e `{secondary_file}` (Símbolos relacionados: `{', '.join(discovered_symbols[:4])}`).\n"
+                f"- **Invariante de Segurança / Estado**: Garantir que entradas nulas, listas vazias ou falhas de rede têm fallback gracioso sem lançar exceções não tratadas (`ReferenceError`, `KeyError`, `TypeError` ou layout blowout).\n"
+                f"- **Teste de Regressão**: Validar o cenário exato que falhava antes e confirmar retorno `{{\"ok\": True}}` / renderização estável."
+            )
+            phases_list = [
+                f"**Fase 1 — Reprodução & Isolamento da Causa-Raiz**: Ler cirurgicamente `{primary_file}` nas linhas indicadas, identificar a linha exata onde o estado diverge do esperado e documentar a causa-raiz.",
+                f"**Fase 2 — Correção Cirúrgica Defensiva (`edit_file`)**: Aplicar o patch mínimo e exato em `{primary_file}` / `{secondary_file}`, adicionando validação de estado nulo/vazio e fallback determinístico.",
+                "**Fase 3 — Blindagem de Interface / Layout / Sincronização**: Se o bug afetar a UI ou estado assíncrono, garantir contenção estrita (`min-width: 0`, `overflow: hidden`, `escapeHtml`) e sincronização imediata do estado em memória.",
+                "**Fase 4 — Teste de Regressão Direcionado**: Criar ou atualizar um caso de teste automatizado que reproduza a falha original e comprove que ficou resolvida.",
+                f"**Fase 5 — Verificação Executável no Terminal**: {verify_cmd}.",
+            ]
+            edge_cases_list = [
+                "Estado inicial vazio ou dados ainda não carregados da API/base de dados (evitar `undefined` / `ReferenceError`).",
+                "Textos longos, caminhos de ficheiros profundos ou listas grandes que possam desformatar o layout CSS Grid/Flex.",
+                "Execução num ambiente remoto acabado de atualizar via `git pull` (garantir fallback sem depender de reinício manual).",
+                "Preservação estrita de funções, docstrings e fluxos adjacentes que já estavam a funcionar.",
+            ]
+        elif mode == "refactor":
+            expanded_narrative = (
+                f"Atua como **{persona}** no projeto **`{ws}`** ({stack_name}).\n"
+                f"O objetivo é executar uma **refatoração arquitetural limpa, modular e orientada à performance** sobre o seguinte alvo:\n"
+                f"**\"{req}\"**.\n\n"
+                f"**Diretriz Arquitetural:**\n"
+                f"- Reestrutura a implementação atual em `{primary_file}` e `{secondary_file}` para eliminar duplicação de código (DRY), reduzir a complexidade ciclomática e melhorar a legibilidade e performance, **mantendo intactos todos os contratos públicos e assinaturas externas** (`{', '.join(discovered_symbols[:3])}`).\n"
+                f"- Aplica separação clara de responsabilidades entre lógica de domínio, acesso a dados e camada de apresentação."
+            )
+            contracts_block = (
+                f"- **Invariante de Contrato Público**: As assinaturas externas em `{primary_file}` devem manter os mesmos parâmetros obrigatórios e estrutura de retorno para não quebrar consumidores existentes.\n"
+                f"- **Módulos / Funções Internas Propostas**: Extrair helpers puros e tipados (`_{snake_id}_helper()`, `normalize_{snake_id}()`) com docstrings claras e complexidade `O(1)` ou `O(N)`."
+            )
+            phases_list = [
+                f"**Fase 1 — Mapeamento de Dependências & Blast Radius**: Verificar todos os pontos que invocam `{', '.join(discovered_symbols[:3])}` em `{primary_file}` e `{secondary_file}`.",
+                "**Fase 2 — Extração de Unidades Modulares Puras**: Isolar lógica repetida ou acoplada em funções auxiliares coesas, com tipagem explícita e sem efeitos secundários ocultos.",
+                "**Fase 3 — Otimização de Performance & Memória**: Eliminar leituras redundantes, queries N+1 ou re-renderizações desnecessárias no DOM/Canvas.",
+                "**Fase 4 — Limpeza de Código Morto & Documentação**: Preservar comentários relevantes e atualizar docstrings com os contratos exatos.",
+                f"**Fase 5 — Verificação de Regressão Zero**: {verify_cmd}.",
+            ]
+            edge_cases_list = [
+                "Compatibilidade total com chamadas legadas que passem argumentos opcionais ou valores por defeito.",
+                "Manutenção da ordem determinística de chaves/resultados devolvidos pela API ou base de dados.",
+                "Zero degradação de tempo de resposta ou uso de memória sob carga.",
+            ]
+        elif mode in ("ui_ux", "ui_3d"):
+            expanded_narrative = (
+                f"Atua como **{persona}** no projeto **`{ws}`** ({stack_name}).\n"
+                f"O objetivo é desenhar e implementar uma **experiência de interface (UI/UX) de qualidade de produção, responsiva e a 60 FPS** para:\n"
+                f"**\"{req}\"**.\n\n"
+                f"**Especificação Visual & Interativa Ponta-a-Ponta:**\n"
+                f"- Constrói ou aprimora o componente em `{primary_file}` respeitando a linguagem visual, paleta de cores, tipografia e hierarquia de informação do projeto `{ws}`.\n"
+                f"- Garante contenção geométrica absoluta (uso de `minmax(0, 1fr)`, `min-width: 0`, `max-width: 100%`, `overflow: hidden` e `text-overflow: ellipsis`) para que conteúdos dinâmicos longos nunca desformatem o ecrã.\n"
+                f"- Liga todos os controlos interativos (botões, dropdowns, filtros, atalhos) ao estado real e aos endpoints de backend em `{secondary_file}`, com feedback visual imediato (estados de hover, active, loading, empty state e toast)."
+            )
+            contracts_block = (
+                f"- **Handlers UI Propostos**: `init{pascal_id}UI()`, `render{pascal_id}UI(data)` e `on{pascal_id}Action(event)` em `{primary_file}`.\n"
+                f"- **Regras de Layout & Renderização**: Contentores Grid/Flex blindados com `min-width: 0; box-sizing: border-box;`, scroll interno isolado e sanitização XSS obrigatória via `escapeHtml()`.\n"
+                f"- **Sincronização de Dados**: Atualização reativa imediata do DOM sem recarregar a página inteira."
+            )
+            phases_list = [
+                f"**Fase 1 — Estrutura Semântica & Grid Blindado**: Definir o layout em `{primary_file}` com colunas `minmax(0, ...)` e estados vazios/loading bem desenhados.",
+                "**Fase 2 — Estilo Visual, Hierarquia & Micro-Interações**: Aplicar contraste elevado, espaçamento consistente, badges informativos e transições suaves a 60 FPS.",
+                f"**Fase 3 — Ligação de Estado & Dados (`{secondary_file}`)**: Conectar os eventos da UI (`onclick`, `onchange`, `oninput`) à fonte de dados com fallback client-side resiliente.",
+                "**Fase 4 — Proteção contra Overflow & XSS**: Garantir `escapeHtml` em todos os valores dinâmicos e truncagem limpa de strings/caminhos longos.",
+                f"**Fase 5 — Validação Sintática & Visual**: {verify_cmd}.",
+            ]
+            edge_cases_list = [
+                "Textos ou caminhos de ficheiros extremamente compridos sem espaços (usar `overflow-wrap: anywhere` / `text-overflow: ellipsis`).",
+                "Ecrãs de diferentes resoluções ou redimensionamento da janela sem cortar botões de ação.",
+                "Caracteres especiais (`'`, `\"`, `<`, `>`, `&`) nos dados que possam partir atributos `onclick` ou injetar HTML.",
+                "Comportamento imediato quando a lista de itens está vazia (exibir Empty State claro e acionável).",
+            ]
+        else:
+            # Default: Feature / Nova Funcionalidade Completa (ou Security)
+            expanded_narrative = (
+                f"Atua como **{persona}** no projeto **`{ws}`** ({stack_name}).\n"
+                f"Preciso que projetes e implementes de ponta a ponta (Backend/Core + Integração UI/API + Testes) a seguinte funcionalidade:\n"
+                f"**\"{req}\"**.\n\n"
+                f"**Especificação Funcional Detalhada (Como o Gemini 4 / Agente deve construir):**\n"
+                f"1. **Arquitetura & Ponto de Integração**: Integra a nova capacidade diretamente nos módulos existentes `{primary_file}` e `{secondary_file}` (junto aos símbolos `{', '.join(discovered_symbols[:3])}`), respeitando os padrões de código, nomenclatura e estrutura de dados já usados em `{ws}`.\n"
+                f"2. **Lógica de Negócio & Processamento**: Implementa o fluxo completo de entrada, validação de parâmetros, processamento determinístico e persistência/atualização de estado, garantindo que valores por defeito sensatos são aplicados quando parâmetros opcionais forem omitidos.\n"
+                f"3. **Exposição & Feedback ao Utilizador**: Expõe a funcionalidade através do contrato apropriado (função pública / endpoint API / controlo interativo na UI) com resposta estruturada, tratamento explícito de erros e feedback claro."
+            )
+            contracts_block = (
+                f"- **Assinatura Core / Backend Proposta (`{primary_file}`)**:\n"
+                f"  `def {snake_id}(workspace: str = \"{ws}\", payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]`\n"
+                f"- **Handler de Interface / Integração Proposto (`{secondary_file}`)**:\n"
+                f"  `async function {camel_id}UI(options = {{}})` ➔ invoca a ação e atualiza o estado visual sem bloquear a thread principal.\n"
+                f"- **Contrato de Retorno Esperado (Schema)**:\n"
+                f"  `{{\"ok\": True, \"workspace\": \"{ws}\", \"data\": ..., \"summary\": \"...\"}}` (com fallback seguro `{{\"ok\": False, \"error\": \"...\"}}` em caso de input inválido)."
+            )
+            phases_list = [
+                f"**Fase 1 — Análise de Contratos & Ponteiros Cirúrgicos**: Inspecionar `{primary_file}` e `{secondary_file}` nos blocos relevantes (`{', '.join(matched_files[:3])}`) para alinhar tipos, imports e estado.",
+                f"**Fase 2 — Implementação do Motor / Lógica Core (`{primary_file}`)**: Codificar `{snake_id}` com validação rigorosa de inputs, tratamento de exceções, docstrings e persistência limpa.",
+                f"**Fase 3 — Ligação de API / Eventos / Interface (`{secondary_file}`)**: Expor o método no router/controlador e ligar à interface (`{camel_id}UI`) com atualização reativa e fallback resiliente.",
+                "**Fase 4 — Tratamento de Casos-Limite (Edge Cases) & Segurança**: Validar inputs vazios/extremos, sanitização de dados, isolamento por workspace e proteção de layout.",
+                f"**Fase 5 — Testes Automatizados & Verificação Final**: Adicionar cobertura de teste para a nova funcionalidade e executar: {verify_cmd}.",
+            ]
+            edge_cases_list = [
+                "Inputs vazios, nulos ou malformados (devolver erro claro e estruturado sem crashar o processo).",
+                "Isolamento estrito por projeto/workspace (`workspace` específico vs `all`/`global`).",
+                "Idempotência: chamadas repetidas à mesma função/ação não devem criar registos duplicados nem corromper o estado.",
+                "Contenção visual e sanitização (`escapeHtml` / `minmax(0, 1fr)`) caso o resultado seja renderizado na UI.",
+            ]
+
+        return {
+            "stack_name": stack_name,
+            "persona": persona,
+            "verify_cmd": verify_cmd,
+            "snake_id": snake_id,
+            "camel_id": camel_id,
+            "pascal_id": pascal_id,
+            "discovered_symbols": discovered_symbols[:6],
+            "expanded_narrative": expanded_narrative,
+            "contracts_block": contracts_block,
+            "phases_list": phases_list,
+            "edge_cases_list": edge_cases_list,
+        }
+
     def generate_optimized_prompt(
         self,
         raw_request: str,
@@ -1749,12 +1986,12 @@ class OrbitEngine:
     ) -> Dict[str, Any]:
         """
         Transforma um pedido simples do utilizador (ex.: 'criar uma função X num projeto')
-        num Super-Prompt estruturado, enriquecido com:
-        - Skills do Antigravity (auto-recomendadas + escolhidas manualmente) com caminho exato SKILL.md;
+        numa Especificação Técnica Completa de nível Gemini 4 / Claude Opus Architect, enriquecida com:
+        - Reescrita e expansão profunda do pedido (Contexto da Stack, Fluxo Ponta-a-Ponta, Assinaturas e Contratos);
+        - Diretivas reais extraídas do interior dos ficheiros SKILL.md das Skills do Antigravity;
         - Ficheiros e símbolos AST :Lstart-end reais detetados em brain.db para esse projeto;
         - Meta-Regras Aprendidas pelo Self-Learn (🧬 learned_playbook) do projeto;
-        - Trajetória cognitiva ótima DOTS (compute_dots_trajectory) e Roteamento JEV-S1;
-        - 3 variantes prontas a colar no chat do Antigravity: Completa, Compacta (Token Diet) e Swarm Multi-Agente.
+        - Plano de implementação em 5 fases, Casos-Limite (Edge Cases) e Critérios de Aceitação (Definition of Done).
         """
         req = (raw_request or "").strip()
         if not req:
@@ -1778,12 +2015,12 @@ class OrbitEngine:
         )
 
         # 2. Pesquisa Híbrida FTS5 BM25 + Vetores 32-D nas memórias do projeto
-        rel_mems = self.db.search_memories(req, workspace=ws, n_results=6)
-        if len(rel_mems) < 2 and ws != "brain_mcp":
-            rel_mems.extend(self.db.search_memories(req, workspace="global", n_results=3))
+        rel_mems = self.db.search_memories(req, workspace=ws, n_results=8)
+        if len(rel_mems) < 3 and ws != "brain_mcp":
+            rel_mems.extend(self.db.search_memories(req, workspace="global", n_results=4))
 
         # 3. Extrair ficheiros e ponteiros :Lstart-end reais das memórias + Checkpoint + Scout Map
-        file_ptr_re = re.compile(r"\b([a-zA-Z0-9_\-/\\]+\.(?:py|html|js|ts|tsx|json|md|sql|css)(?::L\d+(?:-\d+)?)?)\b")
+        file_ptr_re = re.compile(r"\b([a-zA-Z0-9_\-/\\]+\.(?:py|html|js|ts|tsx|json|md|sql|css|cpp|h|inl)(?::L\d+(?:-\d+)?)?)\b")
         matched_files: List[str] = []
         context_facts: List[str] = []
 
@@ -1796,7 +2033,7 @@ class OrbitEngine:
                 s = parts[-1]
             return s
 
-        for m in rel_mems[:5]:
+        for m in rel_mems[:6]:
             txt = f"{m.get('topic', '')}: {m.get('fact', '')}"
             for fp in file_ptr_re.findall(txt):
                 clean_fp = _normalize_file_ptr(fp)
@@ -1804,9 +2041,9 @@ class OrbitEngine:
                     matched_files.append(clean_fp)
             if m.get("category") != "learned_rule":
                 short_f = str(m.get("fact") or "").strip()
-                if len(short_f) > 135:
-                    short_f = short_f[:132].rstrip() + "..."
-                context_facts.append(f"- **{m.get('topic', 'Memória')}**: {short_f}")
+                if len(short_f) > 160:
+                    short_f = short_f[:157].rstrip() + "..."
+                context_facts.append(f"- **[{m.get('category', 'core')}] {m.get('topic', 'Memória')}**: {short_f}")
 
         chk = self.db.get_checkpoint(ws)
         if chk and chk.get("key_files"):
@@ -1816,7 +2053,11 @@ class OrbitEngine:
                     matched_files.append(clean_fp)
 
         if not matched_files:
-            matched_files = ["db_engine.py", "orbit_engine.py", "index.html"] if ws == "brain_mcp" else [f"src/main ({ws})"]
+            matched_files = (
+                ["orbit_engine.py", "web_dashboard.py", "index.html", "test_brain.py"]
+                if ws == "brain_mcp"
+                else [f"src/core_{ws}.py", f"src/ui_{ws}.js"]
+            )
 
         # 4. Obter Meta-Regras Aprendidas pelo Self-Learn do projeto
         sl_status = self.get_self_learn_status(workspace=ws)
@@ -1827,74 +2068,105 @@ class OrbitEngine:
                 "Validar sintaxe AST e correr a suite de testes antes de concluir.",
             ]
 
-        # 5. Especificação conforme o Task Mode escolhido
-        mode_headers = {
-            "feature": ("⚡ IMPLEMENTAÇÃO DE NOVA FUNÇÃO / FEATURE", "Desenha e implementa de forma cirúrgica e modular"),
-            "bugfix": ("🐛 DIAGNÓSTICO CAUSAL & CORREÇÃO DE BUG", "Identifica a causa-raiz exata sem adivinhar e corrige sem regressões"),
-            "refactor": ("🏗️ REFATORAÇÃO ARQUITETURAL & CLEAN CODE", "Refatora mantendo 100% de compatibilidade nos contratos públicos"),
-            "ui_ux": ("🎨 ENGENHARIA UI/UX & PERFORMANCE 60 FPS", "Implementa na interface mantendo zero-allocations / 60 FPS e escape XSS seguro"),
-            "security": ("🛡️ AUDITORIA DE SEGURANÇA & HARDENING", "Valida controlo de acessos, path traversal, CSRF/XSS e redação de segredos"),
-        }
-        mode_title, mode_verb = mode_headers.get(mode, mode_headers["feature"])
-
-        files_bullet_str = "\n".join(f"- `{fp}`" for fp in matched_files[:6])
-        rules_bullet_str = "\n".join(f"- 🧬 {r}" for r in playbook[:4])
-        facts_bullet_str = "\n".join(context_facts[:4]) if context_facts else f"- Projeto alvo: `{ws}` (usar `[BRAIN_MEMORY]` e `[SCOUT_SHARED_MAP]` pré-injetados)."
-        skills_bullet_str = "\n".join(
-            f"- 🛠️ **`{sk['name']}`** (`{sk['path']}`) — *{sk.get('match_reason', 'Recomendada')}*: {sk['description'][:110]}"
-            for sk in matched_skills
+        # 5. Sintetizar Especificação Profunda (Nível Gemini 4 / Claude Opus)
+        spec = self._synthesize_deep_engineering_spec(
+            req=req,
+            ws=ws,
+            mode=mode,
+            matched_files=matched_files,
+            rel_mems=rel_mems,
         )
+
+        mode_headers = {
+            "feature": "🚀 ESPECIFICAÇÃO DE ENGENHARIA: NOVA FUNCIONALIDADE (FEATURE)",
+            "bugfix": "🐛 ESPECIFICAÇÃO DE ENGENHARIA: DIAGNÓSTICO DE CAUSA-RAIZ & BUGFIX",
+            "refactor": "🏗️ ESPECIFICAÇÃO DE ENGENHARIA: REFATORAÇÃO ARQUITETURAL & CLEAN CODE",
+            "ui_ux": "🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS",
+            "ui_3d": "🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS",
+            "security": "🛡️ ESPECIFICAÇÃO DE ENGENHARIA: AUDITORIA DE SEGURANÇA & HARDENING",
+        }
+        mode_title = mode_headers.get(mode, mode_headers["feature"])
+
+        # Extrair diretivas reais do interior dos ficheiros SKILL.md selecionados
+        skills_detailed_lines: List[str] = []
+        for sk in matched_skills:
+            extracted_rules = self._extract_skill_directives(sk.get("path", ""), max_rules=2)
+            rules_sub = ""
+            if extracted_rules:
+                rules_sub = "\n" + "\n".join(f"  - *Diretiva SKILL.md*: {r}" for r in extracted_rules)
+            skills_detailed_lines.append(
+                f"- 🛠️ **`@{sk['name']}`** (`{sk['path']}`) — *{sk.get('match_reason', 'Ativada')}*: {sk['description'][:130]}{rules_sub}"
+            )
+        skills_bullet_str = "\n".join(skills_detailed_lines)
         skills_names_csv = ", ".join(sk["name"] for sk in matched_skills)
 
-        # Variante 1: Prompt Completo de Engenharia (Recomendado para colar no Antigravity)
+        files_bullet_str = "\n".join(f"- `{fp}`" for fp in matched_files[:6])
+        symbols_csv = ", ".join(f"`{s}`" for s in spec["discovered_symbols"])
+        rules_bullet_str = "\n".join(f"- 🧬 {r}" for r in playbook[:5])
+        facts_bullet_str = (
+            "\n".join(context_facts[:5])
+            if context_facts
+            else f"- Projeto alvo: `{ws}` (usar `[BRAIN_MEMORY]` e `[SCOUT_SHARED_MAP]` pré-injetados)."
+        )
+        phases_bullet_str = "\n".join(f"{idx + 1}. {ph}" for idx, ph in enumerate(spec["phases_list"]))
+        edges_bullet_str = "\n".join(f"- [ ] {ec}" for ec in spec["edge_cases_list"])
+
+        # Variante 1: Super-Prompt Completo de Engenharia (Estilo Gemini 4 / Claude Opus Deep Spec)
         full_prompt = (
-            f"### {mode_title} — Projeto `{ws}`\n\n"
-            f"**🎯 Objetivo Principal:**\n"
-            f"{mode_verb} o seguinte pedido no projeto `{ws}`:\n"
-            f"> {req}\n\n"
-            f"**🛠️ Skills do Antigravity Ativadas (Seguir protocolos `SKILL.md`):**\n"
-            f"{skills_bullet_str}\n\n"
-            f"**📂 Ficheiros & Ponteiros Cirúrgicos Relevantes (Evitar Re-leituras Globais):**\n"
+            f"# {mode_title} — Projeto `{ws}`\n\n"
+            f"## 1. Papel, Contexto Arquitetural & Pedido Expandido\n"
+            f"{spec['expanded_narrative']}\n\n"
+            f"## 2. Assinaturas Propostas, Contratos de Dados & Símbolos Alvo\n"
+            f"{spec['contracts_block']}\n"
+            f"- **Símbolos / Funções Existentes Relacionadas**: {symbols_csv}\n\n"
+            f"## 3. Mapa Cirúrgico de Ficheiros Relevantes (`:Lstart-end` — Evitar Leituras Globais)\n"
             f"{files_bullet_str}\n\n"
-            f"**🧠 Contexto Arquitetural Recuperado do `brain.db`:**\n"
-            f"{facts_bullet_str}\n\n"
-            f"**🧬 Regras Aprendidas do Projeto (`Self-Learn IQ {sl_status.get('brain_iq_score', 94.0)}%`):**\n"
-            f"{rules_bullet_str}\n\n"
-            f"**🧭 Trajetória de Execução DOTS & Verificação Obrigatória:**\n"
-            f"1. Seguir a trajetória cognitiva `{dots_traj}` (Intenção: `{intent_name}`).\n"
-            f"2. Efetuar edições cirúrgicas (`edit_file`) apenas nos blocos necessários.\n"
-            f"3. Executar verificação real no terminal (`node --check` / `python test_brain.py` / testes do projeto) antes de declarar concluído.\n"
-            f"4. No final, registar a decisão em `<!-- brain: Tópico | Facto com ficheiros:Lstart-end -->`."
-        )
-
-        # Variante 2: Prompt Ultra-Compacto (Modo Token Diet / TOON)
-        compact_files = ", ".join(matched_files[:4])
-        compact_rule = playbook[0][:90] if playbook else "Validar AST + testes"
-        compact_prompt = (
-            f"[TASK|{ws}|{mode.upper()}|dots={dots_traj}]\n"
-            f"Goal: {req}\n"
-            f"Skills: {skills_names_csv}\n"
-            f"TargetFiles: {compact_files}\n"
-            f"SelfLearnRule: {compact_rule}\n"
-            f"Verify: Edit surgically -> run tests/syntax check -> append <!-- brain: Topic | Fact -->."
-        )
-
-        # Variante 3: Prompt Multi-Agente (Protocolo Asymmetric Swarm 24x)
-        swarm_prompt = (
-            f"### 🐝 EXECUÇÃO ASYMMETRIC SWARM (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`) — Projeto `{ws}`\n\n"
-            f"**Objetivo da Missão:**\n"
-            f"> {req}\n\n"
-            f"**Skills Especializadas para os Subagentes:**\n"
+            f"## 4. Plano de Implementação Passo-a-Passo (Trajetória DOTS `{dots_traj}`)\n"
+            f"{phases_bullet_str}\n\n"
+            f"## 5. Skills do Antigravity Ativadas (`SKILL.md`) & Meta-Regras Self-Learn (`IQ {sl_status.get('brain_iq_score', 94.0)}%`)\n"
+            f"### 🛠️ Diretivas das Skills:\n"
             f"{skills_bullet_str}\n\n"
-            f"**Protocolo Obrigatório de Enxame:**\n"
-            f"1. **SCOUT (Leitura Única)**: Usa o `[SCOUT_SHARED_MAP]` e foca nos ficheiros `{compact_files}`.\n"
-            f"2. **PLAN (Decomposição em Lanes)**: Divide o trabalho em lanes isoladas (`API`, `UI`, `TESTS`, `DOCS`) sem colisões de escrita.\n"
-            f"3. **SWARM**: Delega subtarefas independentes via `invoke_subagent` passando os ficheiros e linhas exatos `:Lstart-end`, as Skills acima e as Meta-Regras:\n"
-            f"{rules_bullet_str}\n"
-            f"4. **VERIFY**: Corre a suite de testes completa e valida a trajetória `{dots_traj}`."
+            f"### 🧬 Meta-Regras Aprendidas Neste Projeto:\n"
+            f"{rules_bullet_str}\n\n"
+            f"### 🧠 Contexto Histórico Recuperado (`brain.db`):\n"
+            f"{facts_bullet_str}\n\n"
+            f"## 6. Casos-Limite (Edge Cases), Guardrails & Definition of Done\n"
+            f"{edges_bullet_str}\n"
+            f"- [ ] **Edição Cirúrgica**: Usar `edit_file` preservando docstrings, comentários e funcionalidades adjacentes.\n"
+            f"- [ ] **Verificação Obrigatória no Terminal**: {spec['verify_cmd']}.\n"
+            f"- [ ] **Registo de Memória Zero-Token**: Anexar `<!-- brain: Tópico | Facto com ficheiros:Lstart-end -->` no final da resposta."
         )
 
-        est_saved = max(320, len(matched_files) * 145 + len(playbook) * 85 + len(matched_skills) * 95)
+        # Variante 2: Prompt Ultra-Compacto (Modo Token Diet / TOON, mas com Contrato + Passos)
+        compact_files = ", ".join(matched_files[:4])
+        compact_rule = playbook[0][:100] if playbook else "Validar AST + testes"
+        compact_prompt = (
+            f"[SPEC|{ws}|mode={mode.upper()}|stack={spec['stack_name'][:48]}|dots={dots_traj}]\n"
+            f"🎯 Goal: {req}\n"
+            f"📐 Contract: {spec['snake_id']}() / {spec['camel_id']}UI() in [{compact_files}]\n"
+            f"🛠️ Skills: {skills_names_csv}\n"
+            f"🧬 SelfLearnRule: {compact_rule}\n"
+            f"⚠️ Guardrails: Handle null/empty states, preserve existing contracts, prevent UI overflow.\n"
+            f"✅ Verify: {spec['verify_cmd']} -> append <!-- brain: Topic | Fact -->."
+        )
+
+        # Variante 3: Prompt Multi-Agente (Protocolo Asymmetric Swarm 24x com Decomposição Real por Lane)
+        swarm_prompt = (
+            f"# 🐝 ORQUESTRAÇÃO ASYMMETRIC SWARM (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`) — Projeto `{ws}`\n\n"
+            f"## 🎯 Missão & Especificação Arquitetural\n"
+            f"{spec['expanded_narrative']}\n\n"
+            f"## 🛠️ Skills Obrigatórias para os Subagentes (`SKILL.md`)\n"
+            f"{skills_bullet_str}\n\n"
+            f"## 🧭 Decomposição em 4 Lanes Isoladas (Sem Colisões de Escrita)\n"
+            f"1. **SCOUT (Leitura Única)**: Usa o `[SCOUT_SHARED_MAP]` e inspeciona `{compact_files}` (Símbolos: {symbols_csv}).\n"
+            f"2. **LANE API / CORE (`{matched_files[0]}`)**: Implementa `{spec['snake_id']}` respeitando o contrato de dados e persistência.\n"
+            f"3. **LANE UI / INTEGRAÇÃO (`{matched_files[1] if len(matched_files) > 1 else matched_files[0]}`)**: Implementa `{spec['camel_id']}UI` com contenção CSS Grid (`minmax(0, 1fr)`), `escapeHtml` e feedback instantâneo.\n"
+            f"4. **LANE TESTS & VERIFY**: Valida todos os Edge Cases e executa: {spec['verify_cmd']}.\n\n"
+            f"## 🧬 Meta-Regras Self-Learn Obrigatórias (`IQ {sl_status.get('brain_iq_score', 94.0)}%`)\n"
+            f"{rules_bullet_str}"
+        )
+
+        est_saved = max(480, len(matched_files) * 165 + len(playbook) * 95 + len(matched_skills) * 115)
 
         with self.db._connect() as conn:
             cur = conn.execute(

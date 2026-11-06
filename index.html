@@ -12516,35 +12516,73 @@
       }).sort((a, b) => b.sc - a.sc).slice(0, 6);
 
       const fileSet = [];
-      const fileRe = /\b([A-Za-z0-9_./\\-]+\.(?:py|js|ts|tsx|html|css|json|md|sql|rs|go|cpp|h))(?::L\d+(?:-\d+)?)?/g;
+      const fileRe = /\b([A-Za-z0-9_./\\-]+\.(?:py|js|ts|tsx|html|css|json|md|sql|rs|go|cpp|h|inl))(?::L\d+(?:-\d+)?)?/g;
       scoredNodes.forEach(({ n }) => {
         const txt = `${n.topic || ''} ${n.fact || ''}`;
         let m;
         while ((m = fileRe.exec(txt)) !== null) {
-          const clean = m[0].replace(/\\/g, '/').split('/').pop();
+          const clean = normalizeShortFilePtrUI(m[0]);
           if (clean && !fileSet.some(f => f.split(':')[0] === clean.split(':')[0]) && fileSet.length < 6) {
             fileSet.push(clean);
           }
         }
       });
-      if (fileSet.length === 0 && ws === 'brain_mcp') {
-        fileSet.push('orbit_engine.py:L1450-1750', 'web_dashboard.py:L1200-1295', 'index.html:L12180-12400');
+      if (fileSet.length === 0) {
+        if (ws === 'brain_mcp') {
+          fileSet.push('orbit_engine.py:L1740-2080', 'web_dashboard.py:L1200-1295', 'index.html:L12260-12800', 'test_brain.py:L765-865');
+        } else {
+          fileSet.push(`src/core_${ws}.py`, `src/ui_${ws}.js`);
+        }
       }
 
-      const modeBadges = {
-        feature: '🚀 IMPLEMENTAÇÃO CIRÚRGICA DE FUNCIONALIDADE (FEATURE)',
-        bugfix: '🐛 DIAGNÓSTICO DE CAUSA-RAIZ & CORREÇÃO DE BUG (BUGFIX)',
-        refactor: '⚡ REFATORIZAÇÃO DE PERFORMANCE & ARQUITETURA LIMPA',
-        security: '🛡️ AUDITORIA & HARDENING DE SEGURANÇA',
-        ui_3d: '🎨 ENGENHARIA UI/UX & RENDERIZAÇÃO 60 FPS',
-        swarm: '🐝 ORQUESTRAÇÃO PARALELA ASYMMETRIC SWARM (SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY)'
+      // Inferir Stack, Persona e Identificadores Técnicos (snake_case, camelCase, PascalCase)
+      const qLow = `${rawReq} ${ws} ${fileSet.join(' ')}`.toLowerCase();
+      let stackName = `Arquitetura Modular de Produção (${ws})`;
+      let persona = `Principal Software Architect & Senior Systems Engineer (${ws})`;
+      let verifyCmd = 'Executar linter, verificação de tipos/sintaxe AST e a suite de testes automatizados do projeto';
+      if (qLow.includes('mt2') || qLow.includes('metin') || qLow.includes('uiscript') || qLow.includes('.inl')) {
+        stackName = 'C++17 Client/Server Engine + Python 2.7 Root/UIScript (Metin2 Architecture)';
+        persona = 'Principal C++/Python Metin2 Client & Game-Server Engine Architect';
+        verifyCmd = 'Validar dicionários UIScript, referências em root/ui*.py (Destroy/ClearDictionary sem memory leaks) e headers em Packet.h / ModuleList.inl';
+      } else if (ws === 'brain_mcp' || qLow.includes('orbit_engine') || qLow.includes('web_dashboard')) {
+        stackName = 'Python 3.12+ (ThreadingHTTPServer + SQLite3 WAL/FTS5/32-D Vectors) + Vanilla JS/HTML5 Canvas 60 FPS';
+        persona = 'Principal Autonomous AI Systems & Fullstack Python/JS Architect';
+        verifyCmd = 'Executar `node --check` no JS extraído de `index.html` e correr `$env:BRAIN_TEST_MODE="1"; python test_brain.py` (100% PASS obrigatório)';
+      } else if (qLow.includes('react') || qLow.includes('next') || qLow.includes('.tsx')) {
+        stackName = 'TypeScript 5.8+ Strict Mode + React 19 / Next.js App Router + Tailwind CSS';
+        persona = 'Principal Fullstack TypeScript & UI/UX Systems Architect';
+        verifyCmd = 'Executar `npx tsc --noEmit`, linter e suite de testes (`npm test` / `vitest`)';
+      }
+
+      const stopW = new Set(['criar', 'cria', 'fazer', 'faz', 'adicionar', 'adiciona', 'implementar', 'implementa', 'corrigir', 'corrige', 'melhorar', 'para', 'uma', 'um', 'que', 'com', 'sem', 'nos', 'nas', 'dos', 'das', 'por', 'como', 'quando', 'onde', 'função', 'funcao', 'sistema', 'página', 'pagina', 'botão', 'botao', 'projeto']);
+      const meaningful = qWords.map(w => w.replace(/[^a-z0-9]/g, '')).filter(w => w.length >= 3 && !stopW.has(w)).slice(0, 4);
+      if (!meaningful.length) meaningful.push('custom', mode || 'feature', 'handler');
+      const snakeId = meaningful.join('_');
+      const camelId = meaningful[0] + meaningful.slice(1).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+      const primaryFile = fileSet[0] || `src/${snakeId}.py`;
+      const secondaryFile = fileSet[1] || primaryFile;
+
+      const modeHeaders = {
+        feature: '🚀 ESPECIFICAÇÃO DE ENGENHARIA: NOVA FUNCIONALIDADE (FEATURE)',
+        bugfix: '🐛 ESPECIFICAÇÃO DE ENGENHARIA: DIAGNÓSTICO DE CAUSA-RAIZ & BUGFIX',
+        refactor: '🏗️ ESPECIFICAÇÃO DE ENGENHARIA: REFATORAÇÃO ARQUITETURAL & CLEAN CODE',
+        security: '🛡️ ESPECIFICAÇÃO DE ENGENHARIA: AUDITORIA DE SEGURANÇA & HARDENING',
+        ui_ux: '🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS',
+        ui_3d: '🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS',
+        swarm: '🐝 ESPECIFICAÇÃO DE ENGENHARIA: ORQUESTRAÇÃO ASYMMETRIC SWARM'
       };
       const dotsTraj = mode === 'bugfix'
-        ? 'diagnose(root_cause) ➔ patch(surgical) ➔ verify(regression_test)'
-        : (mode === 'swarm' ? 'scout(shared_map) ➔ plan(4_lanes) ➔ swarm(parallel) ➔ verify(test_suite)' : 'plan(contract) ➔ implement(surgical) ➔ verify(test_suite)');
+        ? '[REPRODUCE_ROOT_CAUSE]➔[AST_SLICE:L]➔[DEFENSIVE_PATCH]➔[REGRESSION_TEST]'
+        : (mode === 'swarm' ? '[SCOUT_SHARED_MAP]➔[PLAN_4_LANES]➔[SWARM_PARALLEL]➔[VERIFY_GATES]' : '[AST_SLICE:L]➔[CONTRACT_DESIGN]➔[SURGICAL_IMPLEMENT]➔[VERIFY_AST_TESTS]');
+
+      const expandedNarrative = mode === 'bugfix'
+        ? `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nO objetivo desta intervenção é realizar um **diagnóstico determinístico de causa-raiz e correção definitiva** para o seguinte problema reportado:\n**"${rawReq}"**.\n\n**Análise Esperada Ponta-a-Ponta:**\n- Rastreia o fluxo completo de execução desde o ponto de entrada em \`${primaryFile}\` até à camada de estado/dados em \`${secondaryFile}\`.\n- Identifica exatamente que variável não inicializada, falha de contrato JSON/SQL ou regra CSS Grid/Flex está a causar o problema.\n- Aplica a correção cirúrgica preservando 100% da retrocompatibilidade e adiciona blindagem defensiva contra estados nulos/vazios.`
+        : `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nPreciso que projetes e implementes de ponta a ponta (Backend/Core + Integração UI/API + Testes) a seguinte funcionalidade:\n**"${rawReq}"**.\n\n**Especificação Funcional Detalhada (Como o Gemini 4 / Agente deve construir):**\n1. **Arquitetura & Ponto de Integração**: Integra a nova capacidade diretamente nos módulos existentes \`${primaryFile}\` e \`${secondaryFile}\`, respeitando os padrões de código, nomenclatura e estrutura de dados já usados em \`${ws}\`.\n2. **Lógica de Negócio & Processamento**: Implementa o fluxo completo de entrada, validação de parâmetros, processamento determinístico e persistência/atualização de estado.\n3. **Exposição & Feedback ao Utilizador**: Expõe a funcionalidade através do contrato apropriado (\`${snakeId}()\` / \`${camelId}UI()\`) com resposta estruturada, contenção de layout CSS (\`minmax(0, 1fr)\`, \`min-width: 0\`, \`escapeHtml\`) e feedback visual imediato.`;
+
+      const contractsBlock = `- **Assinatura Core / Backend Proposta (\`${primaryFile}\`)**:\n  \`def ${snakeId}(workspace: str = "${ws}", payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]\`\n- **Handler de Interface / Integração Proposto (\`${secondaryFile}\`)**:\n  \`async function ${camelId}UI(options = {})\` ➔ invoca a ação e atualiza o DOM de forma reativa com fallback resiliente.\n- **Contrato de Retorno Esperado (Schema)**:\n  \`{"ok": True, "workspace": "${ws}", "data": ..., "summary": "..."}\` (com fallback seguro \`{"ok": False, "error": "..."}\`).`;
 
       const skillsSection = matchedSkills.map(sk =>
-        `- **\`@${sk.name}\`** (\`${sk.path}\`): ${sk.description}`
+        `- 🛠️ **\`@${sk.name}\`** (\`${sk.path}\`): ${sk.description}`
       ).join('\n');
       const skillsInline = matchedSkills.map(sk => `@${sk.name} (${sk.path})`).join(' | ');
       const filesSection = fileSet.map(f => `- \`${f}\``).join('\n');
@@ -12556,45 +12594,65 @@
         : [`[${ws}] Preservar contratos existentes e validar sintaxe/testes antes de concluir.`];
       const rulesSection = rulesList.map(r => `- 🧬 ${r}`).join('\n');
 
-      const fullPrompt = `### 🎯 Pedido Principal [Projeto: \`${ws}\` | Modo: ${modeBadges[mode] || modeBadges.feature}]
-${rawReq}
+      const fullPrompt = `# ${modeHeaders[mode] || modeHeaders.feature} — Projeto \`${ws}\`
 
-### 🛠️ Skills do Antigravity Ativadas (Seguir protocolos \`SKILL.md\`)
-${skillsSection}
+## 1. Papel, Contexto Arquitetural & Pedido Expandido
+${expandedNarrative}
 
-### 📂 Ficheiros & Ponteiros Relevantes (\`:Lstart-end\` — Evitar re-leituras desnecessárias)
+## 2. Assinaturas Propostas, Contratos de Dados & Símbolos Alvo
+${contractsBlock}
+
+## 3. Mapa Cirúrgico de Ficheiros Relevantes (\`:Lstart-end\` — Evitar Leituras Globais)
 ${filesSection}
 
-### 🧠 Contexto Arquitetural do Projeto (\`[BRAIN_MEMORY]\`)
-${factsSection}
+## 4. Plano de Implementação Passo-a-Passo (Trajetória DOTS \`${dotsTraj}\`)
+1. **Fase 1 — Análise de Contratos & Ponteiros Cirúrgicos**: Inspecionar \`${primaryFile}\` e \`${secondaryFile}\` nos blocos relevantes para alinhar tipos, imports e estado.
+2. **Fase 2 — Implementação do Motor / Lógica Core (\`${primaryFile}\`)**: Codificar \`${snakeId}\` com validação rigorosa de inputs, tratamento de exceções, docstrings e persistência limpa.
+3. **Fase 3 — Ligação de API / Eventos / Interface (\`${secondaryFile}\`)**: Expor o método no controlador e ligar à interface (\`${camelId}UI\`) com atualização reativa e fallback client-side.
+4. **Fase 4 — Tratamento de Casos-Limite (Edge Cases) & Segurança**: Validar inputs vazios/nulos, isolamento estrito por workspace e contenção visual (\`minmax(0, 1fr)\`, \`escapeHtml\`).
+5. **Fase 5 — Testes Automatizados & Verificação Final**: Adicionar cobertura de teste e executar: ${verifyCmd}.
 
-### 🧬 Meta-Regras Auto-Aprendidas (\`Self-Learn IQ: ${Number(sl.brain_iq_score || 99.8).toFixed(1)}%\`)
+## 5. Skills do Antigravity Ativadas (\`SKILL.md\`) & Meta-Regras Self-Learn (\`IQ ${Number(sl.brain_iq_score || 99.8).toFixed(1)}%\`)
+### 🛠️ Diretivas das Skills:
+${skillsSection}
+
+### 🧬 Meta-Regras Aprendidas Neste Projeto:
 ${rulesSection}
 
-### 🎯 Trajetória DOTS & Critérios de Verificação (\`${dotsTraj}\`)
-1. **Plan-First & Edição Cirúrgica**: Usa \`edit_file\` nos ficheiros listados acima sem sobrescrever código não relacionado.
-2. **Ativação de Skills**: Aplica diretamente as diretivas das skills ${matchedSkills.map(s => `\`${s.name}\``).join(', ')} listadas acima.
-3. **Verificação Obrigatória**: Executa os testes automatizados (\`pytest\` / \`test_brain.py\` / \`node --check\`) antes de dares a tarefa por concluída.`;
+### 🧠 Contexto Histórico Recuperado (\`brain.db\`):
+${factsSection}
 
-      const compactPrompt = `[PROJETO: ${ws} | MODO: ${mode.toUpperCase()} | DOTS: ${dotsTraj}]
-🎯 PEDIDO: ${rawReq}
-🛠️[SKILLS]: ${skillsInline}
-📂[FILES]: ${fileSet.join(', ')}
-🧬[SELF_LEARN]: ${rulesList[0] || ''}
-✅[VERIFY]: Edição cirúrgica + executar testes antes de concluir.`;
+## 6. Casos-Limite (Edge Cases), Guardrails & Definition of Done
+- [ ] Inputs vazios, nulos ou malformados tratados com retorno estruturado sem exceções não capturadas.
+- [ ] Isolamento estrito por projeto/workspace (\`${ws}\`) e idempotência em chamadas repetidas.
+- [ ] Contenção de layout CSS Grid/Flex (\`min-width: 0\`, \`overflow: hidden\`, \`text-overflow: ellipsis\`) e sanitização XSS (\`escapeHtml\`).
+- [ ] **Edição Cirúrgica**: Usar \`edit_file\` preservando docstrings, comentários e funcionalidades adjacentes.
+- [ ] **Verificação Obrigatória no Terminal**: ${verifyCmd}.
+- [ ] **Registo de Memória Zero-Token**: Anexar \`<!-- brain: Tópico | Facto com ficheiros:Lstart-end -->\` no final da resposta.`;
 
-      const swarmPrompt = `/teamwork Executa o protocolo SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY no projeto \`${ws}\`:
+      const compactPrompt = `[SPEC|${ws}|mode=${mode.toUpperCase()}|stack=${stackName.slice(0, 48)}|dots=${dotsTraj}]
+🎯 Goal: ${rawReq}
+📐 Contract: ${snakeId}() / ${camelId}UI() in [${fileSet.join(', ')}]
+🛠️ Skills: ${skillsInline}
+🧬 SelfLearnRule: ${rulesList[0] || ''}
+⚠️ Guardrails: Handle null/empty states, preserve existing contracts, prevent UI overflow.
+✅ Verify: ${verifyCmd} -> append <!-- brain: Topic | Fact -->.`;
 
-🎯 **Objetivo**: ${rawReq}
-🛠️ **Skills Obrigatórias**: ${skillsInline}
+      const swarmPrompt = `# 🐝 ORQUESTRAÇÃO ASYMMETRIC SWARM (\`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY\`) — Projeto \`${ws}\`
 
-1. **SCOUT**: Usa os ponteiros já indexados pelo Brain: ${fileSet.join(', ')}.
-2. **PLAN (4 Lanes Isoladas)**:
-   - \`Lane API/Core\`: Lógica principal e contratos de dados
-   - \`Lane UI\`: Interface e feedback visual
-   - \`Lane TESTS\`: Cobertura de testes automatizados
-   - \`Lane VERIFY\`: Validação de sintaxe e regressão
-3. **REGRAS SELF-LEARN (\`IQ ${Number(sl.brain_iq_score || 99.8).toFixed(1)}%\`)**:
+## 🎯 Missão & Especificação Arquitetural
+${expandedNarrative}
+
+## 🛠️ Skills Obrigatórias para os Subagentes (\`SKILL.md\`)
+${skillsSection}
+
+## 🧭 Decomposição em 4 Lanes Isoladas (Sem Colisões de Escrita)
+1. **SCOUT (Leitura Única)**: Usa os ponteiros já indexados pelo Brain: ${fileSet.join(', ')}.
+2. **LANE API / CORE (\`${primaryFile}\`)**: Implementa \`${snakeId}\` respeitando o contrato de dados e persistência.
+3. **LANE UI / INTEGRAÇÃO (\`${secondaryFile}\`)**: Implementa \`${camelId}UI\` com contenção CSS Grid (\`minmax(0, 1fr)\`), \`escapeHtml\` e feedback instantâneo.
+4. **LANE TESTS & VERIFY**: Valida todos os Edge Cases e executa: ${verifyCmd}.
+
+## 🧬 Meta-Regras Self-Learn Obrigatórias (\`IQ ${Number(sl.brain_iq_score || 99.8).toFixed(1)}%\`)
 ${rulesSection}`;
 
       const entry = {

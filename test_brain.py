@@ -832,6 +832,11 @@ def run_all_tests() -> None:
         assert len(pf_res.get("matched_skills", [])) >= 1 and "SKILL.md" in pf_res["full_prompt"], (
             f"Prompt Forge devia injetar Skills do Antigravity com caminho SKILL.md: {pf_res}"
         )
+        assert (
+            "## 1. Papel, Contexto Arquitetural & Pedido Expandido" in pf_res["full_prompt"]
+            and "## 2. Assinaturas Propostas, Contratos de Dados & Símbolos Alvo" in pf_res["full_prompt"]
+            and "## 6. Casos-Limite (Edge Cases), Guardrails & Definition of Done" in pf_res["full_prompt"]
+        ), f"Prompt Forge v5.0 devia sintetizar Especificação Técnica Completa em 6 secções: {pf_res['full_prompt']}"
         assert "SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY" in pf_res["swarm_prompt"] and len(pf_res["history"]) >= 1
 
     for sl_ui_token in (
