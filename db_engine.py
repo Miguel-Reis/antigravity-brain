@@ -339,42 +339,117 @@ class BrainDB:
                 );
                 """
             )
+            # 7. Higienização automática de falsos workspaces (subpastas Next.js [id], clusters internos e caminhos com //)
+            ws_remap = {
+                "brain_mcp": (
+                    "office_3d", "swarm_24x", "graphify_ast", "token_diet",
+                    "antigravity-brain", "claude-architect-coder", "strix", "antigravity-backup",
+                ),
+                "global": (
+                    "brain", "scratch", "test", "ui-ux-pro-max-skill", "ultraplan",
+                    "network_infra", "vps_infra", "docs", "templates",
+                ),
+                "mike-gsp": (
+                    "panel", "hypervisor", "vm-manager", "api", "configparse", "dev",
+                    "executor", "sysinfo", "steamcmd", "[id]", "[backupid]", "apps",
+                    "nodes", "sftp", "ssh-keys", "shared-types", "binary", "databases",
+                    "docker-runtime", "dockerruntime", "fastdl", "watchdog", "drizzle",
+                    "host", "infra", "lend", "locations", "mike-daemon", "nests",
+                    "node-manager", "operations", "protection", "push", "query",
+                    "servers", "startup", "system", "template-manager", "workflows", "internal", "nginx",
+                ),
+                "project-jarvis": ("llm", "backend"),
+                "roblox": ("roblox-studio", "monetization", "app"),
+                "mt2": (
+                    "00_automation", "boost", "build", "char_encoding", "find",
+                    "unpacked", "install", "image", "_m2bob_1091_extract", "xc_decode",
+                ),
+                "anti": ("aura",),
+                "trovettt": ("troveauto",),
+            }
+            for target_ws, bogus_tuple in ws_remap.items():
+                placeholders = ",".join("?" for _ in bogus_tuple)
+                conn.execute(
+                    f"UPDATE OR IGNORE memories SET workspace = ? WHERE LOWER(workspace) IN ({placeholders});",
+                    (target_ws, *bogus_tuple),
+                )
+                conn.execute(
+                    f"DELETE FROM memories WHERE LOWER(workspace) IN ({placeholders});",
+                    bogus_tuple,
+                )
 
     @staticmethod
     def _compute_hash(topic: str, fact: str, workspace: str = "global") -> str:
         norm = f"{workspace.strip().lower()}::{topic.strip().lower()}::{fact.strip().lower()}"
         return hashlib.sha256(norm.encode("utf-8")).hexdigest()[:32]
 
+    _WS_CFG_CACHE: Dict[str, Any] = {"mtime": -1.0, "known_roots": ["brain_mcp"], "aliases": {}}
+
     @staticmethod
     def normalize_workspace(workspace_path: Optional[str]) -> str:
         if not workspace_path:
             return "global"
-        clean = workspace_path.replace("\\", "/").rstrip("/")
+        clean = re.sub(r"/+", "/", str(workspace_path).strip().strip('"').strip("'").replace("\\", "/")).rstrip("/")
         low = clean.lower()
+        if not low:
+            return "global"
 
-        # 1. Se estiver dentro de scratch/<projeto>/..., extrair o nome do projeto raiz no scratch
+        # 1. Se for um caminho dentro de .gemini/antigravity/brain/<uuid> ou .gemini/config, é global
+        if (
+            "/antigravity/brain/" in low
+            or "/.gemini/config/" in low
+            or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", os.path.basename(low))
+        ):
+            return "global"
+
+        # 2. Se for cache CMake Hunter (.hunter), pertence ao projeto mt2
+        if "/.hunter/" in low:
+            return "mt2"
+
+        # 3. Se estiver dentro de scratch/<projeto>/..., extrair o nome do projeto raiz no scratch
         m_scratch = re.search(r"/antigravity/scratch/([^/]+)", low)
         if m_scratch:
             proj = m_scratch.group(1)
-            if proj not in ("", "scratch"):
-                return proj
+            if "." in proj or proj in ("", "scratch"):
+                return "global"
+            return proj
 
-        # 2. Se for um caminho dentro de .gemini/antigravity/brain/<uuid>, é global
-        if "/antigravity/brain/" in low or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", os.path.basename(low)):
-            return "global"
+        # 4. Se estiver dentro de Desktop/<projeto>/..., o diretório de topo no Desktop é sempre a raiz do projeto
+        m_desk = re.search(r"/desktop/([^/]+)", low)
+        if m_desk:
+            proj = m_desk.group(1)
+            if "." not in proj and not proj.startswith("."):
+                return "mt2" if proj == "00_automation" else proj
 
-        # 3. Carregar mapeamento local privado (.brain_workspaces.json, ignorado pelo Git) se existir
+        # 5. Se estiver dentro de Documents/<pasta>/<projeto>, extrair o projeto raiz
+        m_docs = re.search(r"/documents/([^/]+)(?:/([^/]+))?", low)
+        if m_docs:
+            p1, p2 = m_docs.group(1), m_docs.group(2)
+            if p1 in ("craft anything", "projects", "repos", "github", "work", "workspace", "workspaces") and p2 and "." not in p2:
+                return p2
+            if p1 and "." not in p1:
+                return p1
+
+        # 6. Carregar mapeamento local privado (.brain_workspaces.json, com cache em memória por mtime)
         local_cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".brain_workspaces.json")
-        known_roots: List[str] = ["brain_mcp"]
-        aliases: Dict[str, List[str]] = {}
-        if os.path.isfile(local_cfg_path):
-            try:
-                with open(local_cfg_path, "r", encoding="utf-8") as f:
-                    wcfg = json.load(f)
-                known_roots = [str(x).lower() for x in (wcfg.get("known_roots") or ["brain_mcp"])]
-                aliases = wcfg.get("aliases") or {}
-            except Exception:
-                pass
+        try:
+            cur_m = os.path.getmtime(local_cfg_path) if os.path.isfile(local_cfg_path) else 0.0
+            if cur_m != BrainDB._WS_CFG_CACHE["mtime"]:
+                if cur_m > 0:
+                    with open(local_cfg_path, "r", encoding="utf-8") as f:
+                        wcfg = json.load(f)
+                    BrainDB._WS_CFG_CACHE = {
+                        "mtime": cur_m,
+                        "known_roots": [str(x).lower() for x in (wcfg.get("known_roots") or ["brain_mcp"])],
+                        "aliases": wcfg.get("aliases") or {},
+                    }
+                else:
+                    BrainDB._WS_CFG_CACHE["mtime"] = 0.0
+        except Exception:
+            pass
+
+        known_roots: List[str] = BrainDB._WS_CFG_CACHE["known_roots"]
+        aliases: Dict[str, List[str]] = BrainDB._WS_CFG_CACHE["aliases"]
 
         for kr in known_roots:
             if f"/{kr}/" in f"/{low}/":
@@ -384,30 +459,40 @@ class BrainDB:
             if any(pat in f"/{low}/" for pat in patterns):
                 return str(target_ws).lower()
 
-        # 4. Subir na árvore se a pasta folha for genérica (src, components, pages, scripts, app, etc.)
+        # 7. Subir na árvore se a pasta folha for genérica (src, components, pages, scripts, app, [id], etc.)
         generic_folders = {
-            "src", "app", "components", "pages", "scripts", "script", "core", "main",
-            "tests", "__tests__", "test", "tools", "ui", "db", "server", "client",
-            "public", "include", "includes", "lib", "bin", "config", "data", "_data",
-            "css", "js", "source", "root", "game", "desktop", "audio", "security",
-            "styles-xml", "web_hud", "new", "control", "economy", "engine", "pt",
-            "en", "vision", "base", "companion", "patcher", "quest", "sidebar",
-            "src-tauri", "xml", "chat", "daemon", "dashboard", "login", "model",
-            "share", "sidecar", "types", "web", ".agents", "auth", "cmake", "images",
-            "languages", "mcp", "modules", "net", "nginx", "presentation", "rules",
-            "schemes", "shared", "skills", "toolchain", "use"
+            "src", "app", "apps", "api", "panel", "components", "pages", "scripts", "script",
+            "core", "main", "tests", "__tests__", "test", "tools", "ui", "db", "server",
+            "client", "public", "include", "includes", "lib", "bin", "config", "data", "_data",
+            "css", "js", "source", "root", "game", "desktop", "audio", "security", "docs",
+            "nodes", "templates", "internal", "image", "install", "unpacked", "build", "dist",
+            "out", "pkg", "cmd", "packages", "services", "workers", "migrations", "drizzle",
+            "prisma", "workflows", "styles-xml", "web_hud", "new", "control", "economy",
+            "engine", "pt", "en", "vision", "base", "companion", "patcher", "quest", "sidebar",
+            "src-tauri", "xml", "chat", "daemon", "dashboard", "login", "model", "share",
+            "sidecar", "types", "web", ".agents", "auth", "cmake", "images", "languages",
+            "mcp", "modules", "net", "nginx", "presentation", "rules", "schemes", "shared",
+            "skills", "toolchain", "use", "dev", "office_3d", "swarm_24x", "graphify_ast", "token_diet"
         }
         home_user = os.path.basename(os.path.expanduser("~")).lower()
-        ignored_sys = {"users", home_user, ".gemini", "antigravity", "scratch", "documents", "desktop"}
+        ignored_sys = {"users", home_user, ".gemini", "antigravity", "scratch", "documents", "desktop", "brain"}
         parts = [p for p in low.split("/") if p and not p.endswith(":")]
         for part in reversed(parts):
             if re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", part):
+                continue
+            if part.startswith("[") or part.startswith(".") or "." in part:
                 continue
             if part not in generic_folders and part not in ignored_sys:
                 return part
 
         base = os.path.basename(low)
-        if base in generic_folders or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", base):
+        if (
+            base in generic_folders
+            or base in ignored_sys
+            or base.startswith("[")
+            or base.startswith(".")
+            or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", base)
+        ):
             return "global"
         return base or "global"
 

@@ -2066,6 +2066,16 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      flex-shrink: 0;
+    }
+
+    #pfHistoryList > div,
+    #slPageRulesList > div,
+    #slPageEventsList > div,
+    #orbitSelfLearnProjectsList > div,
+    #orbitSelfLearnPlaybookList > div,
+    .office-roster-list > div {
+      flex-shrink: 0;
     }
 
     .roster-card:hover {
@@ -11615,7 +11625,7 @@
         projListEl.innerHTML = projs.map(p => {
           const isEn = Boolean(p.enabled);
           return `
-            <div style="background:rgba(15,23,42,0.92); border:1px solid ${isEn ? 'rgba(168,85,247,0.45)' : 'rgba(148,163,184,0.2)'}; border-radius:7px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
+            <div style="flex-shrink:0; background:rgba(15,23,42,0.92); border:1px solid ${isEn ? 'rgba(168,85,247,0.45)' : 'rgba(148,163,184,0.2)'}; border-radius:7px; padding:6px 8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
               <div>
                 <div style="font-weight:700; color:#f8fafc;">
                   ${isEn ? '🟢' : '⚫'} 📂 ${escapeHtml(p.workspace)}
@@ -11644,17 +11654,17 @@
         let htmlPb = '';
         if (playbook.length) {
           htmlPb += playbook.map((rule, idx) => `
-            <div style="background:rgba(15,23,42,0.92); border-left:3px solid #a855f7; border-radius:5px; padding:5px 8px; color:#f3e8ff;">
+            <div style="flex-shrink:0; background:rgba(15,23,42,0.92); border-left:3px solid #a855f7; border-radius:5px; padding:5px 8px; color:#f3e8ff;">
               <strong style="color:#c084fc;">🧬 Regra #${idx + 1}:</strong> ${escapeHtml(rule)}
             </div>
           `).join('');
         } else {
-          htmlPb += `<div style="color:var(--text-muted); padding:6px;">Clique em "⚡ Evoluir Agora" para destilar Meta-Regras a partir das memórias guardadas.</div>`;
+          htmlPb += `<div style="flex-shrink:0; color:var(--text-muted); padding:6px;">Clique em "⚡ Evoluir Agora" para destilar Meta-Regras a partir das memórias guardadas.</div>`;
         }
         if (events.length) {
           const ev = events[0];
           htmlPb += `
-            <div style="margin-top:4px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:5px 8px; color:#a7f3d0; font-size:9.5px;">
+            <div style="flex-shrink:0; margin-top:4px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:5px 8px; color:#a7f3d0; font-size:9.5px;">
               <strong>⚡ Último Pulso:</strong> ${escapeHtml(ev.title)} — ${escapeHtml(ev.detail)}
             </div>
           `;
@@ -12112,16 +12122,16 @@
         const lMems = sl.learned_memories || [];
         const pb = sl.learned_playbook || [];
         if (!lMems.length && !pb.length) {
-          rulesEl.innerHTML = `<div style="color:var(--text-muted); padding:10px;">Ainda sem Meta-Regras para [${escapeHtml(curWs)}]. Clique em "⚡ Disparar Ciclo de Auto-Melhoria Agora".</div>`;
+          rulesEl.innerHTML = `<div style="flex-shrink:0; color:var(--text-muted); padding:10px;">Ainda sem Meta-Regras para [${escapeHtml(curWs)}]. Clique em "⚡ Disparar Ciclo de Auto-Melhoria Agora".</div>`;
         } else {
           let htmlR = pb.map((ax, i) => `
-            <div style="background:rgba(9,13,22,0.92); border-left:3px solid #a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:7px; padding:7px 10px;">
+            <div style="flex-shrink:0; background:rgba(9,13,22,0.92); border-left:3px solid #a855f7; border:1px solid rgba(168,85,247,0.3); border-radius:7px; padding:7px 10px;">
               <div style="color:#d8b4fe; font-weight:800; font-size:10px;">🧬 AXIOMA OPERACIONAL #${i + 1} · [${escapeHtml(curWs)}]</div>
               <div style="color:#f8fafc; margin-top:2px;">${escapeHtml(ax)}</div>
             </div>
           `).join('');
           htmlR += lMems.map(m => `
-            <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(56,189,248,0.28); border-radius:7px; padding:7px 10px;">
+            <div style="flex-shrink:0; background:rgba(9,13,22,0.92); border:1px solid rgba(56,189,248,0.28); border-radius:7px; padding:7px 10px;">
               <div style="display:flex; justify-content:space-between; color:#7dd3fc; font-weight:700;">
                 <span>${escapeHtml(m.topic)}</span>
                 <span style="color:#34d399;">Trust ${Math.round(Number(m.synaptic_weight || 0.96) * 100)}%</span>
@@ -12138,7 +12148,7 @@
       if (evEl) {
         const evs = sl.recent_events || [];
         evEl.innerHTML = evs.length ? evs.map(ev => `
-          <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(16,185,129,0.28); border-radius:7px; padding:7px 10px;">
+          <div style="flex-shrink:0; background:rgba(9,13,22,0.92); border:1px solid rgba(16,185,129,0.28); border-radius:7px; padding:7px 10px;">
             <div style="display:flex; justify-content:space-between; color:#6ee7b7; font-weight:700;">
               <span>${escapeHtml(ev.title)}</span>
               <span style="color:#fde68a;">+${Number(ev.iq_delta || 0).toFixed(1)}% IQ</span>
@@ -12146,7 +12156,7 @@
             <div style="color:#cbd5e1; margin-top:2px;">${escapeHtml(ev.detail)}</div>
             <div style="color:#64748b; font-size:9px; margin-top:2px;">🕒 ${escapeHtml(ev.created_at || '')}</div>
           </div>
-        `).join('') : `<div style="color:var(--text-muted); padding:10px;">Sem eventos registados.</div>`;
+        `).join('') : `<div style="flex-shrink:0; color:var(--text-muted); padding:10px;">Sem eventos registados.</div>`;
       }
     }
 
@@ -12350,11 +12360,21 @@
       return out.length > 52 ? `${segs[segs.length - 1] || shortPath}${linePart}` : out;
     }
 
+    const INVALID_UI_WORKSPACES = new Set([
+      'all', 'global', 'brain', 'scratch', 'test', 'dev', 'api', 'app', 'apps',
+      'panel', 'docs', 'nodes', 'templates', 'internal', 'image', 'install',
+      'unpacked', '[id]', '[backupid]', 'office_3d', 'swarm_24x', 'graphify_ast',
+      'token_diet', '_m2bob_1091_extract', 'antigravity-backup', 'antigravity-brain',
+      'claude-architect-coder', 'strix', 'ui-ux-pro-max-skill', 'ultraplan',
+      'network_infra', 'vps_infra', '00_automation', 'boost', 'build', 'char_encoding',
+      'find', 'xc_decode', 'aura', 'llm', 'backend', 'dockerruntime', 'fastdl', 'watchdog', 'nginx'
+    ]);
+
     function getAllKnownProjectsUI() {
       const map = new Map();
       const registerWs = (wsName, meta = {}) => {
-        const clean = String(wsName || '').trim();
-        if (!clean || clean === 'all' || clean === 'ALL' || clean === 'global') return;
+        const clean = String(wsName || '').trim().toLowerCase();
+        if (!clean || INVALID_UI_WORKSPACES.has(clean) || !/^[a-z0-9][a-z0-9_-]{1,38}$/.test(clean)) return;
         const existing = map.get(clean) || {
           workspace: clean,
           enabled: true,

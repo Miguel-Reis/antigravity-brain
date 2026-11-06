@@ -104,55 +104,55 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         (
             "Asymmetric Swarm 24 Lanes & Ruflo Pheromone EMA",
             "Orquestra 4 Lanes paralelas (UI, API, TESTS, DOCS × 6 workers) com Work-Stealing automático e fitness de feromonas EMA em tempo real.",
-            "swarm_24x",
+            "brain_mcp",
             "architecture",
-            "swarm lanes ruflo pheromone work_steal verify",
+            "swarm_24x swarm lanes ruflo pheromone work_steal verify",
             5,
         ),
         (
             "Subagent Transactional Sandbox (Copy-on-Write)",
             "Isola subagentes em sandboxes transacionais com snapshots SHA-256, AST syntax gate e scanner AI-Defence antes do merge.",
-            "swarm_24x",
+            "brain_mcp",
             "infra",
-            "swarm sandbox cow verify ast security",
+            "swarm_24x swarm sandbox cow verify ast security",
             4,
         ),
         (
             "Verify Gate 48/48 (AST + HTTP + SQLite WAL)",
             "Auditoria determinística de 48 verificações automáticas garantindo zero colisões de ficheiros e integridade transacional.",
-            "swarm_24x",
+            "brain_mcp",
             "optimization",
-            "verify qa ast sqlite swarm check",
+            "swarm_24x verify qa ast sqlite swarm check",
             4,
         ),
         (
             "Graphify Multi-Modal Knowledge Graph (325 Nodes)",
             "Constrói o grafo multi-modal da codebase (JS Functions ➔ HTTP Routes ➔ Python AST ➔ SQLite Tables) com arestas EXTRACTED, INFERRED e AMBIGUOUS.",
-            "graphify_ast",
+            "brain_mcp",
             "architecture",
-            "graphify ast bfs sqlite routes symbols",
+            "graphify_ast graphify ast bfs sqlite routes symbols",
             5,
         ),
         (
             "Automated File-Save AST & Impact Radius Watcher",
             "Daemon que deteta alterações em ficheiros, calcula o diff de símbolos AST e sinaliza automaticamente mudanças HIGH/CRITICAL no blast radius.",
-            "graphify_ast",
+            "brain_mcp",
             "optimization",
-            "ast watcher impact blast_radius symbols hooks",
+            "graphify_ast ast watcher impact blast_radius symbols hooks",
             5,
         ),
         (
             "Graphify BFS Shortest Path & 70x Token Compression",
             "Pesquisa o caminho relacional mais curto entre qualquer função JS e tabela SQLite em <2ms, poupando mais de 70x em tokens de contexto.",
-            "graphify_ast",
+            "brain_mcp",
             "optimization",
-            "graphify bfs tokens compression ast",
+            "graphify_ast graphify bfs tokens compression ast",
             4,
         ),
         (
             "Ponte de Comando 3D & Bonecos Articulados 60 FPS",
             "Motor isométrico 3D a 60 FPS com 6 zonas arquitetónicas, câmara Follow & Zoom-to-Cursor no rato, Radar Orbital 2D e sintetizador WebAudio.",
-            "office_3d",
+            "brain_mcp",
             "architecture",
             "office_3d webgl canvas camera zoom radar",
             5,
@@ -160,7 +160,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         (
             "Torres Holográficas 3D do Mapa de Calor por Secretária",
             "Renderiza prismas holográficos 3D interativos sobre as secretárias dos agentes com base na intensidade de edição e calor dos ficheiros.",
-            "office_3d",
+            "brain_mcp",
             "optimization",
             "office_3d heatmap holo_towers ast ui",
             5,
@@ -168,7 +168,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         (
             "Sala de Servidores MCP 3D & Portal Quântico",
             "Controlo interativo 3D dos servidores MCP ativos e chegada cronológica de novos agentes pelo Portal Quântico Noroeste.",
-            "office_3d",
+            "brain_mcp",
             "infra",
             "office_3d mcp portal servers tokens",
             4,
@@ -176,7 +176,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         (
             "Dynamic Intent-Based Tool Pruning (-66.7% Tokens)",
             "Seleciona dinamicamente apenas as 3-4 ferramentas MCP essenciais para a intenção do prompt, cortando 66.7% do overhead de schemas.",
-            "token_diet",
+            "brain_mcp",
             "optimization",
             "token_diet quota 5h mcp prune tokens",
             5,
@@ -184,7 +184,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
         (
             "5h Quota Reactor & Perfil Lean vs Full",
             "Monitoriza a janela de 5h do Antigravity e comuta instantaneamente servidores MCP pesados para maximizar turnos disponíveis.",
-            "token_diet",
+            "brain_mcp",
             "preference",
             "token_diet quota 5h lean full mcp",
             4,
@@ -205,7 +205,7 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
     if os.path.isdir(SCRATCH_ROOT):
         for entry in sorted(os.listdir(SCRATCH_ROOT)):
             full_p = os.path.join(SCRATCH_ROOT, entry)
-            if os.path.isdir(full_p) and not entry.startswith("."):
+            if os.path.isdir(full_p) and not entry.startswith(".") and entry.lower() not in ("antigravity-backup",):
                 try:
                     sample_files = [
                         f for f in os.listdir(full_p) if not f.startswith(".")
@@ -309,24 +309,35 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
                                     "write_file",
                                     "edit_file",
                                 ):
-                                    target = (
+                                    target_raw = (
                                         args.get("TargetFile")
                                         or args.get("Path")
                                         or args.get("AbsolutePath")
                                         or ""
                                     )
-                                    if target and (".gemini/antigravity/brain" not in target.replace("\\", "/")):
-                                        base_f = os.path.basename(target.rstrip("/\\"))
+                                    target = re.sub(
+                                        r"/+",
+                                        "/",
+                                        str(target_raw).strip().strip('"').strip("'").replace("\\", "/"),
+                                    )
+                                    if (
+                                        target
+                                        and ".gemini/antigravity/brain" not in target.lower()
+                                        and ".gemini/config" not in target.lower()
+                                    ):
+                                        base_f = os.path.basename(target.rstrip("/"))
                                         if any(
                                             k in base_f.lower()
                                             for k in ("check_", "tmp_", "run_office_sim")
                                         ):
                                             continue
                                         file_ws = db.normalize_workspace(os.path.dirname(target))
+                                        if file_ws in ("global", "all", "brain", "scratch"):
+                                            continue
                                         ext = os.path.splitext(base_f)[1].lstrip(".").lower() or "file"
                                         _, is_new = db.store_fact(
                                             topic=f"Ficheiro {base_f} ({file_ws})",
-                                            fact=f"Ficheiro do projeto {file_ws} em {target.replace(chr(92), '/')} (modificado via {t_name}).",
+                                            fact=f"Ficheiro do projeto {file_ws} em {target} (modificado via {t_name}).",
                                             workspace=file_ws,
                                             category="code_change",
                                             tags=f"file edit {ext} {base_f.lower()} {file_ws}",

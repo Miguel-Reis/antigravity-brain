@@ -1101,6 +1101,17 @@ class OrbitEngine:
     # =========================================================================
     # 7. RECURSIVE SELF-LEARNING & PROACTIVE SENTINEL ENGINE (PER-PROJECT OPT-IN)
     # =========================================================================
+    _SELF_LEARN_SYNC_TS: Dict[str, float] = {}
+    _INVALID_SELF_LEARN_WS = {
+        "all", "global", "brain", "scratch", "test", "dev", "api", "app", "apps",
+        "panel", "docs", "nodes", "templates", "internal", "image", "install",
+        "unpacked", "[id]", "[backupid]", "office_3d", "swarm_24x", "graphify_ast",
+        "token_diet", "_m2bob_1091_extract", "antigravity-backup", "antigravity-brain",
+        "claude-architect-coder", "strix", "ui-ux-pro-max-skill", "ultraplan",
+        "network_infra", "vps_infra", "00_automation", "boost", "build", "char_encoding",
+        "find", "xc_decode", "aura", "llm", "backend", "dockerruntime", "fastdl", "watchdog", "nginx",
+    }
+
     def get_self_learn_status(self, workspace: str = "brain_mcp") -> Dict[str, Any]:
         """
         Devolve o estado de Auto-Aprendizagem Recursiva (Self-Learn) e Proatividade por Projeto:
@@ -1110,41 +1121,63 @@ class OrbitEngine:
         - Lista de todos os projetos disponíveis para ativar/desativar individualmente.
         """
         ws = (workspace or "brain_mcp").strip().lower()
-        if ws in ("all", ""):
+        if ws in ("all", "", "global") or ws in OrbitEngine._INVALID_SELF_LEARN_WS:
             ws = "brain_mcp"
 
+        now_ts = time.time()
+        db_key = str(getattr(self.db, "db_path", "default"))
+        need_sync = (now_ts - OrbitEngine._SELF_LEARN_SYNC_TS.get(db_key, 0.0)) > 15.0
+
         with self.db._connect() as conn:
-            # Descobrir todos os workspaces com memórias e garantir entrada em self_learn_projects (Ativo por defeito / Opt-Out)
-            ws_rows = conn.execute(
-                "SELECT DISTINCT LOWER(TRIM(workspace)) as w FROM memories WHERE workspace IS NOT NULL AND TRIM(workspace) != '';"
-            ).fetchall()
-            known_ws = sorted({str(r["w"]) for r in ws_rows if r["w"]} | {"brain_mcp", ws})
-            for kws in known_ws:
-                default_en = 1
+            if need_sync or ws != "brain_mcp":
+                OrbitEngine._SELF_LEARN_SYNC_TS[db_key] = now_ts
+                # Descobrir todos os workspaces reais com memórias e garantir entrada em self_learn_projects (Ativo por defeito / Opt-Out)
+                ws_rows = conn.execute(
+                    "SELECT DISTINCT LOWER(TRIM(workspace)) as w FROM memories WHERE workspace IS NOT NULL AND TRIM(workspace) != '';"
+                ).fetchall()
+                raw_candidates = {str(r["w"]) for r in ws_rows if r["w"]} | {"brain_mcp", ws}
+                known_ws = sorted(
+                    w for w in raw_candidates
+                    if w not in OrbitEngine._INVALID_SELF_LEARN_WS
+                    and re.match(r"^[a-z0-9][a-z0-9_\-]{1,38}$", w)
+                )
+                if "brain_mcp" not in known_ws:
+                    known_ws.insert(0, "brain_mcp")
+
+                for kws in known_ws:
+                    default_en = 1
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO self_learn_projects
+                        (workspace, enabled, proactive_enabled, cycles_run, rules_distilled, synapses_reinforced, duplicates_healed, brain_iq_score, learned_playbook_json, last_evolution_summary)
+                        VALUES (?, ?, ?, 0, 0, 0, 0, 88.0, '[]', 'Auto-aprendizagem ativa por defeito neste projeto.');
+                        """,
+                        (kws, default_en, default_en),
+                    )
+
+                # Limpar projetos órfãos ou subpastas inválidas de self_learn_projects
+                if known_ws:
+                    placeholders = ",".join("?" for _ in known_ws)
+                    conn.execute(
+                        f"DELETE FROM self_learn_projects WHERE LOWER(workspace) NOT IN ({placeholders});",
+                        tuple(known_ws),
+                    )
+
+                # Migração automática: ativar projetos existentes que tinham ficado em standby por defeito (sem desligamento manual)
                 conn.execute(
                     """
-                    INSERT OR IGNORE INTO self_learn_projects
-                    (workspace, enabled, proactive_enabled, cycles_run, rules_distilled, synapses_reinforced, duplicates_healed, brain_iq_score, learned_playbook_json, last_evolution_summary)
-                    VALUES (?, ?, ?, 0, 0, 0, 0, 88.0, '[]', 'Auto-aprendizagem ativa por defeito neste projeto.');
-                    """,
-                    (kws, default_en, default_en),
+                    UPDATE self_learn_projects
+                    SET enabled = 1,
+                        proactive_enabled = 1
+                    WHERE enabled = 0
+                      AND cycles_run = 0
+                      AND LOWER(workspace) NOT IN (
+                          SELECT DISTINCT LOWER(workspace)
+                          FROM self_learn_events
+                          WHERE event_type = 'toggle_state' AND detail LIKE '%Auto-aprendizagem=OFF%'
+                      );
+                    """
                 )
-
-            # Migração automática: ativar projetos existentes que tinham ficado em standby por defeito (sem desligamento manual)
-            conn.execute(
-                """
-                UPDATE self_learn_projects
-                SET enabled = 1,
-                    proactive_enabled = 1
-                WHERE enabled = 0
-                  AND cycles_run = 0
-                  AND LOWER(workspace) NOT IN (
-                      SELECT DISTINCT LOWER(workspace)
-                      FROM self_learn_events
-                      WHERE event_type = 'toggle_state' AND detail LIKE '%Auto-aprendizagem=OFF%'
-                  );
-                """
-            )
 
             all_proj_rows = conn.execute(
                 "SELECT * FROM self_learn_projects ORDER BY enabled DESC, brain_iq_score DESC, workspace ASC;"
@@ -1748,16 +1781,23 @@ class OrbitEngine:
             out.append(d)
         return out
 
+    _SKILL_DIRECTIVES_CACHE: Dict[str, List[str]] = {}
+
     def _extract_skill_directives(self, skill_path: str, max_rules: int = 3) -> List[str]:
         """
         Abre o ficheiro SKILL.md real no disco e extrai as regras/diretivas operacionais mais importantes
-        para injetar diretamente no Super-Prompt (evitando referências vagas).
+        para injetar diretamente no Super-Prompt (com cache em memória para 0.00ms de I/O).
         """
         if not skill_path:
             return []
+        cache_key = f"{skill_path}::{max_rules}"
+        cached = OrbitEngine._SKILL_DIRECTIVES_CACHE.get(cache_key)
+        if cached is not None:
+            return cached
         try:
             resolved = os.path.expanduser(skill_path.replace("/", os.sep))
             if not os.path.isfile(resolved):
+                OrbitEngine._SKILL_DIRECTIVES_CACHE[cache_key] = []
                 return []
             with open(resolved, "r", encoding="utf-8", errors="ignore") as fh:
                 content = fh.read(8192)
@@ -1777,6 +1817,7 @@ class OrbitEngine:
                         directives.append(clean)
                         if len(directives) >= max_rules:
                             break
+            OrbitEngine._SKILL_DIRECTIVES_CACHE[cache_key] = directives
             return directives
         except Exception:
             return []
