@@ -1710,6 +1710,14 @@ class OrbitEngine:
                 ("rate-limit-abuse-prevention", "Proteção de endpoints & Rate Limiting"),
                 ("code-review-and-quality", "Revisão multi-eixo de segurança e qualidade"),
             ],
+            "total_audit": [
+                ("app-analyzer-optimizer", "Auditoria profunda 360° de arquitetura e bottlenecks"),
+                ("code-review-and-quality", "Revisão multi-eixo (Correção, Arquitetura, Segurança, Performance)"),
+                ("systematic-debugging", "Deteção determinística de bugs ocultos e causas-raiz"),
+                ("performance-optimization", "Otimização de queries, memória, 60 FPS e tokens"),
+                ("autonomous-red-teamer", "Auditoria de segurança XSS/SQLi/CSRF e controlo de acessos"),
+                ("verification-before-completion", "Validação real de testes e regressão zero"),
+            ],
         }
         for sk_id, reason in mode_defaults.get(mode, mode_defaults["feature"]):
             if len(chosen) < 5:
@@ -1902,6 +1910,39 @@ class OrbitEngine:
                 "Manutenção da ordem determinística de chaves/resultados devolvidos pela API ou base de dados.",
                 "Zero degradação de tempo de resposta ou uso de memória sob carga.",
             ]
+        elif mode == "total_audit":
+            expanded_narrative = (
+                f"Atua como **Equipa Principal de Auditoria 360° ({persona} + Principal Security & Performance Auditor)** no projeto **`{ws}`** ({stack_name}).\n"
+                f"O objetivo desta missão é executar uma **AUDITORIA TOTAL PROFUNDA (360° Full-Stack & Architecture Audit)** ao projeto `{ws}` com foco em:\n"
+                f"**\"{req}\"**.\n\n"
+                f"**Os 5 Eixos Obrigatórios da Auditoria Total:**\n"
+                f"1. **Eixo 1 — Correção Funcional & Bugs Ocultos (`Correctness & Reliability`)**: Inspecionar `{', '.join(matched_files[:4])}` à procura de variáveis não declaradas, exceções engolidas, condições de corrida, estados nulos/vazios, fugas de memória (listeners/timers/`Destroy()`) e dessincronização entre UI e Backend/DB.\n"
+                f"2. **Eixo 2 — Arquitetura, Contratos & Dívida Técnica (`Architecture & Clean Code`)**: Avaliar acoplamento entre módulos, duplicação de lógica, inconsistências de contratos JSON/SQL/API e funções excessivamente complexas.\n"
+                f"3. **Eixo 3 — Performance, Memória & Eficiência (`Performance & 60 FPS`)**: Identificar queries lentas/N+1, bloqueios de I/O síncrono, re-renderizações desnecessárias no DOM/Canvas e oportunidades de poupança de tokens/CPU.\n"
+                f"4. **Eixo 4 — Interface UI/UX, Layout & Responsividade (`UI/UX & Layout Integrity`)**: Detetar quebras de layout CSS Grid/Flex (falta de `minmax(0, 1fr)`, `min-width: 0`, `flex-shrink: 0`), textos cortados, falta de feedback visual ou estados vazios.\n"
+                f"5. **Eixo 5 — Segurança & Hardening (`Security & Trust Boundary`)**: Verificar injeções SQL/XSS (`escapeHtml`), validação de parâmetros, path traversal, exposição de segredos e isolamento por workspace."
+            )
+            contracts_block = (
+                f"- **Matriz de Severidade do Relatório de Auditoria**:\n"
+                f"  Classificar cada descoberta como `🔴 CRITICAL`, `🟠 HIGH`, `🟡 MEDIUM` ou `🟢 LOW`, indicando sempre o ficheiro e linha exata (`ficheiro:Lstart-end`), a causa-raiz e o impacto real.\n"
+                f"- **Protocolo Audit-to-Fix (Correção Imediata)**:\n"
+                f"  Não te limites a listar problemas: **corrige cirurgicamente (`edit_file`) todos os problemas `CRITICAL` e `HIGH`** encontrados em `{primary_file}` e `{secondary_file}` sem quebrar contratos existentes (`{', '.join(discovered_symbols[:4])}`).\n"
+                f"- **Orquestração Paralela Recomendada**:\n"
+                f"  Se necessário, lança subagentes especializados em paralelo (`code-reviewer`, `security-auditor`, `web-performance-auditor`, `test-engineer`) para auditar cada eixo sem poluir a janela de contexto."
+            )
+            phases_list = [
+                f"**Fase 1 — Reconhecimento & Mapeamento Cirúrgico (`SCOUT`)**: Inspecionar os módulos centrais (`{', '.join(matched_files[:4])}`) e os símbolos críticos (`{', '.join(discovered_symbols[:4])}`).",
+                "**Fase 2 — Auditoria Multi-Eixo (5 Dimensões)**: Executar a análise sistemática de Bugs/Estado, Arquitetura, Performance/Memória, UI/Layout e Segurança, registando cada achado com `ficheiro:Lstart-end`.",
+                "**Fase 3 — Plano Priorizado de Remediação**: Apresentar a tabela executiva de descobertas ordenada por severidade (`CRITICAL ➔ HIGH ➔ MEDIUM ➔ LOW`).",
+                f"**Fase 4 — Aplicação Cirúrgica das Correções (`SURGICAL PATCH`)**: Implementar imediatamente os fixes para as falhas críticas e altas em `{primary_file}` e `{secondary_file}` preservando 100% da retrocompatibilidade.",
+                f"**Fase 5 — Prova de Estabilidade & Testes de Regressão (`VERIFY`)**: {verify_cmd}.",
+            ]
+            edge_cases_list = [
+                "Falsos positivos: validar sempre o contexto real do código antes de alterar lógica de negócio existente.",
+                "Regressões colaterais: qualquer correção aplicada durante a auditoria não pode quebrar rotas, layouts ou testes existentes.",
+                "Contenção CSS/UI: verificar se elementos flex/grid filhos têm `flex-shrink: 0` (em listas com scroll vertical) e `min-width: 0` (em grelhas horizontais).",
+                "Segurança & Sanitização: confirmar `escapeHtml` em todos os templates HTML dinâmicos e queries parametrizadas (`?`) em SQLite/SQL.",
+            ]
         elif mode in ("ui_ux", "ui_3d"):
             expanded_narrative = (
                 f"Atua como **{persona}** no projeto **`{ws}`** ({stack_name}).\n"
@@ -1994,13 +2035,19 @@ class OrbitEngine:
         - Plano de implementação em 5 fases, Casos-Limite (Edge Cases) e Critérios de Aceitação (Definition of Done).
         """
         req = (raw_request or "").strip()
+        mode = (task_mode or "feature").strip().lower()
+        if not req and mode == "total_audit":
+            req = (
+                "Realizar uma Auditoria Total 360° a todo o projeto (Arquitetura, Bugs Ocultos, "
+                "Performance 60 FPS, UI/UX Layout e Segurança), gerar matriz de severidade com "
+                "ficheiro:Lstart-end e aplicar correções cirúrgicas imediatas nos pontos críticos."
+            )
         if not req:
             return {"ok": False, "error": "Escreva uma descrição do que pretende criar ou melhorar."}
 
         ws = (workspace or "brain_mcp").strip().lower()
         if ws in ("all", ""):
             ws = "brain_mcp"
-        mode = (task_mode or "feature").strip().lower()
 
         # 1. Roteamento JEV System-1 + Trajetória Ótima DOTS + Matching de Skills do Antigravity
         jev_info = self.db.jev_system1_route(req, workspace=ws)
@@ -2084,6 +2131,7 @@ class OrbitEngine:
             "ui_ux": "🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS",
             "ui_3d": "🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS",
             "security": "🛡️ ESPECIFICAÇÃO DE ENGENHARIA: AUDITORIA DE SEGURANÇA & HARDENING",
+            "total_audit": "🔍 AUDITORIA TOTAL 360° (ARQUITETURA, BUGS, PERFORMANCE, UI/UX & SEGURANÇA)",
         }
         mode_title = mode_headers.get(mode, mode_headers["feature"])
 

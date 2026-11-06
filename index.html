@@ -3403,9 +3403,10 @@
             </div>
             <div style="min-width:0;">
               <label style="display:block; font-size:11px; font-weight:700; color:#a5b4fc; margin-bottom:4px;">🧭 2. Tipo de Missão / Engenharia</label>
-              <select id="pfTaskModeSelect" class="select-sm" style="width:100%; height:34px; font-weight:700;">
+              <select id="pfTaskModeSelect" class="select-sm" style="width:100%; height:34px; font-weight:700;" onchange="onPromptForgeTaskModeChange(this.value)">
                 <option value="feature">⚡ Criar Nova Função / Feature</option>
                 <option value="bugfix">🐛 Diagnosticar &amp; Corrigir Bug Cirúrgico</option>
+                <option value="total_audit">🔍 Auditoria Total 360° (Arquitetura, Bugs, UI/UX, Performance &amp; Segurança)</option>
                 <option value="refactor">🏗️ Refatoração Arquitetural / Clean Code</option>
                 <option value="ui_ux">🎨 UI/UX, Canvas 3D &amp; 60 FPS Performance</option>
                 <option value="security">🛡️ Auditoria de Segurança &amp; Hardening</option>
@@ -3431,6 +3432,7 @@
           <div style="min-width:0;">
             <div style="font-size:10px; color:var(--text-muted); margin-bottom:5px; font-weight:600;">💡 Exemplos Rápidos (1-Click):</div>
             <div style="display:flex; flex-wrap:wrap; gap:5px;">
+              <button class="quick-ag-btn" style="border-color:rgba(244,63,94,0.55); color:#fda4af; font-weight:700;" onclick="fillPromptForgeTemplate('total_audit', 'Realizar uma Auditoria Total 360° a todo o projeto (Arquitetura, Bugs Ocultos, Performance 60 FPS, UI/UX Layout e Segurança), gerar matriz de severidade com ficheiro:Lstart-end e aplicar correções cirúrgicas imediatas nos pontos críticos')">🔍 Auditoria Total 360°</button>
               <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('feature', 'Criar uma nova função no backend com cache em SQLite WAL, endpoint REST e validação automática em test_brain.py')">⚡ Nova Função Backend + Teste</button>
               <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('bugfix', 'Investigar e corrigir um bug cirurgicamente verificando os ficheiros afetados no Blast Radius AST sem quebrar contratos existentes')">🐛 Corrigir Bug c/ Blast Radius</button>
               <button class="quick-ag-btn" onclick="fillPromptForgeTemplate('ui_ux', 'Criar um novo painel interativo em index.html com atualização em tempo real, escape XSS seguro e validação node --check')">🎨 Novo Painel UI 60 FPS</button>
@@ -3467,9 +3469,12 @@
         </div>
 
         <!-- Prompt History -->
-        <div style="background:rgba(13,18,30,0.95); border:1px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; min-width:0; max-width:100%; overflow:hidden;">
-          <div style="font-size:11px; font-weight:800; color:#cbd5e1; margin-bottom:6px;">🕒 HISTÓRICO DE PROMPTS GERADOS (CLIQUE PARA CARREGAR)</div>
-          <div id="pfHistoryList" style="display:flex; flex-direction:column; gap:6px; overflow-y:auto; overflow-x:hidden; max-height:135px; min-width:0; width:100%; font-size:10.5px; font-family:var(--font-mono);"></div>
+        <div style="background:rgba(13,18,30,0.95); border:1px solid var(--border); border-radius:12px; padding:10px 12px; display:flex; flex-direction:column; min-width:0; max-width:100%; flex-shrink:0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; gap:6px;">
+            <div style="font-size:11px; font-weight:800; color:#cbd5e1;">🕒 HISTÓRICO DE PROMPTS GERADOS (CLIQUE PARA CARREGAR)</div>
+            <button class="quick-ag-btn" style="font-size:9.5px; padding:2px 7px; color:#94a3b8;" onclick="clearPromptForgeHistoryUI()">🗑️ Limpar</button>
+          </div>
+          <div id="pfHistoryList" style="display:flex; flex-direction:column; gap:7px; overflow-y:auto; overflow-x:hidden; max-height:190px; min-width:0; width:100%; padding-right:2px; font-size:11px; font-family:var(--font-mono);"></div>
         </div>
       </div>
 
@@ -12482,8 +12487,10 @@
       const modeDefaults = {
         feature: ['claude-architect-coder', 'verification-before-completion'],
         bugfix: ['systematic-debugging', 'autonomous-tdd-debugger', 'verification-before-completion'],
+        total_audit: ['code-review-and-quality', 'systematic-debugging', 'performance-optimization', 'verification-before-completion'],
         refactor: ['code-simplification', 'claude-architect-coder', 'code-review-and-quality'],
         security: ['code-review-and-quality', 'claude-architect-coder'],
+        ui_ux: ['frontend-ui-engineering', 'web-3d-graphics-expert'],
         ui_3d: ['frontend-ui-engineering', 'web-3d-graphics-expert'],
         swarm: ['subagent-driven-development', 'claude-architect-coder']
       };
@@ -12565,6 +12572,7 @@
       const modeHeaders = {
         feature: '🚀 ESPECIFICAÇÃO DE ENGENHARIA: NOVA FUNCIONALIDADE (FEATURE)',
         bugfix: '🐛 ESPECIFICAÇÃO DE ENGENHARIA: DIAGNÓSTICO DE CAUSA-RAIZ & BUGFIX',
+        total_audit: '🔍 AUDITORIA TOTAL 360° (ARQUITETURA, BUGS, PERFORMANCE, UI/UX & SEGURANÇA)',
         refactor: '🏗️ ESPECIFICAÇÃO DE ENGENHARIA: REFATORAÇÃO ARQUITETURAL & CLEAN CODE',
         security: '🛡️ ESPECIFICAÇÃO DE ENGENHARIA: AUDITORIA DE SEGURANÇA & HARDENING',
         ui_ux: '🎨 ESPECIFICAÇÃO DE ENGENHARIA: UI/UX & RENDERIZAÇÃO 60 FPS',
@@ -12573,11 +12581,18 @@
       };
       const dotsTraj = mode === 'bugfix'
         ? '[REPRODUCE_ROOT_CAUSE]➔[AST_SLICE:L]➔[DEFENSIVE_PATCH]➔[REGRESSION_TEST]'
-        : (mode === 'swarm' ? '[SCOUT_SHARED_MAP]➔[PLAN_4_LANES]➔[SWARM_PARALLEL]➔[VERIFY_GATES]' : '[AST_SLICE:L]➔[CONTRACT_DESIGN]➔[SURGICAL_IMPLEMENT]➔[VERIFY_AST_TESTS]');
+        : (mode === 'total_audit'
+          ? '[SCOUT_360_AUDIT]➔[5_AXIS_MATRIX]➔[SURGICAL_REMEDIATION]➔[VERIFY_GATES]'
+          : (mode === 'swarm' ? '[SCOUT_SHARED_MAP]➔[PLAN_4_LANES]➔[SWARM_PARALLEL]➔[VERIFY_GATES]' : '[AST_SLICE:L]➔[CONTRACT_DESIGN]➔[SURGICAL_IMPLEMENT]➔[VERIFY_AST_TESTS]'));
 
-      const expandedNarrative = mode === 'bugfix'
-        ? `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nO objetivo desta intervenção é realizar um **diagnóstico determinístico de causa-raiz e correção definitiva** para o seguinte problema reportado:\n**"${rawReq}"**.\n\n**Análise Esperada Ponta-a-Ponta:**\n- Rastreia o fluxo completo de execução desde o ponto de entrada em \`${primaryFile}\` até à camada de estado/dados em \`${secondaryFile}\`.\n- Identifica exatamente que variável não inicializada, falha de contrato JSON/SQL ou regra CSS Grid/Flex está a causar o problema.\n- Aplica a correção cirúrgica preservando 100% da retrocompatibilidade e adiciona blindagem defensiva contra estados nulos/vazios.`
-        : `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nPreciso que projetes e implementes de ponta a ponta (Backend/Core + Integração UI/API + Testes) a seguinte funcionalidade:\n**"${rawReq}"**.\n\n**Especificação Funcional Detalhada (Como o Gemini 4 / Agente deve construir):**\n1. **Arquitetura & Ponto de Integração**: Integra a nova capacidade diretamente nos módulos existentes \`${primaryFile}\` e \`${secondaryFile}\`, respeitando os padrões de código, nomenclatura e estrutura de dados já usados em \`${ws}\`.\n2. **Lógica de Negócio & Processamento**: Implementa o fluxo completo de entrada, validação de parâmetros, processamento determinístico e persistência/atualização de estado.\n3. **Exposição & Feedback ao Utilizador**: Expõe a funcionalidade através do contrato apropriado (\`${snakeId}()\` / \`${camelId}UI()\`) com resposta estruturada, contenção de layout CSS (\`minmax(0, 1fr)\`, \`min-width: 0\`, \`escapeHtml\`) e feedback visual imediato.`;
+      let expandedNarrative = '';
+      if (mode === 'total_audit') {
+        expandedNarrative = `Atua como **Equipa Principal de Auditoria 360° (${persona} + Principal Security & Performance Auditor)** no projeto **\`${ws}\`** (${stackName}).\nO objetivo desta missão é executar uma **AUDITORIA TOTAL PROFUNDA (360° Full-Stack & Architecture Audit)** ao projeto \`${ws}\` com foco em:\n**"${rawReq}"**.\n\n**Os 5 Eixos Obrigatórios da Auditoria Total:**\n1. **Eixo 1 — Correção Funcional & Bugs Ocultos (\`Correctness & Reliability\`)**: Inspecionar \`${fileSet.join(', ')}\` à procura de variáveis não declaradas, exceções engolidas, condições de corrida, estados nulos/vazios e fugas de memória.\n2. **Eixo 2 — Arquitetura, Contratos & Dívida Técnica (\`Architecture & Clean Code\`)**: Avaliar acoplamento entre módulos, duplicação de lógica e consistência de contratos JSON/SQL/API.\n3. **Eixo 3 — Performance, Memória & Eficiência (\`Performance & 60 FPS\`)**: Identificar queries lentas/N+1, bloqueios de I/O e re-renderizações desnecessárias.\n4. **Eixo 4 — Interface UI/UX, Layout & Responsividade (\`UI/UX & Layout Integrity\`)**: Detetar quebras de layout CSS Grid/Flex (falta de \`minmax(0, 1fr)\`, \`min-width: 0\`, \`flex-shrink: 0\`), textos cortados ou falta de feedback visual.\n5. **Eixo 5 — Segurança & Hardening (\`Security & Trust Boundary\`)**: Verificar injeções SQL/XSS (\`escapeHtml\`), validação de parâmetros e isolamento por workspace.`;
+      } else if (mode === 'bugfix') {
+        expandedNarrative = `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nO objetivo desta intervenção é realizar um **diagnóstico determinístico de causa-raiz e correção definitiva** para o seguinte problema reportado:\n**"${rawReq}"**.\n\n**Análise Esperada Ponta-a-Ponta:**\n- Rastreia o fluxo completo de execução desde o ponto de entrada em \`${primaryFile}\` até à camada de estado/dados em \`${secondaryFile}\`.\n- Identifica exatamente que variável não inicializada, falha de contrato JSON/SQL ou regra CSS Grid/Flex está a causar o problema.\n- Aplica a correção cirúrgica preservando 100% da retrocompatibilidade e adiciona blindagem defensiva contra estados nulos/vazios.`;
+      } else {
+        expandedNarrative = `Atua como **${persona}** no projeto **\`${ws}\`** (${stackName}).\nPreciso que projetes e implementes de ponta a ponta (Backend/Core + Integração UI/API + Testes) a seguinte funcionalidade:\n**"${rawReq}"**.\n\n**Especificação Funcional Detalhada (Como o Gemini 4 / Agente deve construir):**\n1. **Arquitetura & Ponto de Integração**: Integra a nova capacidade diretamente nos módulos existentes \`${primaryFile}\` e \`${secondaryFile}\`, respeitando os padrões de código, nomenclatura e estrutura de dados já usados em \`${ws}\`.\n2. **Lógica de Negócio & Processamento**: Implementa o fluxo completo de entrada, validação de parâmetros, processamento determinístico e persistência/atualização de estado.\n3. **Exposição & Feedback ao Utilizador**: Expõe a funcionalidade através do contrato apropriado (\`${snakeId}()\` / \`${camelId}UI()\`) com resposta estruturada, contenção de layout CSS (\`minmax(0, 1fr)\`, \`min-width: 0\`, \`escapeHtml\`) e feedback visual imediato.`;
+      }
 
       const contractsBlock = `- **Assinatura Core / Backend Proposta (\`${primaryFile}\`)**:\n  \`def ${snakeId}(workspace: str = "${ws}", payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]\`\n- **Handler de Interface / Integração Proposto (\`${secondaryFile}\`)**:\n  \`async function ${camelId}UI(options = {})\` ➔ invoca a ação e atualiza o DOM de forma reativa com fallback resiliente.\n- **Contrato de Retorno Esperado (Schema)**:\n  \`{"ok": True, "workspace": "${ws}", "data": ..., "summary": "..."}\` (com fallback seguro \`{"ok": False, "error": "..."}\`).`;
 
@@ -12774,6 +12789,16 @@ ${rulesSection}`;
       showToast('🛠️ Seleção manual limpa — Auto-Match de Skills ativo!');
     }
 
+    function onPromptForgeTaskModeChange(mode) {
+      if (mode === 'total_audit') {
+        const inp = document.getElementById('pfRawInput');
+        if (inp && !inp.value.trim()) {
+          inp.value = 'Realizar uma Auditoria Total 360° a todo o projeto (Arquitetura, Bugs Ocultos, Performance 60 FPS, UI/UX Layout e Segurança), gerar matriz de severidade com ficheiro:Lstart-end e aplicar correções cirúrgicas imediatas nos pontos críticos';
+        }
+      }
+      renderPromptForgeSkillsPicker();
+    }
+
     function fillPromptForgeTemplate(mode, text) {
       const mSel = document.getElementById('pfTaskModeSelect');
       if (mSel) mSel.value = mode;
@@ -12785,7 +12810,12 @@ ${rulesSection}`;
     async function forgeAntigravityPromptUI() {
       const ws = document.getElementById('pfWorkspaceSelect')?.value || 'brain_mcp';
       const mode = document.getElementById('pfTaskModeSelect')?.value || 'feature';
-      const rawReq = (document.getElementById('pfRawInput')?.value || '').trim();
+      const inpEl = document.getElementById('pfRawInput');
+      let rawReq = (inpEl?.value || '').trim();
+      if (!rawReq && mode === 'total_audit') {
+        rawReq = 'Realizar uma Auditoria Total 360° a todo o projeto (Arquitetura, Bugs Ocultos, Performance 60 FPS, UI/UX Layout e Segurança), gerar matriz de severidade com ficheiro:Lstart-end e aplicar correções cirúrgicas imediatas nos pontos críticos';
+        if (inpEl) inpEl.value = rawReq;
+      }
       if (!rawReq) {
         showToast('⚠️ Escreve primeiro o que queres criar ou melhorar no projeto!');
         return;
@@ -12888,15 +12918,27 @@ ${rulesSection}`;
         return;
       }
       el.innerHTML = hist.map((h, idx) => `
-        <div onclick="loadPromptForgeHistoryIdx(${idx})" style="cursor:pointer; min-width:0; max-width:100%; overflow:hidden; background:rgba(9,13,22,0.92); border:1px solid rgba(99,102,241,0.28); border-radius:7px; padding:7px 9px; transition:border-color 0.14s ease;">
-          <div style="display:flex; justify-content:space-between; gap:6px; min-width:0; color:#a5b4fc; font-weight:700;">
+        <div onclick="loadPromptForgeHistoryIdx(${idx})" style="cursor:pointer; flex-shrink:0; min-height:52px; min-width:0; max-width:100%; overflow:hidden; box-sizing:border-box; background:rgba(9,13,22,0.95); border:1px solid rgba(99,102,241,0.34); border-radius:8px; padding:8px 11px; display:flex; flex-direction:column; justify-content:center; gap:4px; transition:border-color 0.14s ease;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; min-width:0; line-height:1.25; color:#a5b4fc; font-weight:800; font-size:10.5px;">
             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">[${escapeHtml(h.workspace)}] · ${escapeHtml((h.task_mode || 'feature').toUpperCase())}</span>
-            <span style="color:#6ee7b7; flex-shrink:0;">+${h.estimated_tokens_saved || 420} tok</span>
+            <span style="color:#6ee7b7; flex-shrink:0;">+${h.estimated_tokens_saved || 480} tok</span>
           </div>
-          <div style="color:#f8fafc; margin-top:2px; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(h.raw_request)}</div>
+          <div style="color:#f8fafc; font-size:11px; line-height:1.35; min-width:0; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(h.raw_request)}</div>
         </div>
       `).join('');
       window._lastPromptForgeHistory = hist;
+    }
+
+    function clearPromptForgeHistoryUI() {
+      try {
+        localStorage.removeItem('brain_pf_history_v1');
+      } catch (e) {}
+      if (lastOrbitOverviewData) {
+        lastOrbitOverviewData.prompt_forge_history = [];
+      }
+      window._lastPromptForgeHistory = [];
+      renderPromptForgeHistoryList([]);
+      showToast('🗑️ Histórico local do Prompt Forge limpo!');
     }
 
     function loadPromptForgeHistoryIdx(idx) {

@@ -839,6 +839,16 @@ def run_all_tests() -> None:
         ), f"Prompt Forge v5.0 devia sintetizar Especificação Técnica Completa em 6 secções: {pf_res['full_prompt']}"
         assert "SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY" in pf_res["swarm_prompt"] and len(pf_res["history"]) >= 1
 
+        # 24.1 Testar Modo "Auditoria Total 360°" (total_audit) mesmo sem raw_request explícito
+        pf_audit = sl_orbit.generate_optimized_prompt(
+            raw_request="",
+            workspace="proj_alpha",
+            task_mode="total_audit",
+        )
+        assert pf_audit["ok"] is True and "AUDITORIA TOTAL 360°" in pf_audit["full_prompt"] and "5 Eixos Obrigatórios" in pf_audit["full_prompt"], (
+            f"Modo total_audit devia gerar especificação de Auditoria Total 360° em 5 eixos: {pf_audit}"
+        )
+
     for sl_ui_token in (
         'id="orbitSelfLearnProjectsList"',
         'id="orbitSelfLearnPlaybookList"',
@@ -852,6 +862,9 @@ def run_all_tests() -> None:
         'id="promptForgeWorkspace"',
         'id="pfOutputTextarea"',
         'id="pfSkillsPickerGrid"',
+        'value="total_audit"',
+        "function onPromptForgeTaskModeChange(",
+        "flex-shrink:0; min-height:52px;",
         "function renderPromptForgeSkillsPicker()",
         "function togglePromptForgeSkill(",
         "function forgePromptClientSideFallback(",
