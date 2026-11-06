@@ -104,6 +104,8 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
                 "brain_inject.py",
                 "brain_harvest.py",
                 "web_dashboard.py",
+                "brain_app.py",
+                "BrainApp.bat",
                 "auto_updater.py",
                 "index.html",
                 "install.py",
@@ -134,7 +136,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
         json.dumps(mcp_cfg, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    # 5. Registar Auto-Start no arranque do Windows (HKCU\...\Run\AntigravityBrain)
+    # 5. Registar Auto-Start no arranque do Windows (HKCU\...\Run\AntigravityBrain) + Atalho no Ambiente de Trabalho
     startup_registered = False
     if os.name == "nt":
         try:
@@ -143,8 +145,8 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
             pythonw_exe = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
             if not os.path.isfile(pythonw_exe):
                 pythonw_exe = sys.executable
-            dashboard_script = str(REPO_DIR / "web_dashboard.py")
-            cmd_val = f'"{pythonw_exe}" "{dashboard_script}"'
+            app_script = str(REPO_DIR / "brain_app.py")
+            cmd_val = f'"{pythonw_exe}" "{app_script}" --tray-only'
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
                 r"Software\Microsoft\Windows\CurrentVersion\Run",
@@ -155,6 +157,16 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
             startup_registered = True
         except Exception:
             startup_registered = False
+
+        try:
+            if str(REPO_DIR) not in sys.path:
+                sys.path.insert(0, str(REPO_DIR))
+            from brain_app import ensure_app_icons, ensure_desktop_shortcuts
+
+            ensure_app_icons()
+            ensure_desktop_shortcuts()
+        except Exception:
+            pass
 
     if not silent:
         print("✅ Hooks globais configurados em:", global_hooks_path)

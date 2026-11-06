@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Antigravity Brain v4.5 — Neural Studio &amp; Graphify Console</title>
+  <meta name="theme-color" content="#070a14" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="manifest" href="/manifest.json" />
+  <title>Antigravity Brain v5.0 — Neural OS, Self-Learn &amp; Prompt Forge</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
@@ -2361,6 +2364,9 @@
     </div>
 
     <div class="top-actions">
+      <button class="btn" onclick="launchBrainSpotlightUI()" style="border-color:rgba(168,85,247,0.48); color:#e9d5ff; background:rgba(168,85,247,0.14);" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
+        ⚡ Spotlight / App
+      </button>
       <button class="btn" onclick="openCommandPalette()" style="border-color:rgba(99,102,241,0.35); color:#c7d2fe; background:rgba(99,102,241,0.08);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
         ⌘K Pesquisa
       </button>
@@ -13000,6 +13006,8 @@ ${rulesSection}`;
         switchMainView('swarm');
       } else if (window.location.hash === '#office') {
         switchMainView('office');
+      } else if (window.location.hash === '#orbit') {
+        switchMainView('orbit');
       } else if (window.location.hash === '#selflearn') {
         switchMainView('selflearn');
       } else if (window.location.hash === '#promptforge') {
@@ -13007,6 +13015,27 @@ ${rulesSection}`;
       }
       setTimeout(renderOfficeQuickAgentDock, 450);
     });
+
+    async function launchBrainSpotlightUI() {
+      try {
+        const isStandaloneApp = window.location.search.includes('app=1') || window.matchMedia('(display-mode: standalone)').matches;
+        const action = isStandaloneApp ? 'open_spotlight' : 'open_window';
+        const res = await fetch('/api/app/launch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action, section: activeMainView || 'promptforge' })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          showToast(action === 'open_spotlight'
+            ? '⚡ Quick Prompt Forge Spotlight aberto! (Atalho global em qualquer ecrã: Ctrl+Shift+B)'
+            : '🖥️ Antigravity Brain App Desktop aberta em janela dedicada!');
+          return;
+        }
+      } catch (e) {}
+      switchMainView('promptforge');
+      showToast('✨ Prompt Forge aberto! (Executa BrainApp.bat para ativar o Ctrl+Shift+B e o System Tray)');
+    }
   </script>
 </body>
 </html>

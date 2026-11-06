@@ -766,6 +766,40 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 self.wfile.write(content)
             return
 
+        if parsed.path in ("/favicon.ico", "/brain_app.ico", "/brain_app.png"):
+            from brain_app import ensure_app_icons
+
+            icons = ensure_app_icons()
+            is_png = parsed.path.endswith(".png")
+            f_path = icons["png"] if is_png else icons["ico"]
+            if os.path.isfile(f_path):
+                with open(f_path, "rb") as fh:
+                    raw_bytes = fh.read()
+                self.send_response(200)
+                self.send_header("Content-Type", "image/png" if is_png else "image/x-icon")
+                self.send_header("Cache-Control", "public, max-age=86400")
+                self.send_header("Content-Length", str(len(raw_bytes)))
+                self.end_headers()
+                if self.command != "HEAD":
+                    self.wfile.write(raw_bytes)
+                return
+
+        if parsed.path == "/manifest.json":
+            manifest = {
+                "name": "Antigravity Brain v5.0 — Neural OS & Prompt Forge",
+                "short_name": "Brain OS",
+                "start_url": "/?app=1#graph",
+                "display": "standalone",
+                "background_color": "#070a14",
+                "theme_color": "#070a14",
+                "icons": [
+                    {"src": "/brain_app.png", "sizes": "256x256", "type": "image/png"},
+                    {"src": "/favicon.ico", "sizes": "64x64 32x32 16x16", "type": "image/x-icon"},
+                ],
+            }
+            self._send_json(manifest)
+            return
+
         if parsed.path == "/api/graph":
             qs = urllib.parse.parse_qs(parsed.query)
             q = qs.get("q", [""])[0]
@@ -1308,6 +1342,32 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 return
             req_ws = str(body.get("workspace", "all"))
             self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi(workspace=req_ws)})
+            return
+
+        if parsed.path == "/api/app/launch":
+            from brain_app import ensure_desktop_shortcuts, launch_native_app_window
+
+            act = str(body.get("action", "open_window")).strip().lower()
+            sec = str(body.get("section", "graph")).strip().lower()
+            if act == "open_spotlight":
+                pyw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
+                if not os.path.isfile(pyw):
+                    pyw = sys.executable
+                subprocess.Popen(
+                    [pyw, os.path.join(CURRENT_DIR, "brain_app.py"), "--spotlight"],
+                    cwd=CURRENT_DIR,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    creationflags=0x08000000 if os.name == "nt" else 0,
+                )
+                self._send_json({"ok": True, "action": "open_spotlight"})
+                return
+            if act == "create_shortcut":
+                sc_res = ensure_desktop_shortcuts()
+                self._send_json(sc_res)
+                return
+            win_res = launch_native_app_window(section=sec)
+            self._send_json(win_res)
             return
 
         self._send_json({"error": "Endpoint desconhecido"}, 404)

@@ -875,9 +875,21 @@ def run_all_tests() -> None:
         "minmax(0, 5fr) minmax(0, 7fr)",
         "function forgeAntigravityPromptUI()",
         "function copyForgedPromptUI()",
+        "function launchBrainSpotlightUI()",
+        'href="/manifest.json"',
     ):
         assert sl_ui_token in html_content, f"Token Self-Learn / Prompt Forge v4.9 em falta em index.html: {sl_ui_token}"
     print("[PASS] Self-Learn Studio Gráfico (60 FPS Neural Pipeline) & Prompt Forge + Antigravity Skills v4.9 OK")
+
+    # 25. Testar App Desktop Nativa v5.0 (brain_app.py + Ícones .ico/.png + System Tray + Spotlight Ctrl+Shift+B)
+    from brain_app import QuickPromptForgeSpotlight, ensure_app_icons, ensure_desktop_shortcuts
+
+    app_icons = ensure_app_icons()
+    assert os.path.isfile(app_icons["ico"]) and os.path.getsize(app_icons["ico"]) > 500, f"Ícone .ico inválido: {app_icons}"
+    sc_info = ensure_desktop_shortcuts()
+    assert sc_info.get("ok") is True or sc_info.get("reason") == "non-windows", f"Falha ao criar atalho Desktop: {sc_info}"
+    assert len(QuickPromptForgeSpotlight.TASK_MODES) >= 8
+    print("[PASS] App Desktop Nativa v5.0 (brain_app.py + Ícone .ico + System Tray + Spotlight Ctrl+Shift+B + Atalho Desktop) OK")
 
 
 if __name__ == "__main__":
