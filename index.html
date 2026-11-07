@@ -2364,6 +2364,9 @@
     </div>
 
     <div class="top-actions">
+      <button class="btn" id="btnLangSwitcher" onclick="toggleBrainLanguageUI()" style="border-color:rgba(56,189,248,0.48); color:#7dd3fc; background:rgba(56,189,248,0.12); font-family:var(--font-mono); font-weight:800;" title="Alternar Idioma da Interface e Prompt Forge (PT-PT ⇄ EN-EN)">
+        🇵🇹 PT-PT
+      </button>
       <button class="btn" onclick="launchBrainSpotlightUI()" style="border-color:rgba(168,85,247,0.48); color:#e9d5ff; background:rgba(168,85,247,0.14);" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
         ⚡ Spotlight / App
       </button>
@@ -2445,10 +2448,10 @@
       <!-- Minimalist Centered Top HUD Bar with 3 View Modes: Quadro Blueprint (Zero-Overlap Default), Galeria Bento (Native Scroll), Orbital -->
       <div class="graph-hud-top">
         <span class="hud-zoom-tag" id="lblPlanetaryZoom">QUADRO NEURAL</span>
-        <span class="hud-dues-badge" id="lblPlanetaryDues">0 dues</span>
+        <span class="hud-dues-badge" id="lblPlanetaryDues">0 sinapses</span>
         <button class="hud-objectives-pill" onclick="focusDailyObjectives()" title="Focar nos Objetivos Críticos & Triangulação Causal do Córtex">
           <span style="width:6px; height:6px; border-radius:50%; background:#fb7185; display:inline-block;"></span>
-          <span id="lblDailyObjectives">3 objectifs</span>
+          <span id="lblDailyObjectives">3 objetivos</span>
         </button>
         <span class="hud-divider"></span>
         <button class="hud-pill active" id="btnBlueprintView" onclick="setBrainViewStyle('blueprint')" style="cursor:pointer;" title="Quadro Arquitetónico Estruturado (Zero sobreposição — Cartões de Domínio & Colunas Kanban)">
@@ -2611,7 +2614,7 @@
             <input type="checkbox" id="chkPulses" checked onchange="onGraphCheckboxChange('pulses', this.checked)" />
           </label>
           <label class="toggle-row" for="chkPlanetaryOrbits">
-            <span>Astrolábio &amp; Ilhas (Îlots)</span>
+            <span>Astrolábio &amp; Ilhas Orbitais</span>
             <input type="checkbox" id="chkPlanetaryOrbits" checked onchange="onGraphCheckboxChange('planetary', this.checked)" />
           </label>
           <label class="toggle-row" for="chkPolarFilaments">
@@ -4031,6 +4034,228 @@
   <div class="toast" id="toastMsg"></div>
 
   <script>
+    // =========================================================================
+    // 00 // BILINGUAL LOCALIZATION ENGINE (PT-PT ⇄ EN-EN) + ZERO-FRENCH GUARD
+    // =========================================================================
+    let currentBrainLang = (typeof localStorage !== 'undefined' && localStorage.getItem('brain_ui_lang')) || 'pt-PT';
+    if (currentBrainLang !== 'pt-PT' && currentBrainLang !== 'en-EN') {
+      currentBrainLang = 'pt-PT';
+    }
+    const _origTextNodeMap = new WeakMap();
+    let _i18nMutating = false;
+
+    function tUi(ptStr, enStr) {
+      return currentBrainLang === 'en-EN' ? enStr : ptStr;
+    }
+
+    const BRAIN_I18N_EXACT = {
+      '🕸️ Córtex': '🕸️ Cortex',
+      '⚡ Spotlight / App': '⚡ Spotlight / App',
+      '⌘K Pesquisa': '⌘K Search',
+      '⚙️ Ferramentas & Física': '⚙️ Tools & Physics',
+      '➕ Nova Memória': '➕ New Memory',
+      '📂 Explorador do Córtex': '📂 Cortex Explorer',
+      '◀ Recolher': '◀ Collapse',
+      '📂 Todos Projetos': '📂 All Projects',
+      '🏷️ Categorias': '🏷️ Categories',
+      '🌐 Todas': '🌐 All',
+      '📌 Fixadas': '📌 Pinned',
+      '🕒 Recentes': '🕒 Recent',
+      '⚠️ Sem Links': '⚠️ Unlinked',
+      '★ Ordenar: Importância & Semântica': '★ Sort: Importance & Semantics',
+      '🕒 Ordenar: Mais Recentes (ID)': '🕒 Sort: Most Recent (ID)',
+      '🔥 Ordenar: Mais Injetadas (Access)': '🔥 Sort: Most Injected (Access)',
+      '🔤 Ordenar: Nome (A-Z)': '🔤 Sort: Name (A-Z)',
+      '◀ Explorador': '◀ Explorer',
+      'Inspetor ▶': 'Inspector ▶',
+      'QUADRO NEURAL': 'NEURAL BOARD',
+      '🗺️ Quadro': '🗺️ Board',
+      '🍱 Galeria': '🍱 Gallery',
+      '🪐 Orbital': '🪐 Orbital',
+      '🧹 Auto-Limpar': '🧹 Auto-Clean',
+      '🧠 Inspetor de Memória': '🧠 Memory Inspector',
+      'Mostrar Nós de #Tags': 'Show #Tag Nodes',
+      'Mostrar Rótulos Sempre': 'Always Show Labels',
+      'Pulsos & Lasers Causais': 'Causal Pulses & Lasers',
+      'Astrolábio & Ilhas Orbitais': 'Astrolabe & Orbital Islands',
+      'Mostrar Malha de Links Globais': 'Show Global Links Mesh',
+      '🛠️ Ferramentas & Módulos do Sistema': '🛠️ System Tools & Modules',
+      '🛰️ Orbit Agent OS & Mission Inbox': '🛰️ Orbit Agent OS & Mission Inbox',
+      '🔎 Explorador AST & Graphify BFS': '🔎 AST Explorer & Graphify BFS',
+      '🛡️ Memory Doctor & Obsidian Vault': '🛡️ Memory Doctor & Obsidian Vault',
+      '🌿 Criar Snapshot Copy-on-Write': '🌿 Create Copy-on-Write Snapshot',
+      '🎨 Tema: Studio': '🎨 Theme: Studio',
+      '⚡ Perfil Quota': '⚡ Quota Profile',
+      '📦 Sincronizar Git & Hooks': '📦 Sync Git & Hooks',
+      '🔄 Atualizar': '🔄 Refresh',
+      '✕ Fechar': '✕ Close',
+      '📡 Emitir Broadcast': '📡 Send Broadcast',
+      '⚡ Disparar Ciclo de Auto-Melhoria Agora': '⚡ Trigger Self-Improvement Cycle Now',
+      '🟢 Ativar & Evoluir Todos os Projetos': '🟢 Enable & Evolve All Projects',
+      '✨ Forjar Super-Prompt Otimizado': '✨ Forge Optimized Super-Prompt',
+      '📋 Copiar Super-Prompt para o Antigravity': '📋 Copy Super-Prompt for Antigravity',
+      '🚀 Nova Funcionalidade (Feature)': '🚀 New Feature (Feature)',
+      '🐛 Correção de Bug & Root-Cause (Bugfix)': '🐛 Bugfix & Root-Cause Diagnosis',
+      '🏗️ Refatoração Arquitetural (Refactor)': '🏗️ Architectural Refactoring (Refactor)',
+      '🎨 Melhoria Visual / UI 3D & 60 FPS': '🎨 Visual UI / 3D & 60 FPS Upgrade',
+      '🛡️ Auditoria de Segurança & Performance': '🛡️ Security & Performance Audit',
+      '🔍 Auditoria Total 360° (Arquitetura + Bugs + UI + Segurança)': '🔍 360° Total Audit (Architecture + Bugs + UI + Security)',
+      '🔥 Super-Prompt Completo': '🔥 Full Super-Prompt',
+      '⚡ Compacto (TOON)': '⚡ Compact (TOON)',
+      '🐝 Multi-Agente (Swarm)': '🐝 Multi-Agent (Swarm)'
+    };
+
+    const BRAIN_I18N_FRAGMENTS = [
+      ['Onde o Self-Learn está Ativo (Controlo Individual por Projeto + Proatividade)', 'Where Self-Learn is Active (Per-Project Control + Proactivity)'],
+      ['Projetos com Self-Learn Ativo em Background', 'Projects with Active Background Self-Learn'],
+      ['Pipeline Neural de Auto-Aprendizagem Recursiva (60 FPS)', 'Recursive Self-Learning Neural Pipeline (60 FPS)'],
+      ['Auto-Learn + Proatividade ATIVOS em background', 'Auto-Learn + Proactivity ACTIVE in background'],
+      ['Desativado neste projeto (Opt-out)', 'Disabled on this project (Opt-out)'],
+      ['Maturidade Cognitiva (Brain IQ)', 'Cognitive Maturity (Brain IQ)'],
+      ['Estúdio de Engenharia de Prompts assistido pelo Córtex', 'Cortex-Assisted Prompt Engineering Studio'],
+      ['HISTÓRICO DE PROMPTS GERADOS (CLIQUE PARA CARREGAR)', 'GENERATED PROMPT HISTORY (CLICK TO LOAD)'],
+      ['PROMPT OTIMIZADO PRONTO PARA COLAR NO ANTIGRAVITY CHAT', 'OPTIMIZED PROMPT READY TO PASTE IN ANTIGRAVITY CHAT'],
+      ['SKILLS DO ANTIGRAVITY A INJETAR NO PROMPT', 'ANTIGRAVITY SKILLS TO INJECT IN PROMPT'],
+      ['DESCREVE O QUE QUERES CRIAR OU CORRIGIR', 'DESCRIBE WHAT YOU WANT TO BUILD OR FIX'],
+      ['PROJETO ALVO (WORKSPACE)', 'TARGET PROJECT (WORKSPACE)'],
+      ['TIPO DE MISSÃO / ENGENHARIA', 'MISSION / ENGINEERING MODE'],
+      ['META-REGRAS & AXIOMAS DESTILADOS PELO SELF-LEARN', 'DISTILLED SELF-LEARN META-RULES & AXIOMS'],
+      ['FEED EM TEMPO REAL DE EVOLUÇÃO & SENTINEL PROATIVO', 'LIVE EVOLUTION & PROACTIVE SENTINEL FEED'],
+      ['Pesquisar memórias, tópicos ou #tags...', 'Search memories, topics or #tags...'],
+      ['Filtrar skills (ex: m2ui, python, react, debug, 3d, graphify)...', 'Filter skills (e.g. m2ui, python, react, debug, 3d, graphify)...'],
+      ['A carregar projetos...', 'Loading projects...'],
+      ['A sincronizar projetos...', 'Syncing projects...'],
+      ['⚡ Evoluir Agora', '⚡ Evolve Now'],
+      ['⏸ Desativar', '⏸ Disable'],
+      ['▶ Ativar Neste Projeto', '▶ Enable on Project'],
+      ['ON (Desligar)', 'ON (Disable)'],
+      ['OFF (Ativar)', 'OFF (Enable)'],
+      ['⚡ Evoluir', '⚡ Evolve'],
+      ['🔄 Limpar Auto', '🔄 Reset Auto'],
+      ['🗑️ Limpar', '🗑️ Clear'],
+      ['memórias ·', 'memories ·'],
+      ['sinapses', 'synapses'],
+      ['objetivos do dia', 'daily goals'],
+      ['objetivos', 'goals'],
+      ['por ligar', 'to link'],
+      ['Ciclos:', 'Cycles:'],
+      ['Regras:', 'Rules:'],
+      ['Sinapses:', 'Synapses:'],
+      ['Poupança:', 'Saved:'],
+      ['Trajetória DOTS:', 'DOTS Trajectory:'],
+      ['Intenção:', 'Intent:'],
+      ['Rota:', 'Route:'],
+      ['proj ativos', 'active projs'],
+      ['Projeto(s) c/ Sentinel Ativo', 'Project(s) w/ Active Sentinel']
+    ];
+
+    function translatePtToEnString(rawStr) {
+      if (!rawStr) return rawStr;
+      const trimmed = rawStr.trim();
+      if (!trimmed) return rawStr;
+      if (BRAIN_I18N_EXACT[trimmed]) {
+        return rawStr.replace(trimmed, BRAIN_I18N_EXACT[trimmed]);
+      }
+      let out = rawStr;
+      for (let i = 0; i < BRAIN_I18N_FRAGMENTS.length; i++) {
+        const [ptFrag, enFrag] = BRAIN_I18N_FRAGMENTS[i];
+        if (out.includes(ptFrag)) {
+          out = out.split(ptFrag).join(enFrag);
+        }
+      }
+      return out;
+    }
+
+    function applyBrainLanguageToSubtree(rootEl) {
+      if (!rootEl || _i18nMutating) return;
+      _i18nMutating = true;
+      try {
+        const isEn = currentBrainLang === 'en-EN';
+        const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, null);
+        let node;
+        while ((node = walker.nextNode())) {
+          const parentTag = node.parentElement ? node.parentElement.tagName : '';
+          if (parentTag === 'SCRIPT' || parentTag === 'STYLE' || parentTag === 'TEXTAREA') continue;
+          if (node.parentElement && node.parentElement.id === 'btnLangSwitcher') continue;
+          if (!_origTextNodeMap.has(node)) {
+            _origTextNodeMap.set(node, node.nodeValue || '');
+          }
+          const origPt = _origTextNodeMap.get(node) || '';
+          const targetVal = isEn ? translatePtToEnString(origPt) : origPt;
+          if (node.nodeValue !== targetVal) {
+            node.nodeValue = targetVal;
+          }
+        }
+
+        if (rootEl.querySelectorAll) {
+          const attrEls = rootEl.querySelectorAll('[placeholder], [title]');
+          attrEls.forEach(el => {
+            if (el.id === 'btnLangSwitcher') return;
+            if (el.hasAttribute('placeholder')) {
+              if (!el.dataset.origPtPlaceholder) {
+                el.dataset.origPtPlaceholder = el.getAttribute('placeholder') || '';
+              }
+              const origPh = el.dataset.origPtPlaceholder;
+              const nextPh = isEn ? translatePtToEnString(origPh) : origPh;
+              if (el.getAttribute('placeholder') !== nextPh) {
+                el.setAttribute('placeholder', nextPh);
+              }
+            }
+            if (el.hasAttribute('title')) {
+              if (!el.dataset.origPtTitle) {
+                el.dataset.origPtTitle = el.getAttribute('title') || '';
+              }
+              const origTi = el.dataset.origPtTitle;
+              const nextTi = isEn ? translatePtToEnString(origTi) : origTi;
+              if (el.getAttribute('title') !== nextTi) {
+                el.setAttribute('title', nextTi);
+              }
+            }
+          });
+        }
+      } finally {
+        _i18nMutating = false;
+      }
+    }
+
+    function setBrainLanguageUI(lang, showNotification = true) {
+      currentBrainLang = lang === 'en-EN' ? 'en-EN' : 'pt-PT';
+      try {
+        localStorage.setItem('brain_ui_lang', currentBrainLang);
+      } catch (e) {}
+      document.documentElement.lang = currentBrainLang;
+
+      const btn = document.getElementById('btnLangSwitcher');
+      if (btn) {
+        btn.textContent = currentBrainLang === 'en-EN' ? '🇬🇧 EN-EN' : '🇵🇹 PT-PT';
+        btn.style.borderColor = currentBrainLang === 'en-EN' ? 'rgba(16,185,129,0.55)' : 'rgba(56,189,248,0.48)';
+        btn.style.color = currentBrainLang === 'en-EN' ? '#6ee7b7' : '#7dd3fc';
+      }
+
+      applyBrainLanguageToSubtree(document.body);
+
+      if (typeof graphData !== 'undefined' && graphData && graphData.nodes && graphData.nodes.length) {
+        const oldPos = {};
+        activeNodes.forEach(n => { oldPos[n.id] = { x: n.x, y: n.y }; });
+        rebuildSimulationGraph(oldPos);
+        graphDirty = true;
+        requestAnimationFrame(renderGraph);
+      }
+
+      if (showNotification && typeof showToast === 'function') {
+        showToast(
+          currentBrainLang === 'en-EN'
+            ? '🇬🇧 Interface & Prompt Forge language switched to English (EN-EN)!'
+            : '🇵🇹 Idioma da Interface e Prompt Forge alterado para Português (PT-PT)!'
+        );
+      }
+    }
+
+    function toggleBrainLanguageUI() {
+      const nextLang = currentBrainLang === 'pt-PT' ? 'en-EN' : 'pt-PT';
+      setBrainLanguageUI(nextLang, true);
+    }
+
     // PALETA DE CORES ESTILO OBSIDIAN NEURAL GRAPH
     const CATEGORY_COLORS = {
       workspace: '#ffffff',
@@ -4093,7 +4318,7 @@
 
     function showToast(text) {
       const el = document.getElementById('toastMsg');
-      el.textContent = text;
+      el.textContent = currentBrainLang === 'en-EN' ? translatePtToEnString(text) : text;
       el.style.display = 'block';
       clearTimeout(el._timer);
       el._timer = setTimeout(() => { el.style.display = 'none'; }, 3200);
@@ -4708,7 +4933,9 @@
       const btn = document.getElementById('btnLockOrbitsHud');
       if (btn) {
         btn.classList.toggle('active', planetaryOrbitsLocked);
-        btn.innerHTML = planetaryOrbitsLocked ? '🔒 Verrouillé' : '🔒 Verrouiller';
+        btn.innerHTML = planetaryOrbitsLocked
+          ? tUi('🔒 Bloqueado', '🔒 Locked')
+          : tUi('🔓 Desbloquear', '🔓 Unlock');
       }
       if (planetaryOrbitsLocked) {
         simAlpha = 0;
@@ -4718,7 +4945,9 @@
       }
       graphDirty = true;
       requestAnimationFrame(renderGraph);
-      showToast(planetaryOrbitsLocked ? '🔒 Órbitas planetárias bloqueadas (Verrouillé)' : '🔓 Órbitas planetárias desbloqueadas');
+      showToast(planetaryOrbitsLocked
+        ? tUi('🔒 Órbitas planetárias bloqueadas', '🔒 Planetary orbits locked')
+        : tUi('🔓 Órbitas planetárias desbloqueadas', '🔓 Planetary orbits unlocked'));
     }
 
     function focusDailyObjectives() {
@@ -4729,7 +4958,7 @@
       const pickIdx = (window._dailyObjCycleIdx = ((window._dailyObjCycleIdx || 0) + 1) % Math.min(3, memNodes.length));
       const target = memNodes[pickIdx];
       selectNode(target, true, true);
-      showToast(`🎯 Objectif du jour #${pickIdx + 1}: ${target._cleanLabel || target.label}`);
+      showToast(`🎯 ${tUi('Objetivo Crítico', 'Critical Goal')} #${pickIdx + 1}: ${target._cleanLabel || target.label}`);
     }
 
     function rebuildSimulationGraph(oldPos = {}) {
@@ -4967,7 +5196,7 @@
         };
       });
 
-      // 4. Construir metadados das Ilhas Planetárias (Îlots) ordenados por importância
+      // 4. Construir metadados das Ilhas Planetárias (Clusters Orbitais) ordenados por importância
       wsNodes.forEach((w) => {
         const wsKey = w.workspace || 'global';
         const c = wsCenters[wsKey];
@@ -4983,7 +5212,10 @@
           cats: st.cats || {},
           ilotsCount,
           toLinkCount,
-          subtitle: `${totalInDb} notes · ${ilotsCount} îlots · ${toLinkCount} à relier`
+          subtitle: tUi(
+            `${totalInDb} memórias · ${ilotsCount} clusters · ${toLinkCount} por ligar`,
+            `${totalInDb} memories · ${ilotsCount} clusters · ${toLinkCount} to link`
+          )
         });
       });
 
@@ -5304,12 +5536,12 @@
       const duesEl = document.getElementById('lblPlanetaryDues');
       if (duesEl) {
         const totalCausal = activeLinks.filter(l => l.kind === 'causal_link').length;
-        duesEl.textContent = `${Math.max(0, totalCausal)} dues`;
+        duesEl.textContent = `${Math.max(0, totalCausal)} ${tUi('sinapses', 'synapses')}`;
       }
       const objEl = document.getElementById('lblDailyObjectives');
       if (objEl) {
         const highCount = activeNodes.filter(n => n.node_type === 'memory' && (n.importance || 3) >= 5).length;
-        objEl.textContent = `${Math.max(3, Math.min(9, highCount))} objectifs du jour`;
+        objEl.textContent = `${Math.max(3, Math.min(9, highCount))} ${tUi('objetivos do dia', 'daily goals')}`;
       }
 
       if (brainViewStyle === 'bento') {
@@ -6375,7 +6607,7 @@
           ctx.font = "600 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
           ctx.fillStyle = isWsHovered ? '#ffffff' : '#94a3b8';
           ctx.textAlign = 'left';
-          ctx.fillText(`📂 Abrir (${totalCount})`, x + 14, y + h - 13);
+          ctx.fillText(`📂 ${tUi('Abrir', 'Open')} (${totalCount})`, x + 14, y + h - 13);
 
           // Pílula 🏢 3D no rodapé do Cartão
           traceRoundedRect(x + w - 126, y + h - 23, 46, 18, 5);
@@ -6392,7 +6624,7 @@
           ctx.font = "700 10.5px 'JetBrains Mono', monospace";
           ctx.fillStyle = color;
           ctx.textAlign = 'right';
-          ctx.fillText('Explorar ➔', x + w - 14, y + h - 13);
+          ctx.fillText(tUi('Explorar ➔', 'Explore ➔'), x + w - 14, y + h - 13);
           ctx.restore();
         }
       } else {
@@ -6419,11 +6651,11 @@
           ctx.fillStyle = '#ffffff';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText('⬅ Voltar ao Mapa Global', b.x + 16, b.y + b.h / 2);
+          ctx.fillText(tUi('⬅ Voltar ao Mapa Global', '⬅ Back to Global Map'), b.x + 16, b.y + b.h / 2);
 
           ctx.font = "700 12px 'Plus Jakarta Sans', -apple-system, sans-serif";
           ctx.fillStyle = '#c7d2fe';
-          ctx.fillText(`⬡ Workspace: ${b.wsKey} · ${b.totalMemories} mems (Pág ${blueprintPage + 1}/${blueprintTotalPages})`, b.x + 218, b.y + b.h / 2);
+          ctx.fillText(`⬡ Workspace: ${b.wsKey} · ${b.totalMemories} mems (${tUi('Pág', 'Page')} ${blueprintPage + 1}/${blueprintTotalPages})`, b.x + 218, b.y + b.h / 2);
 
           // Botão Alternar Kanban / Grelha à Direita
           const btnLayoutW = 158;
@@ -6437,7 +6669,7 @@
           ctx.font = "700 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
           ctx.fillStyle = '#f8fafc';
           ctx.textAlign = 'center';
-          ctx.fillText(blueprintDrilldownLayout === 'kanban' ? '📋 Vista: Kanban (5 Col)' : '🟦 Vista: Grelha', btnLayoutX + btnLayoutW / 2, b.y + b.h / 2);
+          ctx.fillText(blueprintDrilldownLayout === 'kanban' ? tUi('📋 Vista: Kanban (5 Col)', '📋 View: Kanban (5 Col)') : tUi('🟦 Vista: Grelha', '🟦 View: Grid'), btnLayoutX + btnLayoutW / 2, b.y + b.h / 2);
 
           // Botão Sincronizar Office 3D à Direita
           const btn3DW = 110;
@@ -6449,7 +6681,7 @@
           ctx.lineWidth = 1 * invSqrtK;
           ctx.stroke();
           ctx.fillStyle = '#e0f2fe';
-          ctx.fillText('🏢 Equipa 3D', btn3DX + btn3DW / 2, b.y + b.h / 2);
+          ctx.fillText(tUi('🏢 Equipa 3D', '🏢 3D Team'), btn3DX + btn3DW / 2, b.y + b.h / 2);
           ctx.restore();
         }
 
@@ -6805,7 +7037,7 @@
           }
           ctx.restore();
 
-          // Cabeçalho Tipográfico Flutuante da Ilha ("Brain MCP & Jev" / "12 notes · 3 îlots · 4 à relier")
+          // Cabeçalho Tipográfico Flutuante da Ilha ("Brain MCP" / "12 memórias · 3 clusters · 4 por ligar")
           ctx.save();
           const titleY = cl.y - cl.ry * 0.52 - 12;
           ctx.textAlign = 'center';
@@ -12855,7 +13087,8 @@ ${rulesSection}`;
             workspace: ws,
             task_mode: mode,
             raw_request: rawReq,
-            selected_skills: Array.from(selectedPfSkills)
+            selected_skills: Array.from(selectedPfSkills),
+            lang: currentBrainLang
           })
         });
         const out = await res.json();
@@ -13014,6 +13247,16 @@ ${rulesSection}`;
         switchMainView('promptforge');
       }
       setTimeout(renderOfficeQuickAgentDock, 450);
+      setBrainLanguageUI(currentBrainLang, false);
+      if (typeof MutationObserver !== 'undefined') {
+        let _moTimer = null;
+        const _i18nObserver = new MutationObserver(() => {
+          if (_i18nMutating || currentBrainLang !== 'en-EN') return;
+          clearTimeout(_moTimer);
+          _moTimer = setTimeout(() => applyBrainLanguageToSubtree(document.body), 24);
+        });
+        _i18nObserver.observe(document.body, { childList: true, subtree: true });
+      }
     });
 
     async function launchBrainSpotlightUI() {

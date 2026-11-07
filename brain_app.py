@@ -396,8 +396,15 @@ class QuickPromptForgeSpotlight:
                         default_mode_lbl = l
                         break
             self.mode_var = tk.StringVar(value=default_mode_lbl)
-            mode_cb = ttk.Combobox(ctrl_row, textvariable=self.mode_var, values=mode_labels, width=42, state="readonly")
-            mode_cb.pack(side="left", fill="x", expand=True)
+            mode_cb = ttk.Combobox(ctrl_row, textvariable=self.mode_var, values=mode_labels, width=34, state="readonly")
+            mode_cb.pack(side="left", fill="x", expand=True, padx=(0, 10))
+
+            self.lang_var = tk.StringVar(value="pt-PT")
+            lang_cb = ttk.Combobox(ctrl_row, textvariable=self.lang_var, values=["pt-PT", "en-EN"], width=8, state="readonly")
+            lang_cb.pack(side="right")
+            tk.Label(ctrl_row, text="🌐", font=("Consolas", 9, "bold"), fg="#7dd3fc", bg="#070a14").pack(
+                side="right", padx=(0, 4)
+            )
 
             # Input do Pedido Rápido
             inp_frame = tk.Frame(root, bg="#0f172a", highlightbackground="#a855f7", highlightthickness=1)
@@ -449,6 +456,7 @@ class QuickPromptForgeSpotlight:
                     raw_request=req_txt,
                     workspace=ws_val,
                     task_mode=mode_code,
+                    lang=self.lang_var.get() or "pt-PT",
                 )
                 prompt_str = str(res.get("optimized_prompt") or "")
                 self._last_prompt_text = prompt_str

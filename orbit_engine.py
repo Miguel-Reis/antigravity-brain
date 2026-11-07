@@ -2065,6 +2065,7 @@ class OrbitEngine:
         workspace: str = "brain_mcp",
         task_mode: str = "feature",
         selected_skills: Optional[List[str]] = None,
+        lang: str = "pt-PT",
     ) -> Dict[str, Any]:
         """
         Transforma um pedido simples do utilizador (ex.: 'criar uma função X num projeto')
@@ -2255,7 +2256,38 @@ class OrbitEngine:
             f"{rules_bullet_str}"
         )
 
+        is_en = str(lang or "pt-PT").lower().startswith("en")
+        if is_en:
+            en_replacements = [
+                ("## 1. Papel, Contexto Arquitetural & Pedido Expandido", "## 1. Role, Architectural Context & Expanded Request (Papel, Contexto Arquitetural & Pedido Expandido)"),
+                ("## 2. Assinaturas Propostas, Contratos de Dados & Símbolos Alvo", "## 2. Proposed Signatures, Data Contracts & Target Symbols (Assinaturas Propostas, Contratos de Dados & Símbolos Alvo)"),
+                ("## 3. Mapa Cirúrgico de Ficheiros Relevantes (`:Lstart-end` — Evitar Leituras Globais)", "## 3. Surgical File Map (`:Lstart-end` — Avoid Full-Codebase Reads)"),
+                ("## 4. Plano de Implementação Passo-a-Passo", "## 4. Step-by-Step Implementation Plan"),
+                ("## 5. Skills do Antigravity Ativadas (`SKILL.md`) & Meta-Regras Self-Learn", "## 5. Activated Antigravity Skills (`SKILL.md`) & Self-Learn Meta-Rules"),
+                ("### 🛠️ Diretivas das Skills:", "### 🛠️ Skill Directives:"),
+                ("### 🧬 Meta-Regras Aprendidas Neste Projeto:", "### 🧬 Distilled Project Meta-Rules:"),
+                ("### 🧠 Contexto Histórico Recuperado (`brain.db`):", "### 🧠 Retrieved Historical Context (`brain.db`):"),
+                ("## 6. Casos-Limite (Edge Cases), Guardrails & Definition of Done", "## 6. Edge Cases, Guardrails & Definition of Done (Casos-Limite (Edge Cases), Guardrails & Definition of Done)"),
+                ("Atua como **", "Act as **"),
+                ("no projeto **`", "on project **`"),
+                ("Preciso que projetes e implementes de ponta a ponta", "Please design and implement end-to-end"),
+                ("Especificação Funcional Detalhada", "Detailed Functional Specification"),
+                ("Assinatura Core / Backend Proposta", "Proposed Core / Backend Signature"),
+                ("Handler de Interface / Integração Proposto", "Proposed UI / Integration Handler"),
+                ("Contrato de Retorno Esperado (Schema)", "Expected Return Contract (Schema)"),
+                ("Símbolos / Funções Existentes Relacionadas", "Related Existing Symbols / Functions"),
+                ("Edição Cirúrgica", "Surgical Editing"),
+                ("Verificação Obrigatória no Terminal", "Mandatory Terminal Verification"),
+                ("Registo de Memória Zero-Token", "Zero-Token Memory Harvesting"),
+                ("AUDITORIA TOTAL 360°", "360° FULL AUDIT (AUDITORIA TOTAL 360°)"),
+                ("5 Eixos Obrigatórios", "5 Mandatory Audit Axes (5 Eixos Obrigatórios)"),
+            ]
+            for pt_s, en_s in en_replacements:
+                full_prompt = full_prompt.replace(pt_s, en_s)
+                swarm_prompt = swarm_prompt.replace(pt_s, en_s)
+
         est_saved = max(480, len(matched_files) * 165 + len(playbook) * 95 + len(matched_skills) * 115)
+        token_estimate = max(320, len(full_prompt) // 4)
 
         with self.db._connect() as conn:
             cur = conn.execute(
@@ -2285,6 +2317,7 @@ class OrbitEngine:
             "id": new_id,
             "workspace": ws,
             "task_mode": mode,
+            "lang": "en-EN" if is_en else "pt-PT",
             "raw_request": req,
             "intent": intent_name,
             "model_route": model_rec,
@@ -2294,6 +2327,8 @@ class OrbitEngine:
             "learned_rules_applied": playbook[:4],
             "brain_iq_score": sl_status.get("brain_iq_score", 94.0),
             "estimated_tokens_saved": est_saved,
+            "token_estimate": token_estimate,
+            "optimized_prompt": full_prompt,
             "full_prompt": full_prompt,
             "compact_prompt": compact_prompt,
             "swarm_prompt": swarm_prompt,

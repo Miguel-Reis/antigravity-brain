@@ -1324,6 +1324,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 ws = str(body.get("workspace", "brain_mcp"))
                 raw_req = str(body.get("raw_request", ""))
                 t_mode = str(body.get("task_mode", "feature"))
+                lang_val = str(body.get("lang", "pt-PT"))
                 sel_sk = body.get("selected_skills")
                 sel_list = [str(x).strip() for x in sel_sk if str(x).strip()] if isinstance(sel_sk, list) else None
                 pf_res = orbit.generate_optimized_prompt(
@@ -1331,6 +1332,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                     workspace=ws,
                     task_mode=t_mode,
                     selected_skills=sel_list,
+                    lang=lang_val,
                 )
                 res = {**pf_res, "prompt_forge": pf_res}
             elif action == "prompt_history":

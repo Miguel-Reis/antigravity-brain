@@ -849,6 +849,17 @@ def run_all_tests() -> None:
             f"Modo total_audit devia gerar especificação de Auditoria Total 360° em 5 eixos: {pf_audit}"
         )
 
+        # 24.2 Testar Modo Bilingue EN-EN no Prompt Forge
+        forged_en = sl_orbit.generate_optimized_prompt(
+            raw_request="Audit and optimize all language strings across the dashboard and 3D views",
+            workspace="proj_alpha",
+            task_mode="total_audit",
+            lang="en-EN",
+        )
+        assert forged_en["ok"] is True and forged_en.get("lang") == "en-EN"
+        assert "## 1. Role, Architectural Context & Expanded Request" in forged_en["full_prompt"]
+        assert "360° FULL AUDIT" in forged_en["full_prompt"]
+
     for sl_ui_token in (
         'id="orbitSelfLearnProjectsList"',
         'id="orbitSelfLearnPlaybookList"',
@@ -890,6 +901,20 @@ def run_all_tests() -> None:
     assert sc_info.get("ok") is True or sc_info.get("reason") == "non-windows", f"Falha ao criar atalho Desktop: {sc_info}"
     assert len(QuickPromptForgeSpotlight.TASK_MODES) >= 8
     print("[PASS] App Desktop Nativa v5.0 (brain_app.py + Ícone .ico + System Tray + Spotlight Ctrl+Shift+B + Atalho Desktop) OK")
+
+    # 26. Testar Sistema Bilingue PT-PT / EN-EN e Erradicação de Strings em Francês
+    for forbidden_french in ("îlots", "à relier", "objectifs du jour", "Verrouillé"):
+        assert forbidden_french not in html_content, f"String francesa residual encontrada em index.html: {forbidden_french}"
+    for i18n_token in (
+        'id="btnLangSwitcher"',
+        "function toggleBrainLanguageUI()",
+        "function setBrainLanguageUI(",
+        "function tUi(",
+        "BRAIN_I18N_EXACT",
+        "BRAIN_I18N_FRAGMENTS",
+    ):
+        assert i18n_token in html_content, f"Token i18n PT-PT/EN-EN em falta em index.html: {i18n_token}"
+    print("[PASS] Motor Bilingue PT-PT <-> EN-EN (Zero Frances + HUD/Canvas/3D/Prompt Forge i18n) OK")
 
 
 if __name__ == "__main__":
