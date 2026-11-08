@@ -122,14 +122,14 @@ def run_all_tests() -> None:
         f"[PASS] Reverse Call/Impact Graph: {impact['affected_files_count']} ficheiros afetados ({impact['total_references']} referências, Risco: {impact['blast_radius']})"
     )
 
-    # 8. Testar Opção A: Embeddings Semânticos Híbridos 32-D + Cosine Similarity
+    # 8. Testar Opção A: Embeddings Semânticos Híbridos 128-D LSH + Cosine Similarity
     vec_pt = BrainDB.compute_semantic_vector("otimizar latência da base de dados sqlite wal e indices")
     vec_en = BrainDB.compute_semantic_vector("database query latency optimization and sql schema index")
     sim_score = BrainDB.cosine_similarity(vec_pt, vec_en)
-    assert len(vec_pt) == 32 and sim_score > 0.35, f"Similaridade semântica bilingue insuficiente: {sim_score}"
+    assert len(vec_pt) == 128 and sim_score > 0.35, f"Similaridade semântica bilingue insuficiente: {sim_score}"
     sem_results = prod_db.search_memories("reduzir custo da janela de contexto e poupar bateria", workspace="global", n_results=3)
     assert len(sem_results) > 0 and "semantic_similarity" in sem_results[0]
-    print(f"[PASS] Opção A (Hybrid Semantic Vector 32-D + BM25): cosine_bilingue={sim_score:.3f}, top_hit='{sem_results[0]['topic']}'")
+    print(f"[PASS] Opção A (Hybrid Semantic Vector 128-D LSH + RRF BM25): cosine_bilingue={sim_score:.3f}, top_hit='{sem_results[0]['topic']}'")
 
     # 9. Testar Opção C: Dynamic Intent-Based MCP Tool Pruning
     from token_diet import prune_tools_for_intent
@@ -1112,6 +1112,50 @@ def run_all_tests() -> None:
         assert synth_tests["ok"] is True and synth_tests["tests_generated"] >= 1
         assert "def test_regression_" in synth_tests["markdown_preview"]
 
+        # ------------------------------------------------------------------
+        # 29. Pack v6.2: 128-D Subword LSH + RRF (k=60), Unicode Tokenizer,
+        #     Query-Routed Scout Map, Global Brain Payload Extractor,
+        #     Domain Quarantine, Thread-Local mmap SQLite & PageRank
+        # ------------------------------------------------------------------
+        from brain_inject import select_relevant_scout_map
+
+        # 29.1 128-D Vector + Unicode Tokenizer (sem partir palavras acentuadas a meio)
+        vec128 = gb_db.compute_semantic_vector("otimização de memória SQLite e arquitetura")
+        assert len(vec128) == 128, f"Esperado vetor 128-D, obtido {len(vec128)}-D"
+        toks_pt = gb_db.extract_search_tokens("ainda não está no ponto de perfeição que quero para otimização de memória")
+        assert "otimizacao" in toks_pt and "memoria" in toks_pt, f"Tokenizer falhou em palavras acentuadas: {toks_pt}"
+        assert "ponto" not in toks_pt and "ainda" not in toks_pt, f"Stopwords PT deviam ter sido filtradas: {toks_pt}"
+
+        # 29.2 Cross-Domain Quarantine & Relevance Gate (não vazar Alçado MQT na query 'ponto de perfeição')
+        gb_db.store_fact(
+            topic="Alçado 3 Artigos MQT",
+            fact="Imagens geradas para Ponto 1 (soco, cunhais, envolvente vãos), Ponto 2 (barramento armado 2cm) e Ponto 3 (ETICS 6cm)",
+            workspace="arquitetura_civil",
+            category="general",
+            tags="mqt etics",
+            importance=4,
+        )
+        mems_perf = gb_db.search_memories(
+            "ainda nao está no ponto de perfeição que quero. tens mais sugestoes/ melhorias as tecnologias usadas?",
+            workspace="new_project",
+            n_results=6,
+        )
+        assert all("Alçado 3 Artigos MQT" not in m["topic"] for m in mems_perf), f"Contaminação de domínio detetada: {mems_perf}"
+
+        # 29.3 Global Brain Payload Extractor (strip de prefixos '🧬 Meta-Regra Aprendida [foo]:')
+        clean_payload = gb_orbit._extract_clean_rule_payload(
+            "[🌐 shadowmeter2] 🧬 Meta-Regra Aprendida [relatorio_auditoria_shadow_meter]: Usar sempre minmax(0, 1fr) e overflow-x: hidden."
+        )
+        assert clean_payload.startswith("Usar sempre minmax(0, 1fr)"), f"Prefixo não foi limpo corretamente: {clean_payload}"
+
+        # 29.4 Dynamic Query-Routed [SCOUT_SHARED_MAP]
+        sample_scout = (
+            "[SCOUT_SHARED_MAP | ws=brain_mcp | files=3]\n"
+            "- API: app.py (7L) [fn main():L1-7] ; ast_impact_watcher.py (580L) [class AstImpactWatcher:L20] ; db_engine.py (2090L) [class BrainDB:L80]"
+        )
+        routed_scout = select_relevant_scout_map(sample_scout, user_query="otimizar db_engine.py sqlite", max_len=160)
+        assert "db_engine.py" in routed_scout, f"Query-Routed Scout Map devia priorizar db_engine.py: {routed_scout}"
+
     brain_app_txt = Path(os.path.join(repo_dir, "brain_app.py")).read_text(encoding="utf-8")
     for app_tok in ("_do_quick_global_rule", "_do_quick_defuddle", "_do_quick_resolve_conflicts"):
         assert app_tok in brain_app_txt, f"Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
@@ -1137,7 +1181,7 @@ def run_all_tests() -> None:
         "96 / 96",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
-    print("[PASS] Pack Completo v6.0 & v6.1 (Smart Repo Resolver, Zero-Leak Secret Redactor, 5h Quota Radar, Universal AGENTS.md Sync & Bugfix-to-Test Synthesizer) OK")
+    print("[PASS] Pack Completo v6.0, v6.1 & v6.2 (128-D Subword LSH + RRF, Query-Routed Scout, Global Payload Extractor, Domain Quarantine, mmap SQLite & PageRank) OK")
 
 
 if __name__ == "__main__":

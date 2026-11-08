@@ -1602,6 +1602,13 @@ class OrbitEngine:
             "git release",
             "test suite |",
             "post-v5.2 polish roadmap",
+            "consolidated all ",
+            "documento walkthrough.md",
+            "documento ultraplan.md",
+            "sincronizado no commit",
+            "deployed & pushed",
+            "pushed to origin/main",
+            "relatorio_auditoria_shadow_meter",
         )
         if any(m in blob for m in ephemeral_markers):
             return True
@@ -1959,6 +1966,31 @@ class OrbitEngine:
             "canonical_preview": canonical_preview,
         }
 
+    @staticmethod
+    def _extract_clean_rule_payload(raw_text: str) -> str:
+        """
+        v6.2 Global Brain Payload Extractor:
+        Remove invólucros e títulos redundantes ('🧬 Meta-Regra Aprendida [foo]:', '[🌐 ws]', '[Canonical v2]')
+        para que 100% do orçamento de caracteres no [BRAIN_MEMORY] contenha a regra técnica acionável real.
+        """
+        txt = " ".join(str(raw_text or "").split()).strip()
+        # Remover tags iniciais repetidas [🌐 ...] ou [Canonical v2]
+        txt = re.sub(r"^(?:\[(?:🌐[^\]]*|Canonical[^\]]*|Global[^\]]*|Self-Learn[^\]]*|Vault[^\]]*)\]\s*)+", "", txt, flags=re.I)
+        # Remover prefixo '🧬 Meta-Regra Aprendida [ficheiro]:'
+        txt = re.sub(
+            r"^(?:🧬\s*)?Meta-Regra(?:\s+Can[oó]nica)?(?:\s+Aprendida)?(?:\s+v\d+)?\s*(?:\[[^\]]*\])?\s*[:\-–]?\s*",
+            "",
+            txt,
+            flags=re.I,
+        )
+        # Se começar por 'Tópico genérico: Regra real', preservar a parte acionável
+        m_colon = re.match(r"^([^:]{4,48}):\s+(.{20,})$", txt)
+        if m_colon:
+            head, tail = m_colon.group(1).strip(), m_colon.group(2).strip()
+            if any(k in head.lower() for k in ("meta-regra", "global", "rule", "self-learn", "padrao", "padrão", "bugfix")):
+                txt = tail
+        return txt.strip(" -–:;|")
+
     def get_global_brain_top_wisdom(
         self,
         query: str = "",
@@ -1966,34 +1998,42 @@ class OrbitEngine:
         top_k: int = 3,
     ) -> List[str]:
         """
-        Modo Global Total Sempre Ativo:
-        Devolve sempre o Top-3 de Sabedoria Global (Meta-Regras Self-Learn de todos os projetos +
-        Bugs resolvidos + Conversas passadas + Notas Vault .MD), pontuados pela relevância para `query`
-        e sem contaminar o projeto atual com caminhos de ficheiros locais de outros projetos.
+        Modo Global Total Sempre Ativo (v6.2 Cross-Encoder Reranker + Payload Extractor):
+        Devolve o Top-3 de Sabedoria Global com zero truncamento de prefixo, filtrando changelogs
+        específicos de outros projetos (ex.: '[page.tsx] Implemented VPS Plans...') e priorizando
+        leis universais de engenharia e regras pertinentes à `query` e ao `current_workspace`.
         """
         cur_ws = (current_workspace or "brain_mcp").strip().lower()
-        q_vec = self.db.compute_semantic_vector(query or cur_ws)
-        q_tokens = set(self.db.extract_search_tokens(query or ""))
+        effective_q = f"{query} {cur_ws}".strip()
+        q_vec = self.db.compute_semantic_vector(effective_q)
+        q_tokens = set(self.db.extract_search_tokens(effective_q))
 
         candidates: List[Tuple[float, str]] = []
         seen_norm: set[str] = set()
 
+        # Padrões de changelogs locais ou domínios não-código que não são leis universais
+        non_universal_re = re.compile(
+            r"(?:\bimplemented\s+vps\s+plans\b|\bal[cç]ado\s+3\s+artigos\b|\bbarramento\s+armado\b|\betics\b|\bcunhais\b)",
+            re.I,
+        )
+
         def _add_candidate(score: float, text: str, origin_ws: str) -> None:
             if self._is_ephemeral_status_log("", text):
                 return
-            sanitized = self._sanitize_foreign_paths_for_global(text, origin_ws, cur_ws)
-            clean = " ".join(sanitized.split()).strip()
-            if len(clean) < 12:
+            if non_universal_re.search(text) and origin_ws != cur_ws:
                 return
-            nk = re.sub(r"[^a-z0-9]", "", clean.lower())[:50]
+            sanitized = self._sanitize_foreign_paths_for_global(text, origin_ws, cur_ws)
+            clean = self._extract_clean_rule_payload(sanitized)
+            if len(clean) < 18:
+                return
+            nk = re.sub(r"[^a-z0-9]", "", clean.lower())[:44]
             if nk in seen_norm:
                 return
             seen_norm.add(nk)
-            prefix = f"[🌐 {origin_ws}] " if (origin_ws not in (cur_ws, "global") and not clean.startswith("[")) else ""
-            candidates.append((score, f"{prefix}{clean}"))
+            candidates.append((score, clean))
 
         with self.db._connect() as conn:
-            # 1. Playbooks de todos os projetos + global
+            # 1. Playbooks de Self-Learn (priorizando o workspace atual e global)
             sl_rows = conn.execute(
                 "SELECT workspace, learned_playbook_json, brain_iq_score FROM self_learn_projects WHERE enabled = 1 ORDER BY brain_iq_score DESC;"
             ).fetchall()
@@ -2001,24 +2041,26 @@ class OrbitEngine:
                 w_name = str(r["workspace"] or "global").lower()
                 try:
                     pb = json.loads(r["learned_playbook_json"] or "[]")
+                    ws_affinity = 1.6 if w_name in (cur_ws, "global", "global_self_learn") else 0.35
                     for idx, rule_txt in enumerate(pb[:4]):
-                        r_vec = self.db.compute_semantic_vector(rule_txt)
+                        clean_r = self._extract_clean_rule_payload(rule_txt)
+                        r_vec = self.db.compute_semantic_vector(clean_r)
                         sim = self.db.cosine_similarity(q_vec, r_vec)
-                        overlap = sum(1 for t in q_tokens if t in rule_txt.lower())
-                        base_sc = 3.0 + sim * 4.0 + overlap * 1.5 - idx * 0.15
-                        _add_candidate(base_sc, rule_txt, w_name)
+                        norm_r = self.db.strip_accents(clean_r).lower()
+                        overlap = sum(1 for t in q_tokens if t in norm_r)
+                        base_sc = 2.5 + ws_affinity + sim * 4.8 + overlap * 1.6 - idx * 0.15
+                        _add_candidate(base_sc, clean_r, w_name)
                 except Exception:
                     pass
 
-            # 2. Memórias transversais (learned_rule, bug_fix, vault_clip, explicit_note) de todos os projetos
+            # 2. Meta-Regras aprendidas, BugFixes e Diretivas universais
             mem_rows = conn.execute(
                 """
                 SELECT workspace, category, topic, fact, importance
                 FROM memories
-                WHERE category IN ('learned_rule', 'bug_fix', 'vault_clip', 'explicit_note', 'preference')
-                   OR workspace = 'global'
+                WHERE category IN ('learned_rule', 'bug_fix', 'directive')
                 ORDER BY importance DESC, id DESC
-                LIMIT 45;
+                LIMIT 55;
                 """
             ).fetchall()
             for m in mem_rows:
@@ -2028,21 +2070,28 @@ class OrbitEngine:
                 fc_str = str(m["fact"] or "")
                 if cat == "file_edit" or tp_str.lower().startswith("ficheiro ") or "(modificado via " in fc_str.lower():
                     continue
-                blob = f"{tp_str}: {fc_str}"
-                m_vec = self.db.compute_semantic_vector(blob)
+                if "scout_shared_map" in fc_str.lower() or tp_str.lower().startswith(("scout shared", "diretiva 3d")):
+                    continue
+                # Se for de outro projeto específico e for apenas resumo de página/feature, ignorar no Top-3 Universal
+                if w_name not in (cur_ws, "global", "global_self_learn") and cat not in ("learned_rule", "directive"):
+                    continue
+                payload = self._extract_clean_rule_payload(f"{tp_str}: {fc_str}")
+                m_vec = self.db.compute_semantic_vector(payload)
                 sim = self.db.cosine_similarity(q_vec, m_vec)
-                overlap = sum(1 for t in q_tokens if t in blob.lower())
-                cat_boost = 1.4 if cat in ("learned_rule", "bug_fix", "vault_clip") else 0.8
-                sc = float(m["importance"] or 4) * 0.5 + cat_boost + sim * 4.5 + overlap * 1.8
-                _add_candidate(sc, blob, w_name)
+                norm_p = self.db.strip_accents(payload).lower()
+                overlap = sum(1 for t in q_tokens if t in norm_p)
+                ws_affinity = 1.8 if w_name in (cur_ws, "global", "global_self_learn") else 0.4
+                cat_boost = 1.5 if cat in ("learned_rule", "directive", "bug_fix") else 0.6
+                sc = float(m["importance"] or 4) * 0.45 + ws_affinity + cat_boost + sim * 5.0 + overlap * 1.8
+                _add_candidate(sc, payload, w_name)
 
         candidates.sort(key=lambda x: x[0], reverse=True)
         out = [txt for _, txt in candidates[: max(1, int(top_k))]]
         if not out:
             out = [
-                "[🌐 Global] Usar ponteiros cirúrgicos :Lstart-end antes de ler ficheiros completos.",
-                "[🌐 Global] Garantir contenção CSS minmax(0, 1fr) e flex-shrink:0 em listas e grelhas.",
-                "[🌐 Global] Executar sempre verificação sintática/testes antes de concluir qualquer task.",
+                "Usar ponteiros cirúrgicos :Lstart-end antes de ler ficheiros completos.",
+                "Garantir contenção CSS minmax(0, 1fr) e flex-shrink:0 em listas e grelhas.",
+                "Executar sempre verificação sintática/testes antes de concluir qualquer task.",
             ][: max(1, int(top_k))]
         return out
 

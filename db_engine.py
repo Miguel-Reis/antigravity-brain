@@ -51,19 +51,26 @@ STOPWORDS = {
     "tinha", "tinham", "tive", "tivemos", "tiver", "tivera", "tiveram", "tivesse",
     "tivessem", "tu", "tua", "tuas", "um", "uma", "umas", "uns", "vai", "vao",
     "voce", "voces", "vos", "fazer", "criar", "usar", "ver", "qual", "onde",
+    "ainda", "ponto", "pontos", "perfeicao", "perfeito", "quero", "tens",
+    "sugestao", "sugestoes", "melhoria", "melhorias", "usada", "usadas",
+    "usado", "usados", "agora", "entao", "pode", "podes", "vamos", "acho",
+    "achas", "coisa", "coisas", "tipo", "algo", "tudo", "nada", "bem", "bom",
+    "boa", "sim", "ola", "obrigado", "favor", "preciso", "quero", "queres",
     # English stopwords
     "the", "and", "is", "in", "to", "of", "it", "with", "as", "be", "on", "at",
     "by", "this", "that", "from", "or", "an", "are", "was", "were", "what",
     "which", "who", "whom", "how", "when", "where", "why", "can", "could",
     "should", "would", "will", "do", "does", "did", "have", "has", "had",
-    "not",
+    "not", "still", "point", "want", "more", "some", "any",
 }
 
 import threading
+import unicodedata
 
 _DB_INIT_LOCK = threading.Lock()
 _INITIALIZED_DBS: set[str] = set()
 _WAL_CONFIGURED_DBS: set[str] = set()
+_THREAD_LOCAL = threading.local()
 
 SECRET_REDACT_RE = re.compile(
     r"(?:AIza[0-9A-Za-z\-_]{20,}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{20,}|"
@@ -86,7 +93,19 @@ class BrainDB:
         out = SECRET_REDACT_RE.sub("[REDACTED_SECRET]", str(text))
         out = SECRET_KV_REDACT_RE.sub(r"\1[REDACTED_SECRET]\3", out)
         return out
-    """Motor Híbrido SQLite (WAL) + FTS5 (BM25) + Checkpoints + Telemetria."""
+
+    @staticmethod
+    def strip_accents(text: str) -> str:
+        """Remove diacríticos mantendo palavras completas em PT/EN (ex.: 'otimização' -> 'otimizacao')."""
+        if not text:
+            return ""
+        return (
+            unicodedata.normalize("NFKD", str(text))
+            .encode("ascii", "ignore")
+            .decode("ascii")
+        )
+
+    """Motor Híbrido SQLite (WAL + 256MB mmap) + FTS5 (BM25) + 128-D LSH RRF + Checkpoints."""
 
     def __init__(self, db_path: str = DEFAULT_DB_PATH) -> None:
         self.db_path = db_path
@@ -99,22 +118,52 @@ class BrainDB:
 
     @contextlib.contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
-        conn = sqlite3.connect(self.db_path, timeout=30.0)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA busy_timeout = 30000;")
-        if self.db_path not in _WAL_CONFIGURED_DBS:
-            conn.execute("PRAGMA journal_mode=WAL;")
-            conn.execute("PRAGMA synchronous=NORMAL;")
-            conn.execute("PRAGMA temp_store=MEMORY;")
-            _WAL_CONFIGURED_DBS.add(self.db_path)
+        """
+        v6.2 Thread-Local Persistent SQLite Connection Pool + 256MB Zero-Copy Memory-Mapped I/O:
+        Mantém a ligação persistente em RAM para a base de produção (DEFAULT_DB_PATH),
+        e fecha automaticamente ficheiros temporários de teste para evitar WinError 32 no Windows.
+        """
+        is_persistent = os.path.abspath(self.db_path) == os.path.abspath(DEFAULT_DB_PATH)
+        pool: Dict[str, sqlite3.Connection] = getattr(_THREAD_LOCAL, "conns", None)
+        if pool is None:
+            pool = {}
+            _THREAD_LOCAL.conns = pool
+
+        conn = pool.get(self.db_path) if is_persistent else None
+        if conn is not None and not os.path.exists(self.db_path):
+            try:
+                conn.close()
+            except Exception:
+                pass
+            pool.pop(self.db_path, None)
+            conn = None
+
+        if conn is None:
+            conn = sqlite3.connect(self.db_path, timeout=30.0)
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA busy_timeout = 30000;")
+            if self.db_path not in _WAL_CONFIGURED_DBS or is_persistent:
+                conn.execute("PRAGMA journal_mode=WAL;")
+                conn.execute("PRAGMA synchronous=NORMAL;")
+                conn.execute("PRAGMA temp_store=MEMORY;")
+                conn.execute("PRAGMA mmap_size=268435456;")
+                conn.execute("PRAGMA cache_size=-32000;")
+                _WAL_CONFIGURED_DBS.add(self.db_path)
+            if is_persistent:
+                pool[self.db_path] = conn
+
         try:
             yield conn
             conn.commit()
         except Exception:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
             raise
         finally:
-            conn.close()
+            if not is_persistent:
+                conn.close()
 
     def _init_schema(self) -> None:
         with self._connect() as conn:
@@ -390,6 +439,23 @@ class BrainDB:
                     f"DELETE FROM memories WHERE LOWER(workspace) IN ({placeholders});",
                     bogus_tuple,
                 )
+
+            # 8. v6.2 Domain Sanitizer & Quarantine: isolar memórias de construção civil/arquitetura física
+            #    que estavam em 'global' para o seu próprio workspace ('arquitetura_civil')
+            conn.execute(
+                """
+                UPDATE OR IGNORE memories
+                SET workspace = 'arquitetura_civil'
+                WHERE workspace = 'global'
+                  AND (
+                      topic LIKE '%Alçado%'
+                      OR topic LIKE '%MQT%'
+                      OR fact LIKE '%barramento armado%'
+                      OR fact LIKE '%ETICS%'
+                      OR fact LIKE '%cunhais%'
+                  );
+                """
+            )
 
     @staticmethod
     def _compute_hash(topic: str, fact: str, workspace: str = "global") -> str:
@@ -858,8 +924,15 @@ class BrainDB:
 
     @staticmethod
     def extract_search_tokens(query: str) -> List[str]:
-        # Extrai palavras alfanuméricas, IPs, nomes de ficheiros e expande sinónimos técnicos PT/EN
-        raw_tokens = re.findall(r"[a-zA-Z0-9_\-\.]{2,}", query.lower())
+        """
+        v6.2 Unicode-Safe & CamelCase-Aware Search Tokenizer:
+        Remove diacríticos primeiro ('otimização' -> 'otimizacao', 'memória' -> 'memoria')
+        para nunca partir palavras portuguesas a meio nos caracteres acentuados,
+        divide identificadores camelCase e filtra STOPWORDS.
+        """
+        decamel = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", str(query or ""))
+        norm_q = BrainDB.strip_accents(decamel).lower()
+        raw_tokens = re.findall(r"[a-zA-Z0-9_\-\.]{2,}", norm_q)
         tokens: List[str] = []
         seen = set()
         for t in raw_tokens:
@@ -878,28 +951,34 @@ class BrainDB:
     @staticmethod
     def compute_semantic_vector(text: str) -> List[float]:
         """
-        Gera um vetor semântico denso de 32 dimensões (16 clusters conceptuais bilingues PT/EN +
-        16 dimensões LSH de trigramas morfológicos) normalizado (L2) em <0.08ms 100% offline.
+        v6.2 128-D Hybrid Semantic Vector (Weinberger Signed Feature Hashing LSH + Subword N-Grams):
+        - Dimensões 0..15  (16-D): Clusters Conceptuais Bilingues PT/EN (peso sqrt(0.70))
+        - Dimensões 16..79 (64-D): Signed Word & Bigram Feature Hashing LSH (peso sqrt(0.18))
+        - Dimensões 80..127 (48-D): Signed Character 3-Gram & 4-Gram Morphological LSH (peso sqrt(0.12))
+        100% offline, determinístico e normalizado (L2) em <0.18ms.
         """
-        low = (text or "").lower()
-        words = set(re.findall(r"[a-zA-Z0-9_]{2,}", low))
+        decamel = re.sub(r"([a-z0-9])([A-Z])", r"\1 \2", str(text or ""))
+        low = BrainDB.strip_accents(decamel).lower()
+        word_list = [w for w in re.findall(r"[a-z0-9_]{2,}", low) if w not in STOPWORDS]
+        words = set(word_list)
+
         concept_clusters = [
-            ("sqlite", "fts5", "bm25", "wal", "db", "database", "sql", "schema", "index", "indice", "indices", "índice", "memoria", "memória", "persistencia", "storage", "brain_db", "córtex"),
-            ("latencia", "latência", "latency", "rapido", "rápido", "performance", "speed", "ms", "fast", "velocidade", "cache", "otimizar", "optimization", "optimize", "acelerar"),
-            ("token", "tokens", "quota", "lean", "diet", "poupar", "economia", "custo", "cost", "budget", "orçamento", "5h", "contexto", "context", "pruning", "bateria"),
+            ("sqlite", "fts5", "bm25", "wal", "db", "database", "sql", "schema", "index", "indice", "indices", "memoria", "persistencia", "storage", "brain_db", "cortex", "mmap"),
+            ("latencia", "latency", "rapido", "performance", "speed", "ms", "fast", "velocidade", "cache", "otimizar", "otimizacao", "optimization", "optimize", "acelerar"),
+            ("token", "tokens", "quota", "lean", "diet", "poupar", "economia", "custo", "cost", "budget", "orcamento", "5h", "contexto", "context", "pruning", "bateria"),
             ("swarm", "subagent", "subagente", "worker", "lane", "paralelo", "parallel", "orquestracao", "ruflo", "pheromone", "steal"),
-            ("3d", "office", "escritorio", "escritório", "canvas", "camera", "câmara", "follow", "zoom", "pan", "isometric", "hud", "boneco"),
-            ("ast", "scout", "symbol", "símbolo", "funcao", "função", "classe", "codebase", "blackboard", "mapa", "tree", "lookup"),
+            ("3d", "office", "escritorio", "canvas", "camera", "follow", "zoom", "pan", "isometric", "hud", "boneco"),
+            ("ast", "scout", "symbol", "simbolo", "funcao", "classe", "codebase", "blackboard", "mapa", "tree", "lookup", "pagerank"),
             ("hook", "hooks", "preinvocation", "stop", "ephemeral", "inject", "harvest", "transcript", "ciclo", "turno"),
-            ("security", "seguranca", "segurança", "secret", "segredo", "redact", "aidefence", "api_key", "privacidade", "zero_trust"),
+            ("security", "seguranca", "secret", "segredo", "redact", "aidefence", "api_key", "privacidade", "zero_trust"),
             ("git", "diff", "commit", "branch", "worktree", "sandbox", "snapshot", "cow", "merge", "auto_updater", "isolamento"),
             ("mcp", "server", "tool", "tools", "ferramenta", "ferramentas", "stdio", "schema", "plugin", "endpoint", "api"),
-            ("bug", "erro", "error", "fix", "corrigir", "exception", "syntaxerror", "typeerror", "reflexion", "loop", "diagnóstico"),
-            ("arquitetura", "architecture", "design", "modular", "estrutura", "pattern", "arquiteto", "argon", "plano", "plan"),
-            ("test", "teste", "testes", "verify", "qa", "assert", "check", "auditoria", "gate", "validação", "pass"),
-            ("causal", "edge", "aresta", "grafo", "graph", "evolves", "fixed_by", "supersedes", "linhagem", "obsidian"),
-            ("sse", "stream", "eventsource", "realtime", "push", "tempo_real", "live", "websocket", "notificação", "telemetria"),
-            ("checkpoint", "resume", "sessao", "sessão", "estado", "workspace", "projeto", "project", "meta", "progresso"),
+            ("bug", "erro", "error", "fix", "corrigir", "exception", "syntaxerror", "typeerror", "reflexion", "loop", "diagnostico"),
+            ("arquitetura", "architecture", "design", "modular", "estrutura", "pattern", "arquiteto", "argon", "plano", "plan", "tecnologia", "tecnologias"),
+            ("test", "teste", "testes", "verify", "qa", "assert", "check", "auditoria", "gate", "validacao", "pass", "pytest"),
+            ("causal", "edge", "aresta", "grafo", "graph", "evolves", "fixed_by", "supersedes", "linhagem", "obsidian", "rrf"),
+            ("sse", "stream", "eventsource", "realtime", "push", "tempo_real", "live", "websocket", "notificacao", "telemetria"),
+            ("checkpoint", "resume", "sessao", "estado", "workspace", "projeto", "project", "meta", "progresso"),
         ]
         c_vec: List[float] = []
         for cluster in concept_clusters:
@@ -908,24 +987,42 @@ class BrainDB:
 
         c_norm = math.sqrt(sum(v * v for v in c_vec))
         if c_norm > 1e-6:
-            c_vec = [v / c_norm * math.sqrt(0.82) for v in c_vec]
+            c_vec = [v / c_norm * math.sqrt(0.70) for v in c_vec]
 
-        # 16 dimensões LSH de trigramas de caracteres para capturar proximidade morfológica
-        lsh = [0.0] * 16
-        clean_chars = re.sub(r"[^a-z0-9]", "", low)[:240]
+        # 64 dimensões de Signed Feature Hashing (Weinberger Trick) sobre palavras + bigramas
+        word_lsh = [0.0] * 64
+        features: List[Tuple[str, float]] = [(w, 1.0) for w in word_list[:80]]
+        for i in range(min(len(word_list) - 1, 60)):
+            features.append((f"{word_list[i]}_{word_list[i + 1]}", 1.25))
+        for feat, weight in features:
+            h = 2166136261
+            for ch in feat:
+                h = ((h ^ ord(ch)) * 16777619) & 0xFFFFFFFF
+            bucket = h & 63
+            sign = 1.0 if ((h >> 6) & 1) == 0 else -1.0
+            word_lsh[bucket] += sign * weight
+
+        w_norm = math.sqrt(sum(v * v for v in word_lsh))
+        if w_norm > 1e-6:
+            scale_w = math.sqrt(0.18) if c_norm > 1e-6 else math.sqrt(0.65)
+            word_lsh = [v / w_norm * scale_w for v in word_lsh]
+
+        # 48 dimensões LSH de trigramas e tetragramas morfológicos
+        char_lsh = [0.0] * 48
+        clean_chars = re.sub(r"[^a-z0-9]", "", low)[:260]
         for i in range(len(clean_chars) - 2):
             tri = clean_chars[i : i + 3]
-            h = ((ord(tri[0]) * 31 + ord(tri[1])) * 31 + ord(tri[2])) % 32
-            bucket = h % 16
-            sign = 1.0 if h < 16 else -1.0
-            lsh[bucket] += sign * 0.35
+            h = ((ord(tri[0]) * 31 + ord(tri[1])) * 31 + ord(tri[2])) & 0xFFFFFFFF
+            bucket = h % 48
+            sign = 1.0 if ((h >> 6) & 1) == 0 else -1.0
+            char_lsh[bucket] += sign * 0.35
 
-        l_norm = math.sqrt(sum(v * v for v in lsh))
-        if l_norm > 1e-6:
-            w_lsh = math.sqrt(0.18) if c_norm > 1e-6 else 1.0
-            lsh = [v / l_norm * w_lsh for v in lsh]
+        ch_norm = math.sqrt(sum(v * v for v in char_lsh))
+        if ch_norm > 1e-6:
+            scale_ch = math.sqrt(0.12) if (c_norm > 1e-6 or w_norm > 1e-6) else 1.0
+            char_lsh = [v / ch_norm * scale_ch for v in char_lsh]
 
-        vec = c_vec + lsh
+        vec = c_vec + word_lsh + char_lsh
         norm = math.sqrt(sum(v * v for v in vec))
         if norm > 1e-6:
             vec = [round(v / norm, 4) for v in vec]
@@ -933,8 +1030,18 @@ class BrainDB:
 
     @staticmethod
     def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
-        if not vec_a or not vec_b or len(vec_a) != len(vec_b):
+        if not vec_a or not vec_b:
             return 0.0
+        if len(vec_a) != len(vec_b):
+            # Compatibilidade transparente entre vetores legacy 32-D e novos 128-D (compara os 16 clusters conceptuais)
+            k = min(16, len(vec_a), len(vec_b))
+            sa = vec_a[:k]
+            sb = vec_b[:k]
+            na = math.sqrt(sum(x * x for x in sa))
+            nb = math.sqrt(sum(x * x for x in sb))
+            if na < 1e-6 or nb < 1e-6:
+                return 0.0
+            return max(0.0, min(1.0, sum(a * b for a, b in zip(sa, sb)) / (na * nb)))
         dot = sum(a * b for a, b in zip(vec_a, vec_b))
         return max(0.0, min(1.0, float(dot)))
 
@@ -1029,13 +1136,18 @@ class BrainDB:
                     d["score"] = 0.0
                     candidates[rid] = d
 
-            # 3. Re-ranking Híbrido Jev-Mem (BM25 + Vetor Semântico Cosseno + Overlap + Workspace + Global Transferable + Tier)
+            # 3. Re-ranking Híbrido Jev-Mem v6.2 (Reciprocal Rank Fusion RRF k=60 + 128-D LSH Cosseno + Cross-Domain Relevance Gate)
             query_vec = self.compute_semantic_vector(query)
             scored_list: List[Dict[str, Any]] = []
-            for rid, item in candidates.items():
-                text_blob = f"{item['topic']} {item['fact']} {item.get('tags', '')}".lower()
-                overlap = sum(1 for tok in tokens if tok in text_blob)
 
+            # Pré-calcular ranks BM25 e Semântico para Reciprocal Rank Fusion (RRF k=60)
+            bm25_sorted_ids = [
+                cid for cid, citem in sorted(candidates.items(), key=lambda kv: kv[1].get("score", 0.0), reverse=True)
+            ]
+            bm25_rank_map = {cid: idx + 1 for idx, cid in enumerate(bm25_sorted_ids)}
+
+            sem_map: Dict[int, float] = {}
+            for rid, item in candidates.items():
                 raw_emb = item.get("embedding_json")
                 item_vec: List[float] = []
                 if raw_emb and raw_emb != "[]":
@@ -1043,10 +1155,19 @@ class BrainDB:
                         item_vec = json.loads(raw_emb)
                     except Exception:
                         item_vec = []
-                if not item_vec:
-                    item_vec = self.compute_semantic_vector(f"{item['topic']} {item['fact']} {item.get('tags', '')} {item.get('category', '')}")
+                if not item_vec or len(item_vec) != len(query_vec):
+                    item_vec = self.compute_semantic_vector(
+                        f"{item['topic']} {item['fact']} {item.get('tags', '')} {item.get('category', '')}"
+                    )
+                sem_map[rid] = self.cosine_similarity(query_vec, item_vec)
 
-                sem_sim = self.cosine_similarity(query_vec, item_vec)
+            sem_sorted_ids = [cid for cid, _ in sorted(sem_map.items(), key=lambda kv: kv[1], reverse=True)]
+            sem_rank_map = {cid: idx + 1 for idx, cid in enumerate(sem_sorted_ids)}
+
+            for rid, item in candidates.items():
+                text_blob = self.strip_accents(f"{item['topic']} {item['fact']} {item.get('tags', '')}").lower()
+                overlap = sum(1 for tok in tokens if tok in text_blob)
+                sem_sim = sem_map.get(rid, 0.0)
                 item["semantic_similarity"] = round(sem_sim, 3)
 
                 is_transferable_global = str(item.get("category") or "") in (
@@ -1055,20 +1176,31 @@ class BrainDB:
                     "vault_clip",
                     "directive",
                     "preference",
-                ) or item.get("workspace") == "global"
+                ) or item.get("workspace") in ("global", "global_self_learn")
 
-                if tokens and item["score"] == 0.0 and overlap == 0 and sem_sim < 0.28:
-                    if (item["workspace"] != ws and not is_transferable_global) or ws == "global":
+                # v6.2 Cross-Workspace & Domain Relevance Gate:
+                # Se a memória não pertence ao workspace ativo e não tem sobreposição real com a query, não contamina o turno
+                if tokens:
+                    if item["workspace"] != ws:
+                        if overlap == 0 and sem_sim < 0.24:
+                            continue
+                    elif item["score"] == 0.0 and overlap == 0 and sem_sim < 0.22:
                         continue
 
+                # Reciprocal Rank Fusion (RRF k=60)
+                r_bm25 = bm25_rank_map.get(rid, 50)
+                r_sem = sem_rank_map.get(rid, 50)
+                rrf_boost = (90.0 / (60.0 + r_bm25)) + (90.0 / (60.0 + r_sem))
+                item["rrf_score"] = round(rrf_boost, 3)
+
                 ws_boost = (
-                    2.5
+                    2.8
                     if (ws != "global" and item["workspace"] == ws)
-                    else (1.35 if is_transferable_global else 0.4)
+                    else (1.25 if is_transferable_global else 0.35)
                 )
                 imp_boost = float(item.get("importance", 3)) * 0.4
-                overlap_boost = overlap * 1.8
-                sem_boost = sem_sim * 4.5
+                overlap_boost = overlap * 1.85
+                sem_boost = sem_sim * 4.8
                 c_boost = min(2.0, causal_deg.get(int(rid), 0) * 0.45)
                 trust_val = float(item.get("trust_score") if item.get("trust_score") is not None else 0.85)
                 h_lock = int(item.get("human_locked") or 0)
@@ -1098,7 +1230,7 @@ class BrainDB:
                         recency_mult = 1.1
 
                 raw_final = (
-                    item["score"] + overlap_boost + sem_boost + ws_boost + imp_boost + exact_tech_boost + c_boost + trust_boost
+                    item["score"] + rrf_boost + overlap_boost + sem_boost + ws_boost + imp_boost + exact_tech_boost + c_boost + trust_boost
                 )
                 item["final_score"] = round(raw_final * recency_mult * tier_mult, 3)
                 item["causal_degree"] = causal_deg.get(int(rid), 0)

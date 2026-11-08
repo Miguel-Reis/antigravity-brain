@@ -577,7 +577,8 @@ class GraphifyEngine:
                     if nid in nodes:
                         inspect_callable(node, nid)
 
-        # PASSO 4: Calcular Graus, Centralidade, God Nodes e Comunidades Topológicas
+        # PASSO 4: Calcular Graus, PageRank (d=0.85, 20 iterações), Centralidade, God Nodes e Comunidades Topológicas
+        in_neighbors: Dict[str, List[str]] = {nid: [] for nid in nodes}
         for e in edges:
             s_node = nodes[e["source"]]
             t_node = nodes[e["target"]]
@@ -585,10 +586,24 @@ class GraphifyEngine:
             t_node["in_degree"] += 1
             s_node["degree"] += 1
             t_node["degree"] += 1
+            in_neighbors[e["target"]].append(e["source"])
             if t_node.get("file"):
                 s_node["files_connected"].add(t_node["file"])
             if s_node.get("file"):
                 t_node["files_connected"].add(s_node["file"])
+
+        # v6.2 Power-Iteration PageRank (d=0.85, 20 iterações)
+        n_total = max(1, len(nodes))
+        damping = 0.85
+        pr_map: Dict[str, float] = {nid: 1.0 / n_total for nid in nodes}
+        for _ in range(20):
+            sink_sum = sum(pr_map[nid] for nid, nd in nodes.items() if nd["out_degree"] == 0)
+            base_pr = (1.0 - damping + damping * sink_sum) / n_total
+            next_pr: Dict[str, float] = {}
+            for nid in nodes:
+                inc = sum(pr_map[src] / max(1, nodes[src]["out_degree"]) for src in in_neighbors[nid])
+                next_pr[nid] = base_pr + damping * inc
+            pr_map = next_pr
 
         # Atribuição determinística de Comunidades Arquitetónicas + Propagação Topológica
         communities_meta: Dict[str, Dict[str, Any]] = {
@@ -658,9 +673,10 @@ class GraphifyEngine:
         serializable_nodes: List[Dict[str, Any]] = []
         for nid, n in nodes.items():
             cross_reach = len(n["files_connected"])
-            # Pontuação de Centralidade Graphify (pondera grau total + alcance entre ficheiros + importância semântica)
+            pr_scaled = round(pr_map.get(nid, 0.0) * 1000.0, 4)
+            # Pontuação de Centralidade Graphify v6.2 (pondera grau total + alcance entre ficheiros + PageRank + importância semântica)
             type_bonus = 1.35 if n["node_type"] in ("CLASS", "SQL_TABLE", "API_ROUTE", "MCP_TOOL") else 1.0
-            centrality = round((n["degree"] * 1.4 + cross_reach * 3.2) * type_bonus, 2)
+            centrality = round((n["degree"] * 1.4 + cross_reach * 3.2 + pr_scaled * 1.8) * type_bonus, 2)
             comm_id = classify_community(n)
             comm = communities_meta[comm_id]
             comm["nodes_count"] += 1
@@ -677,6 +693,7 @@ class GraphifyEngine:
                 "out_degree": n["out_degree"],
                 "degree": n["degree"],
                 "cross_file_reach": cross_reach,
+                "pagerank": pr_scaled,
                 "centrality_score": centrality,
                 "community_id": comm_id,
                 "community_name": comm["name"],

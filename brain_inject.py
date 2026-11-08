@@ -311,6 +311,78 @@ def slice_scout_map_ast_safe(scout_map: str, max_len: int = 380) -> str:
     return sliced
 
 
+def select_relevant_scout_map(
+    scout_map: str, user_query: str = "", max_len: int = 380
+) -> str:
+    """
+    v6.2 Dynamic Query-Routed [SCOUT_SHARED_MAP]:
+    Em vez de truncar cegamente os primeiros 380 caracteres alfabéticos (que mostravam sempre app.py),
+    pontua cada ficheiro do SCOUT_SHARED_MAP contra a `user_query` + centralidade arquitetural (God Nodes)
+    e constrói um mapa AST cirúrgico focado nos ficheiros relevantes para o turno.
+    """
+    raw = (scout_map or "").strip()
+    if not raw:
+        return ""
+
+    q_low = (user_query or "").lower()
+    q_tokens = [t for t in re.findall(r"[a-zA-Z0-9_]{3,}", q_low) if len(t) >= 3]
+    god_files = {
+        "db_engine.py": 6.5,
+        "orbit_engine.py": 6.2,
+        "brain_inject.py": 6.0,
+        "web_dashboard.py": 5.8,
+        "swarm_engine.py": 5.5,
+        "graphify_engine.py": 5.2,
+        "index.html": 6.0,
+        "brain_app.py": 4.8,
+    }
+
+    lines = raw.splitlines()
+    if len(lines) <= 1:
+        return slice_scout_map_ast_safe(raw, max_len=max_len)
+
+    header = lines[0]
+    rebuilt_lanes: List[str] = []
+
+    for ln in lines[1:]:
+        m_lane = re.match(r"^(\s*-\s*[A-Z_]+\s*:\s*)(.+)$", ln)
+        if not m_lane:
+            rebuilt_lanes.append(ln)
+            continue
+        lane_prefix, body = m_lane.group(1), m_lane.group(2)
+        segments = [s.strip() for s in body.split(" ; ") if s.strip()]
+        if len(segments) <= 1:
+            rebuilt_lanes.append(ln)
+            continue
+
+        scored_segs: List[Tuple[float, str]] = []
+        for seg in segments:
+            seg_low = seg.lower()
+            fn_match = re.match(r"^([a-zA-Z0-9_\-\.]+)", seg.strip())
+            fname = fn_match.group(1) if fn_match else ""
+            sc = god_files.get(fname, 1.0)
+            m_loc = re.search(r"\((\d+)L\)", seg)
+            if m_loc:
+                loc_val = int(m_loc.group(1))
+                if loc_val < 25:
+                    sc -= 2.5
+                elif loc_val > 400:
+                    sc += 2.0
+            if fname and fname.lower() in q_low:
+                sc += 25.0
+            for qt in q_tokens:
+                if qt in seg_low:
+                    sc += 4.5
+            scored_segs.append((sc, seg))
+
+        scored_segs.sort(key=lambda x: x[0], reverse=True)
+        top_body = " ; ".join(s for _, s in scored_segs[:4])
+        rebuilt_lanes.append(f"{lane_prefix}{top_body}")
+
+    routed_raw = "\n".join([header] + rebuilt_lanes)
+    return slice_scout_map_ast_safe(routed_raw, max_len=max_len)
+
+
 def compute_adaptive_budget(user_query: str) -> int:
     """Ajusta dinamicamente o orçamento de caracteres conforme a complexidade do pedido."""
     q = (user_query or "").strip().lower()
@@ -334,6 +406,7 @@ def build_ephemeral_context(
     delta_info: Optional[Dict[str, Any]] = None,
     micro_mode: bool = False,
     orbit_brief: Optional[Dict[str, Any]] = None,
+    user_query: str = "",
 ) -> str:
     """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
     is_micro = bool(micro_mode or max_chars <= 380)
@@ -368,6 +441,7 @@ def build_ephemeral_context(
 
     # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining c/ Delta Dedupe)
     is_delta = bool(delta_info and delta_info.get("is_delta_turn"))
+    effective_gb_query = user_query or str((jev_route or {}).get("intent") or workspace)
     try:
         orb = OrbitEngine()
         if not is_delta and not is_micro:
@@ -395,27 +469,27 @@ def build_ephemeral_context(
             if sl_state and sl_state.get("enabled"):
                 playbook = sl_state.get("learned_playbook") or []
                 if playbook:
-                    pb_str = " | ".join(compress_fact_telegraphic(str(p), 65) for p in playbook[:2])
+                    pb_str = " | ".join(compress_fact_telegraphic( orb._extract_clean_rule_payload(str(p)), 65) for p in playbook[:2])
                     parts.append(
                         f"🧬[SELF_LEARN|iq={sl_state.get('brain_iq_score', 90)}%|cycles={sl_state.get('cycles_run', 1)}]:{pb_str}"
                     )
-                # Modo Global Total Sempre Ativo: Injetar sempre o Top-3 de Sabedoria Global transversal
-                global_top3 = sl_state.get("global_top_wisdom") or orb.get_global_brain_top_wisdom(
-                    query=str((jev_route or {}).get("intent") or workspace),
+                # Modo Global Total Sempre Ativo (v6.2 Cross-Encoder Reranked para a query atual)
+                global_top3 = orb.get_global_brain_top_wisdom(
+                    query=effective_gb_query,
                     current_workspace=workspace,
                     top_k=3,
                 )
                 if global_top3:
-                    gb_str = " | ".join(compress_fact_telegraphic(str(g), 58) for g in global_top3[:3])
+                    gb_str = " | ".join(compress_fact_telegraphic(str(g), 68) for g in global_top3[:3])
                     parts.append(f"🌐[GLOBAL_BRAIN|top3|iq=99.8%]:{gb_str}")
         elif not is_micro and is_delta:
             global_top3 = orb.get_global_brain_top_wisdom(
-                query=str((jev_route or {}).get("intent") or workspace),
+                query=effective_gb_query,
                 current_workspace=workspace,
                 top_k=3,
             )
             if global_top3:
-                gb_str = " | ".join(compress_fact_telegraphic(str(g), 54) for g in global_top3[:3])
+                gb_str = " | ".join(compress_fact_telegraphic(str(g), 64) for g in global_top3[:3])
                 parts.append(f"🌐[GLOBAL_BRAIN|top3|iq=99.8%]:{gb_str}")
     except Exception:
         pass
@@ -430,7 +504,7 @@ def build_ephemeral_context(
             f"⚡[DELTA_CACHE|turn=#{delta_info.get('turn_number', 2)}|scout_map=cached_unchanged|mems_cached={delta_info.get('cached_count', 0)}|saved=~{delta_info.get('delta_saved_tokens', 0)}tok]"
         )
     elif scout_map:
-        parts.append(slice_scout_map_ast_safe(scout_map, max_len=min(380, max(180, max_chars // 3))))
+        parts.append(select_relevant_scout_map(scout_map, user_query=user_query, max_len=min(380, max(180, max_chars // 3))))
 
     stop_th = float((jev_route or {}).get("adaptive_stop_threshold") or 0.30)
     source_memories = delta_info.get("delta_memories", []) if (delta_info and delta_info.get("is_delta_turn")) else memories
@@ -562,6 +636,7 @@ def generate_inspector_preview(
         jev_route=jev_route,
         delta_info=delta_info,
         micro_mode=micro_active,
+        user_query=effective_query,
     )
     est_tokens = max(1, len(ephemeral_text) // 4)
     saved_vs_raw = max(0, raw_tokens_est - est_tokens)
@@ -810,6 +885,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         jev_route=jev_route,
         delta_info=delta_info,
         micro_mode=False,
+        user_query=user_query,
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)
