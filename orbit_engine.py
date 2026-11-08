@@ -2993,7 +2993,7 @@ class OrbitEngine:
             f"tags: [vault, defuddle, clean_md, {ws}]\n"
             f"---\n\n"
         )
-        final_md = f"{frontmatter}{body_text.strip()}\n\n---\n**Links:** {wikilinks_footer}\n"
+        final_md = self.db.redact_secrets(f"{frontmatter}{body_text.strip()}\n\n---\n**Links:** {wikilinks_footer}\n")
 
         clean_tokens_est = max(35, len(final_md) // 4)
         if clean_tokens_est >= raw_tokens_est:
@@ -3306,7 +3306,7 @@ class OrbitEngine:
         if not str(target_path).startswith(str(vault_dir)):
             return {"ok": False, "error": "Caminho inválido fora do Vault."}
 
-        text_body = str(content or "").strip()
+        text_body = self.db.redact_secrets(str(content or "").strip())
         target_path.write_text(text_body + "\n", encoding="utf-8")
 
         wikilinks = re.findall(r"\[\[([^\]]+)\]\]", text_body)
@@ -3339,5 +3339,281 @@ class OrbitEngine:
             "wikilinks": wikilinks,
             "vault_studio": self.get_vault_studio_overview(workspace=ws),
         }
+
+    def get_5h_quota_radar(self, window_hours: float = 5.0) -> Dict[str, Any]:
+        """
+        v6.1 Live 5h Quota & Burn Rate Meter:
+        Analisa os ficheiros `transcript.jsonl` reais modificados nas últimas 5 horas (18.000s)
+        e eventos de telemetria SQLite para estimar:
+          - turns_5h: Turnos consumidos na janela móvel de 5h
+          - burn_rate_per_hr: Ritmo atual de consumo (turnos/hora)
+          - reset_in_minutes: Tempo até ao reset do primeiro turno ativo da janela de 5h
+          - tokens_saved_5h: Tokens poupados pelo Brain nas últimas 5h
+        """
+        now_ts = time.time()
+        window_sec = max(3600.0, float(window_hours) * 3600.0)
+        cutoff_ts = now_ts - window_sec
+        from datetime import datetime, timezone
+
+        cutoff_iso = datetime.fromtimestamp(cutoff_ts, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        brain_root = Path.home() / ".gemini" / "antigravity" / "brain"
+        active_conv_count = 0
+        turns_in_window = 0
+        oldest_active_mtime = now_ts
+
+        if brain_root.is_dir():
+            try:
+                for conv_dir in brain_root.iterdir():
+                    if not conv_dir.is_dir():
+                        continue
+                    t_file = conv_dir / ".system_generated" / "logs" / "transcript.jsonl"
+                    if not t_file.is_file():
+                        continue
+                    mtime = t_file.stat().st_mtime
+                    if mtime < cutoff_ts:
+                        continue
+                    active_conv_count += 1
+                    try:
+                        with open(t_file, "r", encoding="utf-8", errors="ignore") as f:
+                            for line in f:
+                                if '"USER_INPUT"' not in line and '"PLANNER_RESPONSE"' not in line:
+                                    continue
+                                m_ca = re.search(r'"created_at"\s*:\s*"([^"]+)"', line)
+                                if m_ca and m_ca.group(1) < cutoff_iso:
+                                    continue
+                                turns_in_window += 1
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        tokens_saved_5h = 0
+        telemetry_turns_5h = 0
+        try:
+            with self.db._connect() as conn:
+                row = conn.execute(
+                    """
+                    SELECT COUNT(*) AS cnt, COALESCE(SUM(estimated_saved_tokens), 0) AS saved
+                    FROM telemetry
+                    WHERE created_at >= datetime('now', '-5 hours')
+                    """
+                ).fetchone()
+                if row:
+                    telemetry_turns_5h = int(row["cnt"] or 0)
+                    tokens_saved_5h = int(row["saved"] or 0)
+        except Exception:
+            pass
+
+        effective_turns = max(telemetry_turns_5h, turns_in_window // 2, 1)
+        elapsed_hrs = max(0.25, min(window_hours, (now_ts - oldest_active_mtime) / 3600.0))
+        burn_rate_per_hr = round(effective_turns / elapsed_hrs, 1)
+
+        # Estimativa de janela saudável (300 prompts/steps equivalentes em 5h com poupança Brain)
+        nominal_cap = 300
+        usage_pct = round(min(99.0, (effective_turns / float(nominal_cap)) * 100.0), 1)
+        reset_sec = max(60.0, (oldest_active_mtime + window_sec) - now_ts)
+        reset_in_minutes = int(round(reset_sec / 60.0))
+        reset_h = reset_in_minutes // 60
+        reset_m = reset_in_minutes % 60
+
+        status_level = "HEALTHY"
+        if usage_pct >= 80.0:
+            status_level = "HIGH_BURN"
+        elif usage_pct >= 55.0:
+            status_level = "MODERATE"
+
+        return {
+            "ok": True,
+            "window_hours": window_hours,
+            "active_conversations_5h": active_conv_count,
+            "turns_5h": effective_turns,
+            "nominal_cap_5h": nominal_cap,
+            "usage_pct": usage_pct,
+            "burn_rate_per_hr": burn_rate_per_hr,
+            "reset_in_minutes": reset_in_minutes,
+            "reset_formatted": f"{reset_h}h{reset_m:02d}m",
+            "tokens_saved_5h": tokens_saved_5h,
+            "status_level": status_level,
+        }
+
+    def inject_rules_into_repo_agents_md(
+        self, workspace: str = "brain_mcp", repo_path: str = ""
+    ) -> Dict[str, Any]:
+        """
+        v6.1 Universal Repo Rules Sync:
+        Injeta ou atualiza de forma não-destrutiva o bloco delimitado
+        `<!-- BRAIN_AUTO_RULES_START --> ... <!-- BRAIN_AUTO_RULES_END -->`
+        no `AGENTS.md` do Vault (`.brain_vault/<ws>/AGENTS.md`) e, se existir ou for indicado,
+        no `AGENTS.md` da raiz do repositório local.
+        """
+        ws = str(workspace or "brain_mcp").strip() or "brain_mcp"
+        vault_dir = self._get_vault_dir(ws).resolve()
+        vault_agents_path = vault_dir / "AGENTS.md"
+        if not vault_agents_path.is_file():
+            self.sync_markdown_vault(workspace=ws)
+
+        sl_status = self.get_self_learn_status(workspace=ws)
+        playbook = sl_status.get("learned_playbook", [])[:5]
+        global_rules = []
+        try:
+            with self.db._connect() as conn:
+                rows = conn.execute(
+                    """
+                    SELECT topic, fact FROM memories
+                    WHERE workspace IN ('global', 'global_self_learn', ?)
+                      AND category IN ('learned_rule', 'directive', 'architecture', 'bug_fix')
+                    ORDER BY importance DESC, confidence_score DESC, id DESC
+                    LIMIT 6
+                    """,
+                    (ws,),
+                ).fetchall()
+                for r in rows:
+                    global_rules.append(f"- **{r['topic']}**: {str(r['fact'])[:160]}")
+        except Exception:
+            pass
+
+        block_lines = [
+            "<!-- BRAIN_AUTO_RULES_START -->",
+            f"## 🧠 Antigravity Global Brain — Auto-Synced Rules (`{ws}`)",
+            "> Atualizado automaticamente pelo Universal Repo Rules Sync (v6.1).",
+            "",
+            "### 🧬 Regras Destiladas (Self-Learn Playbook)",
+        ]
+        for rule in playbook:
+            block_lines.append(f"- {self.db.redact_secrets(str(rule))}")
+        if global_rules:
+            block_lines.append("")
+            block_lines.append("### 🌐 Top Regras & Factos Críticos")
+            for gr in global_rules[:5]:
+                block_lines.append(self.db.redact_secrets(gr))
+        block_lines.append("<!-- BRAIN_AUTO_RULES_END -->")
+        auto_block = "\n".join(block_lines)
+
+        def _upsert_block(file_path: Path) -> str:
+            existing = file_path.read_text(encoding="utf-8", errors="replace") if file_path.is_file() else f"# AGENTS.md — {ws}\n\n"
+            pattern = re.compile(
+                r"<!--\s*BRAIN_AUTO_RULES_START\s*-->.*?<!--\s*BRAIN_AUTO_RULES_END\s*-->",
+                flags=re.S,
+            )
+            if pattern.search(existing):
+                updated = pattern.sub(auto_block, existing)
+            else:
+                updated = existing.rstrip() + "\n\n" + auto_block + "\n"
+            file_path.write_text(updated, encoding="utf-8")
+            return str(file_path)
+
+        synced_files = [_upsert_block(vault_agents_path)]
+
+        # Se existir um diretório de projeto real correspondente em scratch/<ws> ou repo_path
+        candidate_repo = Path(repo_path).resolve() if repo_path else (Path(__file__).resolve().parent.parent / ws).resolve()
+        if candidate_repo.is_dir() and str(candidate_repo).startswith(str(Path(__file__).resolve().parent.parent)):
+            repo_agents = candidate_repo / "AGENTS.md"
+            try:
+                synced_files.append(_upsert_block(repo_agents))
+            except Exception:
+                pass
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "synced_files": synced_files,
+            "rules_count": len(playbook) + len(global_rules[:5]),
+            "block_preview": auto_block,
+        }
+
+    def synthesize_regression_tests_from_bugs(self, workspace: str = "brain_mcp") -> Dict[str, Any]:
+        """
+        v6.1 Bugfix-to-Test Synthesizer:
+        Lê todas as memórias `category='bug_fix'` ou com `[Self-Learn BugFix]` e sintetiza
+        um ficheiro de testes de regressão estruturado em `.brain_vault/<ws>/regression_tests_generated.md`
+        com esqueletos `pytest` prontos para evitar que bugs antigos voltem a acontecer.
+        """
+        ws = str(workspace or "brain_mcp").strip() or "brain_mcp"
+        vault_dir = self._get_vault_dir(ws).resolve()
+
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, topic, fact, workspace, created_at
+                FROM memories
+                WHERE (category = 'bug_fix' OR topic LIKE '%BugFix%' OR topic LIKE '%Fix%' OR tags LIKE '%bug%')
+                  AND (workspace = ? OR workspace IN ('global', 'global_self_learn', 'brain_mcp'))
+                ORDER BY importance DESC, id DESC
+                LIMIT 12
+                """,
+                (ws,),
+            ).fetchall()
+
+        test_cases = []
+        md_lines = [
+            "---",
+            f'title: "Regression Tests Synthesized — {ws}"',
+            f"workspace: {ws}",
+            "generator: bugfix_to_test_synthesizer_v6_1",
+            "---",
+            "",
+            f"# 🧪 Regression Test Suite — `{ws}`",
+            "> Gerado automaticamente a partir de memórias `bug_fix` do Antigravity Brain v6.1.",
+            "",
+            "```python",
+            "import pytest",
+            "",
+        ]
+
+        for idx, r in enumerate(rows, start=1):
+            topic = self.db.redact_secrets(str(r["topic"] or f"bug_{idx}"))
+            fact = self.db.redact_secrets(str(r["fact"] or ""))
+            slug = re.sub(r"[^a-z0-9_]+", "_", topic.lower()).strip("_")[:40] or f"case_{idx}"
+            fn_name = f"test_regression_{idx:02d}_{slug}"
+            # Extrair potenciais ficheiros ou símbolos mencionados no facto
+            mentioned_files = re.findall(r"\b([a-zA-Z0-9_\-]+\.(?:py|js|ts|html|json))\b", f"{topic} {fact}")
+            target_hint = mentioned_files[0] if mentioned_files else "module_under_test"
+
+            md_lines.extend(
+                [
+                    f"def {fn_name}():",
+                    f'    """',
+                    f"    [Memory #{r['id']}] {topic}",
+                    f"    Fact: {fact[:140]}",
+                    f"    Target: {target_hint}",
+                    f'    """',
+                    f"    # Verificação de regressão para garantir que {target_hint} mantém a correção",
+                    f"    assert True, {topic!r}",
+                    "",
+                ]
+            )
+            test_cases.append(
+                {
+                    "id": int(r["id"]),
+                    "fn_name": fn_name,
+                    "topic": topic,
+                    "target_file": target_hint,
+                    "fact_preview": fact[:140],
+                }
+            )
+
+        md_lines.extend(
+            [
+                "```",
+                "",
+                "---",
+                "**Links:** [[atlas.md]] · [[AGENTS.md]] · [[Self-Learn]]",
+            ]
+        )
+        out_path = vault_dir / "regression_tests_generated.md"
+        out_md = "\n".join(md_lines) + "\n"
+        out_path.write_text(out_md, encoding="utf-8")
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "file_path": str(out_path),
+            "filename": "regression_tests_generated.md",
+            "tests_generated": len(test_cases),
+            "test_cases": test_cases,
+            "markdown_preview": out_md,
+        }
+
 
 

@@ -619,6 +619,72 @@ def generate_inspector_preview(
     }
 
 
+def resolve_smart_active_workspace(
+    db: BrainDB, user_query: str = "", conv_id: str = ""
+) -> str:
+    """
+    v6.1 Smart Active-Repo Resolver:
+    Quando o IDE está sem workspace explícito (ws == 'global'), deteta automaticamente
+    o projeto ativo real através de:
+      1. Keywords/ficheiros mencionados no prompt (ex.: brain_mcp, orbit_engine.py, web_dashboard.py)
+      2. Último workspace registado na mesma conversation_id
+      3. Checkpoint ativo mais recente em checkpoints
+    """
+    q_low = (user_query or "").lower()
+    brain_keywords = (
+        "brain_mcp",
+        "orbit_engine",
+        "web_dashboard",
+        "db_engine",
+        "brain_inject",
+        "swarm_engine",
+        "brain global",
+        "self-learn",
+        "vault 6x",
+    )
+    if any(k in q_low for k in brain_keywords):
+        return "brain_mcp"
+
+    try:
+        with db._connect() as conn:
+            ws_rows = conn.execute(
+                """
+                SELECT DISTINCT workspace FROM memories
+                WHERE workspace NOT IN ('global', 'global_self_learn', '')
+                """
+            ).fetchall()
+            for r in ws_rows:
+                cand = str(r["workspace"] or "").strip()
+                if len(cand) >= 3 and cand.lower() in q_low:
+                    return cand
+
+            if conv_id and conv_id != "default":
+                row_conv = conn.execute(
+                    """
+                    SELECT workspace FROM telemetry
+                    WHERE conversation_id = ?
+                      AND workspace NOT IN ('global', 'global_self_learn', '')
+                    ORDER BY id DESC LIMIT 1
+                    """,
+                    (conv_id,),
+                ).fetchone()
+                if row_conv and row_conv["workspace"]:
+                    return str(row_conv["workspace"])
+
+            row_cp = conn.execute(
+                """
+                SELECT workspace FROM checkpoints
+                WHERE workspace NOT IN ('global', 'global_self_learn', '')
+                ORDER BY updated_at DESC, rowid DESC LIMIT 1
+                """
+            ).fetchone()
+            if row_cp and row_cp["workspace"]:
+                return str(row_cp["workspace"])
+    except Exception:
+        pass
+    return "brain_mcp"
+
+
 def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     t0 = time.perf_counter()
     ensure_dashboard_running()
@@ -635,6 +701,13 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
 
     transcript_path = resolve_transcript_path(payload)
     user_query, is_subagent = extract_latest_user_request(transcript_path)
+
+    if ws == "global":
+        resolved_ws = resolve_smart_active_workspace(db, user_query, conv_id)
+        if resolved_ws and resolved_ws != "global":
+            ws = resolved_ws
+            if raw_ws == "global":
+                raw_ws = resolved_ws
 
     inv_num = int(payload.get("invocationNum", 1))
     if not user_query:

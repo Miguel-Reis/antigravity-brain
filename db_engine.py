@@ -67,12 +67,25 @@ _WAL_CONFIGURED_DBS: set[str] = set()
 
 SECRET_REDACT_RE = re.compile(
     r"(?:AIza[0-9A-Za-z\-_]{20,}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{20,}|"
-    r"github_pat_[0-9A-Za-z_]{25,}|sk-ant-[0-9A-Za-z_\-]{20,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{20,}|"
-    r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{20,})"
+    r"github_pat_[0-9A-Za-z_]{25,}|sk-ant-[0-9A-Za-z_\-]{16,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{16,}|"
+    r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{20,}|"
+    r"Bearer\s+[0-9A-Za-z\-._~+/]{20,}=*)"
+)
+SECRET_KV_REDACT_RE = re.compile(
+    r"((?:api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|passwd|client[_-]?secret)\s*[:=]\s*['\"])([^'\"]{8,})(['\"])",
+    re.I,
 )
 
 
 class BrainDB:
+    @staticmethod
+    def redact_secrets(text: str) -> str:
+        """Zero-Leak Secret Redactor (v6.1): Mascara chaves API, tokens Bearer e passwords antes de gravar em disco."""
+        if not text:
+            return ""
+        out = SECRET_REDACT_RE.sub("[REDACTED_SECRET]", str(text))
+        out = SECRET_KV_REDACT_RE.sub(r"\1[REDACTED_SECRET]\3", out)
+        return out
     """Motor Híbrido SQLite (WAL) + FTS5 (BM25) + Checkpoints + Telemetria."""
 
     def __init__(self, db_path: str = DEFAULT_DB_PATH) -> None:
@@ -665,11 +678,6 @@ class BrainDB:
             ).fetchall()
             return [dict(r) for r in rows]
 
-    @staticmethod
-    def redact_secrets(text: str) -> str:
-        """Redige 12 formatos modernos de chaves/tokens antes de persistir no SQLite."""
-        return SECRET_REDACT_RE.sub("[REDACTED_SECRET]", str(text or ""))
-
     def store_fact(
         self,
         topic: str,
@@ -689,10 +697,8 @@ class BrainDB:
         aplicando a hierarquia de confiança Orbit ('Human Edits Always Win') e inferindo ligações causais.
         Retorna (row_id, is_new).
         """
-        topic = topic.strip()
-        fact = fact.strip()
-        # Ruflo AI-Defence Zero-Trust Redaction automática antes de gravar no SQLite (12 formatos modernos)
-        fact = SECRET_REDACT_RE.sub("[REDACTED_SECRET]", fact)
+        topic = self.redact_secrets(topic.strip())
+        fact = self.redact_secrets(fact.strip())
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
         resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
@@ -1150,6 +1156,10 @@ class BrainDB:
         notes: str = "",
     ) -> None:
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
+        goal = self.redact_secrets(goal)
+        last_completed = self.redact_secrets(last_completed)
+        next_tasks = self.redact_secrets(next_tasks)
+        notes = self.redact_secrets(notes)
         with self._connect() as conn:
             conn.execute(
                 """

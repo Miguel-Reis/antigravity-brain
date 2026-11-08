@@ -1057,6 +1057,61 @@ def run_all_tests() -> None:
         rc_out = gb_orbit.resolve_global_rule_conflicts(workspace="global")
         assert rc_out["ok"] is True and rc_out["conflicts_resolved"] >= 1
 
+        # ------------------------------------------------------------------
+        # 28. Pack v6.1: Smart Active-Repo Resolver, Secret Redactor,
+        #     Live 5h Quota Radar, Universal Repo AGENTS.md Sync & Bugfix-to-Test
+        # ------------------------------------------------------------------
+        from brain_inject import resolve_smart_active_workspace
+
+        # 28.1 Smart Active-Repo Resolver
+        gb_db.save_checkpoint(
+            workspace="new_project",
+            project="NewProj",
+            goal="Finalizar testes v6.1",
+            next_tasks="Validar suite",
+        )
+        smart_ws_kw = resolve_smart_active_workspace(gb_db, "otimizar orbit_engine.py", "conv_test")
+        assert smart_ws_kw == "brain_mcp", f"Esperado brain_mcp por keyword, obtido: {smart_ws_kw}"
+        smart_ws_cp = resolve_smart_active_workspace(gb_db, "sim", "conv_unknown")
+        assert smart_ws_cp == "new_project", f"Esperado new_project via último checkpoint, obtido: {smart_ws_cp}"
+
+        # 28.2 Zero-Leak Secret Redactor (DB + Vault)
+        secret_sample = 'Chave Google AIzaSyD1234567890abcdefABCDEF1234567890 e api_key = "super_secret_token_999999"'
+        redacted_sample = gb_db.redact_secrets(secret_sample)
+        assert "AIzaSyD1234567890" not in redacted_sample and "super_secret_token_999999" not in redacted_sample
+        assert "[REDACTED_SECRET]" in redacted_sample
+        vn_sec = gb_orbit.save_vault_note(
+            workspace="new_project",
+            filename="segredo-teste.md",
+            content=f"# Config\n\n{secret_sample}",
+            sync_to_db=True,
+        )
+        vn_sec_read = gb_orbit.read_vault_note(workspace="new_project", filename="segredo-teste.md")
+        assert "AIzaSyD1234567890" not in vn_sec_read["content"] and "[REDACTED_SECRET]" in vn_sec_read["content"]
+
+        # 28.3 Live 5h Quota & Burn Rate Meter
+        q5h = gb_orbit.get_5h_quota_radar()
+        assert q5h["ok"] is True and "usage_pct" in q5h and "reset_formatted" in q5h
+
+        # 28.4 Universal Repo Rules Sync (AGENTS.md non-destructive block)
+        sync_ag = gb_orbit.inject_rules_into_repo_agents_md(workspace="new_project")
+        assert sync_ag["ok"] is True and len(sync_ag["synced_files"]) >= 1
+        ag_md_read = gb_orbit.read_vault_note(workspace="new_project", filename="AGENTS.md")
+        assert "<!-- BRAIN_AUTO_RULES_START -->" in ag_md_read["content"]
+
+        # 28.5 Bugfix-to-Test Synthesizer
+        gb_db.store_fact(
+            topic="[Self-Learn BugFix] Fix SQLite OperationalError on swarm_tasks",
+            fact="Select explicit columns in swarm_engine.py to prevent OperationalError on older schemas.",
+            workspace="new_project",
+            category="bug_fix",
+            tags="bug sqlite swarm_engine.py",
+            importance=5,
+        )
+        synth_tests = gb_orbit.synthesize_regression_tests_from_bugs(workspace="new_project")
+        assert synth_tests["ok"] is True and synth_tests["tests_generated"] >= 1
+        assert "def test_regression_" in synth_tests["markdown_preview"]
+
     brain_app_txt = Path(os.path.join(repo_dir, "brain_app.py")).read_text(encoding="utf-8")
     for app_tok in ("_do_quick_global_rule", "_do_quick_defuddle", "_do_quick_resolve_conflicts"):
         assert app_tok in brain_app_txt, f"Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
@@ -1067,18 +1122,22 @@ def run_all_tests() -> None:
         'id="vaultNoteEditorModal"',
         'id="slGlobalBrainTop3Grid"',
         'id="btnOfficeFloorWing"',
+        'id="topQuota5hRadarPill"',
         "function synthesizeGlobalBrainUI()",
         "function cycleOfficeFloorWing()",
         "function openVaultNoteEditorModal(",
         "function resolveGlobalRuleConflictsUI()",
         "function runFileEditGcUI()",
         "function launchPromptForgeIntoSwarm48UI()",
+        "function refreshQuota5hRadarUI(",
+        "function injectRepoAgentsMdUI()",
+        "function synthesizeBugTestsUI()",
         "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
-    print("[PASS] Pack Completo v6.0 (7/7 Melhorias: Foreign File-Edit Shield, File-Edit GC, URL Clipper, Vault MD Editor, Swarm 48x Launcher, Rule Conflict Resolver & Spotlight Quick Actions) OK")
+    print("[PASS] Pack Completo v6.0 & v6.1 (Smart Repo Resolver, Zero-Leak Secret Redactor, 5h Quota Radar, Universal AGENTS.md Sync & Bugfix-to-Test Synthesizer) OK")
 
 
 if __name__ == "__main__":

@@ -2364,6 +2364,9 @@
       <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="switchMainView('selflearn')" style="cursor:pointer; border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.12); color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.9 · '1 task running'). Clique para abrir a página gráfica do Self-Learn!">
         🧬 <strong id="topSelfLearnBadgeTxt">Self-Learn ON · IQ 94.2%</strong>
       </button>
+      <button type="button" class="metric-pill" id="topQuota5hRadarPill" onclick="refreshQuota5hRadarUI(true)" style="cursor:pointer; border-color:rgba(56,189,248,0.42); background:rgba(56,189,248,0.10); color:#bae6fd;" title="Radar de Quota 5h & Burn Rate em tempo real (analisa transcripts.jsonl ativos nas últimas 5h + poupança Brain). Clique para atualizar!">
+        ⏱️ <strong id="topQuota5hTxt">Quota 5h: 12% · Reset 4h15m</strong>
+      </button>
       <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
     </div>
 
@@ -3359,6 +3362,9 @@
           <button class="quick-ag-btn" style="border-color:rgba(52,211,153,0.5); color:#6ee7b7; font-weight:700; padding:4px 9px;" onclick="runFileEditGcUI()" title="Compacta registos repetidos de edição de ficheiros antigos em brain.db">
             🧹 Compactar Logs de Ficheiros
           </button>
+          <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.55); color:#fde68a; font-weight:700; padding:4px 9px;" onclick="synthesizeBugTestsUI()" title="Gera automaticamente testes de regressão pytest a partir das memórias bug_fix e abre no Editor .MD do Vault">
+            🧪 Gerar Testes de Regressão
+          </button>
           <div id="slGlobalBrainSummaryBadge" style="font-size:10.5px; font-family:var(--font-mono); color:#7dd3fc; font-weight:700;">
             Top-3 Universal Ativo · 0ms overhead
           </div>
@@ -4008,9 +4014,14 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
                 <div style="font-size:9px; color:#f8fafc; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="vaultPathDisplayLbl">.brain_vault/brain_mcp/AGENTS.md</div>
                 <div style="font-size:8px; color:#64748b;">official vault exporter · straight into your project</div>
               </div>
-              <button class="quick-ag-btn" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#bae6fd; font-weight:800; font-size:9px; padding:4px 9px; white-space:nowrap;" onclick="clipCurrentRuleToVaultUI()">
-                + clip to vault
-              </button>
+              <div style="display:flex; gap:5px; align-items:center;">
+                <button class="quick-ag-btn" style="background:rgba(16,185,129,0.18); border-color:#34d399; color:#6ee7b7; font-weight:800; font-size:9px; padding:4px 8px; white-space:nowrap;" onclick="injectRepoAgentsMdUI()" title="Sincronizar bloco não-destrutivo BRAIN_AUTO_RULES diretamente no AGENTS.md do Vault e do Repositório">
+                  📄 Sync AGENTS.md
+                </button>
+                <button class="quick-ag-btn" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#bae6fd; font-weight:800; font-size:9px; padding:4px 9px; white-space:nowrap;" onclick="clipCurrentRuleToVaultUI()">
+                  + clip to vault
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -14781,6 +14792,84 @@ ${rulesSection}`;
       switchMainView('promptforge');
       showToast('✨ Prompt Forge aberto! (Executa BrainApp.bat para ativar o Ctrl+Shift+B e o System Tray)');
     }
+
+    async function refreshQuota5hRadarUI(notify = false) {
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'quota_5h_radar' })
+        });
+        const data = await res.json();
+        if (!data || !data.ok) return;
+        const txtEl = document.getElementById('topQuota5hTxt');
+        const pillEl = document.getElementById('topQuota5hRadarPill');
+        if (txtEl) {
+          txtEl.textContent = `Quota 5h: ${data.usage_pct}% · ${data.burn_rate_per_hr}/h · Reset ${data.reset_formatted}`;
+        }
+        if (pillEl) {
+          if (data.status_level === 'HIGH_BURN') {
+            pillEl.style.borderColor = 'rgba(244,63,94,0.55)';
+            pillEl.style.background = 'rgba(244,63,94,0.14)';
+            pillEl.style.color = '#fda4af';
+          } else if (data.status_level === 'MODERATE') {
+            pillEl.style.borderColor = 'rgba(245,158,11,0.52)';
+            pillEl.style.background = 'rgba(245,158,11,0.12)';
+            pillEl.style.color = '#fde68a';
+          } else {
+            pillEl.style.borderColor = 'rgba(56,189,248,0.42)';
+            pillEl.style.background = 'rgba(56,189,248,0.10)';
+            pillEl.style.color = '#bae6fd';
+          }
+        }
+        if (notify) {
+          showToast(`⏱️ Quota 5h: ${data.turns_5h}/${data.nominal_cap_5h} turnos (${data.usage_pct}%) · Burn: ${data.burn_rate_per_hr}/h · Reset em ${data.reset_formatted} · Poupados: ${(data.tokens_saved_5h || 0).toLocaleString()} tok`);
+        }
+      } catch (e) {}
+    }
+
+    async function injectRepoAgentsMdUI() {
+      const ws = (typeof activeWorkspace !== 'undefined' && activeWorkspace && activeWorkspace !== 'all') ? activeWorkspace : 'brain_mcp';
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'vault_inject_repo_agents', workspace: ws })
+        });
+        const data = await res.json();
+        if (data && data.ok) {
+          showToast(`📄 AGENTS.md sincronizado (${data.rules_count || 0} regras) em ${(data.synced_files || []).length} ficheiro(s)!`);
+          await refreshVaultWorkspaceUI();
+          openVaultNoteEditorModal('AGENTS.md');
+        }
+      } catch (e) {
+        showToast('⚠️ Erro ao sincronizar AGENTS.md: ' + e.message);
+      }
+    }
+
+    async function synthesizeBugTestsUI() {
+      const ws = (typeof activeWorkspace !== 'undefined' && activeWorkspace && activeWorkspace !== 'all') ? activeWorkspace : 'brain_mcp';
+      try {
+        showToast('🧪 A sintetizar testes de regressão a partir do histórico de BugFixes...');
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'synthesize_bug_tests', workspace: ws })
+        });
+        const data = await res.json();
+        if (data && data.ok) {
+          showToast(`✅ ${data.tests_generated || 0} testes de regressão gerados em regression_tests_generated.md!`);
+          openVaultNoteEditorModal('regression_tests_generated.md');
+        }
+      } catch (e) {
+        showToast('⚠️ Erro ao sintetizar testes de regressão: ' + e.message);
+      }
+    }
+
+    setTimeout(() => {
+      refreshQuota5hRadarUI(false);
+      setInterval(() => refreshQuota5hRadarUI(false), 45000);
+    }, 1200);
   </script>
 </body>
 </html>

@@ -1379,6 +1379,15 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             elif action == "file_edit_gc":
                 max_pw = int(body.get("max_per_workspace", 2) or 2)
                 res = orbit.compact_redundant_file_edits(max_per_workspace=max_pw)
+            elif action == "quota_5h_radar":
+                res = orbit.get_5h_quota_radar()
+            elif action == "vault_inject_repo_agents":
+                ws = str(body.get("workspace", "brain_mcp"))
+                repo_p = str(body.get("repo_path", ""))
+                res = orbit.inject_rules_into_repo_agents_md(workspace=ws, repo_path=repo_p)
+            elif action == "synthesize_bug_tests":
+                ws = str(body.get("workspace", "brain_mcp"))
+                res = orbit.synthesize_regression_tests_from_bugs(workspace=ws)
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return

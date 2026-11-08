@@ -1,0 +1,13 @@
+# AGENTS.md — brain_mcp
+
+<!-- BRAIN_AUTO_RULES_START -->
+## 🧠 Antigravity Global Brain — Auto-Synced Rules (`brain_mcp`)
+> Atualizado automaticamente pelo Universal Repo Rules Sync (v6.1).
+
+### 🧬 Regras Destiladas (Self-Learn Playbook)
+- [conf.json] Found 14 issues across main.rs, win32/window.rs, updater/mod.rs, account/secret.rs, share/mo...
+- [orbit_engine.py] OrbitEngine.synthesize_global_meta_brain in orbit_engine.py:L1577-1744 unifies cross-project...
+- [explicit_note] Identified 3 optional refinements: transcript quality filter in synthesize_global_meta_brain...
+- [🧬 Meta-Regra Aprendida [conf] Padrão consolidado (2 memórias em brain_mcp): Found 14 issues across main.rs, win32/wind
+- [extrator_universal.py] Confirmed Aion 2 (PID 3540/14376) and Speeder Notepad host (PID 10212) active; fixed early-e...
+<!-- BRAIN_AUTO_RULES_END -->
