@@ -2305,82 +2305,334 @@
     .blade-collapsed .blade-collapsible-body {
       display: none !important;
     }
+
+    /* =========================================================================
+       v7.0 — LINEAR / RAYCAST DARK PRECISION & LEFT DOCK STUDIO OS SHELL
+       ========================================================================= */
+    :root {
+      --bg-canvas: #07090e;
+      --bg-panel: rgba(11, 14, 21, 0.94);
+      --bg-panel-solid: #090c12;
+      --bg-card: #0d111a;
+      --bg-card-elevated: #121723;
+      --bg-hover: #171e2d;
+      --border: rgba(255, 255, 255, 0.075);
+      --border-subtle: rgba(255, 255, 255, 0.04);
+      --border-strong: rgba(255, 255, 255, 0.13);
+    }
+
+    .topbar {
+      height: 44px !important;
+      padding: 0 12px !important;
+      background: #080b11 !important;
+      border-bottom: 1px solid var(--border) !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: 12px !important;
+      z-index: 40 !important;
+    }
+
+    .rail-collapse-trigger {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #0d111a;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.14s ease;
+      flex-shrink: 0;
+    }
+
+    .rail-collapse-trigger:hover {
+      background: var(--bg-hover);
+      color: #fff;
+      border-color: var(--border-strong);
+    }
+
+    .cmd-search-omnibox {
+      flex: 1;
+      max-width: 520px;
+      height: 29px;
+      background: #0c1018;
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 11.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .cmd-search-omnibox:hover {
+      background: #111723;
+      border-color: rgba(99, 102, 241, 0.45);
+      color: #e2e8f0;
+    }
+
+    .cmd-search-omnibox kbd {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: #94a3b8;
+    }
+
+    .studio-shell-body {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      width: 100vw;
+      height: calc(100vh - 70px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .studio-rail-dock {
+      width: 162px;
+      flex-shrink: 0;
+      background: #080b11;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px 8px;
+      gap: 8px;
+      z-index: 25;
+      transition: width 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    body.rail-compact .studio-rail-dock {
+      width: 56px;
+      padding: 10px 6px;
+    }
+
+    .studio-rail-section-lbl {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      padding: 2px 8px 4px;
+    }
+
+    body.rail-compact .studio-rail-section-lbl {
+      display: none;
+    }
+
+    .studio-rail-dock .view-tabs {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 3px !important;
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      width: 100% !important;
+    }
+
+    .studio-rail-dock .view-tab {
+      width: 100% !important;
+      height: 32px !important;
+      padding: 0 9px !important;
+      border-radius: 6px !important;
+      border: 1px solid transparent !important;
+      border-left: 2px solid transparent !important;
+      background: transparent !important;
+      color: #94a3b8 !important;
+      font-size: 11.5px !important;
+      font-weight: 600 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      gap: 7px !important;
+      text-align: left !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      transition: all 0.14s ease !important;
+    }
+
+    .studio-rail-dock .view-tab:hover {
+      background: rgba(255, 255, 255, 0.04) !important;
+      color: #f8fafc !important;
+    }
+
+    .studio-rail-dock .view-tab.active {
+      background: rgba(99, 102, 241, 0.13) !important;
+      border-color: rgba(99, 102, 241, 0.22) !important;
+      border-left: 2px solid #6366f1 !important;
+      color: #ffffff !important;
+      box-shadow: none !important;
+    }
+
+    body.rail-compact .studio-rail-dock .view-tab {
+      justify-content: center !important;
+      padding: 0 4px !important;
+      font-size: 0 !important;
+    }
+
+    body.rail-compact .studio-rail-dock .view-tab::first-letter {
+      font-size: 14px !important;
+    }
+
+    .studio-rail-bottom {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .studio-stage-viewport {
+      flex: 1;
+      min-width: 0;
+      height: 100%;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-canvas);
+    }
+
+    #graphWorkspace,
+    #swarmWorkspace,
+    #officeWorkspace,
+    #selfLearnWorkspace,
+    #promptForgeWorkspace,
+    #vaultWorkspace {
+      height: 100% !important;
+      max-height: 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    .studio-statusbar {
+      height: 26px;
+      flex-shrink: 0;
+      background: #06080d;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--text-muted);
+      z-index: 40;
+      overflow: hidden;
+    }
+
+    .studio-statusbar .metrics-strip {
+      display: flex !important;
+      align-items: center !important;
+      gap: 6px !important;
+      overflow-x: auto !important;
+      scrollbar-width: none !important;
+    }
+
+    .studio-statusbar .metric-pill {
+      height: 20px !important;
+      padding: 0 8px !important;
+      font-size: 10px !important;
+      border-radius: 4px !important;
+      background: rgba(255, 255, 255, 0.025) !important;
+      border: 1px solid var(--border) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+      white-space: nowrap !important;
+    }
+
+    .studio-statusbar .metric-pill:hover {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border-color: var(--border-strong) !important;
+    }
+
+    /* Progressive Disclosure Drawers & Sober Linear Cards */
+    .studio-adv-drawer {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 6px 10px;
+      background: #0a0d15;
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+    }
+
+    .studio-adv-drawer.open {
+      display: flex;
+    }
+
+    .studio-hero-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: #0b0f18 !important;
+      border: 1px solid var(--border-strong) !important;
+      border-radius: 10px !important;
+      padding: 11px 16px !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .studio-section-card {
+      background: #0a0e16 !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 10px !important;
+      padding: 11px 14px !important;
+    }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR (CLEAN 3-ZONE ARCHITECTURE) -->
+  <!-- TOP BAR (v7.0 LINEAR / RAYCAST PRECISION HEADER) -->
   <header class="topbar">
-    <div class="brand">
+    <div class="brand" style="gap:9px;">
+      <button type="button" class="rail-collapse-trigger" onclick="toggleStudioRailCompact()" title="Alternar barra lateral compacta (Dock Lateral)">
+        ☰
+      </button>
       <span class="brand-dot"></span>
-      <div style="display:flex; flex-direction:column; line-height:1.15; max-width:190px; overflow:hidden;">
+      <div style="display:flex; flex-direction:column; line-height:1.15; max-width:210px; overflow:hidden;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-size:13.5px; font-weight:800; letter-spacing:-0.02em; color:#fff; white-space:nowrap;">Antigravity Brain</span>
-          <span class="brand-badge">v4.5</span>
+          <span style="font-size:13px; font-weight:800; letter-spacing:-0.02em; color:#fff; white-space:nowrap;">Antigravity Brain</span>
+          <span class="brand-badge">v7.0</span>
         </div>
         <span style="font-size:9.5px; color:var(--text-muted); font-family:var(--font-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="lblTopSubConcept">Neural Cortex · JEV-S1</span>
       </div>
-      <div class="view-tabs">
-        <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')" title="Atalho: Tecla 1">
-          🕸️ Córtex
-        </button>
-        <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')" title="Atalho: Tecla 2">
-          <span class="pulse-dot"></span>
-          ⚡ Swarm
-        </button>
-        <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')" title="Atalho: Tecla 3">
-          🏢 Office 3D
-        </button>
-        <button class="view-tab" id="tabBtnSelfLearn" onclick="switchMainView('selflearn')" title="Ver onde o Self-Learn está ativo e o Pipeline Neural Gráfico a trabalhar em tempo real (Atalho: Tecla 4)">
-          <span class="pulse-dot" style="background:#a855f7;"></span>
-          🧬 Self-Learn
-        </button>
-        <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
-          ✨ Prompt Forge
-        </button>
-        <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" style="border-color:rgba(168,85,247,0.48); color:#f3e8ff; background:rgba(168,85,247,0.1);" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Atalho: Tecla 6]">
-          <span class="pulse-dot" style="background:#c084fc;"></span>
-          💎 Vault 6x
-        </button>
-        <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
-          <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
-          Tasks (<span id="topTabTasksCount">0</span>)
-        </button>
-      </div>
     </div>
 
-    <div class="metrics-strip">
-      <div class="metric-pill" id="sseStatusBadge" style="border-color:rgba(16,185,129,0.28); background:rgba(16,185,129,0.06);" title="Stream Real-Time Server-Sent Events (/api/events) + Router Jev-Mem System-1">
-        <span style="color:#34d399; font-weight:700;">● SSE</span>
-        <span style="color:var(--text-dim);">·</span>
-        <strong id="statLatency" style="color:#38bdf8;">0.01ms</strong>
-      </div>
-      <div class="metric-pill" title="Total de Memórias e Sinapses no Grafo">
-        🧠 <strong id="statMemories">0</strong> memórias · <strong id="statLinks">0</strong> sinapses
-      </div>
-      <button type="button" class="metric-pill" id="btnTokenDietHud" onclick="openInspectorModal()" style="cursor:pointer; border-color:rgba(16,185,129,0.38); background:rgba(16,185,129,0.1); color:#6ee7b7;" title="5 Otimizações de Poupança de Tokens Ativas: Session Delta (-64%), TOON Telegráfico (-31%), Corte Top-K, Pointers AST :Lstart-end e Modo Micro-Prompt (<90 tok). Clique para inspecionar e simular!">
-        ⚡ <strong id="statTokenDietBadge">-64% Tokens</strong> · <span style="font-size:9.5px; color:#a7f3d0;">TOON+Delta</span>
-      </button>
-      <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="switchMainView('selflearn')" style="cursor:pointer; border-color:rgba(168,85,247,0.45); background:rgba(168,85,247,0.12); color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.9 · '1 task running'). Clique para abrir a página gráfica do Self-Learn!">
-        🧬 <strong id="topSelfLearnBadgeTxt">Self-Learn ON · IQ 94.2%</strong>
-      </button>
-      <button type="button" class="metric-pill" id="topQuota5hRadarPill" onclick="refreshQuota5hRadarUI(true)" style="cursor:pointer; border-color:rgba(56,189,248,0.42); background:rgba(56,189,248,0.10); color:#bae6fd;" title="Radar de Quota 5h & Burn Rate em tempo real (analisa transcripts.jsonl ativos nas últimas 5h + poupança Brain). Clique para atualizar!">
-        ⏱️ <strong id="topQuota5hTxt">Quota 5h: 12% · Reset 4h15m</strong>
-      </button>
-      <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
-    </div>
+    <!-- CENTRAL RAYCAST COMMAND OMNIBOX -->
+    <button type="button" class="cmd-search-omnibox" onclick="openCommandPalette()" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
+      <span style="display:flex; align-items:center; gap:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+        <span style="color:#818cf8;">🔍</span>
+        <span>⌘K Pesquisa</span>
+        <span style="color:#475569;">·</span>
+        <span style="color:#64748b; font-size:11px;">Memórias, símbolos AST, regras ou comandos...</span>
+      </span>
+      <kbd>Ctrl+K</kbd>
+    </button>
 
-    <div class="top-actions">
-      <button class="btn" id="btnLangSwitcher" onclick="toggleBrainLanguageUI()" style="border-color:rgba(56,189,248,0.48); color:#7dd3fc; background:rgba(56,189,248,0.12); font-family:var(--font-mono); font-weight:800;" title="Alternar Idioma da Interface e Prompt Forge (PT-PT ⇄ EN-EN)">
-        🇵🇹 PT-PT
-      </button>
-      <button class="btn" onclick="launchBrainSpotlightUI()" style="border-color:rgba(168,85,247,0.48); color:#e9d5ff; background:rgba(168,85,247,0.14);" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
+    <div class="top-actions" style="gap:6px;">
+      <button class="btn" onclick="launchBrainSpotlightUI()" style="border-color:var(--border-strong); color:#cbd5e1; background:#0d111a;" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
         ⚡ Spotlight / App
       </button>
-      <button class="btn" onclick="openCommandPalette()" style="border-color:rgba(99,102,241,0.35); color:#c7d2fe; background:rgba(99,102,241,0.08);" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
-        ⌘K Pesquisa
-      </button>
-      <button class="btn" id="btnOpenToolsPhysicsModal" onclick="openBrainToolsModal()" style="border-color:rgba(129,140,248,0.42); color:#e0e7ff; background:rgba(99,102,241,0.14);" title="Abrir Centro Unificado de Ferramentas, Física de Órbitas, AST, Orbit OS e Quota 5h">
+      <button class="btn" id="btnOpenToolsPhysicsModal" onclick="openBrainToolsModal()" style="border-color:var(--border-strong); color:#cbd5e1; background:#0d111a;" title="Abrir Centro Unificado de Ferramentas, Física de Órbitas, AST, Orbit OS e Quota 5h">
         ⚙️ Ferramentas &amp; Física
       </button>
       <button class="btn btn-primary" onclick="openMemoryModal()">
@@ -2388,6 +2640,56 @@
       </button>
     </div>
   </header>
+
+  <!-- v7.0 STUDIO SHELL BODY (LEFT RAIL DOCK + MAIN STAGE VIEWPORT) -->
+  <div class="studio-shell-body" id="studioShellBody">
+
+    <!-- LEFT VERTICAL NAVIGATION RAIL DOCK -->
+    <nav class="studio-rail-dock" id="studioRailDock" aria-label="Navegação Principal do Studio">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <div class="studio-rail-section-lbl">Workspaces</div>
+        <div class="view-tabs">
+          <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')" title="Atalho: Tecla 1">
+            🕸️ Córtex
+          </button>
+          <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')" title="Atalho: Tecla 2">
+            <span class="pulse-dot"></span>
+            ⚡ Swarm
+          </button>
+          <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')" title="Atalho: Tecla 3">
+            🏢 Office 3D
+          </button>
+          <button class="view-tab" id="tabBtnSelfLearn" onclick="switchMainView('selflearn')" title="Ver onde o Self-Learn está ativo e o Pipeline Neural Gráfico a trabalhar em tempo real (Atalho: Tecla 4)">
+            <span class="pulse-dot" style="background:#a855f7;"></span>
+            🧬 Self-Learn
+          </button>
+          <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
+            ✨ Prompt Forge
+          </button>
+          <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Atalho: Tecla 6]">
+            <span class="pulse-dot" style="background:#c084fc;"></span>
+            💎 Vault 6x
+          </button>
+          <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
+            <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
+            Tasks (<span id="topTabTasksCount">0</span>)
+          </button>
+        </div>
+      </div>
+
+      <div class="studio-rail-bottom">
+        <div class="studio-rail-section-lbl">Módulos Rápidos</div>
+        <button type="button" class="view-tab" onclick="openOrbitOsModal()" title="Abrir Orbit Agent OS & Mission Control Inbox">
+          🛰️ Orbit OS
+        </button>
+        <button type="button" class="view-tab" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST, Blast Radius & Graphify BFS">
+          🔎 AST &amp; BFS
+        </button>
+      </div>
+    </nav>
+
+    <!-- MAIN STAGE VIEWPORT -->
+    <div class="studio-stage-viewport" id="studioStageViewport">
 
   <!-- 3-PANE RETRACTABLE BRAIN WORKSPACE -->
   <div class="workspace" id="graphWorkspace">
@@ -2796,21 +3098,26 @@
         <button class="btn-scout-emerald" style="border-color:rgba(16,185,129,0.4); color:#6ee7b7;" onclick="triggerSwarmAction('verify_all')" title="Executa verificação real AST Python + JS + SQLite WAL e valida imediatamente 48/48 checks">
           ✅ Verify All (48/48)
         </button>
-        <button class="btn-scout-emerald" onclick="triggerSwarmAction('work_steal')" title="Ruflo Work-Stealing (claims_steal): Redistribui tasks pendentes para workers com maior fitness de feromonas">
-          ⚖️ Work-Steal
+        <button type="button" class="btn-scout-emerald" id="btnToggleSwarmAdv" onclick="toggleStudioAdvDrawer('swarmAdvControlsDrawer', this)" title="Mostrar/Ocultar controlos avançados do Swarm (Work-Steal, Feromonas, Doctor, AST)">
+          ⚙️ Avançado ▾
         </button>
-        <button class="btn-scout-emerald" onclick="triggerSwarmAction('pheromone_boost')" title="Ruflo Pheromone EMA (swarm_pheromone_update): Atualiza fitness adaptativo das 4 Lanes">
-          🧬 Feromonas EMA
-        </button>
-        <button class="btn-scout-emerald" onclick="triggerSwarmAction('doctor')" title="Executa o Memory Doctor FTS5 + Descoberta de Grafo Causal">
-          🩺 Doctor
-        </button>
-        <button class="btn-scout-emerald" style="border-color:rgba(56,189,248,0.35); color:#7dd3fc;" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST & Blast Radius">
-          🔎 AST &amp; Impacto
-        </button>
-        <button class="btn-scout-emerald" onclick="triggerSwarmAction('reset_queue')" title="Reinicia a fila das 24 tasks da Run atual">
-          🔄 Reset
-        </button>
+        <div class="studio-adv-drawer" id="swarmAdvControlsDrawer">
+          <button class="btn-scout-emerald" onclick="triggerSwarmAction('work_steal')" title="Ruflo Work-Stealing (claims_steal): Redistribui tasks pendentes para workers com maior fitness de feromonas">
+            ⚖️ Work-Steal
+          </button>
+          <button class="btn-scout-emerald" onclick="triggerSwarmAction('pheromone_boost')" title="Ruflo Pheromone EMA (swarm_pheromone_update): Atualiza fitness adaptativo das 4 Lanes">
+            🧬 Feromonas EMA
+          </button>
+          <button class="btn-scout-emerald" onclick="triggerSwarmAction('doctor')" title="Executa o Memory Doctor FTS5 + Descoberta de Grafo Causal">
+            🩺 Doctor
+          </button>
+          <button class="btn-scout-emerald" style="border-color:rgba(56,189,248,0.35); color:#7dd3fc;" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST & Blast Radius">
+            🔎 AST &amp; Impacto
+          </button>
+          <button class="btn-scout-emerald" onclick="triggerSwarmAction('reset_queue')" title="Reinicia a fila das 24 tasks da Run atual">
+            🔄 Reset
+          </button>
+        </div>
       </div>
     </div>
 
@@ -3059,8 +3366,8 @@
           <button class="office-btn primary" id="btnOfficeFollow" onclick="toggleOfficeFollowMode()" aria-pressed="true" title="Modo Follow: A câmara 3D acompanha e mantém o agente selecionado no centro do ecrã enquanto caminha">
             🎯 Follow: ON
           </button>
-          <button class="office-btn primary" id="btnOfficeFrustumCull" onclick="toggleOfficeFrustumCulling()" aria-pressed="true" title="Frustum Culling 3D: Descarta cálculos de projeção, animação e draw calls de agentes fora do campo de visão ativo (reduz carga na CPU)">
-            👁️ Culling: ON
+          <button class="office-btn primary" id="btnOfficeFloorWing" onclick="cycleOfficeFloorWing()" title="Alternar Piso/Ala 3D entre Ala A (Workers 01-24), Ala B (Workers 25-48) e Frota Completa 48 Agentes 3D">
+            🏢 Ala A (01-24)
           </button>
           <button class="office-btn" onclick="setOfficeCameraPreset('overview')" title="Visão isométrica 3D de todas as 6 zonas do escritório">
             🎥 Geral
@@ -3071,51 +3378,56 @@
           <button class="office-btn" onclick="setOfficeCameraPreset('swarm_wing')" title="Zona 4: Ala de Engenharia Swarm (UI, API, QA, DOCS)">
             ⚡ Engenharia
           </button>
-          <button class="office-btn primary" id="btnOfficeFloorWing" onclick="cycleOfficeFloorWing()" title="Alternar Piso/Ala 3D entre Ala A (Workers 01-24), Ala B (Workers 25-48) e Frota Completa 48 Agentes 3D">
-            🏢 Ala A (01-24)
-          </button>
           <button class="office-btn" onclick="setOfficeCameraPreset('desks')" title="Zona 5: Ala de Conversas &amp; Subagentes Ativos">
             💬 Conversas
-          </button>
-          <button class="office-btn" onclick="setOfficeCameraPreset('mcp_room')" title="Zona 2: Sala de Servidores MCP 3D">
-            🖥️ MCP
           </button>
           <button class="office-btn" onclick="setOfficeCameraPreset('lounge')" title="Zona 6: Zona de Pausa, Sofás, Arcade e Café Espresso">
             ☕ Lounge
           </button>
-          <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
-            🔄 Orbit 360°
-          </button>
-          <button class="office-btn primary" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor sobre as Secretárias dos Agentes">
-            🔥 Heatmap 3D: ON
-          </button>
-          <button class="office-btn" id="btnPulseHoloTowers" onclick="pulseOfficeHoloTowers3D()" style="border-color:rgba(244,63,94,0.4); color:#fda4af;" title="Dispara um pulso holográfico de atividade de edição em todas as Torres 3D das Secretárias">
-            🗼 Pulso Torres 3D
-          </button>
-          <button class="office-btn" id="btnOfficeSound" onclick="toggleOfficeSound3D()" title="Ativa/Desativa Sintetizador WebAudio 3D (som de teclado, café espresso e portal quântico)">
-            🔇 Som 3D: OFF
-          </button>
-          <button class="office-btn" onclick="replayOfficeTimeline()" title="Time-Travel 3D: Faz replay da chegada cronológica de todos os agentes pelo Portal Quântico 3D">
-            ⏪ Replay
-          </button>
-          <button class="office-btn emerald" onclick="spawnNewOfficeConversationAgent()" title="Simula a criação de um novo agente de conversa (entra pelo Portal Quântico 3D e caminha até à secretária)">
-            ➕ Agente 3D
-          </button>
-          <button class="office-btn" onclick="triggerOfficeTeamAction('work_all')" title="Chama todos os agentes para as secretárias 3D (Modo Sprint)">
-            💻 Trabalhar
-          </button>
-          <button class="office-btn" onclick="triggerOfficeTeamAction('pause_all')" title="Envia todos os agentes para descansar no Lounge &amp; Café Espresso">
-            ☕ Pausa
-          </button>
-          <button class="office-btn" onclick="triggerOfficeTeamAction('complete_all_tasks')" title="Conclui todas as tasks ativas (48/48 PASS) e sincroniza equipa">
-            ✅ Concluir
-          </button>
-          <button class="office-btn" onclick="triggerOfficeTeamAction('clear_simulated')" title="Remove agentes simulados temporários e restaura deteção automática de transcripts">
-            🧹 Limpar
-          </button>
           <button class="office-btn primary" onclick="triggerSwarmFromOffice()" title="Lança Swarm Run de 24 Lanes em paralelo a partir do Escritório 3D">
             ⚡ Swarm
           </button>
+          <button type="button" class="office-btn" id="btnToggleOfficeAdv" onclick="toggleStudioAdvDrawer('officeAdvCamDrawer', this)" title="Mostrar/Ocultar Controlos 3D, FX Holográficos, Som e Simulação de Equipa">
+            🎛️ Controlos 3D &amp; FX ▾
+          </button>
+          <div class="studio-adv-drawer" id="officeAdvCamDrawer">
+            <button class="office-btn primary" id="btnOfficeFrustumCull" onclick="toggleOfficeFrustumCulling()" aria-pressed="true" title="Frustum Culling 3D: Descarta cálculos de projeção, animação e draw calls de agentes fora do campo de visão ativo (reduz carga na CPU)">
+              👁️ Culling: ON
+            </button>
+            <button class="office-btn" onclick="setOfficeCameraPreset('mcp_room')" title="Zona 2: Sala de Servidores MCP 3D">
+              🖥️ MCP
+            </button>
+            <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
+              🔄 Orbit 360°
+            </button>
+            <button class="office-btn primary" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor sobre as Secretárias dos Agentes">
+              🔥 Heatmap 3D: ON
+            </button>
+            <button class="office-btn" id="btnPulseHoloTowers" onclick="pulseOfficeHoloTowers3D()" style="border-color:rgba(244,63,94,0.4); color:#fda4af;" title="Dispara um pulso holográfico de atividade de edição em todas as Torres 3D das Secretárias">
+              🗼 Pulso Torres 3D
+            </button>
+            <button class="office-btn" id="btnOfficeSound" onclick="toggleOfficeSound3D()" title="Ativa/Desativa Sintetizador WebAudio 3D (som de teclado, café espresso e portal quântico)">
+              🔇 Som 3D: OFF
+            </button>
+            <button class="office-btn" onclick="replayOfficeTimeline()" title="Time-Travel 3D: Faz replay da chegada cronológica de todos os agentes pelo Portal Quântico 3D">
+              ⏪ Replay
+            </button>
+            <button class="office-btn emerald" onclick="spawnNewOfficeConversationAgent()" title="Simula a criação de um novo agente de conversa (entra pelo Portal Quântico 3D e caminha até à secretária)">
+              ➕ Agente 3D
+            </button>
+            <button class="office-btn" onclick="triggerOfficeTeamAction('work_all')" title="Chama todos os agentes para as secretárias 3D (Modo Sprint)">
+              💻 Trabalhar
+            </button>
+            <button class="office-btn" onclick="triggerOfficeTeamAction('pause_all')" title="Envia todos os agentes para descansar no Lounge &amp; Café Espresso">
+              ☕ Pausa
+            </button>
+            <button class="office-btn" onclick="triggerOfficeTeamAction('complete_all_tasks')" title="Conclui todas as tasks ativas (48/48 PASS) e sincroniza equipa">
+              ✅ Concluir
+            </button>
+            <button class="office-btn" onclick="triggerOfficeTeamAction('clear_simulated')" title="Remove agentes simulados temporários e restaura deteção automática de transcripts">
+              🧹 Limpar
+            </button>
+          </div>
         </div>
       </div>
 
@@ -3309,60 +3621,60 @@
        ========================================================================= -->
   <div class="swarm-workspace" id="selfLearnWorkspace" style="padding:12px 16px; gap:12px; width:100%; max-width:100vw; height:calc(100vh - 50px); overflow-x:hidden; overflow-y:auto; box-sizing:border-box;">
     <!-- Top Header & Live Reactor Controls -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:linear-gradient(90deg, rgba(88,28,135,0.28), rgba(15,23,42,0.92)); border:1px solid rgba(168,85,247,0.45); border-radius:12px; padding:12px 16px;">
+    <div class="studio-hero-banner">
       <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
         <div>
-          <div style="font-size:10px; font-family:var(--font-mono); color:#d8b4fe; font-weight:800; letter-spacing:0.08em;">04 // RECURSIVE SELF-IMPROVEMENT &amp; PROACTIVE SENTINEL ENGINE</div>
-          <div style="font-size:16px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:10px; margin-top:2px;">
+          <div style="font-size:10px; font-family:var(--font-mono); color:#94a3b8; font-weight:700; letter-spacing:0.08em;">04 // RECURSIVE SELF-IMPROVEMENT &amp; PROACTIVE SENTINEL ENGINE</div>
+          <div style="font-size:15px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:10px; margin-top:2px;">
             <span>🧬 Estúdio Gráfico de Auto-Aprendizagem</span>
-            <span id="slPageActiveTaskPill" style="font-size:10.5px; font-family:var(--font-mono); background:rgba(16,185,129,0.2); border:1px solid rgba(16,185,129,0.55); color:#6ee7b7; padding:2px 9px; border-radius:999px;">● 1 task running · Sentinel Ativo (0 tok/h)</span>
+            <span id="slPageActiveTaskPill" style="font-size:10.5px; font-family:var(--font-mono); background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.35); color:#6ee7b7; padding:2px 9px; border-radius:999px;">● 1 task running · Sentinel Ativo (0 tok/h)</span>
           </div>
         </div>
       </div>
 
-      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <div style="display:flex; align-items:center; gap:6px; background:rgba(9,13,22,0.85); border:1px solid rgba(168,85,247,0.4); border-radius:8px; padding:5px 10px;">
-          <span style="font-size:11px; color:#cbd5e1;">Projeto em Foco:</span>
-          <select id="slPageWorkspaceSelect" class="select-sm" style="min-width:165px; font-weight:700; color:#f3e8ff;" onchange="onSelfLearnWorkspaceChange(this.value)">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:6px; background:#090c14; border:1px solid var(--border-strong); border-radius:7px; padding:4px 10px;">
+          <span style="font-size:11px; color:#94a3b8;">Projeto em Foco:</span>
+          <select id="slPageWorkspaceSelect" class="select-sm" style="min-width:165px; font-weight:700; color:#f8fafc;" onchange="onSelfLearnWorkspaceChange(this.value)">
             <option value="brain_mcp" selected>🟢 brain_mcp (IQ 99.8%)</option>
             <option value="global">🟢 global (IQ 94.0%)</option>
           </select>
         </div>
-        <button class="btn" id="slPageToggleBtn" style="background:rgba(16,185,129,0.2); border-color:#10b981; color:#6ee7b7; font-weight:800;" onclick="toggleProjectSelfLearnUI(document.getElementById('slPageWorkspaceSelect')?.value || 'brain_mcp')">
+        <button class="btn" id="slPageToggleBtn" style="background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.38); color:#6ee7b7; font-weight:700;" onclick="toggleProjectSelfLearnUI(document.getElementById('slPageWorkspaceSelect')?.value || 'brain_mcp')">
           🟢 Self-Learn: ATIVO
         </button>
-        <button class="btn" style="background:rgba(16,185,129,0.16); border-color:#34d399; color:#a7f3d0; font-weight:800;" onclick="enableAndEvolveAllProjectsUI()">
+        <button class="btn" style="background:#0d111a; border-color:var(--border-strong); color:#a7f3d0; font-weight:700;" onclick="enableAndEvolveAllProjectsUI()">
           🟢 Ativar &amp; Evoluir Todos
         </button>
-        <button class="btn" style="background:linear-gradient(135deg, rgba(14,165,233,0.28), rgba(168,85,247,0.28)); border-color:#38bdf8; color:#bae6fd; font-weight:800;" onclick="synthesizeGlobalBrainUI()">
+        <button class="btn" style="background:#0d111a; border-color:var(--border-strong); color:#bae6fd; font-weight:700;" onclick="synthesizeGlobalBrainUI()">
           🌐 Unificar Brain Global Agora
         </button>
-        <button class="btn btn-primary" style="background:linear-gradient(135deg, #9333ea, #6366f1); border-color:#c084fc; font-weight:800;" onclick="triggerGraphicalSelfLearnCycle()">
+        <button class="btn btn-primary" onclick="triggerGraphicalSelfLearnCycle()">
           ⚡ Disparar Ciclo de Auto-Melhoria Agora
         </button>
       </div>
     </div>
 
     <!-- Section: 🌐 Córtex Global Unificado Sempre Ativo (Top-3 Sabedoria Universal: Self-Learn + Bugs + Conversas + Vault) -->
-    <div style="background:linear-gradient(90deg, rgba(14,165,233,0.12), rgba(88,28,135,0.16), rgba(13,18,30,0.96)); border:1px solid rgba(56,189,248,0.45); border-radius:11px; padding:11px 14px; min-width:0; max-width:100%;">
+    <div class="studio-section-card" style="min-width:0; max-width:100%;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
         <div>
-          <div style="font-size:12px; font-weight:800; color:#bae6fd; display:flex; align-items:center; gap:6px;">
+          <div style="font-size:12px; font-weight:800; color:#f8fafc; display:flex; align-items:center; gap:6px;">
             <span>🌐 CÓRTEX GLOBAL SEMPRE ATIVO — TOP-3 SABEDORIA UNIVERSAL (`🌐[GLOBAL_BRAIN|top3]`)</span>
-            <span style="background:rgba(16,185,129,0.22); border:1px solid rgba(16,185,129,0.55); color:#6ee7b7; padding:1px 7px; border-radius:999px; font-size:9.5px; font-family:var(--font-mono);">MODO GLOBAL TOTAL ATIVO</span>
+            <span style="background:rgba(16,185,129,0.14); border:1px solid rgba(16,185,129,0.4); color:#6ee7b7; padding:1px 7px; border-radius:999px; font-size:9.5px; font-family:var(--font-mono);">MODO GLOBAL TOTAL ATIVO</span>
           </div>
           <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">
             Injetado automaticamente em 100% dos turnos a partir de todos os projetos (`Self-Learn`), `Auto-Bugfix`, histórico de conversas (`transcripts.jsonl`) e `Vault .md` (com sanitização anti-confusão de ficheiros estrangeiros).
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-          <button class="quick-ag-btn" style="border-color:rgba(168,85,247,0.55); color:#e9d5ff; font-weight:700; padding:4px 9px;" onclick="resolveGlobalRuleConflictsUI()" title="Deteta regras redundantes ou contraditórias entre projetos e funde-as numa única Meta-Regra Canónica v2">
+          <button class="quick-ag-btn" style="border-color:var(--border-strong); color:#e2e8f0; font-weight:700; padding:4px 9px;" onclick="resolveGlobalRuleConflictsUI()" title="Deteta regras redundantes ou contraditórias entre projetos e funde-as numa única Meta-Regra Canónica v2">
             🧬 Resolver Conflitos &amp; Fundir Regras
           </button>
-          <button class="quick-ag-btn" style="border-color:rgba(52,211,153,0.5); color:#6ee7b7; font-weight:700; padding:4px 9px;" onclick="runFileEditGcUI()" title="Compacta registos repetidos de edição de ficheiros antigos em brain.db">
+          <button class="quick-ag-btn" style="border-color:var(--border-strong); color:#6ee7b7; font-weight:700; padding:4px 9px;" onclick="runFileEditGcUI()" title="Compacta registos repetidos de edição de ficheiros antigos em brain.db">
             🧹 Compactar Logs de Ficheiros
           </button>
-          <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.55); color:#fde68a; font-weight:700; padding:4px 9px;" onclick="synthesizeBugTestsUI()" title="Gera automaticamente testes de regressão pytest a partir das memórias bug_fix e abre no Editor .MD do Vault">
+          <button class="quick-ag-btn" style="border-color:var(--border-strong); color:#fde68a; font-weight:700; padding:4px 9px;" onclick="synthesizeBugTestsUI()" title="Gera automaticamente testes de regressão pytest a partir das memórias bug_fix e abre no Editor .MD do Vault">
             🧪 Gerar Testes de Regressão
           </button>
           <div id="slGlobalBrainSummaryBadge" style="font-size:10.5px; font-family:var(--font-mono); color:#7dd3fc; font-weight:700;">
@@ -3374,7 +3686,7 @@
     </div>
 
     <!-- Graphical Neural Pipeline Canvas (4-Stage Synaptic Reactor at 60 FPS) -->
-    <div style="position:relative; background:radial-gradient(circle at 50% 50%, rgba(59,7,100,0.32), rgba(6,9,17,0.98)); border:1px solid rgba(168,85,247,0.4); border-radius:12px; height:235px; overflow:hidden; box-shadow:inset 0 0 40px rgba(0,0,0,0.75);">
+    <div style="position:relative; background:#080b12; border:1px solid var(--border-strong); border-radius:10px; height:235px; overflow:hidden;">
       <canvas id="selfLearnPipelineCanvas" style="width:100%; height:100%; display:block;"></canvas>
       <div style="position:absolute; top:10px; left:14px; display:flex; gap:8px; pointer-events:none; flex-wrap:wrap;">
         <span style="background:rgba(9,13,22,0.86); border:1px solid rgba(56,189,248,0.45); color:#7dd3fc; padding:3px 9px; border-radius:6px; font-size:10px; font-family:var(--font-mono); font-weight:700;">
@@ -3390,14 +3702,14 @@
           ESTÁGIO 4: 🧬 Meta-Regras (<span id="slStage4Rules">0</span>) &amp; IQ <span id="slStage4Iq">99.8%</span>
         </span>
       </div>
-      <div id="slCanvasLastPulseBanner" style="position:absolute; bottom:10px; left:14px; right:14px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; font-family:var(--font-mono); font-size:10.5px; color:#e9d5ff; background:rgba(9,13,22,0.78); border:1px solid rgba(168,85,247,0.3); padding:5px 10px; border-radius:7px;">
+      <div id="slCanvasLastPulseBanner" style="position:absolute; bottom:10px; left:14px; right:14px; display:flex; justify-content:space-between; align-items:center; pointer-events:none; font-family:var(--font-mono); font-size:10.5px; color:#cbd5e1; background:rgba(9,13,22,0.86); border:1px solid var(--border-strong); padding:5px 10px; border-radius:7px;">
         <span id="slCanvasLastPulseTxt">⚡ Sentinel a trabalhar em background: a consolidar memórias e reforçar sinapses...</span>
         <span style="color:#34d399; font-weight:700;">CONSUMO LLM EM BACKGROUND: 0 TOKENS</span>
       </div>
     </div>
 
     <!-- Section: Onde o Self-Learn está Ativo (Cards Visuais de Todos os Projetos) -->
-    <div style="background:rgba(13,18,30,0.94); border:1px solid var(--border-strong); border-radius:11px; padding:12px 14px; min-width:0; max-width:100%;">
+    <div class="studio-section-card" style="min-width:0; max-width:100%;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px;">
         <div>
           <div style="font-size:12px; font-weight:800; color:#f8fafc;">🛰️ RADAR DE PROJETOS — ONDE O SELF-LEARN &amp; SENTINEL ESTÃO ATIVOS</div>
@@ -3410,15 +3722,15 @@
 
     <!-- Bottom 2 Columns: Distilled Meta-Rules Playbook + Live Evolution Timeline -->
     <div style="display:grid; grid-template-columns:minmax(0, 1.25fr) minmax(0, 1fr); gap:12px; width:100%; min-width:0; min-height:200px;">
-      <div style="background:rgba(13,18,30,0.94); border:1px solid rgba(168,85,247,0.38); border-radius:11px; padding:12px 14px; display:flex; flex-direction:column; min-width:0; overflow:hidden;">
+      <div class="studio-section-card" style="display:flex; flex-direction:column; min-width:0; overflow:hidden;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; flex-wrap:wrap;">
-          <div style="font-size:12px; font-weight:800; color:#e9d5ff;">🧬 META-REGRAS APRENDIDAS PELO BRAIN (`learned_rule` + Playbook)</div>
-          <button class="quick-ag-btn" style="border-color:rgba(56,189,248,0.5); color:#7dd3fc;" onclick="switchMainView('promptforge')">✨ Usar no Prompt Forge →</button>
+          <div style="font-size:12px; font-weight:800; color:#f8fafc;">🧬 META-REGRAS APRENDIDAS PELO BRAIN (`learned_rule` + Playbook)</div>
+          <button class="quick-ag-btn" style="border-color:var(--border-strong); color:#7dd3fc;" onclick="switchMainView('promptforge')">✨ Usar no Prompt Forge →</button>
         </div>
         <div id="slPageRulesList" style="display:flex; flex-direction:column; gap:7px; overflow-y:auto; overflow-x:hidden; max-height:220px; font-size:11px; font-family:var(--font-mono); min-width:0;"></div>
       </div>
 
-      <div style="background:rgba(13,18,30,0.94); border:1px solid rgba(16,185,129,0.35); border-radius:11px; padding:12px 14px; display:flex; flex-direction:column; min-width:0; overflow:hidden;">
+      <div class="studio-section-card" style="display:flex; flex-direction:column; min-width:0; overflow:hidden;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px; flex-wrap:wrap;">
           <div style="font-size:12px; font-weight:800; color:#6ee7b7;">⚡ LOG EM TEMPO REAL DE AUTO-MELHORIA (TASK WORKER)</div>
           <span style="font-size:10px; font-family:var(--font-mono); color:#94a3b8;">Auto-refresh ativo</span>
@@ -3433,18 +3745,18 @@
        ========================================================================= -->
   <div class="swarm-workspace" id="promptForgeWorkspace" style="padding:12px 16px; gap:12px; width:100%; max-width:100vw; height:calc(100vh - 50px); overflow-x:hidden; overflow-y:auto; box-sizing:border-box;">
     <!-- Header -->
-    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:linear-gradient(90deg, rgba(30,58,138,0.32), rgba(88,28,135,0.28), rgba(15,23,42,0.95)); border:1px solid rgba(99,102,241,0.48); border-radius:12px; padding:10px 14px; min-width:0; max-width:100%;">
+    <div class="studio-hero-banner" style="min-width:0; max-width:100%;">
       <div style="min-width:0; flex:1;">
-        <div style="font-size:10px; font-family:var(--font-mono); color:#93c5fd; font-weight:800; letter-spacing:0.08em;">05 // CONTEXT-AWARE PROMPT ARCHITECT &amp; SELF-LEARN INJECTOR</div>
+        <div style="font-size:10px; font-family:var(--font-mono); color:#94a3b8; font-weight:700; letter-spacing:0.08em;">05 // CONTEXT-AWARE PROMPT ARCHITECT &amp; SELF-LEARN INJECTOR</div>
         <div style="font-size:15px; font-weight:800; color:#ffffff; margin-top:2px;">
           ✨ Prompt Forge — Otimizador de Prompts para o Chat do Antigravity
         </div>
-        <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">
+        <div style="font-size:11px; color:#94a3b8; margin-top:2px;">
           Escreva o que pretende criar ou corrigir. O Brain cruza automaticamente as memórias do projeto, os ficheiros/linhas AST (`:Lstart-end`), as Meta-Regras do Self-Learn e as Skills do Antigravity para devolver o prompt perfeito pronto a colar no chat.
         </div>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
-        <span id="pfSavedTokensBadge" style="background:rgba(16,185,129,0.18); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; padding:5px 10px; border-radius:8px; font-family:var(--font-mono); font-size:11px; font-weight:700; white-space:nowrap;">
+        <span id="pfSavedTokensBadge" style="background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.38); color:#6ee7b7; padding:5px 10px; border-radius:7px; font-family:var(--font-mono); font-size:11px; font-weight:700; white-space:nowrap;">
           🪙 Poupança estimada: +580 tokens/pedido
         </span>
       </div>
@@ -4029,6 +4341,39 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
     </div>
   </div>
+    </div><!-- /studioStageViewport -->
+  </div><!-- /studioShellBody -->
+
+  <!-- v7.0 IDE STATUS BAR (CURSOR / LINEAR STYLE TELEMETRY & QUOTA 5H STRIP) -->
+  <footer class="studio-statusbar" id="studioStatusBar">
+    <div class="metrics-strip">
+      <div class="metric-pill" id="sseStatusBadge" title="Stream Real-Time Server-Sent Events (/api/events) + Router Jev-Mem System-1">
+        <span style="color:#34d399; font-weight:700;">● SSE</span>
+        <span style="color:var(--text-dim);">·</span>
+        <strong id="statLatency" style="color:#38bdf8;">0.01ms</strong>
+      </div>
+      <div class="metric-pill" title="Total de Memórias e Sinapses no Grafo">
+        🧠 <strong id="statMemories">0</strong> memórias · <strong id="statLinks">0</strong> sinapses
+      </div>
+      <button type="button" class="metric-pill" id="btnTokenDietHud" onclick="openInspectorModal()" style="cursor:pointer; color:#6ee7b7;" title="5 Otimizações de Poupança de Tokens Ativas: Session Delta (-64%), TOON Telegráfico (-31%), Corte Top-K, Pointers AST :Lstart-end e Modo Micro-Prompt (<90 tok). Clique para inspecionar e simular!">
+        ⚡ <strong id="statTokenDietBadge">-64% Tokens</strong> · <span style="font-size:9.5px; color:#a7f3d0;">TOON+Delta</span>
+      </button>
+      <button type="button" class="metric-pill" id="btnSelfLearnTopBadge" onclick="switchMainView('selflearn')" style="cursor:pointer; color:#e9d5ff;" title="Auto-Aprendizagem Recursiva & Sentinel Proativo por Projeto (Self-Learn v4.9 · '1 task running'). Clique para abrir a página gráfica do Self-Learn!">
+        🧬 <strong id="topSelfLearnBadgeTxt">Self-Learn ON · IQ 94.2%</strong>
+      </button>
+      <button type="button" class="metric-pill" id="topQuota5hRadarPill" onclick="refreshQuota5hRadarUI(true)" style="cursor:pointer; color:#bae6fd;" title="Radar de Quota 5h & Burn Rate em tempo real (analisa transcripts.jsonl ativos nas últimas 5h + poupança Brain). Clique para atualizar!">
+        ⏱️ <strong id="topQuota5hTxt">Quota 5h: 12% · Reset 4h15m</strong>
+      </button>
+      <div class="metric-pill" style="display:none;"><strong id="statSaved">+0 tok</strong><strong id="statWindow5h">Reset 5h</strong></div>
+    </div>
+
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-size:9.5px; color:#64748b;">SQLite WAL mmap: 256MB · LSH-128D + RRF</span>
+      <button class="metric-pill" id="btnLangSwitcher" onclick="toggleBrainLanguageUI()" style="cursor:pointer; color:#7dd3fc; font-family:var(--font-mono); font-weight:800;" title="Alternar Idioma da Interface e Prompt Forge (PT-PT ⇄ EN-EN)">
+        🇵🇹 PT-PT
+      </button>
+    </div>
+  </footer>
 
   <!-- MODAL EDITOR MARKDOWN INTERATIVO DO VAULT (.BRAIN_VAULT/*.MD) -->
   <div class="modal-backdrop" id="vaultNoteEditorModal" onclick="if(event.target===this) closeVaultNoteEditorModal()">
@@ -4560,6 +4905,39 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
   <script>
     // =========================================================================
+    // 00 // v7.0 STUDIO SHELL HELPERS (LEFT RAIL DOCK & PROGRESSIVE DISCLOSURE)
+    // =========================================================================
+    function toggleStudioRailCompact() {
+      const isCompact = document.body.classList.toggle('rail-compact');
+      try {
+        localStorage.setItem('brain_rail_compact', isCompact ? '1' : '0');
+      } catch (_e) {}
+      setTimeout(() => {
+        try {
+          if (typeof resizeCanvas === 'function') resizeCanvas();
+          if (typeof resizeOffice3DCanvas === 'function') resizeOffice3DCanvas();
+          window.dispatchEvent(new Event('resize'));
+        } catch (_err) {}
+      }, 200);
+    }
+
+    function toggleStudioAdvDrawer(drawerId, btnEl) {
+      const drawer = document.getElementById(drawerId);
+      if (!drawer) return;
+      const isOpen = drawer.classList.toggle('open');
+      if (btnEl) {
+        btnEl.style.borderColor = isOpen ? 'rgba(99, 102, 241, 0.55)' : '';
+        btnEl.style.color = isOpen ? '#ffffff' : '';
+      }
+    }
+
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('brain_rail_compact') === '1') {
+        document.body.classList.add('rail-compact');
+      }
+    } catch (_e) {}
+
+    // =========================================================================
     // 00 // BILINGUAL LOCALIZATION ENGINE (PT-PT ⇄ EN-EN) + ZERO-FRENCH GUARD
     // =========================================================================
     let currentBrainLang = (typeof localStorage !== 'undefined' && localStorage.getItem('brain_ui_lang')) || 'pt-PT';
@@ -4579,6 +4957,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       '⌘K Pesquisa': '⌘K Search',
       '⚙️ Ferramentas & Física': '⚙️ Tools & Physics',
       '➕ Nova Memória': '➕ New Memory',
+      '⚙️ Avançado ▾': '⚙️ Advanced ▾',
+      '🎛️ Controlos 3D & FX ▾': '🎛️ 3D Controls & FX ▾',
+      '🛰️ Orbit OS': '🛰️ Orbit OS',
+      '🔎 AST & BFS': '🔎 AST & BFS',
       '📂 Explorador do Córtex': '📂 Cortex Explorer',
       '◀ Recolher': '◀ Collapse',
       '📂 Todos Projetos': '📂 All Projects',

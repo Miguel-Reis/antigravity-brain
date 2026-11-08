@@ -1176,12 +1176,20 @@ def run_all_tests() -> None:
         "function refreshQuota5hRadarUI(",
         "function injectRepoAgentsMdUI()",
         "function synthesizeBugTestsUI()",
+        'id="studioRailDock"',
+        'id="studioStatusBar"',
+        'id="studioStageViewport"',
+        'class="cmd-search-omnibox"',
+        'id="swarmAdvControlsDrawer"',
+        'id="officeAdvCamDrawer"',
+        "function toggleStudioRailCompact()",
+        "function toggleStudioAdvDrawer(",
         "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
     ):
-        assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
-    print("[PASS] Pack Completo v6.0, v6.1 & v6.2 (128-D Subword LSH + RRF, Query-Routed Scout, Global Payload Extractor, Domain Quarantine, mmap SQLite & PageRank) OK")
+        assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
+    print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, 128-D LSH + RRF) OK")
 
 
 if __name__ == "__main__":
