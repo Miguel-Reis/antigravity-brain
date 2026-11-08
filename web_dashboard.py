@@ -1339,6 +1339,30 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 ws = str(body.get("workspace", "all"))
                 hist = orbit.get_prompt_forge_history(workspace=ws, limit=10)
                 res = {"ok": True, "history": hist}
+            elif action == "vault_overview":
+                ws = str(body.get("workspace", "brain_mcp"))
+                res = orbit.get_vault_studio_overview(workspace=ws)
+            elif action == "vault_defuddle":
+                ws = str(body.get("workspace", "brain_mcp"))
+                raw_in = str(body.get("raw_input", ""))
+                title_in = str(body.get("title", ""))
+                save_flag = bool(body.get("save_to_vault", True))
+                df_res = orbit.defuddle_content(
+                    raw_input=raw_in,
+                    workspace=ws,
+                    title=title_in,
+                    save_to_vault=save_flag,
+                )
+                res = {**df_res, "vault_studio": orbit.get_vault_studio_overview(workspace=ws)}
+            elif action == "vault_sync":
+                ws = str(body.get("workspace", "brain_mcp"))
+                vs_res = orbit.sync_markdown_vault(workspace=ws)
+                res = {**vs_res, "vault_studio": vs_res}
+            elif action == "global_brain_synthesize":
+                ws = str(body.get("workspace", "brain_mcp"))
+                scan_tr = bool(body.get("scan_transcripts", True))
+                gb_res = orbit.synthesize_global_meta_brain(scan_transcripts=scan_tr)
+                res = {**gb_res, "global_brain": gb_res, "self_learn": orbit.get_self_learn_status(workspace=ws)}
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return

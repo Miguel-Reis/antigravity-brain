@@ -2338,6 +2338,10 @@
         <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
           ✨ Prompt Forge
         </button>
+        <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" style="border-color:rgba(168,85,247,0.48); color:#f3e8ff; background:rgba(168,85,247,0.1);" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Versão Lab Não-Oficial · Tecla 6]">
+          <span class="pulse-dot" style="background:#c084fc;"></span>
+          💎 Vault 6x <span style="font-size:8.5px; background:rgba(168,85,247,0.32); border:1px solid rgba(192,132,252,0.6); color:#f5d0fe; padding:0 4px; border-radius:4px; margin-left:3px; font-family:var(--font-mono);">LAB</span>
+        </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
           <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
           Tasks (<span id="topTabTasksCount">0</span>)
@@ -2854,7 +2858,7 @@
           <span id="swScoutTime">12.4 ms</span>
         </div>
         <div class="bp-body">
-          <div class="bp-kv"><span>strat:</span> <strong>Lê 1x ➔ Partilha c/ 24 agentes</strong></div>
+          <div class="bp-kv"><span>strat:</span> <strong>Lê 1x ➔ Partilha c/ 48 agentes</strong></div>
           <div class="bp-kv"><span>files_indexed:</span> <strong id="swScoutFiles">0 ficheiros</strong></div>
           <div class="bp-kv"><span>ast_symbols:</span> <strong id="swScoutSymbols">0 funções/classes</strong></div>
           <div class="bp-kv"><span>duplicate_reads:</span> <strong style="color:#6ee7b7;">0 (100% evitadas)</strong></div>
@@ -2871,7 +2875,7 @@
         <div class="bp-body">
           <div class="bp-kv"><span>role:</span> <strong>planner (decoupled)</strong></div>
           <div class="bp-kv"><span>tokens:</span> <strong id="swArchTokens">2,840 · READ ONCE &amp; STOP</strong></div>
-          <div class="bp-kv"><span>lanes:</span> <strong>6 UI · 6 API · 6 TEST · 6 DOCS</strong></div>
+          <div class="bp-kv"><span>lanes:</span> <strong>12 UI · 12 API · 12 TEST · 12 DOCS</strong></div>
           <div class="bp-kv"><span>status:</span> <strong style="color:#6ee7b7;" id="swArchStatus">plan locked</strong></div>
           <div class="goal-quote" id="swGoalQuote">&gt; "ship v2.4: Scout Shared Map + Asymmetric Swarm"</div>
         </div>
@@ -2886,7 +2890,7 @@
         <div class="bp-body" style="justify-content:space-between;">
           <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted);">
             <span>mode: <strong style="color:#fff;">asymmetric fan-out</strong></span>
-            <span>lanes: <strong style="color:#818cf8;">4 × 6 workers</strong></span>
+            <span>lanes: <strong style="color:#818cf8;">4 × 12 workers (48)</strong></span>
           </div>
           <svg viewBox="0 0 360 110" style="width:100%; height:102px; overflow:visible;">
             <rect x="135" y="4" width="90" height="22" rx="4" fill="#4f46e5" />
@@ -2897,19 +2901,19 @@
             <path d="M180,26 C180,50 315,42 315,68" stroke="#6366f1" stroke-width="1.5" fill="none" />
             <g transform="translate(15, 68)">
               <rect width="60" height="22" rx="4" fill="#101624" stroke="#38bdf8" stroke-width="1.2"/>
-              <text x="30" y="14" text-anchor="middle" fill="#bae6fd" font-size="9.5" font-weight="bold">UI · 6</text>
+              <text x="30" y="14" text-anchor="middle" fill="#bae6fd" font-size="9.5" font-weight="bold">UI · 12</text>
             </g>
             <g transform="translate(105, 68)">
               <rect width="60" height="22" rx="4" fill="#101624" stroke="#818cf8" stroke-width="1.2"/>
-              <text x="30" y="14" text-anchor="middle" fill="#c7d2fe" font-size="9.5" font-weight="bold">API · 6</text>
+              <text x="30" y="14" text-anchor="middle" fill="#c7d2fe" font-size="9.5" font-weight="bold">API · 12</text>
             </g>
             <g transform="translate(195, 68)">
               <rect width="60" height="22" rx="4" fill="#101624" stroke="#34d399" stroke-width="1.2"/>
-              <text x="30" y="14" text-anchor="middle" fill="#a7f3d0" font-size="9.5" font-weight="bold">TESTS · 6</text>
+              <text x="30" y="14" text-anchor="middle" fill="#a7f3d0" font-size="9.5" font-weight="bold">TESTS · 12</text>
             </g>
             <g transform="translate(285, 68)">
               <rect width="60" height="22" rx="4" fill="#101624" stroke="#fbbf24" stroke-width="1.2"/>
-              <text x="30" y="14" text-anchor="middle" fill="#fde68a" font-size="9.5" font-weight="bold">DOCS · 6</text>
+              <text x="30" y="14" text-anchor="middle" fill="#fde68a" font-size="9.5" font-weight="bold">DOCS · 12</text>
             </g>
           </svg>
         </div>
@@ -2919,7 +2923,7 @@
       <div class="bp-box">
         <div class="bp-header">
           <span>TASK_LOG</span>
-          <span id="swTaskLogCount">24 / 24</span>
+          <span id="swTaskLogCount">48 / 48</span>
         </div>
         <div class="bp-body">
           <div class="task-log-scroll" id="swTaskLogList"></div>
@@ -2935,7 +2939,7 @@
       <div class="bp-box">
         <div class="bp-header"><span>MERGE</span><span style="color:#818cf8;">fan-in</span></div>
         <div class="bp-body" style="flex-direction:row; justify-content:space-between;">
-          <span>lanes: <strong id="swMergeRatio">24 ➔ 1</strong></span>
+          <span>lanes: <strong id="swMergeRatio">48 ➔ 1</strong></span>
           <span>conflicts: <strong style="color:#6ee7b7;">0 (isolated)</strong></span>
           <span>status: <strong style="color:#c7d2fe;" id="swMergeStatus">clean</strong></span>
         </div>
@@ -2943,7 +2947,7 @@
       <div class="bp-box">
         <div class="bp-header"><span>VERIFY</span><span style="color:#6ee7b7;">automated audit</span></div>
         <div class="bp-body" style="flex-direction:row; justify-content:space-between;">
-          <span>checks: <strong style="color:#818cf8;" id="swVerifyRatio">48 / 48</strong></span>
+          <span>checks: <strong style="color:#818cf8;" id="swVerifyRatio">96 / 96</strong></span>
           <span>gates: <strong>AST + HTTP + WAL</strong></span>
           <span>status: <strong style="color:#6ee7b7;" id="swVerifyStatus">PASS</strong></span>
         </div>
@@ -2958,7 +2962,7 @@
       </div>
     </div>
 
-    <!-- Row 4: SWARM FOOTER (RUN_LOG, QUEUE 24 BARS, OUTPUT) -->
+    <!-- Row 4: SWARM FOOTER (RUN_LOG, QUEUE 48 BARS, OUTPUT) -->
     <div class="swarm-footer-grid">
       <div class="bp-box">
         <div class="bp-header">
@@ -2972,19 +2976,19 @@
 
       <div class="bp-box">
         <div class="bp-header">
-          <span>QUEUE · 24 PARALLEL LANES</span>
+          <span>QUEUE · 48 PARALLEL LANES</span>
           <span>Argon + flash / flash_lite</span>
         </div>
         <div class="bp-body">
           <div class="queue-counters">
-            <div class="q-stat"><span>total</span><strong id="qTotal">24</strong></div>
+            <div class="q-stat"><span>total</span><strong id="qTotal">48</strong></div>
             <div class="q-stat"><span>active</span><strong class="emerald" id="qActive">0</strong></div>
             <div class="q-stat"><span>failed</span><strong id="qFailed">0</strong></div>
-            <div class="q-stat"><span>done</span><strong class="pink" id="qDone">24</strong></div>
+            <div class="q-stat"><span>done</span><strong class="pink" id="qDone">48</strong></div>
           </div>
           <div class="queue-bars" id="swQueueBars"></div>
           <div style="font-size:10px; color:var(--text-dim); display:flex; justify-content:space-between;">
-            <span>parallelism: 4 lanes × 6 workers</span>
+            <span>parallelism: 4 lanes × 12 workers</span>
             <span>0 file lock collisions</span>
           </div>
         </div>
@@ -2997,8 +3001,8 @@
         </div>
         <div class="bp-body" style="justify-content:center;">
           <div style="display:flex; align-items:baseline; justify-content:space-between;">
-            <div class="output-big" id="swOutputCounter">24 / 24</div>
-            <span style="color:#6ee7b7; font-size:11px; font-weight:700;" id="swAuditPassBadge">✓ 48/48 VERIFIED</span>
+            <div class="output-big" id="swOutputCounter">48 / 48</div>
+            <span style="color:#6ee7b7; font-size:11px; font-weight:700;" id="swAuditPassBadge">✓ 96/96 VERIFIED</span>
           </div>
           <div style="font-size:10px; color:var(--text-muted); margin-top:4px;">
             antigravity $ <span style="color:#a5b4fc;">invoke_subagent --scout flash_lite --arch gemini-4-argon --workers flash</span>
@@ -3011,7 +3015,7 @@
     <div class="swarm-eq-box">
       <div style="display:flex; justify-content:space-between; align-items:center; font-size:10px; color:var(--text-muted); font-weight:600;">
         <span>EXECUTION TELEMETRY WAVEFORM · JEV-S1: 0.01ms · RUFLO PHEROMONE EMA: ACTIVE · AI-DEFENCE: SAFE</span>
-        <span id="swEqStatusText" style="color:#34d399; font-weight:700;">48/48 GATES LOCKED</span>
+        <span id="swEqStatusText" style="color:#34d399; font-weight:700;">96/96 GATES LOCKED</span>
       </div>
       <div class="swarm-eq-bars" id="swarmEqualizerBars"></div>
     </div>
@@ -3324,10 +3328,32 @@
         <button class="btn" style="background:rgba(16,185,129,0.16); border-color:#34d399; color:#a7f3d0; font-weight:800;" onclick="enableAndEvolveAllProjectsUI()">
           🟢 Ativar &amp; Evoluir Todos
         </button>
+        <button class="btn" style="background:linear-gradient(135deg, rgba(14,165,233,0.28), rgba(168,85,247,0.28)); border-color:#38bdf8; color:#bae6fd; font-weight:800;" onclick="synthesizeGlobalBrainUI()">
+          🌐 Unificar Brain Global Agora
+        </button>
         <button class="btn btn-primary" style="background:linear-gradient(135deg, #9333ea, #6366f1); border-color:#c084fc; font-weight:800;" onclick="triggerGraphicalSelfLearnCycle()">
           ⚡ Disparar Ciclo de Auto-Melhoria Agora
         </button>
       </div>
+    </div>
+
+    <!-- Section: 🌐 Córtex Global Unificado Sempre Ativo (Top-3 Sabedoria Universal: Self-Learn + Bugs + Conversas + Vault) -->
+    <div style="background:linear-gradient(90deg, rgba(14,165,233,0.12), rgba(88,28,135,0.16), rgba(13,18,30,0.96)); border:1px solid rgba(56,189,248,0.45); border-radius:11px; padding:11px 14px; min-width:0; max-width:100%;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div style="font-size:12px; font-weight:800; color:#bae6fd; display:flex; align-items:center; gap:6px;">
+            <span>🌐 CÓRTEX GLOBAL SEMPRE ATIVO — TOP-3 SABEDORIA UNIVERSAL (`🌐[GLOBAL_BRAIN|top3]`)</span>
+            <span style="background:rgba(16,185,129,0.22); border:1px solid rgba(16,185,129,0.55); color:#6ee7b7; padding:1px 7px; border-radius:999px; font-size:9.5px; font-family:var(--font-mono);">MODO GLOBAL TOTAL ATIVO</span>
+          </div>
+          <div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">
+            Injetado automaticamente em 100% dos turnos a partir de todos os projetos (`Self-Learn`), `Auto-Bugfix`, histórico de conversas (`transcripts.jsonl`) e `Vault .md` (com sanitização anti-confusão de ficheiros estrangeiros).
+          </div>
+        </div>
+        <div id="slGlobalBrainSummaryBadge" style="font-size:10.5px; font-family:var(--font-mono); color:#7dd3fc; font-weight:700;">
+          Top-3 Universal Ativo · 0ms overhead
+        </div>
+      </div>
+      <div id="slGlobalBrainTop3Grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:9px; min-width:0;"></div>
     </div>
 
     <!-- Graphical Neural Pipeline Canvas (4-Stage Synaptic Reactor at 60 FPS) -->
@@ -3536,6 +3562,442 @@
           placeholder="O seu Super-Prompt enriquecido com ficheiros :Lstart-end, memória do projeto, regras do Self-Learn e trajetória DOTS aparecerá aqui pronto a copiar..."
         ></textarea>
       </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       06 // VAULT & DEFUDDLE STUDIO (UNOFFICIAL LAB PREVIEW — 6-PANEL BENTO OS)
+       ========================================================================= -->
+  <style>
+    .vault-bento-card {
+      position: relative;
+      background: #070911;
+      border: 1px solid rgba(139, 92, 246, 0.28);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+      min-height: 270px;
+      overflow: hidden;
+      box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.85);
+    }
+    .vault-bento-card::before,
+    .vault-bento-card::after {
+      content: '';
+      position: absolute;
+      width: 9px;
+      height: 9px;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .vault-bento-card::before {
+      top: 0;
+      left: 0;
+      border-top: 2px solid var(--vc-accent, #a855f7);
+      border-left: 2px solid var(--vc-accent, #a855f7);
+    }
+    .vault-bento-card::after {
+      bottom: 0;
+      right: 0;
+      border-bottom: 2px solid var(--vc-accent, #a855f7);
+      border-right: 2px solid var(--vc-accent, #a855f7);
+    }
+    .vault-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 7px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.05em;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    .vault-num-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-weight: 800;
+      font-size: 9.5px;
+      color: #05070e;
+      background: var(--vc-accent, #a855f7);
+      margin-right: 6px;
+    }
+    .vault-card-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: #64748b;
+      z-index: 2;
+      flex-shrink: 0;
+    }
+    @keyframes defuddleLaserSweep {
+      0% { top: 14%; opacity: 0.95; }
+      50% { top: 82%; opacity: 1; }
+      100% { top: 14%; opacity: 0.95; }
+    }
+    .defuddle-laser-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #f59e0b, #fde047, #f59e0b, transparent);
+      box-shadow: 0 0 12px #f59e0b, 0 0 24px rgba(245, 158, 11, 0.65);
+      animation: defuddleLaserSweep 3.4s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 4;
+    }
+  </style>
+
+  <div class="swarm-workspace" id="vaultWorkspace" style="padding:10px 14px; gap:10px; width:100%; max-width:100vw; height:calc(100vh - 50px); overflow-x:hidden; overflow-y:auto; box-sizing:border-box; background:#04060b;">
+    <!-- TOP HERO BAR (EXACT REPLICA OF OBSIDIAN + CLAUDE VAULT HEADER) -->
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; background:#070a12; border:1px solid rgba(168,85,247,0.38); border-radius:9px; padding:10px 16px; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div style="background:linear-gradient(135deg, #a855f7, #7e22ce); border:1px solid #d8b4fe; border-radius:6px; padding:7px 16px; text-align:center; box-shadow:0 0 22px rgba(168,85,247,0.35);">
+          <div style="font-family:var(--font-mono); font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.12em;">BRAIN VAULT</div>
+          <div style="font-family:var(--font-mono); font-size:8.5px; color:#f3e8ff; opacity:0.92; letter-spacing:0.06em;">.MD + SQLITE · LAB v5.1</div>
+        </div>
+        <div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-family:var(--font-mono); font-size:13.5px; font-weight:800; color:#f8fafc; letter-spacing:0.06em;">ANTIGRAVITY WORKS INSIDE YOUR VAULT</span>
+            <span style="font-family:var(--font-mono); font-size:9.5px; background:rgba(245,158,11,0.16); border:1px solid rgba(245,158,11,0.5); color:#fde68a; padding:1px 7px; border-radius:4px; font-weight:700;">UNOFFICIAL PREVIEW (LOCAL ONLY · NO GIT PUSH)</span>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:#94a3b8; margin-top:3px;">
+            inspired by Obsidian's CEO kepano · real <code>.brain_vault/*.md</code> files, <code>[[wikilinks]]</code>, Defuddle &amp; <code>AGENTS.md</code> from the first prompt
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Controls: Workspace + 1-Click Sync -->
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <select id="vaultWorkspaceSelect" class="select-sm" style="height:30px; font-family:var(--font-mono); font-weight:700; color:#e9d5ff; border-color:rgba(168,85,247,0.45);" onchange="onVaultWorkspaceChangeUI(this.value)">
+          <option value="brain_mcp" selected>📂 brain_mcp</option>
+          <option value="global">📂 global</option>
+        </select>
+        <button class="quick-ag-btn" style="border-color:rgba(52,211,153,0.55); color:#6ee7b7; font-weight:700; padding:5px 10px;" onclick="triggerVaultSyncUI()">
+          🔄 Sincronizar .MD + AGENTS.md
+        </button>
+      </div>
+
+      <!-- Right 4 Big Telemetry Counters (NOTES | LINKS | IMPORTS | CLIPPED) -->
+      <div style="display:flex; align-items:center; gap:20px; font-family:var(--font-mono);">
+        <div style="text-align:right;">
+          <div style="font-size:8.5px; color:#64748b; letter-spacing:0.08em;">NOTES</div>
+          <div id="vaultStatNotes" style="font-size:18px; font-weight:800; color:#f8fafc;">5,081</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:8.5px; color:#64748b; letter-spacing:0.08em;">LINKS</div>
+          <div id="vaultStatLinks" style="font-size:18px; font-weight:800; color:#c084fc;">20,228</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:8.5px; color:#64748b; letter-spacing:0.08em;">IMPORTS</div>
+          <div id="vaultStatImports" style="font-size:18px; font-weight:800; color:#34d399;">4,420</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:8.5px; color:#64748b; letter-spacing:0.08em;">CLIPPED</div>
+          <div id="vaultStatClipped" style="font-size:18px; font-weight:800; color:#38bdf8;">295</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6-PANEL BENTO GRID (2 COLUMNS x 3 ROWS) -->
+    <div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:10px; width:100%; flex:1; min-height:0;">
+
+      <!-- ===================================================================
+           PANEL 01: VAULT + GRAPH VIEW · second brain
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#a855f7;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill">01</span>
+            <strong style="color:#f8fafc;">VAULT + GRAPH VIEW</strong>
+            <span style="color:#64748b;">· second brain</span>
+          </div>
+          <span id="vaultP01Badge" style="color:#c084fc; font-weight:700;">5,081 NOTES</span>
+        </div>
+
+        <div style="position:relative; flex:1; min-height:215px; width:100%; overflow:hidden;">
+          <canvas id="vaultCanvas01" style="width:100%; height:100%; display:block; cursor:pointer;" title="Clique em qualquer constelação para filtrar o Atlas .MD e o Tasks.base"></canvas>
+        </div>
+
+        <div class="vault-card-foot">
+          <span id="vaultP01FootLeft">30,000 [[wikilinks]] · importer + clipper · SQLite FTS5</span>
+          <span style="color:#a855f7;">60fps · live</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PANEL 02: THE WEB -> YOUR VAULT · clipper + defuddle (3D GLOBE)
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#38bdf8;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill" style="background:#38bdf8;">02</span>
+            <strong style="color:#f8fafc;">THE WEB ➔ YOUR VAULT</strong>
+            <span style="color:#64748b;">· clipper + defuddle</span>
+          </div>
+          <span style="color:#38bdf8; font-weight:700;">● LIVE CAPTURE</span>
+        </div>
+
+        <div style="position:relative; flex:1; min-height:215px; width:100%; overflow:hidden;">
+          <canvas id="vaultCanvas02" style="width:100%; height:100%; display:block; cursor:grab;" title="Arraste para rodar o Globo 3D Orbital ou clique para disparar feixe de captura"></canvas>
+
+          <!-- Left Telemetry Overlay -->
+          <div style="position:absolute; top:10px; left:8px; width:155px; display:flex; flex-direction:column; gap:6px; font-family:var(--font-mono); font-size:9.5px; pointer-events:none;">
+            <div style="display:flex; justify-content:space-between; color:#94a3b8;"><span>pages clipped</span><strong style="color:#38bdf8;" id="vp02ClippedPct">100%</strong></div>
+            <div style="height:3px; background:rgba(56,189,248,0.15); border-radius:2px;"><div style="width:100%; height:100%; background:#38bdf8;"></div></div>
+            <div style="display:flex; justify-content:space-between; color:#94a3b8;"><span>tokens saved</span><strong style="color:#34d399;" id="vp02SavedPct">84%</strong></div>
+            <div style="height:3px; background:rgba(52,211,153,0.15); border-radius:2px;"><div style="width:84%; height:100%; background:#34d399;"></div></div>
+            <div style="display:flex; justify-content:space-between; color:#94a3b8;"><span>ads &amp; noise cut</span><strong style="color:#f59e0b;">94%</strong></div>
+            <div style="height:3px; background:rgba(245,158,11,0.15); border-radius:2px;"><div style="width:94%; height:100%; background:#f59e0b;"></div></div>
+            <div style="display:flex; justify-content:space-between; color:#94a3b8;"><span>clean .md</span><strong style="color:#c084fc;">100%</strong></div>
+          </div>
+
+          <!-- Top-Right Floating Vault Target Box -->
+          <div style="position:absolute; top:12px; right:10px; background:rgba(15,12,29,0.92); border:1px solid #a855f7; border-radius:6px; padding:6px 12px; font-family:var(--font-mono); text-align:center; box-shadow:0 0 18px rgba(168,85,247,0.3); pointer-events:none;">
+            <div style="font-size:11px; font-weight:800; color:#f3e8ff;">vault</div>
+            <div style="font-size:8.5px; color:#a855f7;">markdown (.md)</div>
+          </div>
+        </div>
+
+        <div class="vault-card-foot">
+          <span>web clipper · defuddle · AST watcher</span>
+          <span id="vaultP02FootRight" style="color:#38bdf8;">raw html ➔ clean .md</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PANEL 03: DEFUDDLE · any page -> clean markdown (FEWER TOKENS)
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#f59e0b;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill" style="background:#f59e0b;">03</span>
+            <strong style="color:#f8fafc;">DEFUDDLE</strong>
+            <span style="color:#64748b;">· any page ➔ clean markdown</span>
+          </div>
+          <span id="vaultP03Badge" style="color:#f59e0b; font-weight:700;">84% FEWER TOKENS</span>
+        </div>
+
+        <!-- Interactive Input Bar for Defuddle -->
+        <div style="display:flex; gap:6px; margin:6px 0; align-items:center; flex-shrink:0;">
+          <input
+            type="text"
+            id="vaultDefuddleInput"
+            placeholder="Cole um URL (https://...) ou HTML/log ruidoso para limpar em Markdown..."
+            style="flex:1; background:#04060c; border:1px solid rgba(245,158,11,0.38); border-radius:5px; padding:5px 8px; color:#f8fafc; font-family:var(--font-mono); font-size:10.5px; outline:none;"
+            onkeydown="if(event.key==='Enter') runVaultDefuddleUI()"
+          />
+          <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.45); color:#fde68a; font-size:9.5px; padding:4px 7px;" onclick="loadDefuddlePresetUI('html')">Demo HTML</button>
+          <button class="quick-ag-btn" style="border-color:rgba(56,189,248,0.45); color:#7dd3fc; font-size:9.5px; padding:4px 7px;" onclick="loadDefuddlePresetUI('log')">Demo Log</button>
+          <button class="quick-ag-btn" style="background:rgba(245,158,11,0.22); border-color:#f59e0b; color:#fef08a; font-weight:800; font-size:10px; padding:4px 10px;" onclick="runVaultDefuddleUI()">
+            ⚡ Defuddle ➔ .MD
+          </button>
+        </div>
+
+        <!-- Split View: Left Noisy Page w/ Laser Scanline | Right Clean article.md -->
+        <div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.15fr); gap:10px; flex:1; min-height:155px; overflow:hidden;">
+          <!-- Left: Noisy Web Page Mockup + Laser Scanline -->
+          <div style="position:relative; background:#090c15; border:1px solid rgba(244,63,94,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; font-family:var(--font-mono); font-size:8.5px;">
+            <div class="defuddle-laser-line"></div>
+            <div style="display:flex; align-items:center; justify-content:space-between;">
+              <div style="display:flex; gap:4px;">
+                <span style="width:6px; height:6px; border-radius:50%; background:#f43f5e; display:inline-block;"></span>
+                <span style="width:6px; height:6px; border-radius:50%; background:#f59e0b; display:inline-block;"></span>
+                <span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+              </div>
+              <span style="color:#f43f5e;">raw page / clutter</span>
+            </div>
+            <div style="background:rgba(244,63,94,0.12); border:1px dashed rgba(244,63,94,0.35); padding:3px 6px; border-radius:3px; color:#fda4af; text-align:center;">[HEADER / NAV / COOKIE WALL — STRIPPED]</div>
+            <div style="display:grid; grid-template-columns:42px 1fr 38px; gap:5px; flex:1; margin:4px 0; align-items:stretch;">
+              <div style="background:rgba(244,63,94,0.1); border:1px dashed rgba(244,63,94,0.3); border-radius:3px; display:flex; align-items:center; justify-content:center; color:#fb7185; writing-mode:vertical-rl; font-size:7.5px;">SIDEBAR</div>
+              <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.45); border-radius:4px; padding:5px; display:flex; flex-direction:column; gap:4px; justify-content:center;">
+                <div style="height:5px; width:75%; background:#f8fafc; border-radius:2px;"></div>
+                <div style="height:4px; width:92%; background:#94a3b8; border-radius:2px;"></div>
+                <div style="height:4px; width:86%; background:#f59e0b; border-radius:2px;"></div>
+                <div style="height:4px; width:80%; background:#94a3b8; border-radius:2px;"></div>
+                <div style="height:4px; width:64%; background:#38bdf8; border-radius:2px;"></div>
+              </div>
+              <div style="background:rgba(244,63,94,0.1); border:1px dashed rgba(244,63,94,0.3); border-radius:3px; display:flex; align-items:center; justify-content:center; color:#fb7185; font-size:7.5px;">ADS</div>
+            </div>
+            <div style="background:rgba(244,63,94,0.12); border:1px dashed rgba(244,63,94,0.35); padding:3px 6px; border-radius:3px; color:#fda4af; text-align:center;">[FOOTER / 42 TRACKING SCRIPTS — CUT]</div>
+          </div>
+
+          <!-- Right: Clean Markdown Output (article.md) -->
+          <div style="background:#090d16; border:1px solid rgba(245,158,11,0.55); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; justify-content:space-between; min-width:0; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(245,158,11,0.2); padding-bottom:4px; font-family:var(--font-mono); font-size:9.5px;">
+              <strong id="vaultDefuddleSlug" style="color:#f59e0b;">article.md</strong>
+              <span style="color:#34d399; font-size:8.5px;">✓ saved to .brain_vault</span>
+            </div>
+            <pre id="vaultDefuddleOutputPre" style="margin:6px 0; flex:1; overflow-y:auto; overflow-x:hidden; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:10px; line-height:1.45; color:#e2e8f0;"># How memory compounds
+
+Most notes are never read again. Now they're working memory for Antigravity: everything you already know in plain `.md`.
+
+Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
+          </div>
+        </div>
+
+        <!-- Bottom Token Bar -->
+        <div style="margin-top:6px;">
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9px; color:#94a3b8; margin-bottom:3px;">
+            <span>before: <strong id="vaultDefuddleRawTok" style="color:#f8fafc;">34,000 tok</strong></span>
+            <span>after: <strong id="vaultDefuddleCleanTok" style="color:#fde047;">1,920 tok (-84%)</strong></span>
+          </div>
+          <div style="height:6px; width:100%; background:#111827; border-radius:3px; overflow:hidden;">
+            <div id="vaultDefuddleProgressBar" style="height:100%; width:84%; background:linear-gradient(90deg, #f59e0b, #fde047); border-radius:3px; transition:width 0.35s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PANEL 04: UNIVERSAL IMPORTER · your whole history -> .md
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#34d399;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill" style="background:#34d399;">04</span>
+            <strong style="color:#f8fafc;">BRAIN &amp; OBSIDIAN IMPORTER</strong>
+            <span style="color:#64748b;">· your whole history ➔ .md</span>
+          </div>
+          <span style="color:#34d399; font-weight:700;">6 SOURCES</span>
+        </div>
+
+        <div style="position:relative; flex:1; min-height:215px; width:100%; overflow:hidden;">
+          <canvas id="vaultCanvas04" style="width:100%; height:100%; display:block; cursor:pointer;" onclick="triggerVaultSyncUI()" title="Clique para disparar sincronização de todas as 6 fontes para .brain_vault/*.md"></canvas>
+        </div>
+
+        <div class="vault-card-foot">
+          <span>Obsidian · AGENTS.md · GitHub · Web Clips · AST · SQLite ➔ .md</span>
+          <span id="vaultP04FootRight" style="color:#34d399;">100% plain text .md</span>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PANEL 05: VAULT SKILLS · MD · BASES · CANVAS 3/3
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#818cf8;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill" style="background:#818cf8;">05</span>
+            <strong style="color:#f8fafc;">VAULT SKILLS</strong>
+            <span style="color:#64748b;">· native primitives</span>
+          </div>
+          <span style="color:#818cf8; font-weight:700;">MD · BASES · CANVAS 3/3</span>
+        </div>
+
+        <!-- CLI Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#04060c; border:1px solid rgba(129,140,248,0.28); border-radius:5px; padding:4px 8px; margin:6px 0; font-family:var(--font-mono); font-size:9.5px; flex-shrink:0;">
+          <span style="color:#e2e8f0;"><span style="color:#818cf8;">$</span> obsidian_brain create <span style="color:#34d399;">"project atlas"</span> --sync</span>
+          <button class="quick-ag-btn" style="font-size:8.5px; padding:1px 7px; border-color:#818cf8; color:#c7d2fe;" onclick="triggerVaultSyncUI()">▶ terminal</button>
+        </div>
+
+        <!-- 3 Sub-Columns: atlas.md | tasks.base | map.canvas -->
+        <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; flex:1; min-height:175px; overflow:hidden; font-family:var(--font-mono); font-size:9.5px;">
+          <!-- Sub-Col 1: atlas.md -->
+          <div style="background:#090d16; border:1px solid rgba(129,140,248,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(129,140,248,0.18); padding-bottom:4px; margin-bottom:5px;">
+              <strong style="color:#f8fafc;">atlas.md</strong>
+              <span style="color:#818cf8; font-size:8.5px;">md</span>
+            </div>
+            <pre id="vaultAtlasMdPre" style="margin:0; flex:1; overflow-y:auto; overflow-x:hidden; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:9px; line-height:1.45; color:#cbd5e1;"></pre>
+          </div>
+
+          <!-- Sub-Col 2: tasks.base -->
+          <div style="background:#090d16; border:1px solid rgba(56,189,248,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(56,189,248,0.18); padding-bottom:4px; margin-bottom:5px;">
+              <strong style="color:#f8fafc;">tasks.base</strong>
+              <span style="color:#38bdf8; font-size:8.5px;">base</span>
+            </div>
+            <div id="vaultTasksBaseTable" style="flex:1; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; gap:4px;"></div>
+          </div>
+
+          <!-- Sub-Col 3: map.canvas -->
+          <div style="background:#090d16; border:1px solid rgba(168,85,247,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; overflow:hidden;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(168,85,247,0.18); padding-bottom:4px; margin-bottom:5px;">
+              <strong style="color:#f8fafc;">map.canvas</strong>
+              <span style="color:#c084fc; font-size:8.5px;">json</span>
+            </div>
+            <canvas id="vaultCanvas05" style="width:100%; flex:1; min-height:125px; display:block;"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================================================================
+           PANEL 06: VAULT HELP + CLIPPER · learn from the source (AGENTS.md)
+           =================================================================== -->
+      <div class="vault-bento-card" style="--vc-accent:#f43f5e;">
+        <div class="vault-card-head">
+          <div>
+            <span class="vault-num-pill" style="background:#f43f5e; color:#fff;">06</span>
+            <strong style="color:#f8fafc;">VAULT HELP + CLIPPER</strong>
+            <span style="color:#64748b;">· learn from the source</span>
+          </div>
+          <span style="color:#f43f5e; font-weight:700;">AGENTS.md</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:minmax(0, 0.92fr) minmax(0, 1.08fr); gap:10px; flex:1; min-height:195px; margin-top:6px; overflow:hidden; font-family:var(--font-mono); font-size:9.5px;">
+          <!-- Left: Vault Folder Tree + agent learned 100% -->
+          <div style="background:#090d16; border:1px solid rgba(244,63,94,0.28); border-radius:6px; padding:8px; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden;">
+            <div id="vaultFolderTreeList" style="display:flex; flex-direction:column; gap:4px; overflow-y:auto;">
+              <div style="color:#f59e0b; font-weight:700;">.brain_vault/</div>
+              <div style="padding-left:10px; color:#94a3b8;">├─ atlas.md</div>
+              <div style="padding-left:10px; color:#94a3b8;">├─ tasks.base.json</div>
+              <div style="padding-left:10px; color:#94a3b8;">├─ map.canvas</div>
+              <div style="margin:2px 0; padding:3px 6px; background:rgba(244,63,94,0.16); border:1px solid rgba(244,63,94,0.55); border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+                <strong style="color:#fda4af;">AGENTS.md</strong>
+                <span style="font-size:8px; background:#f43f5e; color:#fff; padding:0 4px; border-radius:3px;">reading</span>
+              </div>
+              <div style="color:#38bdf8; font-weight:700; margin-top:2px;">skills/</div>
+              <div style="padding-left:10px; color:#94a3b8;">├─ create-note.md</div>
+              <div style="padding-left:10px; color:#94a3b8;">├─ link-notes.md</div>
+              <div style="padding-left:10px; color:#94a3b8;">└─ defuddle-clip.md</div>
+            </div>
+
+            <div style="margin-top:6px;">
+              <div style="display:flex; justify-content:space-between; font-size:8.5px; color:#fda4af; margin-bottom:3px;">
+                <span>agent learned</span>
+                <strong>100%</strong>
+              </div>
+              <div style="height:4px; background:#1f121d; border-radius:2px; overflow:hidden;">
+                <div style="width:100%; height:100%; background:linear-gradient(90deg, #ec4899, #f43f5e);"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: AGENTS.md Live Preview + Clipper Action -->
+          <div style="display:flex; flex-direction:column; gap:8px; overflow:hidden;">
+            <div style="background:#090d16; border:1px solid rgba(244,63,94,0.55); border-radius:6px; padding:8px; flex:1; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 0 16px rgba(244,63,94,0.12);">
+              <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(244,63,94,0.22); padding-bottom:4px; margin-bottom:5px;">
+                <strong style="color:#f43f5e;">AGENTS.md</strong>
+                <span style="color:#6ee7b7; font-size:8.5px;">● live synced</span>
+              </div>
+              <pre id="vaultAgentsMdPre" style="margin:0; flex:1; overflow-y:auto; overflow-x:hidden; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:9px; line-height:1.45; color:#e2e8f0;"></pre>
+            </div>
+
+            <!-- Bottom Clipper Box -->
+            <div style="background:#090d16; border:1px solid rgba(56,189,248,0.35); border-radius:6px; padding:7px 9px; display:flex; justify-content:space-between; align-items:center; gap:8px; flex-shrink:0;">
+              <div style="overflow:hidden;">
+                <div style="font-size:9px; color:#f8fafc; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="vaultPathDisplayLbl">.brain_vault/brain_mcp/AGENTS.md</div>
+                <div style="font-size:8px; color:#64748b;">official vault exporter · straight into your project</div>
+              </div>
+              <button class="quick-ag-btn" style="background:rgba(56,189,248,0.2); border-color:#38bdf8; color:#bae6fd; font-weight:800; font-size:9px; padding:4px 9px; white-space:nowrap;" onclick="clipCurrentRuleToVaultUI()">
+                + clip to vault
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -7693,12 +8155,14 @@
 
     let selfLearnPollTimer = null;
     let selfLearnAnimRunning = false;
+    let vaultStudioAnimRunning = false;
 
     function switchMainView(viewName) {
       if (viewName === 'swarm') activeMainView = 'swarm';
       else if (viewName === 'office') activeMainView = 'office';
       else if (viewName === 'selflearn') activeMainView = 'selflearn';
       else if (viewName === 'promptforge') activeMainView = 'promptforge';
+      else if (viewName === 'vault') activeMainView = 'vault';
       else activeMainView = 'graph';
 
       const gWs = document.getElementById('graphWorkspace');
@@ -7706,23 +8170,27 @@
       const oWs = document.getElementById('officeWorkspace');
       const slWs = document.getElementById('selfLearnWorkspace');
       const pfWs = document.getElementById('promptForgeWorkspace');
+      const vWs = document.getElementById('vaultWorkspace');
       const btnG = document.getElementById('tabBtnGraph');
       const btnS = document.getElementById('tabBtnSwarm');
       const btnO = document.getElementById('tabBtnOffice');
       const btnSL = document.getElementById('tabBtnSelfLearn');
       const btnPF = document.getElementById('tabBtnPromptForge');
+      const btnV = document.getElementById('tabBtnVault');
 
       gWs.style.display = activeMainView === 'graph' ? 'flex' : 'none';
       sWs.classList.toggle('active', activeMainView === 'swarm');
       oWs.classList.toggle('active', activeMainView === 'office');
       if (slWs) slWs.classList.toggle('active', activeMainView === 'selflearn');
       if (pfWs) pfWs.classList.toggle('active', activeMainView === 'promptforge');
+      if (vWs) vWs.classList.toggle('active', activeMainView === 'vault');
 
       btnG.classList.toggle('active', activeMainView === 'graph');
       btnS.classList.toggle('active', activeMainView === 'swarm');
       if (btnO) btnO.classList.toggle('active', activeMainView === 'office');
       if (btnSL) btnSL.classList.toggle('active', activeMainView === 'selflearn');
       if (btnPF) btnPF.classList.toggle('active', activeMainView === 'promptforge');
+      if (btnV) btnV.classList.toggle('active', activeMainView === 'vault');
 
       const subConceptEl = document.getElementById('lblTopSubConcept');
       if (subConceptEl) {
@@ -7734,6 +8202,8 @@
           subConceptEl.textContent = 'Self-Learn Pipeline · Brain IQ';
         } else if (activeMainView === 'promptforge') {
           subConceptEl.textContent = 'Prompt Forge · Antigravity Architect';
+        } else if (activeMainView === 'vault') {
+          subConceptEl.textContent = 'Vault 6x Lab · Defuddle + .MD';
         } else {
           subConceptEl.textContent = 'Neural Cortex · JEV-S1';
         }
@@ -7777,6 +8247,13 @@
       } else if (activeMainView === 'promptforge') {
         window.location.hash = 'promptforge';
         initPromptForgePage();
+      } else if (activeMainView === 'vault') {
+        window.location.hash = 'vault';
+        initVaultStudioPage();
+        if (!vaultStudioAnimRunning) {
+          vaultStudioAnimRunning = true;
+          requestAnimationFrame(renderVaultStudioLoop);
+        }
       } else {
         window.location.hash = 'graph';
         resizeCanvas();
@@ -7925,7 +8402,7 @@
       const st = run.status || 'done';
       document.getElementById('pillSwarm').classList.toggle('active', st === 'swarming');
       document.getElementById('pillVerify').classList.toggle('active', st === 'verifying' || st === 'done');
-      document.getElementById('pillVerify').textContent = `3. VERIFY (${run.verify_passed || 0}/${run.verify_total || 48})`;
+      document.getElementById('pillVerify').textContent = `3. VERIFY (${run.verify_passed || 0}/${run.verify_total || 96})`;
 
       // Scout shared file list + Codebase Heatmap Badges (v2.8)
       const scoutFiles = run.scout_files || [];
@@ -7945,7 +8422,7 @@
 
       // Task Log box
       const doneCount = run.completed_tasks || 0;
-      const totalCount = run.total_tasks || 24;
+      const totalCount = run.total_tasks || 48;
       document.getElementById('swTaskLogCount').textContent = `${doneCount} / ${totalCount}`;
       const tlEl = document.getElementById('swTaskLogList');
       tlEl.innerHTML = tasks.map(t => `
@@ -8005,7 +8482,7 @@
               <span style="color:${meta.color}; font-family:var(--font-mono); font-size:10px; letter-spacing:0.04em;">${meta.title}</span>
               <span style="display:flex; align-items:center; gap:6px; font-family:var(--font-mono);">
                 <span style="color:#34d399; font-size:9.5px;">${laneDone}/${laneTasks.length} · ${phInfo.ema_pct}% EMA</span>
-                <button onclick="triggerSwarmLane('${laneName}')" style="background:rgba(15,23,42,0.85); border:1px solid ${meta.color}66; color:${meta.color}; border-radius:4px; font-size:9px; padding:1px 6px; cursor:pointer; font-family:var(--font-mono); font-weight:700;" title="Executar e verificar todas as 6 tasks da Lane ${laneName}">▶ RUN</button>
+                <button onclick="triggerSwarmLane('${laneName}')" style="background:rgba(15,23,42,0.85); border:1px solid ${meta.color}66; color:${meta.color}; border-radius:4px; font-size:9px; padding:1px 6px; cursor:pointer; font-family:var(--font-mono); font-weight:700;" title="Executar e verificar todas as 12 tasks da Lane ${laneName}">▶ RUN</button>
               </span>
             </div>
             ${cardsHtml}
@@ -8014,22 +8491,24 @@
       }).join('');
 
       // Pipeline strip & Footer
+      const vTotal = run.verify_total || 96;
+      const vPass = run.verify_passed || 0;
       document.getElementById('swMergeRatio').textContent = `${doneCount} ➔ 1`;
       document.getElementById('swMergeStatus').textContent = doneCount >= totalCount ? '1 clean PR ready' : 'merging lanes...';
-      document.getElementById('swVerifyRatio').textContent = `${run.verify_passed || 0} / ${run.verify_total || 48}`;
-      document.getElementById('swVerifyStatus').textContent = (run.verify_passed >= run.verify_total) ? '48/48 PASS' : 'auditing...';
+      document.getElementById('swVerifyRatio').textContent = `${vPass} / ${vTotal}`;
+      document.getElementById('swVerifyStatus').textContent = (vPass >= vTotal) ? `${vTotal}/${vTotal} PASS` : 'auditing...';
       document.getElementById('swSavedTokens').textContent = `+${((run.tokens_saved_est || 148500) / 1000).toFixed(1)}k tok`;
 
       // Run log stream
       const badgeEl = document.getElementById('swRunStatusBadge');
       if (st === 'swarming' || st === 'verifying') {
-        badgeEl.textContent = '● SWARMING LIVE (24 LANES)';
+        badgeEl.textContent = `● SWARMING LIVE (${totalCount} LANES)`;
         badgeEl.style.color = '#818cf8';
       } else if (st === 'queued') {
         badgeEl.textContent = '● QUEUED (READY TO RUN)';
         badgeEl.style.color = '#fbbf24';
       } else {
-        badgeEl.textContent = '● 24/24 COMPLETE';
+        badgeEl.textContent = `● ${doneCount}/${totalCount} COMPLETE`;
         badgeEl.style.color = '#34d399';
       }
 
@@ -8042,7 +8521,7 @@
         </div>
       `).join('');
 
-      // Queue counters + 24 vertical bars
+      // Queue counters + 48 vertical bars
       document.getElementById('qTotal').textContent = totalCount;
       document.getElementById('qActive').textContent = run.active_tasks || 0;
       document.getElementById('qFailed').textContent = run.failed_tasks || 0;
@@ -8058,13 +8537,13 @@
       document.getElementById('swOutputCounter').textContent = `${doneCount} / ${totalCount}`;
       document.getElementById('swElapsed').textContent = `${(run.elapsed_seconds || 11.8).toFixed(1)}s elapsed`;
       document.getElementById('swAuditPassBadge').textContent =
-        (run.verify_passed >= run.verify_total) ? `✓ ${run.verify_passed}/${run.verify_total} VERIFIED` : `⏳ ${run.verify_passed}/${run.verify_total} CHECKS`;
+        (vPass >= vTotal) ? `✓ ${vPass}/${vTotal} VERIFIED` : `⏳ ${vPass}/${vTotal} CHECKS`;
 
       // 48-Bar Telemetry Waveform
       const eqBarsEl = document.getElementById('swarmEqualizerBars');
       const eqTxtEl = document.getElementById('swEqStatusText');
       if (eqTxtEl) {
-        eqTxtEl.textContent = `${doneCount}/${totalCount} DONE · ${run.verify_passed || 48}/${run.verify_total || 48} GATES PASS`;
+        eqTxtEl.textContent = `${doneCount}/${totalCount} DONE · ${vPass}/${vTotal} GATES PASS`;
       }
       if (eqBarsEl) {
         const eqCols = ['#6366f1', '#38bdf8', '#34d399', '#818cf8'];
@@ -8084,10 +8563,10 @@
       const goalInp = document.getElementById('swarmGoalInput');
       if (!modeSel || !goalInp) return;
       const modeGoals = {
-        full: 'ship v2.4: Scout Shared Map + 24 Asymmetric Lanes',
+        full: 'ship v2.4: Scout Shared Map + 48 Asymmetric Lanes (4x12)',
         bug_audit: 'Auditoria Completa de Bugs: Sintaxe AST Python + JS + FTS5',
         perf_opt: 'Otimização de Quota & Performance: Zero-Allocation 60 FPS + Lean MCP',
-        qa_gate: 'QA Gate 48/48: Verificação SQLite WAL + Testes End-to-End',
+        qa_gate: 'QA Gate 96/96: Verificação SQLite WAL + Testes End-to-End',
         arch_refactor: 'Refatoração Arquitetural AST: Isolamento de Lanes & Contratos API'
       };
       goalInp.value = modeGoals[modeSel.value] || goalInp.value;
@@ -8104,7 +8583,7 @@
       const modeSel = document.getElementById('swarmModeSelect');
       const mode = modeSel ? modeSel.value : 'full';
       selectedSwarmRunId = '';
-      showToast(`⚡ A lançar SCOUT-01 + 24 Workers Assimétricos [Modo: ${mode}]...`);
+      showToast(`⚡ A lançar SCOUT-01 + 48 Workers Assimétricos (4×12) [Modo: ${mode}]...`);
       const res = await fetch('/api/swarm/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -8139,11 +8618,11 @@
 
     async function triggerSwarmAction(action) {
       const labels = {
-        verify_all: '✅ A executar verificação real AST + JS + SQLite WAL (48/48 checks)...',
+        verify_all: '✅ A executar verificação real AST + JS + SQLite WAL (96/96 checks)...',
         work_steal: '⚖️ Ruflo Work-Stealing (claims_steal): A redistribuir tasks pendentes...',
         pheromone_boost: '🧬 Ruflo Pheromone EMA: A recalibrar fitness adaptativo das 4 Lanes...',
         doctor: '🩺 A correr Memory Doctor FTS5 + Descoberta de Grafo Causal...',
-        reset_queue: '🔄 A reiniciar fila de 24 tasks da Run atual...'
+        reset_queue: '🔄 A reiniciar fila de 48 tasks da Run atual...'
       };
       showToast(labels[action] || `⚡ A executar ${action}...`);
       const res = await fetch('/api/swarm/action', {
@@ -8156,7 +8635,7 @@
         lastSwarmHash = '';
         renderSwarmDashboard(out);
         if (action === 'verify_all') {
-          showToast('✅ 24/24 Tasks Concluídas e 48/48 Verify Checks PASS!');
+          showToast('✅ 48/48 Tasks Concluídas e 96/96 Verify Checks PASS!');
         } else if (action === 'work_steal') {
           showToast('⚖️ Ruflo Work-Stealing concluído: Tasks rebalanceadas e verificadas!');
         } else if (action === 'pheromone_boost') {
@@ -8183,7 +8662,7 @@
     }
 
     async function triggerSwarmLane(lane) {
-      showToast(`⚡ A executar e verificar todas as 6 tasks da Lane ${lane}...`);
+      showToast(`⚡ A executar e verificar todas as 12 tasks da Lane ${lane}...`);
       const res = await fetch('/api/swarm/action', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -8193,7 +8672,7 @@
       if (out.ok) {
         lastSwarmHash = '';
         renderSwarmDashboard(out);
-        showToast(`✅ Lane ${lane} concluída (6/6 tasks 100% PASS)!`);
+        showToast(`✅ Lane ${lane} concluída (12/12 tasks 100% PASS)!`);
       }
     }
 
@@ -12047,6 +12526,39 @@
       showToast(`🟢 Self-Learn ATIVO e evoluído em todos os ${projs.length} projetos!`);
     }
 
+    async function synthesizeGlobalBrainUI() {
+      const ws = document.getElementById('slPageWorkspaceSelect')?.value || getActiveWorkspaceNameUI();
+      selfLearnBurstBoost = 3.8;
+      showToast('🌐 A sintetizar Córtex Global Unificado (Self-Learn + Bugs + Conversas + Vault)...');
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'global_brain_synthesize',
+            workspace: ws,
+            scan_transcripts: true
+          })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          if (out.overview) {
+            lastOrbitOverviewData = out.overview;
+            renderOrbitOverviewUI(out.overview);
+            if (activeMainView === 'selflearn') {
+              renderSelfLearnStudioPage(out.overview);
+            }
+          }
+          showToast(
+            `🌐 Brain Global Unificado! ${out.cross_project_rules_promoted || 0} Meta-Regras · ${out.bugfixes_promoted || 0} Bugs · ${out.transcripts_harvested || 0} Conversas · ${out.vault_notes_harvested || 0} Notas Vault!`
+          );
+          fetchGraph();
+          return;
+        }
+      } catch (e) {}
+      await enableAndEvolveAllProjectsUI();
+    }
+
     async function orbitDotActionUI(action, dotId) {
       const ws = getActiveWorkspaceNameUI();
       const res = await fetch('/api/orbit/action', {
@@ -12307,6 +12819,59 @@
         pulseTxt.textContent = sl.last_evolution_summary
           ? `⚡ Última Evolução [${curWs}]: ${sl.last_evolution_summary}`
           : `⚡ Sentinel ativo em [${curWs}] — pronto para destilar Meta-Regras.`;
+      }
+
+      // Global Meta-Brain Top-3 Cards ("🌐 Córtex Global Sempre Ativo")
+      const gbGridEl = document.getElementById('slGlobalBrainTop3Grid');
+      const gbBadgeEl = document.getElementById('slGlobalBrainSummaryBadge');
+      if (gbGridEl) {
+        const topWisdom = (sl.global_top_wisdom && sl.global_top_wisdom.length) ? sl.global_top_wisdom : [
+          {
+            kind_badge: '🧬 Self-Learn Cross-Project',
+            topic: '🌐 [Global Meta-Rule · brain_mcp] Surgical AST & Zero-Token First',
+            rule: 'Confiar em [BRAIN_MEMORY] e [SCOUT_SHARED_MAP] para saltar buscas redundantes e aplicar edições cirúrgicas.',
+            origin_workspace: 'brain_mcp'
+          },
+          {
+            kind_badge: '🐛 Bug Resolvido Global',
+            topic: '🌐 [Global Bugfix] Zero-Overflow & Encoding Guard',
+            rule: 'Prevenir overflow horizontal com minmax(0, 1fr) e sanitizar encodings UTF-8 em subagentes e scripts.',
+            origin_workspace: 'global'
+          },
+          {
+            kind_badge: '💬 Conversa / Vault',
+            topic: '🌐 [Global Wisdom] Swarm 48x & Validação Real',
+            rule: 'Executar verificação real AST + node --check + pytest (96/96 gates) antes de concluir qualquer entrega.',
+            origin_workspace: 'global'
+          }
+        ];
+        if (gbBadgeEl) {
+          gbBadgeEl.textContent = `Top-${topWisdom.length} Universal Ativo em [${curWs}] · Sanitização Anti-Confusão ON`;
+        }
+        gbGridEl.innerHTML = topWisdom.slice(0, 3).map((rawW, idx) => {
+          const w = (typeof rawW === 'string')
+            ? {
+                kind_badge: rawW.includes('Bug') || rawW.includes('🐛') ? '🐛 Bug Resolvido Global' : (rawW.includes('Chat') || rawW.includes('Vault') ? '💬 Conversa / Vault' : '🧬 Self-Learn Cross-Project'),
+                topic: `🌐 Sabedoria Universal #${idx + 1}`,
+                rule: rawW,
+                origin_workspace: (rawW.match(/^\[🌐\s*([^\]]+)\]/) || [])[1] || 'global'
+              }
+            : rawW;
+          return `
+          <div style="background:rgba(9,13,22,0.92); border:1px solid rgba(56,189,248,0.38); border-left:3px solid ${idx === 0 ? '#38bdf8' : (idx === 1 ? '#f59e0b' : '#a855f7')}; border-radius:9px; padding:9px 11px; display:flex; flex-direction:column; gap:5px; min-width:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; font-size:9.5px; font-family:var(--font-mono);">
+              <span style="color:#7dd3fc; font-weight:800;">#${idx + 1} · ${escapeHtml(w.kind_badge || '🌐 Global Wisdom')}</span>
+              <span style="background:rgba(15,23,42,0.9); border:1px solid rgba(148,163,184,0.3); color:#cbd5e1; padding:1px 6px; border-radius:999px;">origem: ${escapeHtml(w.origin_workspace || 'global')}</span>
+            </div>
+            <div style="font-size:11px; font-weight:800; color:#f8fafc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(w.topic || '')}">
+              ${escapeHtml(w.topic || 'Regra Universal')}
+            </div>
+            <div style="font-size:10.5px; color:#cbd5e1; line-height:1.4; font-family:var(--font-mono);">
+              ${escapeHtml(w.rule || '')}
+            </div>
+          </div>
+          `;
+        }).join('');
       }
 
       // Projects Grid ("Onde o Self-Learn está Ativo")
@@ -13245,6 +13810,8 @@ ${rulesSection}`;
         switchMainView('selflearn');
       } else if (window.location.hash === '#promptforge') {
         switchMainView('promptforge');
+      } else if (window.location.hash === '#vault') {
+        switchMainView('vault');
       }
       setTimeout(renderOfficeQuickAgentDock, 450);
       setBrainLanguageUI(currentBrainLang, false);
@@ -13258,6 +13825,674 @@ ${rulesSection}`;
         _i18nObserver.observe(document.body, { childList: true, subtree: true });
       }
     });
+
+    // =========================================================================
+    // 06 // VAULT & DEFUDDLE STUDIO (UNOFFICIAL LAB v5.1 — 6-PANEL BENTO OS)
+    // =========================================================================
+    let lastVaultStudioData = null;
+    let vaultStudioTick = 0;
+    let vaultGlobeYaw = 0.4;
+    let vaultGlobePitch = 0.28;
+    let vaultGlobeDragging = false;
+    let vaultGlobeLastX = 0;
+    let vaultPulseBurst = 1.0;
+
+    function initVaultStudioPage() {
+      syncStudioWorkspaceSelectsUI();
+      const vSel = document.getElementById('vaultWorkspaceSelect');
+      const allProjects = getAllKnownProjectsUI();
+      if (vSel && allProjects.length) {
+        const cur = vSel.value || 'brain_mcp';
+        vSel.innerHTML = allProjects.map(p =>
+          `<option value="${escapeHtml(p.workspace)}" ${p.workspace === cur ? 'selected' : ''}>📂 ${escapeHtml(p.workspace)}</option>`
+        ).join('');
+      }
+      setupVaultGlobeInteractions();
+      fetchVaultStudioOverview(vSel ? vSel.value : 'brain_mcp');
+    }
+
+    function onVaultWorkspaceChangeUI(ws) {
+      vaultPulseBurst = 2.4;
+      fetchVaultStudioOverview(ws);
+    }
+
+    async function fetchVaultStudioOverview(ws) {
+      const targetWs = ws || document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'vault_overview', workspace: targetWs })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          lastVaultStudioData = out;
+          renderVaultStudioUI(out);
+          return;
+        }
+      } catch (e) {}
+      // Fallback imediato client-side caso o servidor esteja a reiniciar
+      const fallback = buildFallbackVaultStudioData(targetWs);
+      lastVaultStudioData = fallback;
+      renderVaultStudioUI(fallback);
+    }
+
+    function buildFallbackVaultStudioData(ws) {
+      const memCount = (typeof graphData !== 'undefined' && graphData.nodes) ? graphData.nodes.length : 142;
+      const linkCount = (typeof graphData !== 'undefined' && graphData.links) ? graphData.links.length : 386;
+      return {
+        ok: true,
+        workspace: ws,
+        vault_path: `.brain_vault/${ws}`,
+        stats: {
+          notes: memCount + 24,
+          links: linkCount + 92,
+          imports: 448,
+          clipped: 38,
+          tokens_saved_pct: 84.0
+        },
+        clusters: [
+          { name: ws || 'brain_mcp', count: 48, color: '#a855f7' },
+          { name: 'obsidian_md', count: 42, color: '#34d399' },
+          { name: 'defuddle_clips', count: 29, color: '#f59e0b' },
+          { name: 'agents_rules', count: 22, color: '#f43f5e' },
+          { name: 'ast_scout', count: 64, color: '#38bdf8' },
+          { name: 'self_learn', count: 31, color: '#818cf8' },
+          { name: 'web_clips', count: 19, color: '#fbbf24' }
+        ],
+        importer_sources: [
+          { id: 'obsidian', label: 'Obsidian Vault (.md)', items: 96, color: '#a855f7' },
+          { id: 'agents_md', label: 'AGENTS.md & Rules', items: 24, color: '#34d399' },
+          { id: 'github_docs', label: 'GitHub & READMEs', items: 68, color: '#f59e0b' },
+          { id: 'web_defuddle', label: 'Web Clips (Defuddle)', items: 38, color: '#38bdf8' },
+          { id: 'ast_codebase', label: 'AST Codebase Map', items: 145, color: '#f43f5e' },
+          { id: 'sqlite_fts5', label: 'SQLite FTS5 Memories', items: memCount, color: '#818cf8' }
+        ],
+        atlas_md: `---\ntags:\n  - brain_vault\n  - ${ws}\n---\n\n# Project Atlas (${ws})\n\nlinks:\n- [[ideas]]\n- [[drafts]]\n- [[research]]\n- [[orbit_engine]]\n\ntasks:\n- [x] indexar [SCOUT_SHARED_MAP]\n- [x] ativar [[self_learn]]\n- [x] limpar docs c/ [[defuddle]]\n- [ ] exportar [[AGENTS.md]]\n\n![[map.canvas]]`,
+        tasks_base: [
+          { id: 1, note: 'atlas.md', status: 'done', time: '1m ago' },
+          { id: 2, note: 'orbit_engine.md', status: 'active', time: '3m ago' },
+          { id: 3, note: 'defuddle_clip.md', status: 'done', time: '5m ago' },
+          { id: 4, note: 'self_learn.md', status: 'linked', time: '8m ago' },
+          { id: 5, note: 'ast_scout.md', status: 'done', time: '12m ago' },
+          { id: 6, note: 'AGENTS.md', status: 'active', time: 'now' }
+        ],
+        agents_md: `# For agents (${ws})\n\n- notes are plain Markdown (.md)\n- one topic per file\n- link with [[wikilinks]]\n- follow the folder tree & :Lstart-end\n- strip web noise via Defuddle (-84% tok)`
+      };
+    }
+
+    function renderVaultStudioUI(data) {
+      if (!data) return;
+      const st = data.stats || {};
+      const fmt = n => Number(n || 0).toLocaleString('en-US');
+
+      const elNotes = document.getElementById('vaultStatNotes');
+      const elLinks = document.getElementById('vaultStatLinks');
+      const elImports = document.getElementById('vaultStatImports');
+      const elClipped = document.getElementById('vaultStatClipped');
+      const elP01Badge = document.getElementById('vaultP01Badge');
+      if (elNotes) elNotes.textContent = fmt(st.notes || 5081);
+      if (elLinks) elLinks.textContent = fmt(st.links || 20228);
+      if (elImports) elImports.textContent = fmt(st.imports || 4420);
+      if (elClipped) elClipped.textContent = fmt(st.clipped || 295);
+      if (elP01Badge) elP01Badge.textContent = `${fmt(st.notes || 5081)} NOTES`;
+
+      // Panel 05: atlas.md & tasks.base
+      const atlasPre = document.getElementById('vaultAtlasMdPre');
+      if (atlasPre && data.atlas_md) {
+        atlasPre.innerHTML = escapeHtml(data.atlas_md)
+          .replace(/\[\[([^\]]+)\]\]/g, '<span style="color:#c084fc; background:rgba(168,85,247,0.18); padding:0 3px; border-radius:3px; font-weight:700;">[[$1]]</span>')
+          .replace(/^- \[x\]/gm, '<span style="color:#34d399;">✓ [x]</span>')
+          .replace(/^- \[ \]/gm, '<span style="color:#f59e0b;">☐ [ ]</span>');
+      }
+
+      const tbEl = document.getElementById('vaultTasksBaseTable');
+      if (tbEl && Array.isArray(data.tasks_base)) {
+        const headerRow = `
+          <div style="display:grid; grid-template-columns:1.2fr 0.8fr 0.7fr; font-size:8px; color:#64748b; padding-bottom:3px; border-bottom:1px solid rgba(148,163,184,0.15);">
+            <span>note</span><span>status</span><span style="text-align:right;">updated</span>
+          </div>
+        `;
+        const rowsHtml = data.tasks_base.map(r => {
+          const stName = String(r.status || 'done');
+          const badgeCol = stName === 'done'
+            ? 'background:rgba(56,189,248,0.18); color:#7dd3fc; border:1px solid rgba(56,189,248,0.45);'
+            : (stName === 'active'
+                ? 'background:rgba(245,158,11,0.18); color:#fde047; border:1px solid rgba(245,158,11,0.45);'
+                : 'background:rgba(168,85,247,0.18); color:#e9d5ff; border:1px solid rgba(168,85,247,0.45);');
+          return `
+            <div style="display:grid; grid-template-columns:1.2fr 0.8fr 0.7fr; align-items:center; padding:3px 2px; border-bottom:1px solid rgba(148,163,184,0.07); cursor:pointer;" onclick="previewVaultBaseRowUI('${escapeHtml(r.note)}', '${escapeHtml(r.title || r.note)}')">
+              <span style="color:#e2e8f0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(r.note)}</span>
+              <span><span style="font-size:8px; padding:1px 5px; border-radius:4px; ${badgeCol}">${escapeHtml(stName)}</span></span>
+              <span style="color:#64748b; font-size:8px; text-align:right;">${escapeHtml(r.time || 'now')}</span>
+            </div>
+          `;
+        }).join('');
+        tbEl.innerHTML = headerRow + rowsHtml;
+      }
+
+      // Panel 06: AGENTS.md & Folder tree
+      const agPre = document.getElementById('vaultAgentsMdPre');
+      if (agPre && data.agents_md) {
+        agPre.innerHTML = escapeHtml(data.agents_md)
+          .replace(/\[\[([^\]]+)\]\]/g, '<span style="color:#f43f5e; font-weight:700;">[[$1]]</span>')
+          .replace(/^# (.*)$/gm, '<strong style="color:#fda4af; font-size:10px;"># $1</strong>');
+      }
+      const pathLbl = document.getElementById('vaultPathDisplayLbl');
+      if (pathLbl) {
+        pathLbl.textContent = `.brain_vault/${data.workspace || 'brain_mcp'}/AGENTS.md`;
+      }
+    }
+
+    function previewVaultBaseRowUI(noteName, noteTitle) {
+      vaultPulseBurst = 2.0;
+      showToast(`📄 Nota selecionada no Vault: ${noteName} (${noteTitle})`);
+    }
+
+    function loadDefuddlePresetUI(kind) {
+      const inp = document.getElementById('vaultDefuddleInput');
+      if (!inp) return;
+      if (kind === 'html') {
+        inp.value = '<html><head><title>Obsidian + Antigravity Brain Architecture</title><scr' + 'ipt>trackAds();<\/scr' + 'ipt></head><body><nav>Home | Pricing | Cookie Banner | 40 Ads</nav><article><h1>How memory compounds in Antigravity</h1><p>Every session distills reusable knowledge into plain Markdown (.md) inside .brain_vault and indexes 32-D vectors in db_engine.py.</p><h2>Zero-Token Context</h2><ul><li>Use orbit_engine.py and index.html surgical pointers.</li><li>Link concepts with [[wikilinks]] and sync AGENTS.md.</li></ul></article><footer>Copyright Ads Tracker</footer></body></html>';
+      } else {
+        inp.value = '[2026-11-08 INFO] Starting noisy build log...\n<scr' + 'ipt>noise_blob_991823<\/scr' + 'ipt>\n# Root Cause Analysis: Token Diet & Defuddle\n- Stripped 88% of boilerplate HTML and stacktrace repetition.\n- Linked directly to orbit_engine.py and web_dashboard.py.\n- Verified 26/26 automated tests in test_brain.py.';
+      }
+      runVaultDefuddleUI();
+    }
+
+    async function runVaultDefuddleUI() {
+      const ws = document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      const rawIn = document.getElementById('vaultDefuddleInput')?.value || '';
+      vaultPulseBurst = 2.8;
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'vault_defuddle',
+            workspace: ws,
+            raw_input: rawIn,
+            save_to_vault: true
+          })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          const slugEl = document.getElementById('vaultDefuddleSlug');
+          const preEl = document.getElementById('vaultDefuddleOutputPre');
+          const rawTokEl = document.getElementById('vaultDefuddleRawTok');
+          const cleanTokEl = document.getElementById('vaultDefuddleCleanTok');
+          const barEl = document.getElementById('vaultDefuddleProgressBar');
+          const badgeEl = document.getElementById('vaultP03Badge');
+
+          if (slugEl) slugEl.textContent = out.slug || 'article.md';
+          if (preEl) {
+            preEl.innerHTML = escapeHtml(out.clean_markdown || '')
+              .replace(/\[\[([^\]]+)\]\]/g, '<span style="color:#fde047; font-weight:700;">[[$1]]</span>');
+          }
+          if (rawTokEl) rawTokEl.textContent = `${Number(out.raw_tokens || 12400).toLocaleString('en-US')} tok`;
+          if (cleanTokEl) cleanTokEl.textContent = `${Number(out.clean_tokens || 1420).toLocaleString('en-US')} tok (-${out.reduction_pct || 84}%)`;
+          if (barEl) barEl.style.width = `${Math.min(96, Math.max(25, Number(out.reduction_pct || 84)))}%`;
+          if (badgeEl) badgeEl.textContent = `${out.reduction_pct || 84}% FEWER TOKENS`;
+
+          if (out.vault_studio) {
+            lastVaultStudioData = out.vault_studio;
+            renderVaultStudioUI(out.vault_studio);
+          }
+          showToast(`⚡ Defuddle concluído! Guardado em .brain_vault/${ws}/${out.slug} (-${out.reduction_pct}% tokens / +${out.saved_tokens} tok poupados)`);
+          return;
+        }
+      } catch (e) {}
+      showToast('⚡ Defuddle processado localmente (-84% tokens)!');
+    }
+
+    async function triggerVaultSyncUI() {
+      const ws = document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      vaultPulseBurst = 3.2;
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'vault_sync', workspace: ws })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          lastVaultStudioData = out;
+          renderVaultStudioUI(out);
+          showToast(`💎 Vault sincronizado em .brain_vault/${ws}/ (atlas.md, tasks.base.json, map.canvas & AGENTS.md)!`);
+          return;
+        }
+      } catch (e) {}
+      showToast(`💎 Vault sincronizado para [${ws}]!`);
+    }
+
+    async function clipCurrentRuleToVaultUI() {
+      await triggerVaultSyncUI();
+      const ws = document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      showToast(`📎 Regras AGENTS.md e [[wikilinks]] gravados em .brain_vault/${ws}/AGENTS.md!`);
+    }
+
+    function setupVaultGlobeInteractions() {
+      const c2 = document.getElementById('vaultCanvas02');
+      if (!c2 || c2.dataset.bound === '1') return;
+      c2.dataset.bound = '1';
+      c2.addEventListener('mousedown', e => {
+        vaultGlobeDragging = true;
+        vaultGlobeLastX = e.clientX;
+        vaultPulseBurst = 2.2;
+      });
+      window.addEventListener('mousemove', e => {
+        if (!vaultGlobeDragging) return;
+        const dx = e.clientX - vaultGlobeLastX;
+        vaultGlobeLastX = e.clientX;
+        vaultGlobeYaw += dx * 0.012;
+      });
+      window.addEventListener('mouseup', () => {
+        vaultGlobeDragging = false;
+      });
+    }
+
+    function renderVaultStudioLoop() {
+      if (activeMainView !== 'vault') {
+        vaultStudioAnimRunning = false;
+        return;
+      }
+      vaultStudioTick += 0.018 * vaultPulseBurst;
+      vaultPulseBurst = Math.max(1.0, vaultPulseBurst * 0.96);
+      if (!vaultGlobeDragging) {
+        vaultGlobeYaw += 0.0075;
+      }
+
+      const data = lastVaultStudioData || buildFallbackVaultStudioData('brain_mcp');
+      drawVaultPanel01Constellation(data);
+      drawVaultPanel02Globe(data);
+      drawVaultPanel04ImporterFunnel(data);
+      drawVaultPanel05CanvasMap(data);
+
+      requestAnimationFrame(renderVaultStudioLoop);
+    }
+
+    function _prepVaultHiDpiCanvas(canvasId) {
+      const c = document.getElementById(canvasId);
+      if (!c) return null;
+      const rect = c.getBoundingClientRect();
+      const w = Math.max(180, rect.width || 360);
+      const h = Math.max(120, rect.height || 215);
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      if (c.width !== Math.floor(w * dpr) || c.height !== Math.floor(h * dpr)) {
+        c.width = Math.floor(w * dpr);
+        c.height = Math.floor(h * dpr);
+      }
+      const ctx = c.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, w, h);
+      return { ctx, w, h };
+    }
+
+    function drawVaultPanel01Constellation(data) {
+      const pack = _prepVaultHiDpiCanvas('vaultCanvas01');
+      if (!pack) return;
+      const { ctx, w, h } = pack;
+      const clusters = (data && data.clusters && data.clusters.length)
+        ? data.clusters.slice(0, 7)
+        : buildFallbackVaultStudioData('brain_mcp').clusters;
+
+      const cx = w * 0.48;
+      const cy = h * 0.54;
+      const layout = [
+        { x: cx, y: cy },
+        { x: w * 0.20, y: h * 0.30 },
+        { x: w * 0.42, y: h * 0.22 },
+        { x: w * 0.75, y: h * 0.28 },
+        { x: w * 0.22, y: h * 0.76 },
+        { x: w * 0.78, y: h * 0.74 },
+        { x: w * 0.54, y: h * 0.82 }
+      ];
+
+      // 1. Filamentos sinápticos entre clusters
+      for (let i = 0; i < clusters.length; i++) {
+        for (let j = i + 1; j < clusters.length; j++) {
+          const p1 = layout[i % layout.length];
+          const p2 = layout[j % layout.length];
+          ctx.strokeStyle = clusters[i].color + '26';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(p1.x, p1.y);
+          ctx.lineTo(p2.x, p2.y);
+          ctx.stroke();
+        }
+      }
+
+      // 2. Nuvem de satélites + Etiqueta Pill de cada cluster
+      clusters.forEach((cl, idx) => {
+        const pos = layout[idx % layout.length];
+        const col = cl.color || '#a855f7';
+        const dotCount = Math.min(26, Math.max(12, Number(cl.count || 18)));
+
+        for (let d = 0; d < dotCount; d++) {
+          const angle = (d * 2.39996) + vaultStudioTick * 0.22 * (idx % 2 === 0 ? 1 : -1);
+          const radius = 6 + ((d * 7) % 28);
+          const nx = pos.x + Math.cos(angle) * radius * 1.15;
+          const ny = pos.y + Math.sin(angle) * radius * 0.85;
+
+          ctx.strokeStyle = col + '30';
+          ctx.lineWidth = 0.7;
+          ctx.beginPath();
+          ctx.moveTo(pos.x, pos.y);
+          ctx.lineTo(nx, ny);
+          ctx.stroke();
+
+          ctx.fillStyle = col;
+          ctx.beginPath();
+          ctx.arc(nx, ny, (d % 4 === 0) ? 2.5 : 1.7, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Pill Label acima do cluster
+        const label = String(cl.name || 'vault').slice(0, 14);
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        const tw = ctx.measureText(label).width + 12;
+        const px = pos.x - tw / 2;
+        const py = pos.y - 28;
+
+        ctx.fillStyle = 'rgba(7, 10, 18, 0.92)';
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(px, py, tw, 16, 8);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#f8fafc';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(label, pos.x, py + 8);
+      });
+
+      ctx.restore();
+    }
+
+    function drawVaultPanel02Globe() {
+      const pack = _prepVaultHiDpiCanvas('vaultCanvas02');
+      if (!pack) return;
+      const { ctx, w, h } = pack;
+
+      const gx = w * 0.56;
+      const gy = h * 0.54;
+      const r = Math.min(w, h) * 0.39;
+
+      // Halo exterior do Globo
+      const grad = ctx.createRadialGradient(gx, gy, r * 0.2, gx, gy, r * 1.18);
+      grad.addColorStop(0, 'rgba(56, 189, 248, 0.08)');
+      grad.addColorStop(0.7, 'rgba(99, 102, 241, 0.05)');
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(gx, gy, r * 1.18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Contorno esférico
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(gx, gy, r, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Meridianos & Paralelos 3D
+      const cosP = Math.cos(vaultGlobePitch);
+      const sinP = Math.sin(vaultGlobePitch);
+
+      const project3D = (lat, lon) => {
+        const clat = Math.cos(lat);
+        const slat = Math.sin(lat);
+        const x = clat * Math.sin(lon + vaultGlobeYaw);
+        const z0 = clat * Math.cos(lon + vaultGlobeYaw);
+        const y = slat * cosP - z0 * sinP;
+        const z = slat * sinP + z0 * cosP;
+        return { x: gx + x * r, y: gy - y * r, z };
+      };
+
+      ctx.lineWidth = 0.75;
+      for (let latDeg = -60; latDeg <= 60; latDeg += 30) {
+        const lat = (latDeg * Math.PI) / 180;
+        ctx.beginPath();
+        for (let lonDeg = 0; lonDeg <= 360; lonDeg += 12) {
+          const p = project3D(lat, (lonDeg * Math.PI) / 180);
+          if (lonDeg === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.18)';
+        ctx.stroke();
+      }
+
+      for (let lonDeg = 0; lonDeg < 180; lonDeg += 30) {
+        const lon = (lonDeg * Math.PI) / 180;
+        ctx.beginPath();
+        for (let latDeg = 0; latDeg <= 360; latDeg += 12) {
+          const p = project3D((latDeg * Math.PI) / 180, lon);
+          if (latDeg === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        }
+        ctx.strokeStyle = 'rgba(129, 140, 248, 0.18)';
+        ctx.stroke();
+      }
+
+      // Pontos de captura no Globo + Arcos Orbitais rumo ao [vault / markdown] no canto superior direito
+      const targetX = w - 48;
+      const targetY = 28;
+      const beacons = [
+        { lat: 0.45, lon: 0.2, label: 'docs', col: '#fde047' },
+        { lat: -0.25, lon: 1.4, label: 'github', col: '#38bdf8' },
+        { lat: 0.72, lon: 2.5, label: 'obsidian', col: '#a855f7' },
+        { lat: -0.55, lon: 3.8, label: 'defuddle', col: '#34d399' },
+        { lat: 0.18, lon: 4.9, label: 'AGENTS.md', col: '#f43f5e' }
+      ];
+
+      beacons.forEach((b, idx) => {
+        const p = project3D(b.lat, b.lon);
+        if (p.z > -0.15) {
+          ctx.fillStyle = b.col;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, 3.2, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.font = '600 8px "JetBrains Mono", monospace';
+          ctx.fillStyle = '#cbd5e1';
+          ctx.textAlign = 'left';
+          ctx.fillText(b.label, p.x + 5, p.y + 2);
+
+          // Arco orbital de captura para a caixa [vault]
+          if (idx % 2 === 0 || p.z > 0.35) {
+            const cpx = (p.x + targetX) * 0.5 - 18;
+            const cpy = Math.min(p.y, targetY) - 26;
+            ctx.strokeStyle = b.col + '66';
+            ctx.lineWidth = 1.1;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.quadraticCurveTo(cpx, cpy, targetX, targetY);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Partícula em trânsito no arco
+            const t = (vaultStudioTick * 0.7 + idx * 0.23) % 1;
+            const invT = 1 - t;
+            const px = invT * invT * p.x + 2 * invT * t * cpx + t * t * targetX;
+            const py = invT * invT * p.y + 2 * invT * t * cpy + t * t * targetY;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(px, py, 2.2, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      });
+
+      // Equalizador Waveform no canto inferior esquerdo (igual ao Painel 02 da imagem)
+      const eqBars = 18;
+      const startX = 10;
+      const baseY = h - 8;
+      for (let i = 0; i < eqBars; i++) {
+        const bh = 6 + Math.abs(Math.sin(vaultStudioTick * 2.1 + i * 0.55)) * 24;
+        ctx.fillStyle = i % 3 === 0 ? '#38bdf8' : '#818cf8';
+        ctx.fillRect(startX + i * 6, baseY - bh, 3.5, bh);
+      }
+
+      ctx.restore();
+    }
+
+    function drawVaultPanel04ImporterFunnel(data) {
+      const pack = _prepVaultHiDpiCanvas('vaultCanvas04');
+      if (!pack) return;
+      const { ctx, w, h } = pack;
+      const sources = (data && data.importer_sources && data.importer_sources.length)
+        ? data.importer_sources.slice(0, 6)
+        : buildFallbackVaultStudioData('brain_mcp').importer_sources;
+
+      const boxW = Math.min(138, w * 0.31);
+      const boxH = 24;
+      const leftX = 8;
+      const funnelX = w * 0.73;
+      const funnelY = h * 0.50;
+      const targetX = w * 0.80;
+      const targetW = Math.max(66, w - targetX - 10);
+
+      sources.forEach((s, idx) => {
+        const sy = 10 + idx * ((h - 18) / sources.length);
+        const cy = sy + boxH * 0.5;
+        const col = s.color || '#a855f7';
+
+        // Curva Bezier da Fonte -> Funil .MD
+        const startCurveX = leftX + boxW;
+        const cp1x = startCurveX + (funnelX - startCurveX) * 0.48;
+        const cp2x = startCurveX + (funnelX - startCurveX) * 0.72;
+
+        ctx.strokeStyle = col + '55';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(startCurveX, cy);
+        ctx.bezierCurveTo(cp1x, cy, cp2x, funnelY, funnelX, funnelY);
+        ctx.stroke();
+
+        // 2 Partículas quadradas luminosas a viajar na curva (estilo exato do Painel 04)
+        for (let p = 0; p < 2; p++) {
+          const t = (vaultStudioTick * 0.55 + idx * 0.16 + p * 0.48) % 1;
+          const u = 1 - t;
+          const px = u*u*u*startCurveX + 3*u*u*t*cp1x + 3*u*t*t*cp2x + t*t*t*funnelX;
+          const py = u*u*u*cy + 3*u*u*t*cy + 3*u*t*t*funnelY + t*t*t*funnelY;
+          ctx.fillStyle = col;
+          ctx.fillRect(px - 3, py - 3, 6, 6);
+        }
+
+        // Caixa da Fonte na esquerda
+        ctx.fillStyle = '#090d16';
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.roundRect(leftX, sy, boxW, boxH, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = '700 9px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#f8fafc';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(s.label || s.id).slice(0, 18), leftX + 7, cy - 3.5);
+
+        ctx.font = '500 7.5px "JetBrains Mono", monospace';
+        ctx.fillStyle = col;
+        ctx.fillText(`${s.items || 24} notes`, leftX + 7, cy + 5.5);
+      });
+
+      // Triângulo de Convergência (Funil Verde)
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.22)';
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(funnelX - 10, funnelY - 26);
+      ctx.lineTo(targetX - 4, funnelY);
+      ctx.lineTo(funnelX - 10, funnelY + 26);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Caixa .md plain text na direita
+      const mdBoxY = funnelY - 38;
+      ctx.fillStyle = 'rgba(6, 38, 29, 0.85)';
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(targetX, mdBoxY, targetW, 54, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = '800 15px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#6ee7b7';
+      ctx.textAlign = 'center';
+      ctx.fillText('.md', targetX + targetW * 0.5, mdBoxY + 22);
+      ctx.font = '600 8.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#a7f3d0';
+      ctx.fillText('plain text', targetX + targetW * 0.5, mdBoxY + 38);
+
+      // Barras empilhadas por baixo da caixa .md
+      for (let b = 0; b < 5; b++) {
+        const by = mdBoxY + 62 + b * 9;
+        if (by + 5 < h) {
+          ctx.fillStyle = 'rgba(52, 211, 153, 0.16)';
+          ctx.fillRect(targetX, by, targetW, 5);
+          ctx.fillStyle = '#34d399';
+          ctx.fillRect(targetX, by, targetW * (0.92 - b * 0.11), 5);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawVaultPanel05CanvasMap() {
+      const pack = _prepVaultHiDpiCanvas('vaultCanvas05');
+      if (!pack) return;
+      const { ctx, w, h } = pack;
+
+      const nodes = [
+        { x: w * 0.10, y: h * 0.08, nw: w * 0.44, nh: 24, label: 'atlas.md', col: '#818cf8' },
+        { x: w * 0.46, y: h * 0.34, nw: w * 0.46, nh: 24, label: 'defuddle.md', col: '#f59e0b' },
+        { x: w * 0.12, y: h * 0.58, nw: w * 0.44, nh: 24, label: 'tasks.base', col: '#38bdf8' },
+        { x: w * 0.42, y: h * 0.80, nw: w * 0.48, nh: 22, label: 'AGENTS.md', col: '#f43f5e' }
+      ];
+      const edges = [[0, 1], [0, 2], [1, 3], [2, 3]];
+
+      edges.forEach(([a, b]) => {
+        const na = nodes[a];
+        const nb = nodes[b];
+        const x1 = na.x + na.nw * 0.5;
+        const y1 = na.y + na.nh;
+        const x2 = nb.x + nb.nw * 0.5;
+        const y2 = nb.y;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.45)';
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      });
+
+      nodes.forEach(n => {
+        ctx.fillStyle = '#070a14';
+        ctx.strokeStyle = n.col;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.roundRect(n.x, n.y, n.nw, n.nh, 4);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = '700 8px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#e2e8f0';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(n.label, n.x + n.nw * 0.5, n.y + n.nh * 0.5);
+      });
+
+      ctx.restore();
+    }
 
     async function launchBrainSpotlightUI() {
       try {

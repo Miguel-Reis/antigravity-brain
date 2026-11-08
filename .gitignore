@@ -23,6 +23,7 @@ venv/
 .dots/
 .swarm_sandboxes/
 .brain_app_profile/
+.brain_vault/
 
 # Temporary AI Studio media artifacts
 .aistudio/

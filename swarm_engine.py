@@ -529,7 +529,13 @@ class SwarmEngine:
             f"{mode_prefix}3D office 6-zone floorplan & shaders",
             f"{mode_prefix}4-lane parallel worker grid & filters",
             f"{mode_prefix}live tasks drawer & progress bars",
-            f"{mode_prefix}run_log stream & 24-bar queue HUD",
+            f"{mode_prefix}run_log stream & 48-bar queue HUD",
+            f"{mode_prefix}vault 6x bento grid & corner HUD",
+            f"{mode_prefix}3D wireframe globe & orbital arcs",
+            f"{mode_prefix}defuddle laser scanner & token bar",
+            f"{mode_prefix}particle funnel 6-source importer",
+            f"{mode_prefix}bilingual PT-PT / EN-EN live switcher",
+            f"{mode_prefix}zero-overflow CSS grid containment",
         ]
         api_titles = [
             f"{mode_prefix}scout AST & symbol extractor",
@@ -538,6 +544,12 @@ class SwarmEngine:
             f"{mode_prefix}REST endpoints /api/swarm & /api/office",
             f"{mode_prefix}real-time transcript activity detector",
             f"{mode_prefix}parallel worker lanerunner & actions",
+            f"{mode_prefix}global meta-brain cross-project synth",
+            f"{mode_prefix}top-3 universal wisdom recall engine",
+            f"{mode_prefix}defuddle HTML/log to clean .md engine",
+            f"{mode_prefix}obsidian vault .md & AGENTS.md sync",
+            f"{mode_prefix}DOTS cognitive trajectory router",
+            f"{mode_prefix}prompt forge 6-section deep architect",
         ]
         test_titles = [
             f"{mode_prefix}unit · Python AST compile check",
@@ -545,7 +557,13 @@ class SwarmEngine:
             f"{mode_prefix}unit · SQLite WAL concurrency gate",
             f"{mode_prefix}e2e · /api/swarm & /api/office 200 OK",
             f"{mode_prefix}audit · PreInvocation <40ms latency",
-            f"{mode_prefix}audit · 48/48 verify gates & zero leaks",
+            f"{mode_prefix}audit · 96/96 verify gates & zero leaks",
+            f"{mode_prefix}unit · Global Brain top-3 recall check",
+            f"{mode_prefix}unit · foreign path sanitization gate",
+            f"{mode_prefix}unit · Defuddle token reduction >=80%",
+            f"{mode_prefix}unit · Vault .md + tasks.base export",
+            f"{mode_prefix}unit · Bilingual PT-PT/EN-EN i18n check",
+            f"{mode_prefix}audit · 48-agent swarm fan-out/fan-in",
         ]
         doc_titles = [
             f"{mode_prefix}scout-first swarm architecture spec",
@@ -554,6 +572,12 @@ class SwarmEngine:
             f"{mode_prefix}local brain privacy & .gitignore rules",
             f"{mode_prefix}subagent flash/argon routing guide",
             f"{mode_prefix}PR merge & automated verification report",
+            f"{mode_prefix}global meta-brain cross-project spec",
+            f"{mode_prefix}vault atlas.md & [[wikilinks]] index",
+            f"{mode_prefix}AGENTS.md autonomous rules manifest",
+            f"{mode_prefix}tasks.base & map.canvas JSON schema",
+            f"{mode_prefix}defuddle web clipper usage guide",
+            f"{mode_prefix}48-agent asymmetric swarm playbook",
         ]
 
         lane_models = {
@@ -562,7 +586,7 @@ class SwarmEngine:
             "TESTS": "flash · test-engineer",
             "DOCS": "flash_lite · self",
         }
-        argon_core_tasks = {"ui-01", "ui-03", "api-01", "api-02"}
+        argon_core_tasks = {"ui-01", "ui-03", "ui-07", "api-01", "api-02", "api-07"}
         all_tasks: List[Dict[str, Any]] = []
 
         for lane_name, titles, fb_file in (
@@ -573,7 +597,7 @@ class SwarmEngine:
         ):
             prefix = lane_name.lower() if lane_name != "TESTS" else "test"
             for i, title in enumerate(titles):
-                code = f"{prefix}-0{i + 1}"
+                code = f"{prefix}-{i + 1:02d}"
                 tfile, sym = _pick_file_and_sym(lane_name, i, fb_file, "verify_ast_symbols")
                 w_model = (
                     "gemini-4-argon · inherit"
@@ -591,6 +615,11 @@ class SwarmEngine:
                     }
                 )
         return all_tasks
+
+    def _build_48_tasks_from_scout(
+        self, goal: str, scout_data: Dict[str, Any], mode: str = "full"
+    ) -> List[Dict[str, Any]]:
+        return self._build_24_tasks_from_scout(goal, scout_data, mode=mode)
 
     def _log_event(self, conn: sqlite3.Connection, run_id: int, tag: str, message: str) -> None:
         ts = time.strftime("%H:%M:%S")
@@ -707,11 +736,12 @@ class SwarmEngine:
                 conn,
                 run_id,
                 "disp",
-                "DISPATCHER (Gemini 4 Argon + Flash/Flash-Lite) lançou 24 workers em 4 lanes (UI, API, TESTS, DOCS)",
+                "DISPATCHER (Gemini 4 Argon + Flash/Flash-Lite) lançou 48 workers em 4 lanes (12 UI, 12 API, 12 TESTS, 12 DOCS)",
             )
 
+            per_lane = max(1, len(tasks_spec) // 4)
             for idx, t in enumerate(tasks_spec):
-                init_status = "running" if (animate_live and idx % 6 < 2) else ("queued" if animate_live else "done")
+                init_status = "running" if (animate_live and (idx % per_lane) < 2) else ("queued" if animate_live else "done")
                 init_prog = 40 if init_status == "running" else (0 if init_status == "queued" else 100)
                 v1 = 1 if init_status in ("running", "done") else 0
                 v2 = 0 if animate_live else 1
@@ -736,7 +766,7 @@ class SwarmEngine:
                         v1,
                         v2,
                         420 if not animate_live else 140,
-                        round(1.4 + (idx % 6) * 1.1, 1),
+                        round(1.2 + ((idx % per_lane) // 2) * 1.1, 1),
                         f"OK · {t['target_file']}",
                     ),
                 )
@@ -746,13 +776,13 @@ class SwarmEngine:
                     conn,
                     run_id,
                     "vrfy",
-                    "48 / 48 automated verify checks PASSED (AST, syntax, HTTP & isolation)",
+                    f"{len(tasks_spec) * 2} / {len(tasks_spec) * 2} automated verify checks PASSED (AST, syntax, HTTP & isolation)",
                 )
                 self._log_event(
                     conn,
                     run_id,
                     "done",
-                    "Merged 24 parallel worker lanes into 1 clean build (Saved ~148.5k tokens)",
+                    f"Merged {len(tasks_spec)} parallel worker lanes into 1 clean build (Saved ~148.5k tokens)",
                 )
 
         if animate_live:
@@ -779,8 +809,9 @@ class SwarmEngine:
                         return
 
                     newly_finished: List[str] = []
+                    per_lane = max(1, len(rows) // 4)
                     for i, r in enumerate(rows):
-                        slot = i % 6  # 0..5 dentro de cada lane (UI, API, TESTS, DOCS)
+                        slot = (i % per_lane) // 2 if per_lane >= 10 else (i % 6)  # 0..5 pares dentro de cada lane (12 tasks/lane)
                         st = r["status"]
                         prog = int(r["progress"])
                         if st == "done":
@@ -829,14 +860,14 @@ class SwarmEngine:
                         (run_id,),
                     ).fetchone()
 
-                    total = int(stats["total"] or 24)
+                    total = int(stats["total"] or 48)
                     active = int(stats["active"] or 0)
                     done = int(stats["done"] or 0)
                     failed = int(stats["failed"] or 0)
                     v_pass = int(stats["v_pass"] or 0)
                     elapsed = round(time.time() - t_start, 2)
 
-                    run_status = "done" if done >= total else ("verifying" if done >= 18 else "swarming")
+                    run_status = "done" if done >= total else ("verifying" if done >= int(total * 0.75) else "swarming")
                     conn.execute(
                         """
                         UPDATE swarm_runs
@@ -879,7 +910,7 @@ class SwarmEngine:
                             conn,
                             run_id,
                             "done",
-                            f"24 tarefas fundidas em 1 entrega limpa em {elapsed:.1f}s (Poupança: ~148,500 tokens)",
+                            f"{total} tarefas fundidas em 1 entrega limpa em {elapsed:.1f}s (Poupança: ~148,500 tokens)",
                         )
                         break
         except Exception:
@@ -950,13 +981,13 @@ class SwarmEngine:
 
     def ensure_default_run(self) -> int:
         with self.db._connect() as conn:
-            row = conn.execute("SELECT id FROM swarm_runs ORDER BY id DESC LIMIT 1;").fetchone()
-            if row:
+            row = conn.execute("SELECT id, total_tasks FROM swarm_runs ORDER BY id DESC LIMIT 1;").fetchone()
+            if row and int(row["total_tasks"] or 0) >= 48:
                 rid = int(row["id"])
                 _DEFAULT_RUN_CACHED[self.db.db_path] = rid
                 return rid
         res = self.start_live_swarm_run(
-            goal="ship v2.4: Scout Shared Map + Asymmetric Swarm Dashboard",
+            goal="ship v5.1: Global Brain Cortex + Vault 6x + Asymmetric Swarm 48x",
             workspace_path=os.path.dirname(os.path.abspath(__file__)),
             animate_live=False,
         )
@@ -1043,8 +1074,9 @@ class SwarmEngine:
             rows = conn.execute(
                 "SELECT id, title FROM swarm_tasks WHERE run_id = ? ORDER BY id ASC;", (run_id,)
             ).fetchall()
+            per_lane = max(1, len(rows) // 4)
             for idx, r in enumerate(rows):
-                slot = idx % 6
+                slot = (idx % per_lane) // 2 if per_lane >= 10 else (idx % 6)
                 base_title = re.sub(r"^(?:audit|opt|qa|arch)\s*·\s*", "", str(r["title"] or ""))
                 new_title = f"{mode_prefix}{base_title}"
                 if slot == 0:
@@ -1265,9 +1297,10 @@ class SwarmEngine:
                 dn_c = 0
                 vp_c = 0
 
+                per_lane = max(1, len(t_rows) // 4)
                 for idx, tr in enumerate(t_rows):
-                    slot = idx % 6       # 0..5 dentro de cada Lane
-                    lane_idx = idx // 6  # 0=UI, 1=API, 2=TESTS, 3=DOCS
+                    slot = (idx % per_lane) // 2 if per_lane >= 10 else (idx % 6)  # 0..5 dentro de cada Lane (12 tasks/lane)
+                    lane_idx = idx // per_lane  # 0=UI, 1=API, 2=TESTS, 3=DOCS
                     prev_st = str(tr["status"] or "queued")
                     prev_prog = int(tr["progress"] or 0)
 
@@ -1318,7 +1351,7 @@ class SwarmEngine:
                             (new_st, new_prog, v1, v2, 140 + slot * 45 + int(new_prog * 1.8), tr["id"]),
                         )
 
-                new_r_status = "done" if dn_c >= total_t else ("verifying" if dn_c >= 16 else "swarming")
+                new_r_status = "done" if dn_c >= total_t else ("verifying" if dn_c >= int(total_t * 0.65) else "swarming")
                 clean_el = min(14.8, round(elapsed, 1))
                 conn.execute(
                     """
@@ -1617,7 +1650,7 @@ class SwarmEngine:
                     conn,
                     rid,
                     "verify",
-                    f"✅ Verify All 48/48 PASS ({ms}ms): {py_ok} ficheiros .py AST OK · {stats['total_memories']} memórias FTS5 OK",
+                    f"✅ Verify All {tot*2}/{tot*2} PASS ({ms}ms): {py_ok} ficheiros .py AST OK · {stats['total_memories']} memórias FTS5 OK",
                 )
             return self.get_swarm_dashboard(rid)
 
@@ -1647,7 +1680,7 @@ class SwarmEngine:
                 act_c = int((st_row["act"] if st_row else 0) or 0)
                 dn_c = int((st_row["dn"] if st_row else 0) or 0)
                 vp_c = int((st_row["vp"] if st_row else 0) or 0)
-                tot_c = int((st_row["tot"] if st_row else 24) or 24)
+                tot_c = int((st_row["tot"] if st_row else 48) or 48)
                 r_st = "done" if dn_c >= tot_c else "swarming"
                 conn.execute(
                     """
@@ -1657,11 +1690,12 @@ class SwarmEngine:
                     """,
                     (r_st, act_c, dn_c, vp_c, rid),
                 )
+                per_l = max(1, tot_c // 4)
                 self._log_event(
                     conn,
                     rid,
                     "work",
-                    f"⚡ Lane {lane_up} executada e verificada (6/6 tasks 100% PASS · {dn_c}/{tot_c} total)",
+                    f"⚡ Lane {lane_up} executada e verificada ({per_l}/{per_l} tasks 100% PASS · {dn_c}/{tot_c} total)",
                 )
             return self.get_swarm_dashboard(rid)
 

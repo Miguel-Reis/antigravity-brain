@@ -1000,15 +1000,18 @@ class BrainDB:
                     except sqlite3.OperationalError:
                         pass
 
-            # 2. Fallback / Complemento: Memórias de alta importância do workspace atual ou global
+            # 2. Fallback / Complemento: Memórias de alta importância do workspace atual + Córtex Global Transversal
             fallback_rows = conn.execute(
                 """
                 SELECT * FROM memories
                 WHERE workspace IN (?, 'global')
-                ORDER BY importance DESC, id DESC
-                LIMIT 30;
+                   OR category IN ('learned_rule', 'bug_fix', 'vault_clip', 'directive', 'preference')
+                   OR importance >= 5
+                ORDER BY CASE WHEN workspace = ? THEN 0 WHEN workspace = 'global' THEN 1 ELSE 2 END,
+                         importance DESC, id DESC
+                LIMIT 45;
                 """,
-                (ws,),
+                (ws, ws),
             ).fetchall()
 
             for r in fallback_rows:
@@ -1020,7 +1023,7 @@ class BrainDB:
                     d["score"] = 0.0
                     candidates[rid] = d
 
-            # 3. Re-ranking Híbrido Jev-Mem (BM25 + Vetor Semântico Cosseno + Overlap + Workspace + Tier + Causal Centrality)
+            # 3. Re-ranking Híbrido Jev-Mem (BM25 + Vetor Semântico Cosseno + Overlap + Workspace + Global Transferable + Tier)
             query_vec = self.compute_semantic_vector(query)
             scored_list: List[Dict[str, Any]] = []
             for rid, item in candidates.items():
@@ -1040,11 +1043,23 @@ class BrainDB:
                 sem_sim = self.cosine_similarity(query_vec, item_vec)
                 item["semantic_similarity"] = round(sem_sim, 3)
 
+                is_transferable_global = str(item.get("category") or "") in (
+                    "learned_rule",
+                    "bug_fix",
+                    "vault_clip",
+                    "directive",
+                    "preference",
+                ) or item.get("workspace") == "global"
+
                 if tokens and item["score"] == 0.0 and overlap == 0 and sem_sim < 0.28:
-                    if item["workspace"] != ws or ws == "global":
+                    if (item["workspace"] != ws and not is_transferable_global) or ws == "global":
                         continue
 
-                ws_boost = 2.5 if (ws != "global" and item["workspace"] == ws) else 0.0
+                ws_boost = (
+                    2.5
+                    if (ws != "global" and item["workspace"] == ws)
+                    else (1.35 if is_transferable_global else 0.4)
+                )
                 imp_boost = float(item.get("importance", 3)) * 0.4
                 overlap_boost = overlap * 1.8
                 sem_boost = sem_sim * 4.5

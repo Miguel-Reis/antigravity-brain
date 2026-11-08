@@ -916,6 +916,95 @@ def run_all_tests() -> None:
         assert i18n_token in html_content, f"Token i18n PT-PT/EN-EN em falta em index.html: {i18n_token}"
     print("[PASS] Motor Bilingue PT-PT <-> EN-EN (Zero Frances + HUD/Canvas/3D/Prompt Forge i18n) OK")
 
+    # 27. Testar Córtex Global Unificado (Global Meta-Brain Top-3 Sempre Ativo), Vault 6x [LAB] e Swarm 48 Agentes (96/96 Gates)
+    with tempfile.TemporaryDirectory() as gb_tmp:
+        gb_db = BrainDB(db_path=os.path.join(gb_tmp, "global_brain_test.db"))
+        gb_swarm = SwarmEngine(gb_db)
+        gb_orbit = OrbitEngine(gb_db)
+
+        # 27.1 Registar uma Meta-Regra de Self-Learn num projeto estrangeiro ("foreign_app") com caminho local que deve ser sanitizado
+        gb_db.store_fact(
+            topic="Regra de Arquitetura UI [foreign_app]",
+            fact="Em C:/Users/guels/foreign_app/src/secret_local_panel.tsx:L10-50, usar sempre minmax(0, 1fr) para evitar overflow horizontal em CSS Grid.",
+            workspace="foreign_app",
+            category="learned_rule",
+            tags="self_learn meta_rule ui css grid",
+            importance=5,
+            source_agent="self_learn_engine",
+            trust_score=0.98,
+        )
+        # 27.2 Registar um Bug Resolvido noutro projeto ("api_service")
+        gb_db.store_fact(
+            topic="Auto-Bugfix: UnicodeEncodeError cp1252 Windows",
+            fact="Causa-raiz: print() sem reconfigure UTF-8 em subagentes Windows falha em setas Unicode -> Solução: sys.stdout.reconfigure(encoding='utf-8').",
+            workspace="api_service",
+            category="bug_fix",
+            tags="auto_bugfix encoding windows utf8",
+            importance=5,
+            source_agent="brain_harvest",
+            trust_score=0.96,
+        )
+
+        # 27.3 Sintetizar Córtex Global Unificado e validar Top-3 Sabedoria Universal num terceiro projeto ("new_project")
+        synth_res = gb_orbit.synthesize_global_meta_brain(scan_transcripts=False)
+        assert synth_res["ok"] is True
+        assert synth_res["cross_project_rules_promoted"] >= 1
+        assert synth_res["bugfixes_promoted"] >= 1
+
+        top3_wisdom = gb_orbit.get_global_brain_top_wisdom(
+            query="overflow horizontal CSS grid encoding",
+            current_workspace="new_project",
+            top_k=3,
+        )
+        assert len(top3_wisdom) >= 2
+        combined_rules_txt = " ".join(w if isinstance(w, str) else w.get("rule", "") for w in top3_wisdom)
+        # Verifica sanitização anti-confusão de ficheiros de outros projetos:
+        assert "C:/Users/guels/foreign_app/src/secret_local_panel.tsx" not in combined_rules_txt, (
+            f"Caminho bruto de outro projeto não foi sanitizado no Global Brain: {combined_rules_txt}"
+        )
+        assert "minmax(0, 1fr)" in combined_rules_txt or "UTF-8" in combined_rules_txt
+
+        # 27.4 Verificar injeção Sempre Ativa de 🌐[GLOBAL_BRAIN|top3] no PreInvocation (build_ephemeral_context)
+        gb_orbit.toggle_project_self_learn(workspace="new_project", enabled=True, proactive_enabled=True)
+        gb_brief = gb_orbit.get_executive_briefing_and_roi("new_project")
+        gb_ctx = build_ephemeral_context([], None, "new_project", orbit_brief=gb_brief)
+        assert "🌐[GLOBAL_BRAIN|top3" in gb_ctx, f"🌐[GLOBAL_BRAIN|top3 não foi injetado no modo Global Sempre Ativo: {gb_ctx}"
+
+        # 27.5 Testar Vault & Defuddle Studio (💎 Vault 6x [LAB])
+        df_res = gb_orbit.defuddle_content(
+            raw_input="<html><body><nav>Menu</nav><article><h1>Guia Global Brain</h1><p>Regra limpa extraída pelo Defuddle.</p></article></body></html>",
+            workspace="new_project",
+            title="Guia Global Brain",
+            save_to_vault=True,
+        )
+        assert df_res["ok"] is True and "Guia Global Brain" in df_res["clean_markdown"]
+        vault_ov = gb_orbit.get_vault_studio_overview(workspace="new_project")
+        assert vault_ov["ok"] is True and vault_ov["stats"]["notes"] >= 1
+
+        # 27.6 Testar Frota Escalada para 48 Agentes Swarm (4 Lanes x 12 Workers = 48 Tasks, 96/96 Verify Gates)
+        sw_dash = gb_swarm.start_live_swarm_run(
+            goal="Escalar Frota para 48 Agentes Swarm + Global Brain",
+            workspace_path=repo_dir,
+            animate_live=False,
+            mode="full",
+        )
+        assert sw_dash["run"]["total_tasks"] == 48, f"Esperadas 48 tasks, obteve {sw_dash['run']['total_tasks']}"
+        assert sw_dash["run"]["verify_total"] == 96, f"Esperados 96 verify gates, obteve {sw_dash['run']['verify_total']}"
+        assert sw_dash["run"]["verify_passed"] == 96
+        for lane_key in ("UI", "API", "TESTS", "DOCS"):
+            assert len(sw_dash["lanes"][lane_key]) == 12, f"Lane {lane_key} devia ter 12 workers, tem {len(sw_dash['lanes'][lane_key])}"
+
+    for gb_ui_token in (
+        'id="tabBtnVault"',
+        'id="vaultWorkspace"',
+        'id="slGlobalBrainTop3Grid"',
+        "function synthesizeGlobalBrainUI()",
+        "4 × 12 workers (48)",
+        "96 / 96",
+    ):
+        assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
+    print("[PASS] Córtex Global Unificado (Top-3 Sempre Ativo + Sanitização) + Vault 6x [LAB] + Frota 48 Agentes Swarm (96/96 Gates) OK")
+
 
 if __name__ == "__main__":
     run_all_tests()

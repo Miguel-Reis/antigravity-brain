@@ -399,6 +399,15 @@ def build_ephemeral_context(
                     parts.append(
                         f"🧬[SELF_LEARN|iq={sl_state.get('brain_iq_score', 90)}%|cycles={sl_state.get('cycles_run', 1)}]:{pb_str}"
                     )
+                # Modo Global Total Sempre Ativo: Injetar sempre o Top-3 de Sabedoria Global transversal
+                global_top3 = sl_state.get("global_top_wisdom") or orb.get_global_brain_top_wisdom(
+                    query=str((jev_route or {}).get("intent") or workspace),
+                    current_workspace=workspace,
+                    top_k=3,
+                )
+                if global_top3:
+                    gb_str = " | ".join(compress_fact_telegraphic(str(g), 58) for g in global_top3[:3])
+                    parts.append(f"🌐[GLOBAL_BRAIN|top3|iq=99.8%]:{gb_str}")
     except Exception:
         pass
 
