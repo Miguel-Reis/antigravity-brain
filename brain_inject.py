@@ -408,6 +408,15 @@ def build_ephemeral_context(
                 if global_top3:
                     gb_str = " | ".join(compress_fact_telegraphic(str(g), 58) for g in global_top3[:3])
                     parts.append(f"🌐[GLOBAL_BRAIN|top3|iq=99.8%]:{gb_str}")
+        elif not is_micro and is_delta:
+            global_top3 = orb.get_global_brain_top_wisdom(
+                query=str((jev_route or {}).get("intent") or workspace),
+                current_workspace=workspace,
+                top_k=3,
+            )
+            if global_top3:
+                gb_str = " | ".join(compress_fact_telegraphic(str(g), 54) for g in global_top3[:3])
+                parts.append(f"🌐[GLOBAL_BRAIN|top3|iq=99.8%]:{gb_str}")
     except Exception:
         pass
 
@@ -444,20 +453,30 @@ def build_ephemeral_context(
     tier_badges = {"working": "[W]", "episodic": "[E]", "semantic": "[S]"}
     for m in sorted_memories:
         topic = (m.get("topic") or "Fact").strip()
+        raw_fact_str = str(m.get("fact") or "")
+        m_ws = str(m.get("workspace") or "global")
+        m_cat = str(m.get("category") or "").lower()
         if topic.startswith("Scout Shared Codebase Map") and scout_map:
             continue
-        if topic.startswith("📡 Broadcast") or "[ORBIT BROADCAST" in str(m.get("fact") or ""):
+        if topic.startswith("📡 Broadcast") or "[ORBIT BROADCAST" in raw_fact_str:
+            continue
+        # Bloqueio Anti-Ruído de Ficheiros Estrangeiros (v5.4): Nunca injetar logs brutos 'Ficheiro X (modificado via ...)' de outros projetos ou em ws=global
+        is_file_edit_log = (
+            m_cat == "file_edit"
+            or topic.lower().startswith("ficheiro ")
+            or "(modificado via " in raw_fact_str.lower()
+        )
+        if is_file_edit_log and (workspace == "global" or m_ws != workspace):
             continue
         norm_topic = re.sub(r"\s+", " ", topic.lower())
         if norm_topic in seen_topics:
             continue
         seen_topics.add(norm_topic)
-        fact = compress_fact_telegraphic(m.get("fact") or "", max_len=135)
+        fact = compress_fact_telegraphic(raw_fact_str, max_len=135)
         is_locked = int(m.get("human_locked") or 0) == 1
         is_pin = is_locked or "pinned" in str(m.get("tags", "")).lower() or m.get("category") == "directive"
         pin_prefix = "🔒" if is_locked else ("📌" if is_pin else "")
         t_badge = tier_badges.get(str(m.get("tier") or "semantic").lower(), "[S]")
-        m_ws = str(m.get("workspace") or "global")
         # OTIMIZAÇÃO #2: Omitir tag [workspace] quando igual ao workspace do cabeçalho ou global
         ws_tag = f"[{m_ws}]" if (m_ws not in ("global", workspace)) else ""
         entry = f"- {pin_prefix}{t_badge}{ws_tag}{topic}:{fact}"

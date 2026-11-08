@@ -1791,6 +1791,8 @@ class OrbitEngine:
                 ),
             )
 
+        gc_res = self.compact_redundant_file_edits(max_per_workspace=2)
+
         return {
             "ok": True,
             "global_iq_score": 99.8,
@@ -1800,8 +1802,161 @@ class OrbitEngine:
             "transcripts_scanned": transcripts_scanned,
             "transcript_facts_added": transcript_facts_added,
             "ephemeral_purged": ephemeral_purged,
+            "file_edits_compacted": gc_res.get("compacted_removed", 0),
             "vault_notes_indexed": vault_notes_indexed,
             "global_playbook": top_global_playbook,
+        }
+
+    def compact_redundant_file_edits(self, max_per_workspace: int = 2) -> Dict[str, Any]:
+        """
+        Auto-Compactação de Registos Antigos de Edição de Ficheiros (File-Edit GC):
+        Remove entradas redundantes 'Ficheiro X (modificado via ...)' antigas por projeto,
+        preservando apenas os últimos `max_per_workspace` registos de ficheiro por workspace
+        e mantendo intactas todas as memórias fixadas ou de arquitetura/regras.
+        """
+        removed_ids: List[int] = []
+        ws_counts: Dict[str, int] = {}
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, workspace, topic, fact, category, human_locked
+                FROM memories
+                WHERE COALESCE(human_locked, 0) = 0
+                  AND (category = 'file_edit' OR topic LIKE 'Ficheiro %' OR fact LIKE '%(modificado via %')
+                ORDER BY id DESC;
+                """
+            ).fetchall()
+            seen_per_ws_topic: set[Tuple[str, str]] = set()
+            for r in rows:
+                ws = str(r["workspace"] or "global").lower()
+                tp = str(r["topic"] or "").strip().lower()
+                key = (ws, tp)
+                if key in seen_per_ws_topic or ws_counts.get(ws, 0) >= max(1, int(max_per_workspace)):
+                    removed_ids.append(int(r["id"]))
+                else:
+                    seen_per_ws_topic.add(key)
+                    ws_counts[ws] = ws_counts.get(ws, 0) + 1
+            if removed_ids:
+                ph = ",".join("?" for _ in removed_ids)
+                conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", removed_ids)
+                try:
+                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", removed_ids)
+                except Exception:
+                    pass
+        return {
+            "ok": True,
+            "compacted_removed": len(removed_ids),
+            "workspaces_cleaned": len(ws_counts),
+        }
+
+    def resolve_global_rule_conflicts(self, workspace: str = "global") -> Dict[str, Any]:
+        """
+        Detetor Automático de Conflitos e Fusão Canónica de Regras (Rule Conflict Resolver):
+        Compara regras de Self-Learn e Córtex Global por similaridade vetorial 32-D e sobreposição lexical,
+        funde regras redundantes ou contraditórias do mesmo domínio numa única Meta-Regra Canónica ([Canonical v2])
+        e deduplica os playbooks ativos.
+        """
+        merged_count = 0
+        removed_ids: List[int] = []
+        canonical_preview: List[str] = []
+
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT id, workspace, category, topic, fact, importance, human_locked
+                FROM memories
+                WHERE category IN ('learned_rule', 'bug_fix', 'directive')
+                   OR (workspace = 'global' AND topic LIKE '[Global%')
+                ORDER BY COALESCE(human_locked, 0) DESC, importance DESC, id DESC
+                LIMIT 80;
+                """
+            ).fetchall()
+
+            kept_records: List[Dict[str, Any]] = []
+            for r in rows:
+                rec = dict(r)
+                if self._is_ephemeral_status_log(str(rec.get("topic") or ""), str(rec.get("fact") or "")):
+                    if int(rec.get("human_locked") or 0) == 0:
+                        removed_ids.append(int(rec["id"]))
+                        merged_count += 1
+                    continue
+
+                blob = f"{rec.get('topic') or ''}: {rec.get('fact') or ''}"
+                vec = self.db.compute_semantic_vector(blob)
+                tokens = set(self.db.extract_search_tokens(blob))
+                norm_topic = re.sub(r"[^a-z0-9]+", "", str(rec.get("topic") or "").lower())[:28]
+
+                matched_primary = None
+                for k in kept_records:
+                    sim = self.db.cosine_similarity(vec, k["_vec"])
+                    shared_toks = len(tokens & k["_tokens"])
+                    overlap = shared_toks / max(1, min(len(tokens), len(k["_tokens"]))) if (tokens and k["_tokens"]) else 0.0
+                    same_topic_head = bool(norm_topic and len(norm_topic) >= 10 and norm_topic == k["_norm_topic"])
+                    if same_topic_head or sim >= 0.78 or shared_toks >= 3 or (sim >= 0.55 and overlap >= 0.35):
+                        matched_primary = k
+                        break
+
+                if matched_primary is not None and int(rec.get("human_locked") or 0) == 0:
+                    # Fundir cláusula complementar se trouxer informação nova relevante
+                    prim_fact = str(matched_primary.get("fact") or "")
+                    sec_fact = str(rec.get("fact") or "")
+                    if len(sec_fact) > 20 and sec_fact[:35].lower() not in prim_fact.lower() and len(prim_fact) < 220:
+                        merged_fact = f"{prim_fact.rstrip('.')} | [Canonical v2] {sec_fact[:110]}"
+                        matched_primary["fact"] = merged_fact
+                        conn.execute(
+                            "UPDATE memories SET fact = ?, importance = 5 WHERE id = ?;",
+                            (merged_fact, int(matched_primary["id"])),
+                        )
+                    removed_ids.append(int(rec["id"]))
+                    merged_count += 1
+                else:
+                    rec["_vec"] = vec
+                    rec["_tokens"] = tokens
+                    rec["_norm_topic"] = norm_topic
+                    kept_records.append(rec)
+                    if len(canonical_preview) < 5:
+                        canonical_preview.append(f"{rec.get('topic')}: {str(rec.get('fact') or '')[:95]}")
+
+            if removed_ids:
+                ph = ",".join("?" for _ in removed_ids)
+                conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", removed_ids)
+                try:
+                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", removed_ids)
+                except Exception:
+                    pass
+
+            # Deduplicar também learned_playbook_json em self_learn_projects
+            sl_rows = conn.execute("SELECT workspace, learned_playbook_json FROM self_learn_projects;").fetchall()
+            for sr in sl_rows:
+                try:
+                    pb = json.loads(sr["learned_playbook_json"] or "[]")
+                    dedup_pb: List[str] = []
+                    seen_pb: set[str] = set()
+                    for item in pb:
+                        s_item = " ".join(str(item).split()).strip()
+                        if not s_item or self._is_ephemeral_status_log("", s_item):
+                            merged_count += 1
+                            continue
+                        nk = re.sub(r"[^a-z0-9]", "", s_item.lower())[:42]
+                        if nk not in seen_pb:
+                            seen_pb.add(nk)
+                            dedup_pb.append(s_item)
+                        else:
+                            merged_count += 1
+                    if len(dedup_pb) != len(pb):
+                        conn.execute(
+                            "UPDATE self_learn_projects SET learned_playbook_json = ?, rules_distilled = ? WHERE workspace = ?;",
+                            (json.dumps(dedup_pb, ensure_ascii=False), len(dedup_pb), sr["workspace"]),
+                        )
+                except Exception:
+                    pass
+
+        return {
+            "ok": True,
+            "workspace": workspace,
+            "conflicts_resolved": merged_count,
+            "canonical_rules_total": len(kept_records),
+            "canonical_preview": canonical_preview,
         }
 
     def get_global_brain_top_wisdom(
@@ -1869,7 +2024,11 @@ class OrbitEngine:
             for m in mem_rows:
                 w_name = str(m["workspace"] or "global").lower()
                 cat = str(m["category"] or "")
-                blob = f"{m['topic']}: {m['fact']}"
+                tp_str = str(m["topic"] or "")
+                fc_str = str(m["fact"] or "")
+                if cat == "file_edit" or tp_str.lower().startswith("ficheiro ") or "(modificado via " in fc_str.lower():
+                    continue
+                blob = f"{tp_str}: {fc_str}"
                 m_vec = self.db.compute_semantic_vector(blob)
                 sim = self.db.cosine_similarity(q_vec, m_vec)
                 overlap = sum(1 for t in q_tokens if t in blob.lower())
@@ -2708,14 +2867,28 @@ class OrbitEngine:
         if src.startswith(("http://", "https://")) and "\n" not in src and len(src) < 500:
             source_url = src
             try:
+                import ipaddress
+                import socket
+                import urllib.parse
                 import urllib.request
 
+                parsed_u = urllib.parse.urlparse(source_url)
+                host_u = (parsed_u.hostname or "").strip().lower()
+                if host_u in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "169.254.169.254"):
+                    raise ValueError("Host local/interno bloqueado por política SSRF")
+                try:
+                    ip_obj = ipaddress.ip_address(socket.gethostbyname(host_u))
+                    if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
+                        raise ValueError("IP privado/loopback bloqueado por política SSRF")
+                except ValueError as ve:
+                    if "SSRF" in str(ve):
+                        raise
                 req = urllib.request.Request(
                     source_url,
-                    headers={"User-Agent": "Mozilla/5.0 (AntigravityBrainDefuddle/5.1)"},
+                    headers={"User-Agent": "Mozilla/5.0 (AntigravityBrainDefuddle/5.4)"},
                 )
                 with urllib.request.urlopen(req, timeout=6) as resp:
-                    raw_html = resp.read().decode("utf-8", errors="replace")
+                    raw_html = resp.read(524288).decode("utf-8", errors="replace")
                 src = raw_html
             except Exception as exc:
                 src = (
@@ -3093,4 +3266,78 @@ class OrbitEngine:
             "md_files_count": len(md_files),
             "md_files": [f.name for f in md_files[:20]],
         }
+
+    def read_vault_note(self, workspace: str = "brain_mcp", filename: str = "atlas.md") -> Dict[str, Any]:
+        """Lê o conteúdo de uma nota Markdown (.md / .json / .canvas) dentro de `.brain_vault/<ws>/` com proteção contra Path Traversal."""
+        ws = str(workspace or "brain_mcp").strip() or "brain_mcp"
+        vault_dir = self._get_vault_dir(ws).resolve()
+        safe_name = os.path.basename(str(filename or "atlas.md").strip()) or "atlas.md"
+        if not safe_name.endswith((".md", ".json", ".canvas")):
+            safe_name += ".md"
+        target_path = (vault_dir / safe_name).resolve()
+        if not str(target_path).startswith(str(vault_dir)):
+            return {"ok": False, "error": "Caminho inválido fora do Vault."}
+        if not target_path.is_file():
+            self.sync_markdown_vault(workspace=ws)
+        content = target_path.read_text(encoding="utf-8", errors="replace") if target_path.is_file() else f"# {safe_name}\n\n"
+        return {
+            "ok": True,
+            "workspace": ws,
+            "filename": safe_name,
+            "path": str(target_path),
+            "content": content,
+        }
+
+    def save_vault_note(
+        self,
+        workspace: str = "brain_mcp",
+        filename: str = "atlas.md",
+        content: str = "",
+        sync_to_db: bool = True,
+    ) -> Dict[str, Any]:
+        """Guarda ou cria uma nota `.md` diretamente em `.brain_vault/<ws>/` e sincroniza com o SQLite Brain."""
+        ws = str(workspace or "brain_mcp").strip() or "brain_mcp"
+        vault_dir = self._get_vault_dir(ws).resolve()
+        raw_name = os.path.basename(str(filename or "note.md").strip())
+        safe_name = re.sub(r"[^a-zA-Z0-9_\-\.]", "-", raw_name) or "note.md"
+        if not safe_name.endswith((".md", ".json", ".canvas")):
+            safe_name += ".md"
+        target_path = (vault_dir / safe_name).resolve()
+        if not str(target_path).startswith(str(vault_dir)):
+            return {"ok": False, "error": "Caminho inválido fora do Vault."}
+
+        text_body = str(content or "").strip()
+        target_path.write_text(text_body + "\n", encoding="utf-8")
+
+        wikilinks = re.findall(r"\[\[([^\]]+)\]\]", text_body)
+        if sync_to_db and safe_name.endswith(".md"):
+            title_match = re.search(r"^#\s+(.+)$", text_body, flags=re.M)
+            note_title = title_match.group(1).strip() if title_match else safe_name.replace(".md", "")
+            snippet = " ".join(
+                ln.strip()
+                for ln in text_body.splitlines()
+                if ln.strip() and not ln.strip().startswith(("---", "#"))
+            )[:220]
+            try:
+                self.db.store_fact(
+                    topic=f"[Vault .MD] {note_title[:70]}",
+                    fact=f"Nota editada em .brain_vault/{ws}/{safe_name}: {snippet or note_title} (Wikilinks: {', '.join(wikilinks[:5]) or 'atlas'})",
+                    workspace=ws,
+                    category="vault_clip",
+                    tags=f"vault md_editor {ws} " + " ".join(wikilinks[:4]),
+                    importance=4,
+                    source_agent="vault_md_editor",
+                )
+            except Exception:
+                pass
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "filename": safe_name,
+            "path": str(target_path),
+            "wikilinks": wikilinks,
+            "vault_studio": self.get_vault_studio_overview(workspace=ws),
+        }
+
 

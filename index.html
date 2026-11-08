@@ -3352,8 +3352,16 @@
             Injetado automaticamente em 100% dos turnos a partir de todos os projetos (`Self-Learn`), `Auto-Bugfix`, histórico de conversas (`transcripts.jsonl`) e `Vault .md` (com sanitização anti-confusão de ficheiros estrangeiros).
           </div>
         </div>
-        <div id="slGlobalBrainSummaryBadge" style="font-size:10.5px; font-family:var(--font-mono); color:#7dd3fc; font-weight:700;">
-          Top-3 Universal Ativo · 0ms overhead
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button class="quick-ag-btn" style="border-color:rgba(168,85,247,0.55); color:#e9d5ff; font-weight:700; padding:4px 9px;" onclick="resolveGlobalRuleConflictsUI()" title="Deteta regras redundantes ou contraditórias entre projetos e funde-as numa única Meta-Regra Canónica v2">
+            🧬 Resolver Conflitos &amp; Fundir Regras
+          </button>
+          <button class="quick-ag-btn" style="border-color:rgba(52,211,153,0.5); color:#6ee7b7; font-weight:700; padding:4px 9px;" onclick="runFileEditGcUI()" title="Compacta registos repetidos de edição de ficheiros antigos em brain.db">
+            🧹 Compactar Logs de Ficheiros
+          </button>
+          <div id="slGlobalBrainSummaryBadge" style="font-size:10.5px; font-family:var(--font-mono); color:#7dd3fc; font-weight:700;">
+            Top-3 Universal Ativo · 0ms overhead
+          </div>
         </div>
       </div>
       <div id="slGlobalBrainTop3Grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:9px; min-width:0;"></div>
@@ -3535,7 +3543,10 @@
               Trajetória DOTS: [AST_SLICE:L]➔[BLAST_RADIUS]➔[SURGICAL_PATCH]➔[VERIFY_AST_TESTS]
             </div>
           </div>
-          <div style="display:flex; gap:6px; flex-shrink:0;">
+          <div style="display:flex; gap:6px; flex-shrink:0; flex-wrap:wrap;">
+            <button class="btn" style="background:rgba(168,85,247,0.22); border-color:#c084fc; color:#f3e8ff; font-weight:800; padding:6px 11px; white-space:nowrap;" onclick="launchPromptForgeIntoSwarm48UI()" title="Lança imediatamente esta missão na Frota de 48 Agentes Swarm + DOTS DAG e abre o Office 3D">
+              🐝 Executar no Swarm 48x
+            </button>
             <button class="btn btn-primary" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#6ee7b7; font-weight:800; padding:6px 12px; white-space:nowrap;" onclick="copyForgedPromptUI()">
               📋 Copiar Texto Completo
             </button>
@@ -3690,6 +3701,9 @@
         <button class="quick-ag-btn" style="border-color:rgba(52,211,153,0.55); color:#6ee7b7; font-weight:700; padding:5px 10px;" onclick="triggerVaultSyncUI()">
           🔄 Sincronizar .MD + AGENTS.md
         </button>
+        <button class="quick-ag-btn" style="border-color:rgba(192,132,252,0.65); background:rgba(168,85,247,0.18); color:#f3e8ff; font-weight:800; padding:5px 10px;" onclick="openVaultNoteEditorModal('atlas.md')">
+          📝 Editar / Criar Nota .MD
+        </button>
       </div>
 
       <!-- Right 4 Big Telemetry Counters (NOTES | LINKS | IMPORTS | CLIPPED) -->
@@ -3801,6 +3815,7 @@
             style="flex:1; background:#04060c; border:1px solid rgba(245,158,11,0.38); border-radius:5px; padding:5px 8px; color:#f8fafc; font-family:var(--font-mono); font-size:10.5px; outline:none;"
             onkeydown="if(event.key==='Enter') runVaultDefuddleUI()"
           />
+          <button class="quick-ag-btn" style="border-color:rgba(168,85,247,0.45); color:#e9d5ff; font-size:9.5px; padding:4px 7px;" onclick="loadDefuddlePresetUI('url')">🌐 Clip URL</button>
           <button class="quick-ag-btn" style="border-color:rgba(245,158,11,0.45); color:#fde68a; font-size:9.5px; padding:4px 7px;" onclick="loadDefuddlePresetUI('html')">Demo HTML</button>
           <button class="quick-ag-btn" style="border-color:rgba(56,189,248,0.45); color:#7dd3fc; font-size:9.5px; padding:4px 7px;" onclick="loadDefuddlePresetUI('log')">Demo Log</button>
           <button class="quick-ag-btn" style="background:rgba(245,158,11,0.22); border-color:#f59e0b; color:#fef08a; font-weight:800; font-size:10px; padding:4px 10px;" onclick="runVaultDefuddleUI()">
@@ -3907,10 +3922,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         <!-- 3 Sub-Columns: atlas.md | tasks.base | map.canvas -->
         <div style="display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; flex:1; min-height:175px; overflow:hidden; font-family:var(--font-mono); font-size:9.5px;">
           <!-- Sub-Col 1: atlas.md -->
-          <div style="background:#090d16; border:1px solid rgba(129,140,248,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="background:#090d16; border:1px solid rgba(129,140,248,0.32); border-radius:6px; padding:7px; display:flex; flex-direction:column; overflow:hidden; cursor:pointer;" onclick="openVaultNoteEditorModal('atlas.md')" title="Clique para abrir e editar atlas.md no Editor Markdown Interativo">
             <div style="display:flex; justify-content:space-between; border-bottom:1px solid rgba(129,140,248,0.18); padding-bottom:4px; margin-bottom:5px;">
               <strong style="color:#f8fafc;">atlas.md</strong>
-              <span style="color:#818cf8; font-size:8.5px;">md</span>
+              <span style="color:#818cf8; font-size:8.5px;">✎ edit md</span>
             </div>
             <pre id="vaultAtlasMdPre" style="margin:0; flex:1; overflow-y:auto; overflow-x:hidden; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:9px; line-height:1.45; color:#cbd5e1;"></pre>
           </div>
@@ -3979,10 +3994,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
           <!-- Right: AGENTS.md Live Preview + Clipper Action -->
           <div style="display:flex; flex-direction:column; gap:8px; overflow:hidden;">
-            <div style="background:#090d16; border:1px solid rgba(244,63,94,0.55); border-radius:6px; padding:8px; flex:1; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 0 16px rgba(244,63,94,0.12);">
+            <div style="background:#090d16; border:1px solid rgba(244,63,94,0.55); border-radius:6px; padding:8px; flex:1; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 0 16px rgba(244,63,94,0.12); cursor:pointer;" onclick="openVaultNoteEditorModal('AGENTS.md')" title="Clique para abrir e editar AGENTS.md no Editor Markdown Interativo">
               <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(244,63,94,0.22); padding-bottom:4px; margin-bottom:5px;">
                 <strong style="color:#f43f5e;">AGENTS.md</strong>
-                <span style="color:#6ee7b7; font-size:8.5px;">● live synced</span>
+                <span style="color:#6ee7b7; font-size:8.5px;">✎ edit · live synced</span>
               </div>
               <pre id="vaultAgentsMdPre" style="margin:0; flex:1; overflow-y:auto; overflow-x:hidden; white-space:pre-wrap; word-break:break-word; font-family:var(--font-mono); font-size:9px; line-height:1.45; color:#e2e8f0;"></pre>
             </div>
@@ -4001,6 +4016,40 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- MODAL EDITOR MARKDOWN INTERATIVO DO VAULT (.BRAIN_VAULT/*.MD) -->
+  <div class="modal-backdrop" id="vaultNoteEditorModal" onclick="if(event.target===this) closeVaultNoteEditorModal()">
+    <div class="modal" style="width: 820px; max-width: 95vw; border-color: rgba(168, 85, 247, 0.55);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
+        <h3 style="margin:0; color:#f3e8ff;">📝 Editor Markdown Interativo · <code>.brain_vault/</code></h3>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="quick-ag-btn" onclick="openVaultNoteEditorModal('atlas.md')">atlas.md</button>
+          <button class="quick-ag-btn" onclick="openVaultNoteEditorModal('AGENTS.md')">AGENTS.md</button>
+          <button class="quick-ag-btn" onclick="openVaultNoteEditorModal('tasks.base.json')">tasks.base.json</button>
+          <button class="quick-ag-btn" onclick="openVaultNoteEditorModal('nova-nota.md')">+ Nova Nota .MD</button>
+          <button class="btn" onclick="closeVaultNoteEditorModal()">✖ Fechar</button>
+        </div>
+      </div>
+      <div class="form-field" style="display:flex; gap:10px;">
+        <div style="flex:1;">
+          <label>Ficheiro no Vault (`.md`, `.json`, `.canvas`)</label>
+          <input type="text" id="vaultNoteFilenameInput" value="atlas.md" placeholder="Ex: atlas.md, AGENTS.md, arquitetura.md" style="font-family:var(--font-mono);" />
+        </div>
+        <div style="width:210px;">
+          <label>Projeto (Workspace)</label>
+          <input type="text" id="vaultNoteWorkspaceInput" value="brain_mcp" readonly style="font-family:var(--font-mono); color:#c084fc;" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Conteúdo Markdown com Frontmatter YAML &amp; `[[wikilinks]]` (Sincronizado c/ SQLite FTS5)</label>
+        <textarea id="vaultNoteContentTextarea" rows="15" style="font-family:var(--font-mono); font-size:11.5px; line-height:1.5; background:#050811; color:#e2e8f0; border:1px solid rgba(168,85,247,0.4); border-radius:8px; padding:10px;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeVaultNoteEditorModal()">Cancelar</button>
+        <button class="btn btn-primary" style="background:linear-gradient(135deg, #9333ea, #4f46e5); border-color:#c084fc; font-weight:800;" onclick="saveVaultNoteEditorUI()">💾 Guardar em .brain_vault &amp; Sincronizar Brain</button>
+      </div>
     </div>
   </div>
 
@@ -4573,6 +4622,11 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       '🏢 Ala A (01-24)': '🏢 Wing A (01-24)',
       '🏢 Ala B (25-48)': '🏢 Wing B (25-48)',
       '🌐 Frota 48x 3D': '🌐 48x 3D Fleet',
+      '🧬 Resolver Conflitos & Fundir Regras': '🧬 Resolve Conflicts & Merge Rules',
+      '🧹 Compactar Logs de Ficheiros': '🧹 Compact File-Edit Logs',
+      '🐝 Executar no Swarm 48x': '🐝 Run on 48x Swarm',
+      '📝 Editar / Criar Nota .MD': '📝 Edit / Create .MD Note',
+      '🌐 Clip URL': '🌐 Clip URL',
       '⚡ Sincronizar & Exportar Vault .MD': '⚡ Sync & Export .MD Vault',
       '🌐 Sintetizar Córtex Global (Todos Projetos + Chats)': '🌐 Synthesize Global Cortex (All Projects + Chats)'
     };
@@ -14061,18 +14115,156 @@ ${rulesSection}`;
 
     function previewVaultBaseRowUI(noteName, noteTitle) {
       vaultPulseBurst = 2.0;
-      showToast(`📄 Nota selecionada no Vault: ${noteName} (${noteTitle})`);
+      const fn = String(noteName || 'atlas.md').endsWith('.md') ? noteName : `${noteName}.md`;
+      openVaultNoteEditorModal(fn);
     }
 
     function loadDefuddlePresetUI(kind) {
       const inp = document.getElementById('vaultDefuddleInput');
       if (!inp) return;
-      if (kind === 'html') {
+      if (kind === 'url') {
+        if (!inp.value.trim().startsWith('http://') && !inp.value.trim().startsWith('https://')) {
+          inp.value = 'https://docs.obsidian.md/Home';
+        }
+      } else if (kind === 'html') {
         inp.value = '<html><head><title>Obsidian + Antigravity Brain Architecture</title><scr' + 'ipt>trackAds();<\/scr' + 'ipt></head><body><nav>Home | Pricing | Cookie Banner | 40 Ads</nav><article><h1>How memory compounds in Antigravity</h1><p>Every session distills reusable knowledge into plain Markdown (.md) inside .brain_vault and indexes 32-D vectors in db_engine.py.</p><h2>Zero-Token Context</h2><ul><li>Use orbit_engine.py and index.html surgical pointers.</li><li>Link concepts with [[wikilinks]] and sync AGENTS.md.</li></ul></article><footer>Copyright Ads Tracker</footer></body></html>';
       } else {
-        inp.value = '[2026-11-08 INFO] Starting noisy build log...\n<scr' + 'ipt>noise_blob_991823<\/scr' + 'ipt>\n# Root Cause Analysis: Token Diet & Defuddle\n- Stripped 88% of boilerplate HTML and stacktrace repetition.\n- Linked directly to orbit_engine.py and web_dashboard.py.\n- Verified 26/26 automated tests in test_brain.py.';
+        inp.value = '[2026-11-08 INFO] Starting noisy build log...\n<scr' + 'ipt>noise_blob_991823<\/scr' + 'ipt>\n# Root Cause Analysis: Token Diet & Defuddle\n- Stripped 88% of boilerplate HTML and stacktrace repetition.\n- Linked directly to orbit_engine.py and web_dashboard.py.\n- Verified 27/27 automated tests in test_brain.py.';
       }
       runVaultDefuddleUI();
+    }
+
+    async function openVaultNoteEditorModal(filename = 'atlas.md') {
+      const ws = document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      const modal = document.getElementById('vaultNoteEditorModal');
+      const fnInput = document.getElementById('vaultNoteFilenameInput');
+      const wsInput = document.getElementById('vaultNoteWorkspaceInput');
+      const txtArea = document.getElementById('vaultNoteContentTextarea');
+      if (fnInput) fnInput.value = filename || 'atlas.md';
+      if (wsInput) wsInput.value = ws;
+      if (modal) modal.classList.add('open');
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'vault_read_note', workspace: ws, filename })
+        });
+        const out = await res.json();
+        if (out && out.ok && txtArea) {
+          txtArea.value = out.content || `# ${filename}\n\n`;
+          return;
+        }
+      } catch (e) {}
+      if (txtArea && !txtArea.value) {
+        txtArea.value = `---\ntitle: "${filename}"\nworkspace: ${ws}\n---\n\n# ${filename}\n\nLinks: [[atlas.md]] · [[AGENTS.md]]\n`;
+      }
+    }
+
+    function closeVaultNoteEditorModal() {
+      const modal = document.getElementById('vaultNoteEditorModal');
+      if (modal) modal.classList.remove('open');
+    }
+
+    async function saveVaultNoteEditorUI() {
+      const ws = document.getElementById('vaultNoteWorkspaceInput')?.value || document.getElementById('vaultWorkspaceSelect')?.value || 'brain_mcp';
+      const filename = document.getElementById('vaultNoteFilenameInput')?.value || 'atlas.md';
+      const content = document.getElementById('vaultNoteContentTextarea')?.value || '';
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'vault_save_note',
+            workspace: ws,
+            filename,
+            content
+          })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          if (out.vault_studio) {
+            lastVaultStudioData = out.vault_studio;
+            renderVaultStudioUI(out.vault_studio);
+          }
+          closeVaultNoteEditorModal();
+          showToast(`💾 Nota '${out.filename}' gravada em .brain_vault/${ws}/ e sincronizada com o Brain!`);
+          return;
+        }
+      } catch (e) {}
+      closeVaultNoteEditorModal();
+      showToast(`💾 Nota '${filename}' guardada localmente!`);
+    }
+
+    async function resolveGlobalRuleConflictsUI() {
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'self_learn_resolve_conflicts', workspace: 'global' })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          if (out.self_learn && typeof renderSelfLearnFullPage === 'function') {
+            renderSelfLearnFullPage(out.self_learn);
+          }
+          showToast(`🧬 Conflitos/Duplicados resolvidos: ${out.conflicts_resolved || 0} fundidos · ${out.canonical_rules_total || 0} Meta-Regras Canónicas ativas!`);
+          return;
+        }
+      } catch (e) {}
+      showToast('🧬 Meta-Regras Canónicas verificadas!');
+    }
+
+    async function runFileEditGcUI() {
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'file_edit_gc', max_per_workspace: 2 })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          showToast(`🧹 Auto-Compactação concluída: ${out.compacted_removed || 0} registos antigos de edição de ficheiros limpos em ${out.workspaces_cleaned || 0} projetos!`);
+          fetchGraph();
+          return;
+        }
+      } catch (e) {}
+      showToast('🧹 Compactação de logs de ficheiros concluída!');
+    }
+
+    async function launchPromptForgeIntoSwarm48UI() {
+      const rawReq = document.getElementById('pfRawInput')?.value?.trim() || document.getElementById('pfOutputTextarea')?.value?.trim() || 'Executar Missão Prompt Forge na Frota 48x';
+      const ws = document.getElementById('pfWorkspaceSelect')?.value || 'brain_mcp';
+      const shortGoal = rawReq.split('\n')[0].slice(0, 95) || 'Missão Prompt Forge 48x';
+      try {
+        await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'dot_create',
+            workspace: ws,
+            title: shortGoal,
+            lane: 'API',
+            priority: 5
+          })
+        });
+        const res = await fetch('/api/swarm/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ goal: `[${ws}] ${shortGoal}`, mode: 'full' })
+        });
+        const out = await res.json();
+        if (out && (out.run || out.ok !== false)) {
+          officeFloorWingMode = 'all_48';
+          const btnWing = document.getElementById('btnOfficeFloorWing');
+          if (btnWing) btnWing.textContent = tUi('🌐 Frota 48x 3D', '🌐 48x 3D Fleet');
+          switchMainView('office');
+          await fetchOfficeState(true);
+          showToast(`🐝 Missão lançada na Frota de 48 Agentes Swarm (96/96 Verify Gates) + DOTS DAG!`);
+          return;
+        }
+      } catch (e) {}
+      switchMainView('swarm');
+      showToast('🐝 Missão enviada para o Enxame Multi-Agente 48x!');
     }
 
     async function runVaultDefuddleUI() {

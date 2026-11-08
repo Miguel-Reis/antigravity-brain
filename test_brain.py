@@ -1010,19 +1010,75 @@ def run_all_tests() -> None:
         assert off_state_48["swarm_fleet_48"][0]["wing"] == "wing_a"
         assert off_state_48["swarm_fleet_48"][24]["wing"] == "wing_b"
 
+        # 27.8 Testar os 7 Pontos do Pack v6.0 (Bloqueio Foreign File-Edit + File-Edit GC + Vault Editor + Rule Conflict Resolver + Spotlight Quick Actions)
+        for idx_fe in range(4):
+            gb_db.store_fact(
+                topic=f"Ficheiro apply_metinfarm_proto_{idx_fe}.py (mt2)",
+                fact=f"Ficheiro do projeto mt2 em D:/N2-MT2/scripts/apply_metinfarm_proto_{idx_fe}.py (modificado via write_to_file #{idx_fe}).",
+                workspace="mt2",
+                category="file_edit",
+                tags="file_edit mt2",
+                importance=3,
+            )
+        foreign_mems = gb_db.search_memories("apply_metinfarm_proto", workspace="global", n_results=10)
+        delta_ctx = build_ephemeral_context(
+            foreign_mems,
+            None,
+            "global",
+            delta_info={"is_delta_turn": True, "turn_number": 2, "scout_unchanged": True, "delta_memories": foreign_mems},
+            orbit_brief=gb_brief,
+        )
+        assert "apply_metinfarm_proto" not in delta_ctx, f"Ruído de file_edit estrangeiro vazou em ws=global: {delta_ctx}"
+        assert "🌐[GLOBAL_BRAIN|top3" in delta_ctx, f"🌐[GLOBAL_BRAIN|top3 devia estar presente no turno DELTA: {delta_ctx}"
+
+        gc_out = gb_orbit.compact_redundant_file_edits(max_per_workspace=1)
+        assert gc_out["ok"] is True and gc_out["compacted_removed"] >= 3
+
+        # Testar Editor Markdown Interativo do Vault (save_vault_note + read_vault_note)
+        vn_save = gb_orbit.save_vault_note(
+            workspace="new_project",
+            filename="arquitetura-v6.md",
+            content="# Arquitetura v6.0\n\nSincronizada com [[atlas.md]] e [[AGENTS.md]].",
+            sync_to_db=True,
+        )
+        assert vn_save["ok"] is True and "atlas.md" in vn_save["wikilinks"]
+        vn_read = gb_orbit.read_vault_note(workspace="new_project", filename="arquitetura-v6.md")
+        assert vn_read["ok"] is True and "Arquitetura v6.0" in vn_read["content"]
+
+        # Testar Rule Conflict Resolver (funde 2 regras redundantes numa Meta-Regra Canónica)
+        gb_db.store_fact(
+            topic="[Global Rule] CSS Grid Overflow Fix",
+            fact="Usar sempre minmax(0, 1fr) e overflow-x: hidden em contentores flex/grid para evitar scroll horizontal.",
+            workspace="global",
+            category="learned_rule",
+            tags="css grid overflow",
+            importance=5,
+        )
+        rc_out = gb_orbit.resolve_global_rule_conflicts(workspace="global")
+        assert rc_out["ok"] is True and rc_out["conflicts_resolved"] >= 1
+
+    brain_app_txt = Path(os.path.join(repo_dir, "brain_app.py")).read_text(encoding="utf-8")
+    for app_tok in ("_do_quick_global_rule", "_do_quick_defuddle", "_do_quick_resolve_conflicts"):
+        assert app_tok in brain_app_txt, f"Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
+
     for gb_ui_token in (
         'id="tabBtnVault"',
         'id="vaultWorkspace"',
+        'id="vaultNoteEditorModal"',
         'id="slGlobalBrainTop3Grid"',
         'id="btnOfficeFloorWing"',
         "function synthesizeGlobalBrainUI()",
         "function cycleOfficeFloorWing()",
+        "function openVaultNoteEditorModal(",
+        "function resolveGlobalRuleConflictsUI()",
+        "function runFileEditGcUI()",
+        "function launchPromptForgeIntoSwarm48UI()",
         "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
-    print("[PASS] Córtex Global Unificado v5.3 (Top-3 Sempre Ativo + Filtro Anti-Logs) + Vault 6x Oficial + Office 3D 48x Wing Switcher OK")
+    print("[PASS] Pack Completo v6.0 (7/7 Melhorias: Foreign File-Edit Shield, File-Edit GC, URL Clipper, Vault MD Editor, Swarm 48x Launcher, Rule Conflict Resolver & Spotlight Quick Actions) OK")
 
 
 if __name__ == "__main__":

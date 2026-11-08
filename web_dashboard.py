@@ -1358,11 +1358,27 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 ws = str(body.get("workspace", "brain_mcp"))
                 vs_res = orbit.sync_markdown_vault(workspace=ws)
                 res = {**vs_res, "vault_studio": vs_res}
+            elif action == "vault_read_note":
+                ws = str(body.get("workspace", "brain_mcp"))
+                fn = str(body.get("filename", "atlas.md"))
+                res = orbit.read_vault_note(workspace=ws, filename=fn)
+            elif action == "vault_save_note":
+                ws = str(body.get("workspace", "brain_mcp"))
+                fn = str(body.get("filename", "atlas.md"))
+                cnt = str(body.get("content", ""))
+                res = orbit.save_vault_note(workspace=ws, filename=fn, content=cnt, sync_to_db=True)
             elif action == "global_brain_synthesize":
                 ws = str(body.get("workspace", "brain_mcp"))
                 scan_tr = bool(body.get("scan_transcripts", True))
                 gb_res = orbit.synthesize_global_meta_brain(scan_transcripts=scan_tr)
                 res = {**gb_res, "global_brain": gb_res, "self_learn": orbit.get_self_learn_status(workspace=ws)}
+            elif action == "self_learn_resolve_conflicts":
+                ws = str(body.get("workspace", "global"))
+                rc_res = orbit.resolve_global_rule_conflicts(workspace=ws)
+                res = {**rc_res, "self_learn": orbit.get_self_learn_status(workspace=ws)}
+            elif action == "file_edit_gc":
+                max_pw = int(body.get("max_per_workspace", 2) or 2)
+                res = orbit.compact_redundant_file_edits(max_per_workspace=max_pw)
             else:
                 self._send_json({"ok": False, "error": f"Ação Orbit desconhecida: {action}"}, 400)
                 return

@@ -352,8 +352,9 @@ class QuickPromptForgeSpotlight:
             nav_buttons = [
                 ("🖥️ Abrir App Completa", "graph", "#6366f1"),
                 ("✨ Estúdio Prompt Forge", "promptforge", "#a855f7"),
+                ("💎 Vault 6x Studio", "vault", "#c084fc"),
                 ("🧬 Self-Learn Studio", "selflearn", "#10b981"),
-                ("🏢 Escritório 3D", "office", "#38bdf8"),
+                ("🏢 Escritório 3D (48x)", "office", "#38bdf8"),
                 ("🛰️ Orbit OS", "orbit", "#f59e0b"),
             ]
             for lbl, sec, col in nav_buttons:
@@ -475,6 +476,58 @@ class QuickPromptForgeSpotlight:
                     f"✅ COPIADO PARA O CLIPBOARD! ({tok_est} tokens · {sk_cnt} Skills Antigravity · {fl_cnt} Ficheiros) — Faz Ctrl+V no Antigravity!"
                 )
 
+            def _do_quick_global_rule() -> None:
+                req_txt = self.entry_req.get().strip()
+                if not req_txt:
+                    status_var.set("⚠️ Escreve primeiro a Regra Global ou Decisão que queres guardar no Córtex Global.")
+                    return
+                db.store_fact(
+                    topic=f"[Global Rule] {req_txt[:56]}",
+                    fact=req_txt,
+                    workspace="global",
+                    category="learned_rule",
+                    tags="global_brain learned_rule spotlight_quick",
+                    importance=5,
+                    source_agent="spotlight_quick_rule",
+                    trust_score=0.99,
+                )
+                synth = orb.synthesize_global_meta_brain(scan_transcripts=False)
+                output_box.delete("1.0", "end")
+                output_box.insert("1.0", f"🌐 REGRA GLOBAL GUARDADA NO CÓRTEX UNIFICADO:\n\n- {req_txt}\n\nTop Regras Globais Ativas: {synth.get('global_rules_count', 0)}")
+                status_var.set("✅ Regra Global gravada (importance=5) e injetada em todos os projetos!")
+
+            def _do_quick_defuddle() -> None:
+                raw_in = self.entry_req.get().strip()
+                if not raw_in:
+                    try:
+                        raw_in = root.clipboard_get()
+                    except Exception:
+                        raw_in = ""
+                ws_val = self.ws_var.get().strip() or "brain_mcp"
+                df_res = orb.defuddle_content(raw_input=raw_in, workspace=ws_val, save_to_vault=True)
+                clean_md = str(df_res.get("clean_markdown") or "")
+                output_box.delete("1.0", "end")
+                output_box.insert("1.0", clean_md)
+                root.clipboard_clear()
+                root.clipboard_append(clean_md)
+                root.update()
+                status_var.set(
+                    f"🧹 DEFUDDLE CONCLUÍDO! Guardado em .brain_vault/{ws_val}/{df_res.get('slug')} (-{df_res.get('reduction_pct')}% tok) & Copiado!"
+                )
+
+            def _do_quick_resolve_conflicts() -> None:
+                rc = orb.resolve_global_rule_conflicts(workspace="global")
+                preview = "\n".join(f"• {p}" for p in (rc.get("canonical_preview") or []))
+                output_box.delete("1.0", "end")
+                output_box.insert(
+                    "1.0",
+                    f"🧬 DETETOR DE CONFLITOS & FUSÃO CANÓNICA CONCLUÍDO:\n"
+                    f"- Conflitos/Duplicados Fundidos: {rc.get('conflicts_resolved', 0)}\n"
+                    f"- Regras Canónicas Ativas: {rc.get('canonical_rules_total', 0)}\n\n"
+                    f"{preview}",
+                )
+                status_var.set(f"🧬 {rc.get('conflicts_resolved', 0)} conflitos/duplicados fundidos em Meta-Regras Canónicas!")
+
             forge_btn = tk.Button(
                 inp_frame,
                 text="⚡ FORJAR & COPIAR",
@@ -490,6 +543,29 @@ class QuickPromptForgeSpotlight:
                 command=_do_forge,
             )
             forge_btn.pack(side="right", padx=6, pady=6)
+
+            # Barra de Ações Diretas Spotlight v6.0 (Quick Rule | Defuddle URL/Clipboard | Resolver Conflitos)
+            quick_act_bar = tk.Frame(root, bg="#070a14")
+            quick_act_bar.pack(fill="x", padx=12, pady=(0, 6))
+            for q_lbl, q_cmd, q_fg in [
+                ("➕ Guardar Regra Global", _do_quick_global_rule, "#6ee7b7"),
+                ("🧹 Defuddle URL / Clipboard ➔ .MD", _do_quick_defuddle, "#fde047"),
+                ("🧬 Fundir Regras Conflituosas", _do_quick_resolve_conflicts, "#7dd3fc"),
+            ]:
+                tk.Button(
+                    quick_act_bar,
+                    text=q_lbl,
+                    font=("Consolas", 8, "bold"),
+                    fg=q_fg,
+                    bg="#0f172a",
+                    activebackground="#1e293b",
+                    activeforeground="#ffffff",
+                    relief="flat",
+                    padx=9,
+                    pady=4,
+                    cursor="hand2",
+                    command=q_cmd,
+                ).pack(side="left", padx=(0, 6))
 
             self.entry_req.bind("<Return>", _do_forge)
             root.bind("<Escape>", lambda _e: root.withdraw())
