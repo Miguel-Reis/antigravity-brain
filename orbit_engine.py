@@ -1574,6 +1574,41 @@ class OrbitEngine:
         cleaned = re.sub(r"\b([a-zA-Z0-9_\-]+\.(?:py|ts|tsx|js|jsx|cpp|h|inl)):L\d+(?:-\d+)?", r"\1", cleaned)
         return cleaned
 
+    @staticmethod
+    def _is_ephemeral_status_log(topic: str, fact: str) -> bool:
+        """
+        Filtra relatórios efémeros de progresso/auditoria de subagentes (ex.: 'Completed read-only audit',
+        'Audited all 15 files', 'Running 27-suite verification', 'Sent full report to parent') para que o
+        Córtex Global retenha apenas regras técnicas reutilizáveis, padrões de arquitetura e causas-raiz de bugs.
+        """
+        t_low = str(topic or "").strip().lower()
+        f_low = str(fact or "").strip().lower()
+        blob = f"{t_low} | {f_low}"
+        ephemeral_markers = (
+            "topico",
+            "short topic",
+            "completed read-only audit",
+            "sent full prioritized report",
+            "sent structured findings",
+            "reported structured",
+            "audited all ",
+            "audited src/",
+            "running 27-suite",
+            "running test",
+            "waiting for task",
+            "commit 17c31f5 pushed",
+            "commit 31d15f1 pushed",
+            "status |",
+            "git release",
+            "test suite |",
+            "post-v5.2 polish roadmap",
+        )
+        if any(m in blob for m in ephemeral_markers):
+            return True
+        if re.search(r"\b(found \d+ issues across|completed .* audit of|sent .* to parent)\b", f_low):
+            return True
+        return False
+
     def synthesize_global_meta_brain(self, scan_transcripts: bool = True) -> Dict[str, Any]:
         """
         Unifica no Córtex Global ('global'):
@@ -1586,15 +1621,35 @@ class OrbitEngine:
         transcripts_scanned = 0
         transcript_facts_added = 0
         vault_notes_indexed = 0
+        ephemeral_purged = 0
 
         def _push_axiom(ax: str) -> None:
             clean_ax = " ".join(str(ax or "").split()).strip()
-            if len(clean_ax) < 16:
+            if len(clean_ax) < 16 or self._is_ephemeral_status_log("", clean_ax):
                 return
             norm_k = re.sub(r"[^a-z0-9]", "", clean_ax.lower())[:55]
             if norm_k not in seen_axioms:
                 seen_axioms.add(norm_k)
                 global_axioms.append(clean_ax[:150])
+
+        # 0. Limpar eventuais logs de estado efémeros antigos guardados como [Global Chat]
+        with self.db._connect() as conn:
+            old_chat_rows = conn.execute(
+                "SELECT id, topic, fact FROM memories WHERE workspace = 'global' AND (topic LIKE '[Global Chat]%' OR source_agent = 'global_brain_synthesizer');"
+            ).fetchall()
+            purge_ids = [
+                int(r["id"])
+                for r in old_chat_rows
+                if self._is_ephemeral_status_log(str(r["topic"] or ""), str(r["fact"] or ""))
+            ]
+            if purge_ids:
+                ph = ",".join("?" for _ in purge_ids)
+                conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", purge_ids)
+                try:
+                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", purge_ids)
+                except Exception:
+                    pass
+                ephemeral_purged = len(purge_ids)
 
         # 1. Absorver Meta-Regras de todos os projetos (Self-Learn) e Bugs Resolvidos (Auto-Bugfix)
         with self.db._connect() as conn:
@@ -1624,8 +1679,12 @@ class OrbitEngine:
             for m in cross_mems:
                 w_name = str(m["workspace"] or "global")
                 cat = str(m["category"] or "")
-                fact_s = self._sanitize_foreign_paths_for_global(str(m["fact"] or ""), w_name, "global")
-                if cat == "bug_fix" or "bug" in str(m["topic"] or "").lower():
+                top_str = str(m["topic"] or "")
+                fact_raw = str(m["fact"] or "")
+                if self._is_ephemeral_status_log(top_str, fact_raw):
+                    continue
+                fact_s = self._sanitize_foreign_paths_for_global(fact_raw, w_name, "global")
+                if cat == "bug_fix" or "bug" in top_str.lower():
                     _push_axiom(f"[🐛 Bugfix/{w_name}] {fact_s}")
                 elif cat == "vault_clip":
                     _push_axiom(f"[💎 Vault/{w_name}] {fact_s}")
@@ -1660,16 +1719,17 @@ class OrbitEngine:
                             for t_top, t_fact in matches[-3:]:
                                 clean_t = t_top.strip()
                                 clean_f = " ".join(t_fact.strip().split())
-                                if any(k in clean_t.lower() for k in ("topico", "short topic")):
+                                if self._is_ephemeral_status_log(clean_t, clean_f):
                                     continue
-                                _push_axiom(f"[💬 Chat] {clean_t}: {clean_f}")
+                                sanitized_f = self._sanitize_foreign_paths_for_global(clean_f, "foreign_chat", "global")
+                                _push_axiom(f"[💬 Chat] {clean_t}: {sanitized_f}")
                                 _, is_new = self.db.store_fact(
                                     topic=f"[Global Chat] {clean_t[:65]}",
-                                    fact=clean_f,
+                                    fact=sanitized_f,
                                     workspace="global",
                                     category="learned_rule",
                                     tags="global_brain,transcript_wisdom,cross_project",
-                                    importance=5,
+                                    importance=4,
                                     source_agent="global_brain_synthesizer",
                                     trust_score=0.95,
                                 )
@@ -1739,6 +1799,7 @@ class OrbitEngine:
             "bugfixes_promoted": max(1, len(top_global_playbook) // 2),
             "transcripts_scanned": transcripts_scanned,
             "transcript_facts_added": transcript_facts_added,
+            "ephemeral_purged": ephemeral_purged,
             "vault_notes_indexed": vault_notes_indexed,
             "global_playbook": top_global_playbook,
         }
@@ -1763,6 +1824,8 @@ class OrbitEngine:
         seen_norm: set[str] = set()
 
         def _add_candidate(score: float, text: str, origin_ws: str) -> None:
+            if self._is_ephemeral_status_log("", text):
+                return
             sanitized = self._sanitize_foreign_paths_for_global(text, origin_ws, cur_ws)
             clean = " ".join(sanitized.split()).strip()
             if len(clean) < 12:

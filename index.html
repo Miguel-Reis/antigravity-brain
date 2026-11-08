@@ -2338,9 +2338,9 @@
         <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
           ✨ Prompt Forge
         </button>
-        <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" style="border-color:rgba(168,85,247,0.48); color:#f3e8ff; background:rgba(168,85,247,0.1);" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Versão Lab Não-Oficial · Tecla 6]">
+        <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" style="border-color:rgba(168,85,247,0.48); color:#f3e8ff; background:rgba(168,85,247,0.1);" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Atalho: Tecla 6]">
           <span class="pulse-dot" style="background:#c084fc;"></span>
-          💎 Vault 6x <span style="font-size:8.5px; background:rgba(168,85,247,0.32); border:1px solid rgba(192,132,252,0.6); color:#f5d0fe; padding:0 4px; border-radius:4px; margin-left:3px; font-family:var(--font-mono);">LAB</span>
+          💎 Vault 6x
         </button>
         <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
           <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
@@ -3068,6 +3068,9 @@
           <button class="office-btn" onclick="setOfficeCameraPreset('swarm_wing')" title="Zona 4: Ala de Engenharia Swarm (UI, API, QA, DOCS)">
             ⚡ Engenharia
           </button>
+          <button class="office-btn primary" id="btnOfficeFloorWing" onclick="cycleOfficeFloorWing()" title="Alternar Piso/Ala 3D entre Ala A (Workers 01-24), Ala B (Workers 25-48) e Frota Completa 48 Agentes 3D">
+            🏢 Ala A (01-24)
+          </button>
           <button class="office-btn" onclick="setOfficeCameraPreset('desks')" title="Zona 5: Ala de Conversas &amp; Subagentes Ativos">
             💬 Conversas
           </button>
@@ -3548,7 +3551,7 @@
             ⚡ Ultra-Compacto (Token Diet TOON)
           </button>
           <button class="quick-ag-btn" id="pfTabSwarm" style="padding:5px 10px;" onclick="switchPromptForgeVariant('swarm')">
-            🐝 Enxame Multi-Agente (Swarm 24x)
+            🐝 Enxame Multi-Agente (Swarm 48x)
           </button>
         </div>
 
@@ -3665,12 +3668,12 @@
       <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
         <div style="background:linear-gradient(135deg, #a855f7, #7e22ce); border:1px solid #d8b4fe; border-radius:6px; padding:7px 16px; text-align:center; box-shadow:0 0 22px rgba(168,85,247,0.35);">
           <div style="font-family:var(--font-mono); font-size:15px; font-weight:900; color:#ffffff; letter-spacing:0.12em;">BRAIN VAULT</div>
-          <div style="font-family:var(--font-mono); font-size:8.5px; color:#f3e8ff; opacity:0.92; letter-spacing:0.06em;">.MD + SQLITE · LAB v5.1</div>
+          <div style="font-family:var(--font-mono); font-size:8.5px; color:#f3e8ff; opacity:0.92; letter-spacing:0.06em;">.MD + SQLITE · STUDIO v5.3</div>
         </div>
         <div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span style="font-family:var(--font-mono); font-size:13.5px; font-weight:800; color:#f8fafc; letter-spacing:0.06em;">ANTIGRAVITY WORKS INSIDE YOUR VAULT</span>
-            <span style="font-family:var(--font-mono); font-size:9.5px; background:rgba(245,158,11,0.16); border:1px solid rgba(245,158,11,0.5); color:#fde68a; padding:1px 7px; border-radius:4px; font-weight:700;">UNOFFICIAL PREVIEW (LOCAL ONLY · NO GIT PUSH)</span>
+            <span style="font-family:var(--font-mono); font-size:9.5px; background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.5); color:#6ee7b7; padding:1px 7px; border-radius:4px; font-weight:700;">OBSIDIAN .MD + DEFUDDLE + GLOBAL CORTEX v5.3</span>
           </div>
           <div style="font-family:var(--font-mono); font-size:10px; color:#94a3b8; margin-top:3px;">
             inspired by Obsidian's CEO kepano · real <code>.brain_vault/*.md</code> files, <code>[[wikilinks]]</code>, Defuddle &amp; <code>AGENTS.md</code> from the first prompt
@@ -4564,7 +4567,14 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       '🔍 Auditoria Total 360° (Arquitetura + Bugs + UI + Segurança)': '🔍 360° Total Audit (Architecture + Bugs + UI + Security)',
       '🔥 Super-Prompt Completo': '🔥 Full Super-Prompt',
       '⚡ Compacto (TOON)': '⚡ Compact (TOON)',
-      '🐝 Multi-Agente (Swarm)': '🐝 Multi-Agent (Swarm)'
+      '🐝 Multi-Agente (Swarm)': '🐝 Multi-Agent (Swarm)',
+      '🐝 Enxame Multi-Agente (Swarm 48x)': '🐝 Multi-Agent Swarm (48x Fleet)',
+      '💎 Vault 6x': '💎 Vault 6x',
+      '🏢 Ala A (01-24)': '🏢 Wing A (01-24)',
+      '🏢 Ala B (25-48)': '🏢 Wing B (25-48)',
+      '🌐 Frota 48x 3D': '🌐 48x 3D Fleet',
+      '⚡ Sincronizar & Exportar Vault .MD': '⚡ Sync & Export .MD Vault',
+      '🌐 Sintetizar Córtex Global (Todos Projetos + Chats)': '🌐 Synthesize Global Cortex (All Projects + Chats)'
     };
 
     const BRAIN_I18N_FRAGMENTS = [
@@ -4583,6 +4593,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       ['TIPO DE MISSÃO / ENGENHARIA', 'MISSION / ENGINEERING MODE'],
       ['META-REGRAS & AXIOMAS DESTILADOS PELO SELF-LEARN', 'DISTILLED SELF-LEARN META-RULES & AXIOMS'],
       ['FEED EM TEMPO REAL DE EVOLUÇÃO & SENTINEL PROATIVO', 'LIVE EVOLUTION & PROACTIVE SENTINEL FEED'],
+      ['CÓRTEX GLOBAL UNIFICADO · SEMPRE ATIVO (TOP-3 ZERO-NOISE)', 'UNIFIED GLOBAL CORTEX · ALWAYS-ON (TOP-3 ZERO-NOISE)'],
+      ['SABEDORIA UNIVERSAL INJETADA AUTOMATICAMENTE EM QUALQUER PROJETO', 'UNIVERSAL WISDOM AUTO-INJECTED ACROSS EVERY PROJECT'],
       ['Pesquisar memórias, tópicos ou #tags...', 'Search memories, topics or #tags...'],
       ['Filtrar skills (ex: m2ui, python, react, debug, 3d, graphify)...', 'Filter skills (e.g. m2ui, python, react, debug, 3d, graphify)...'],
       ['A carregar projetos...', 'Loading projects...'],
@@ -8965,29 +8977,35 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     // ZONA 1 (Noroeste): Portal Quântico de Entrada (-445, -265)
     const PORTAL_POS = { x: -445, z: -265 };
 
-    // ZONA 3 (Ponte de Comando Norte: 0..1), ZONA 4 (Ala Engenharia Swarm: 2..7), ZONA 5 (Ala Conversas Ativas: 8..17)
+    // ZONA 3 (Ponte de Comando Norte: 0..1), ZONA 4 (Ala Engenharia Swarm: 2..9), ZONA 5 (Ala Conversas & Workers: 10..23)
     const DESK_SLOTS = [
       // ZONA 3: PONTE DE COMANDO ARGON & SCOUT AST (Norte Central)
       { x: -165, z: -255, label: 'COMMAND · ARGON', color: '#ec4899' },
       { x: -20, z: -255, label: 'SCOUT · AST MAP', color: '#10b981' },
-      // ZONA 4: ALA DE ENGENHARIA SWARM (Grelha 3x2 Espaçada no Centro-Norte)
-      { x: -215, z: -105, label: 'UI-01 · 3D/WEBGL', color: '#06b6d4' },
-      { x: -45, z: -105, label: 'UI-02 · HUD/CSS', color: '#38bdf8' },
-      { x: 125, z: -105, label: 'API-01 · CORE DB', color: '#8b5cf6' },
-      { x: -215, z: -15, label: 'API-02 · HOOKS', color: '#a855f7' },
-      { x: -45, z: -15, label: 'TEST-01 · QA GATE', color: '#f59e0b' },
-      { x: 125, z: -15, label: 'DOC-01 · GIT SYNC', color: '#3b82f6' },
-      // ZONA 5: ALA DE CONVERSAS & SUBAGENTES ATIVOS (Grelha 5x2 no Centro-Sul)
-      { x: -255, z: 135, label: 'CONV-01', color: '#06b6d4' },
-      { x: -150, z: 135, label: 'CONV-02', color: '#f43f5e' },
-      { x: -45, z: 135, label: 'CONV-03', color: '#10b981' },
-      { x: 60, z: 135, label: 'CONV-04', color: '#f59e0b' },
-      { x: 165, z: 135, label: 'CONV-05', color: '#8b5cf6' },
-      { x: -255, z: 255, label: 'CONV-06', color: '#ec4899' },
-      { x: -150, z: 255, label: 'CONV-07', color: '#3b82f6' },
-      { x: -45, z: 255, label: 'CONV-08', color: '#14b8a6' },
-      { x: 60, z: 255, label: 'CONV-09', color: '#a855f7' },
-      { x: 165, z: 255, label: 'CONV-10', color: '#f97316' }
+      // ZONA 4: ALA DE ENGENHARIA SWARM (Grelha 4x2 Espaçada no Centro-Norte · 8 Secretárias)
+      { x: -245, z: -105, label: 'UI-01 · 3D/WEBGL', color: '#06b6d4' },
+      { x: -105, z: -105, label: 'UI-02 · HUD/CSS', color: '#38bdf8' },
+      { x: 35, z: -105, label: 'API-01 · CORE DB', color: '#8b5cf6' },
+      { x: 165, z: -105, label: 'API-02 · HOOKS', color: '#a855f7' },
+      { x: -245, z: -15, label: 'TEST-01 · QA GATE', color: '#f59e0b' },
+      { x: -105, z: -15, label: 'DOC-01 · GIT SYNC', color: '#3b82f6' },
+      { x: 35, z: -15, label: 'SWARM-07 · ORBIT', color: '#10b981' },
+      { x: 165, z: -15, label: 'SWARM-08 · VAULT', color: '#ec4899' },
+      // ZONA 5: ALA DE CONVERSAS, SUBAGENTES & SWARM PODS (14 Secretárias no Centro-Sul)
+      { x: -255, z: 120, label: 'CONV-01', color: '#06b6d4' },
+      { x: -150, z: 120, label: 'CONV-02', color: '#f43f5e' },
+      { x: -45, z: 120, label: 'CONV-03', color: '#10b981' },
+      { x: 60, z: 120, label: 'CONV-04', color: '#f59e0b' },
+      { x: 165, z: 120, label: 'CONV-05', color: '#8b5cf6' },
+      { x: -202, z: 192, label: 'POD-06', color: '#38bdf8' },
+      { x: -97, z: 192, label: 'POD-07', color: '#a855f7' },
+      { x: 8, z: 192, label: 'POD-08', color: '#14b8a6' },
+      { x: 113, z: 192, label: 'POD-09', color: '#f97316' },
+      { x: -255, z: 265, label: 'CONV-10', color: '#ec4899' },
+      { x: -150, z: 265, label: 'CONV-11', color: '#3b82f6' },
+      { x: -45, z: 265, label: 'CONV-12', color: '#14b8a6' },
+      { x: 60, z: 265, label: 'CONV-13', color: '#a855f7' },
+      { x: 165, z: 265, label: 'CONV-14', color: '#f97316' }
     ];
 
     // ZONA 6 (Ala Este): Lounge, Bar de Café Espresso, Arcade e Sofás de Descanso
@@ -9085,6 +9103,53 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     }
 
     let officeLiveTasks = [];
+    let officeFloorWingMode = 'wing_a'; // 'wing_a' (01-24) | 'wing_b' (25-48) | 'all_48' (01-48)
+    let officeBaseAgentsCache = [];
+    let officeSwarmFleet48 = [];
+    let officeBaseSummaryCache = {};
+
+    function resolveActiveOfficeFloorAgents() {
+      if (officeFloorWingMode === 'wing_b' && officeSwarmFleet48.length >= 25) {
+        return officeSwarmFleet48.slice(24, 48);
+      }
+      if (officeFloorWingMode === 'all_48' && officeSwarmFleet48.length > 0) {
+        return officeSwarmFleet48.slice(0, 48);
+      }
+      if (officeBaseAgentsCache.length > 0) {
+        if (officeSwarmFleet48.length > 0 && officeBaseAgentsCache.length < 24) {
+          const existingIds = new Set(officeBaseAgentsCache.map(a => a.agent_id));
+          const extra = officeSwarmFleet48.slice(0, 24).filter(a => !existingIds.has(a.agent_id));
+          return [...officeBaseAgentsCache, ...extra].slice(0, 24);
+        }
+        return officeBaseAgentsCache;
+      }
+      return officeSwarmFleet48.slice(0, 24);
+    }
+
+    function cycleOfficeFloorWing() {
+      const order = ['wing_a', 'wing_b', 'all_48'];
+      const nextIdx = (order.indexOf(officeFloorWingMode) + 1) % order.length;
+      officeFloorWingMode = order[nextIdx];
+      const btn = document.getElementById('btnOfficeFloorWing');
+      if (btn) {
+        if (officeFloorWingMode === 'wing_a') {
+          btn.textContent = tUi('🏢 Ala A (01-24)', '🏢 Wing A (01-24)');
+        } else if (officeFloorWingMode === 'wing_b') {
+          btn.textContent = tUi('🏢 Ala B (25-48)', '🏢 Wing B (25-48)');
+        } else {
+          btn.textContent = tUi('🌐 Frota 48x 3D', '🌐 48x 3D Fleet');
+        }
+      }
+      const activeList = resolveActiveOfficeFloorAgents();
+      syncOfficeAgentsToSim(activeList, officeBaseSummaryCache || {});
+      showToast(
+        officeFloorWingMode === 'wing_a'
+          ? '🏢 Piso 3D: Ala A ativa (Command + Workers 01-24)'
+          : (officeFloorWingMode === 'wing_b'
+            ? '🏢 Piso 3D: Ala B ativa (Swarm Workers 25-48)'
+            : '🌐 Piso 3D: Frota Completa de 48 Agentes Swarm em simultâneo!')
+      );
+    }
 
     async function fetchOfficeState(force = false) {
       if (officeFetchInFlight) return;
@@ -9098,7 +9163,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           officeHeatmapData = data.heatmap || [];
           officeDeskTowersData = data.desk_towers || [];
           officeLiveTasks = data.live_tasks || [];
-          syncOfficeAgentsToSim(data.agents, data.summary || {});
+          officeBaseAgentsCache = data.agents || [];
+          officeSwarmFleet48 = data.swarm_fleet_48 || [];
+          officeBaseSummaryCache = data.summary || {};
+          syncOfficeAgentsToSim(resolveActiveOfficeFloorAgents(), officeBaseSummaryCache);
           renderHoloTowerInspectorUI();
         }
       } catch (err) {
@@ -9110,12 +9178,13 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
     function syncOfficeAgentsToSim(agents, summary) {
       officeAgentsData = agents;
-      const workingCnt = summary.working ?? agents.filter(a => a.status === 'working').length;
+      const workingCnt = agents.filter(a => a.status === 'working').length;
+      const pausedCnt = Math.max(0, agents.length - workingCnt);
       const activeTasksCnt = summary.active_tasks ?? workingCnt;
 
-      document.getElementById('offStatTotal').textContent = summary.total_agents || agents.length;
+      document.getElementById('offStatTotal').textContent = agents.length || summary.total_agents || 0;
       document.getElementById('offStatWorking').textContent = workingCnt;
-      document.getElementById('offStatPaused').textContent = summary.paused || 0;
+      document.getElementById('offStatPaused').textContent = pausedCnt;
       document.getElementById('offStatConvs').textContent = summary.conversations_and_subagents || 0;
 
       const elOffTasks = document.getElementById('offStatTasks');
@@ -9138,19 +9207,22 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         }
       }
 
-      // Limpar bonecos antigos que já não estão no Top 18 ativo da cena 3D
+      // Limpar bonecos antigos que já não estão na Ala ativa da cena 3D
       const validAgentIds = new Set(agents.map(a => a.agent_id));
       Object.keys(officeSimAgents).forEach(k => {
         if (!validAgentIds.has(k)) delete officeSimAgents[k];
       });
 
       agents.forEach((ag, idx) => {
-        const deskIdx = Math.min(DESK_SLOTS.length - 1, Math.max(0, ag.desk_index ?? idx));
+        const deskIdx = Math.min(DESK_SLOTS.length - 1, Math.max(0, (ag.desk_index ?? idx) % DESK_SLOTS.length));
         const desk = DESK_SLOTS[deskIdx];
         const lounge = LOUNGE_SLOTS[idx % LOUNGE_SLOTS.length];
+        const isSecondShiftPod = idx >= DESK_SLOTS.length;
+        const podOffsetX = isSecondShiftPod ? ((idx % 2 === 0) ? -19 : 19) : 0;
+        const podOffsetZ = isSecondShiftPod ? 14 : 0;
         const target = ag.status === 'working'
-          ? { x: desk.x, z: desk.z + 25 }
-          : { x: lounge.x, z: lounge.z };
+          ? { x: desk.x + podOffsetX, z: desk.z + 25 + podOffsetZ }
+          : { x: lounge.x + (isSecondShiftPod ? 14 : 0), z: lounge.z };
 
         let sim = officeSimAgents[ag.agent_id];
         if (!sim) {
@@ -10489,7 +10561,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       drawFloorCarpet3D(-445, -265, 175, 135, isTechRev ? 'rgba(0, 240, 255, 0.13)' : 'rgba(6, 182, 212, 0.11)', isTechRev ? '#00f0ff' : '#06b6d4', 'ZONA 1 // PORTAL QUÂNTICO 3D');
       drawFloorCarpet3D(-445, 55, 175, 420, isTechRev ? 'rgba(0, 240, 255, 0.10)' : 'rgba(56, 189, 248, 0.08)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 2 // SALA SERVIDORES MCP 3D');
       drawFloorCarpet3D(-45, -265, 535, 135, isTechRev ? 'rgba(255, 42, 133, 0.14)' : 'rgba(236, 72, 153, 0.10)', isTechRev ? '#ff2a85' : '#ec4899', 'ZONA 3 // PONTE DE COMANDO ARGON');
-      drawFloorCarpet3D(-45, -60, 535, 200, isTechRev ? 'rgba(0, 255, 157, 0.11)' : 'rgba(139, 92, 246, 0.07)', isTechRev ? '#00ff9d' : '#a855f7', 'ZONA 4 // ALA SWARM 24 WORKERS');
+      const z4Label = officeFloorWingMode === 'wing_b'
+        ? 'ZONA 4 // ALA SWARM B (WORKERS 25-48)'
+        : (officeFloorWingMode === 'all_48' ? 'ZONA 4 // FROTA COMPLETA 48 AGENTES 3D' : 'ZONA 4 // ALA SWARM A (WORKERS 01-24)');
+      drawFloorCarpet3D(-45, -60, 535, 200, isTechRev ? 'rgba(0, 255, 157, 0.11)' : 'rgba(139, 92, 246, 0.07)', isTechRev ? '#00ff9d' : '#a855f7', z4Label);
       drawFloorCarpet3D(-45, 200, 535, 265, isTechRev ? 'rgba(0, 240, 255, 0.09)' : 'rgba(59, 130, 246, 0.06)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 5 // SUBAGENTES & CONVERSAS');
       drawFloorCarpet3D(390, 5, 250, 680, isTechRev ? 'rgba(255, 183, 3, 0.11)' : 'rgba(245, 158, 11, 0.08)', isTechRev ? '#ffb703' : '#f59e0b', 'ZONA 6 // LOUNGE, CAFÉ & ARCADE');
 
@@ -10557,10 +10632,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
             const pBoard = projectOffice3D(-95, 54, -342);
             const sc = officeCam.zoom;
             const bStats = officeBoardData || {};
-            const doneT = bStats.completed_tasks ?? 24;
-            const totT = bStats.total_tasks ?? 24;
-            const verP = bStats.verify_passed ?? 48;
-            const verT = bStats.verify_total ?? 48;
+            const doneT = bStats.completed_tasks ?? 48;
+            const totT = bStats.total_tasks ?? 48;
+            const verP = bStats.verify_passed ?? 96;
+            const verT = bStats.verify_total ?? 96;
             const actTasks = (officeLiveTasks || []).filter(t => t.is_active).length;
             officeCtx.save();
             officeCtx.textAlign = 'center';

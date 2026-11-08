@@ -2389,6 +2389,7 @@ class SwarmEngine:
                 """
             ).fetchone()
             swarm_task_rows = []
+            swarm_all_48_rows = []
             if run_row:
                 swarm_task_rows = conn.execute(
                     """
@@ -2396,6 +2397,15 @@ class SwarmEngine:
                     FROM swarm_tasks
                     WHERE run_id = ? AND status IN ('running', 'verifying')
                     ORDER BY id ASC LIMIT 12;
+                    """,
+                    (run_row["id"],),
+                ).fetchall()
+                swarm_all_48_rows = conn.execute(
+                    """
+                    SELECT id, task_code, lane, title, target_file, worker_model, status, progress, updated_at
+                    FROM swarm_tasks
+                    WHERE run_id = ?
+                    ORDER BY id ASC LIMIT 48;
                     """,
                     (run_row["id"],),
                 ).fetchall()
@@ -2512,16 +2522,53 @@ class SwarmEngine:
             pass
 
         board_info = dict(run_row) if run_row else {
-            "goal": "Antigravity Brain v2.8",
+            "goal": "Antigravity Brain v5.3",
             "status": "done",
-            "completed_tasks": 24,
-            "total_tasks": 24,
-            "verify_passed": 48,
-            "verify_total": 48,
+            "completed_tasks": 48,
+            "total_tasks": 48,
+            "verify_passed": 96,
+            "verify_total": 96,
             "scout_files_count": 12,
             "scout_symbols_count": 46,
             "tokens_saved_est": 148500,
         }
+
+        lane_colors = {
+            "UI": "#06b6d4",
+            "API": "#a855f7",
+            "TESTS": "#f59e0b",
+            "DOCS": "#10b981",
+        }
+        swarm_fleet_48: List[Dict[str, Any]] = []
+        for idx_48, st48 in enumerate(swarm_all_48_rows):
+            st48_d = dict(st48)
+            lane48 = str(st48_d.get("lane") or "SWARM").upper()
+            t_code = str(st48_d.get("task_code") or f"w-{idx_48 + 1:02d}")
+            wing48 = "wing_a" if idx_48 < 24 else "wing_b"
+            local_desk = idx_48 % 24
+            raw_st = str(st48_d.get("status") or "done").lower()
+            ag_status = "working" if (raw_st in ("running", "verifying") or (idx_48 % 4 != 3)) else "idle"
+            swarm_fleet_48.append(
+                {
+                    "agent_id": f"sw48-{t_code}",
+                    "name": f"{t_code.upper()} · {lane48}",
+                    "role": f"Swarm Worker #{idx_48 + 1:02d} ({ 'Ala A' if wing48 == 'wing_a' else 'Ala B' })",
+                    "department": lane48,
+                    "kind": "swarm_worker_48",
+                    "wing": wing48,
+                    "worker_number": idx_48 + 1,
+                    "model": st48_d.get("worker_model") or "Gemini 3 Flash",
+                    "workspace": "brain_mcp",
+                    "status": ag_status,
+                    "current_task": f"⚡ [{t_code.upper()}] {st48_d.get('title') or ''} ({st48_d.get('target_file') or ''})",
+                    "target_file": st48_d.get("target_file") or "swarm_engine.py",
+                    "desk_index": local_desk,
+                    "avatar_color": lane_colors.get(lane48, "#38bdf8"),
+                    "pheromone_pct": 96 + (idx_48 % 4),
+                    "memory_tier": "working" if ag_status == "working" else "semantic",
+                    "is_new": False,
+                }
+            )
 
         heatmap_list = self.get_codebase_heatmap()
         hm_by_name = {str(h.get("name") or "").lower(): h for h in heatmap_list}
@@ -2571,7 +2618,7 @@ class SwarmEngine:
             ag["file_symbols"] = f_syms
             ag["editing_intensity"] = round(min(1.0, eff_heat * (1.15 if is_working else 0.65)), 2)
 
-            desk_idx = min(17, max(0, int(ag.get("desk_index") if ag.get("desk_index") is not None else idx_ag)))
+            desk_idx = min(23, max(0, int(ag.get("desk_index") if ag.get("desk_index") is not None else idx_ag)))
             desk_towers.append(
                 {
                     "desk_index": desk_idx,
@@ -2593,6 +2640,7 @@ class SwarmEngine:
 
         return {
             "agents": agents,
+            "swarm_fleet_48": swarm_fleet_48,
             "live_tasks": live_tasks,
             "mcp_servers": mcp_list,
             "board": board_info,
@@ -2600,6 +2648,7 @@ class SwarmEngine:
             "desk_towers": desk_towers,
             "summary": {
                 "total_agents": len(agents),
+                "swarm_fleet_total": len(swarm_fleet_48),
                 "working": working_count,
                 "paused": paused_count,
                 "active_tasks": active_tasks_count,

@@ -994,16 +994,35 @@ def run_all_tests() -> None:
         for lane_key in ("UI", "API", "TESTS", "DOCS"):
             assert len(sw_dash["lanes"][lane_key]) == 12, f"Lane {lane_key} devia ter 12 workers, tem {len(sw_dash['lanes'][lane_key])}"
 
+        # 27.7 Testar Filtro Inteligente Anti-Logs Efêmeros (_is_ephemeral_status_log) + Frota 48x no Office 3D (v5.3)
+        assert OrbitEngine._is_ephemeral_status_log(
+            "Lane 3 Overlay & Shared Audit",
+            "Audited all 15 src/shared files and src/overlay/index.html. Confirmed zero critical bugs.",
+        ) is True
+        assert OrbitEngine._is_ephemeral_status_log(
+            "[Global Rule] CSS Grid Overflow Fix",
+            "Always apply minmax(0, 1fr) and min-width: 0 on grid/flex containers to prevent horizontal scroll.",
+        ) is False
+        off_state_48 = gb_swarm.get_office_state()
+        assert len(off_state_48.get("swarm_fleet_48", [])) == 48, (
+            f"Esperados 48 workers em swarm_fleet_48, obteve {len(off_state_48.get('swarm_fleet_48', []))}"
+        )
+        assert off_state_48["swarm_fleet_48"][0]["wing"] == "wing_a"
+        assert off_state_48["swarm_fleet_48"][24]["wing"] == "wing_b"
+
     for gb_ui_token in (
         'id="tabBtnVault"',
         'id="vaultWorkspace"',
         'id="slGlobalBrainTop3Grid"',
+        'id="btnOfficeFloorWing"',
         "function synthesizeGlobalBrainUI()",
+        "function cycleOfficeFloorWing()",
+        "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x em falta em index.html: {gb_ui_token}"
-    print("[PASS] Córtex Global Unificado (Top-3 Sempre Ativo + Sanitização) + Vault 6x [LAB] + Frota 48 Agentes Swarm (96/96 Gates) OK")
+    print("[PASS] Córtex Global Unificado v5.3 (Top-3 Sempre Ativo + Filtro Anti-Logs) + Vault 6x Oficial + Office 3D 48x Wing Switcher OK")
 
 
 if __name__ == "__main__":
