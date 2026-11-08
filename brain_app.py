@@ -18,22 +18,26 @@ if str(CURRENT_DIR) not in sys.path:
 from db_engine import BrainDB, ensure_dashboard_running
 from orbit_engine import OrbitEngine
 
-APP_TITLE = "Antigravity Brain v5.0 — Neural OS & Prompt Forge"
+APP_TITLE = "Antigravity Brain v7.0 — Precision Studio OS"
 DASHBOARD_URL = "http://127.0.0.1:8765"
 ICON_ICO_PATH = CURRENT_DIR / "brain_app.ico"
 ICON_PNG_PATH = CURRENT_DIR / "brain_app.png"
 
+_ICON_GENERATED_V7 = False
+
 
 # =============================================================================
-# 1. GERADOR AUTOMÁTICO DE ÍCONE CYBERPUNK (.ICO & .PNG) — 0 ASSETS EXTERNOS
+# 1. GERADOR AUTOMÁTICO DE ÍCONE LINEAR / RAYCAST DARK PRECISION (.ICO & .PNG) — 0 ASSETS EXTERNOS
 # =============================================================================
-def ensure_app_icons() -> Dict[str, str]:
+def ensure_app_icons(force: bool = False) -> Dict[str, str]:
     """
     Gera automaticamente os ícones oficiais brain_app.ico (multi-resolução) e brain_app.png
-    com estética Cyberpunk Neural (roxo/ciano/esmeralda sobre safira escuro).
+    com estética Linear/Raycast Dark Precision (grafite/obsidiana base (11, 14, 21),
+    borda de precisão sutil (99, 102, 241) e nós neurais limpos).
     Usa Pillow se disponível ou gerador binário ICO/BMP nativo como fallback.
     """
-    if ICON_ICO_PATH.is_file() and ICON_PNG_PATH.is_file() and ICON_ICO_PATH.stat().st_size > 1024:
+    global _ICON_GENERATED_V7
+    if not force and _ICON_GENERATED_V7 and ICON_ICO_PATH.is_file() and ICON_PNG_PATH.is_file() and ICON_ICO_PATH.stat().st_size > 1024:
         return {"ico": str(ICON_ICO_PATH), "png": str(ICON_PNG_PATH)}
 
     try:
@@ -43,44 +47,44 @@ def ensure_app_icons() -> Dict[str, str]:
         img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        # Fundo arredondado escuro (#070a14) com borda néon dupla
-        draw.rounded_rectangle((8, 8, 248, 248), radius=54, fill=(7, 10, 20, 255), outline=(99, 102, 241, 255), width=6)
-        draw.rounded_rectangle((18, 18, 238, 238), radius=46, fill=(11, 16, 32, 255), outline=(168, 85, 247, 180), width=3)
+        # Fundo arredondado Linear/Raycast Dark Precision grafite/obsidiana (11, 14, 21) com borda de precisão (99, 102, 241)
+        draw.rounded_rectangle((8, 8, 248, 248), radius=54, fill=(11, 14, 21, 255), outline=(99, 102, 241, 255), width=4)
+        draw.rounded_rectangle((16, 16, 240, 240), radius=46, fill=(13, 17, 26, 255), outline=(30, 41, 59, 220), width=2)
 
-        # Anel orbital exterior
-        draw.ellipse((38, 38, 218, 218), outline=(56, 189, 248, 130), width=4)
-        draw.ellipse((58, 58, 198, 198), outline=(168, 85, 247, 180), width=4)
+        # Anéis orbitais de precisão
+        draw.ellipse((42, 42, 214, 214), outline=(30, 41, 59, 180), width=2)
+        draw.ellipse((64, 64, 192, 192), outline=(99, 102, 241, 80), width=2)
 
-        # Ligações sinápticas (Grafo Neural)
+        # Ligações sinápticas e nós neurais limpos de precisão
         nodes = [
-            (128, 52, (56, 189, 248, 255)),   # Topo (Ciano)
-            (194, 90, (168, 85, 247, 255)),   # Direita-Topo (Roxo)
-            (194, 166, (16, 185, 129, 255)),  # Direita-Baixo (Esmeralda)
-            (128, 204, (99, 102, 241, 255)),  # Baixo (Indigo)
-            (62, 166, (16, 185, 129, 255)),   # Esquerda-Baixo (Esmeralda)
-            (62, 90, (168, 85, 247, 255)),    # Esquerda-Topo (Roxo)
-            (128, 128, (248, 250, 252, 255)), # Núcleo Central (Branco/Néon)
+            (128, 56, (99, 102, 241, 255)),   # Topo (Indigo Precision)
+            (190, 92, (129, 140, 248, 255)),  # Direita-Topo (Slate Blue)
+            (190, 164, (56, 189, 248, 255)),  # Direita-Baixo (Sky Precision)
+            (128, 200, (99, 102, 241, 255)),  # Baixo (Indigo Precision)
+            (66, 164, (56, 189, 248, 255)),   # Esquerda-Baixo (Sky Precision)
+            (66, 92, (129, 140, 248, 255)),   # Esquerda-Topo (Slate Blue)
+            (128, 128, (248, 250, 252, 255)), # Núcleo Central (White Precision)
         ]
         center = (128, 128)
         for nx, ny, _ in nodes[:-1]:
-            draw.line((center[0], center[1], nx, ny), fill=(139, 92, 246, 220), width=6)
+            draw.line((center[0], center[1], nx, ny), fill=(99, 102, 241, 180), width=3)
 
         for i in range(6):
             x1, y1, _ = nodes[i]
             x2, y2, _ = nodes[(i + 1) % 6]
-            draw.line((x1, y1, x2, y2), fill=(56, 189, 248, 190), width=4)
+            draw.line((x1, y1, x2, y2), fill=(51, 65, 85, 200), width=2)
 
-        # Desenhar nós sinápticos
+        # Desenhar nós sinápticos limpos
         for nx, ny, col in nodes[:-1]:
-            r = 15
-            draw.ellipse((nx - r - 4, ny - r - 4, nx + r + 4, ny + r + 4), fill=(col[0], col[1], col[2], 95))
-            draw.ellipse((nx - r, ny - r, nx + r, ny + r), fill=col, outline=(255, 255, 255, 230), width=3)
+            r = 11
+            draw.ellipse((nx - r - 3, ny - r - 3, nx + r + 3, ny + r + 3), fill=(99, 102, 241, 50))
+            draw.ellipse((nx - r, ny - r, nx + r, ny + r), fill=col, outline=(248, 250, 252, 230), width=2)
 
-        # Núcleo Central (Brain Core)
-        cr = 26
-        draw.ellipse((128 - cr - 8, 128 - cr - 8, 128 + cr + 8, 128 + cr + 8), fill=(168, 85, 247, 130))
-        draw.ellipse((128 - cr, 128 - cr, 128 + cr, 128 + cr), fill=(99, 102, 241, 255), outline=(110, 231, 183, 255), width=5)
-        draw.ellipse((128 - 10, 128 - 10, 128 + 10, 128 + 10), fill=(255, 255, 255, 255))
+        # Núcleo Central de Precisão (Brain Core)
+        cr = 22
+        draw.ellipse((128 - cr - 6, 128 - cr - 6, 128 + cr + 6, 128 + cr + 6), fill=(79, 70, 229, 70))
+        draw.ellipse((128 - cr, 128 - cr, 128 + cr, 128 + cr), fill=(79, 70, 229, 255), outline=(99, 102, 241, 255), width=3)
+        draw.ellipse((128 - 8, 128 - 8, 128 + 8, 128 + 8), fill=(248, 250, 252, 255))
 
         img.save(str(ICON_PNG_PATH), format="PNG")
         img.save(
@@ -88,6 +92,7 @@ def ensure_app_icons() -> Dict[str, str]:
             format="ICO",
             sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)],
         )
+        _ICON_GENERATED_V7 = True
         return {"ico": str(ICON_ICO_PATH), "png": str(ICON_PNG_PATH)}
     except Exception:
         # Fallback binário ICO 32x32 32-bit BGRA sem dependências externas
@@ -98,12 +103,14 @@ def ensure_app_icons() -> Dict[str, str]:
                 idx = (y * w + x) * 4
                 dx, dy = x - 15.5, y - 15.5
                 dist = (dx * dx + dy * dy) ** 0.5
-                if dist < 5.0:
-                    pixels[idx : idx + 4] = bytes((255, 230, 110, 255))  # Núcleo Ciano/Branco
-                elif dist < 12.5:
-                    pixels[idx : idx + 4] = bytes((241, 102, 99, 255))   # Anel Indigo/Roxo
-                elif dist < 15.0:
-                    pixels[idx : idx + 4] = bytes((24, 14, 9, 255))      # Borda Escura
+                if dist < 4.0:
+                    pixels[idx : idx + 4] = bytes((252, 250, 248, 255))  # Núcleo Branco
+                elif dist < 9.0:
+                    pixels[idx : idx + 4] = bytes((229, 70, 79, 255))   # BGRA: Indigo (79, 70, 229)
+                elif dist < 13.5:
+                    pixels[idx : idx + 4] = bytes((21, 14, 11, 255))    # BGRA: Obsidiana base (11, 14, 21)
+                elif dist < 15.5:
+                    pixels[idx : idx + 4] = bytes((241, 102, 99, 255))  # BGRA: Borda de precisão (99, 102, 241)
                 else:
                     pixels[idx : idx + 4] = bytes((0, 0, 0, 0))
         and_mask = bytes((w // 8) * h)
@@ -111,6 +118,7 @@ def ensure_app_icons() -> Dict[str, str]:
         ico_data = bmp_header + bytes(pixels) + and_mask
         ico_dir = struct.pack("<HHH", 0, 1, 1) + struct.pack("<BBBBHHII", w, h, 0, 0, 1, 32, len(ico_data), 22)
         ICON_ICO_PATH.write_bytes(ico_dir + ico_data)
+        _ICON_GENERATED_V7 = True
         return {"ico": str(ICON_ICO_PATH), "png": str(ICON_PNG_PATH)}
 
 
@@ -205,7 +213,7 @@ foreach ($TargetDir in @($DesktopDir, $StartMenuDir)) {{
         $Shortcut.Arguments = '"{app_script}" --open-app'
         $Shortcut.WorkingDirectory = '{CURRENT_DIR}'
         $Shortcut.IconLocation = '{ico_path},0'
-        $Shortcut.Description = 'Antigravity Brain v5.0 — Neural OS, Self-Learn Studio & Prompt Forge (Ctrl+Shift+B)'
+        $Shortcut.Description = 'Antigravity Brain v7.0 — Precision Studio OS, Self-Learn Studio & Prompt Forge (Ctrl+Shift+B)'
         $Shortcut.Save()
     }}
 }}
@@ -295,8 +303,8 @@ class QuickPromptForgeSpotlight:
 
             root = tk.Tk()
             self.root = root
-            root.title("⚡ Antigravity Brain — Quick Prompt Forge Spotlight (Ctrl+Shift+B)")
-            root.configure(bg="#070a14")
+            root.title("⚡ Antigravity Brain v7.0 — Quick Prompt Forge Spotlight (Ctrl+Shift+B)")
+            root.configure(bg="#080b11")
             root.attributes("-topmost", True)
             if ICON_ICO_PATH.is_file():
                 try:
@@ -311,7 +319,7 @@ class QuickPromptForgeSpotlight:
             y = max(20, (sh - h) // 3)
             root.geometry(f"{w}x{h}+{x}+{y}")
 
-            # Estilo Dark Cyberpunk
+            # Estilo Linear / Raycast Dark Precision
             style = ttk.Style(root)
             try:
                 style.theme_use("clam")
@@ -319,55 +327,65 @@ class QuickPromptForgeSpotlight:
                 pass
             style.configure(
                 "TCombobox",
-                fieldbackground="#0f172a",
-                background="#1e293b",
+                fieldbackground="#0d111a",
+                background="#121723",
                 foreground="#f8fafc",
-                arrowcolor="#a855f7",
+                arrowcolor="#94a3b8",
+            )
+            style.map(
+                "TCombobox",
+                fieldbackground=[("readonly", "#0d111a")],
+                background=[("readonly", "#121723")],
+                foreground=[("readonly", "#f8fafc")],
+                selectbackground=[("readonly", "#171e2d")],
+                selectforeground=[("readonly", "#ffffff")],
             )
 
             # Header
-            hdr = tk.Frame(root, bg="#0d1326", highlightbackground="#4f46e5", highlightthickness=1)
+            hdr = tk.Frame(root, bg="#0b0f18", highlightbackground="#1e293b", highlightthickness=1)
             hdr.pack(fill="x", padx=12, pady=(12, 8))
 
             tk.Label(
                 hdr,
-                text="✨ ANTIGRAVITY BRAIN — QUICK PROMPT FORGE SPOTLIGHT",
-                font=("Consolas", 11, "bold"),
-                fg="#c084fc",
-                bg="#0d1326",
+                text="✨ ANTIGRAVITY BRAIN v7.0 — QUICK PROMPT FORGE SPOTLIGHT",
+                font=("Segoe UI", 11, "bold"),
+                fg="#f8fafc",
+                bg="#0b0f18",
             ).pack(side="left", padx=10, pady=8)
 
             tk.Label(
                 hdr,
                 text="Atalho Global: Ctrl+Shift+B · Enter = Forjar & Copiar",
-                font=("Consolas", 9),
-                fg="#6ee7b7",
-                bg="#0d1326",
+                font=("Segoe UI", 8, "bold"),
+                fg="#94a3b8",
+                bg="#0b0f18",
             ).pack(side="right", padx=10, pady=8)
 
-            # Barra de Navegação Rápida para abrir a App Desktop completa
-            nav_bar = tk.Frame(root, bg="#070a14")
+            # Barra de Navegação Rápida para abrir a App Desktop completa (Pills Monocromáticas de Precisão)
+            nav_bar = tk.Frame(root, bg="#080b11")
             nav_bar.pack(fill="x", padx=12, pady=(0, 8))
 
             nav_buttons = [
-                ("🖥️ Abrir App Completa", "graph", "#6366f1"),
-                ("✨ Estúdio Prompt Forge", "promptforge", "#a855f7"),
-                ("💎 Vault 6x Studio", "vault", "#c084fc"),
-                ("🧬 Self-Learn Studio", "selflearn", "#10b981"),
-                ("🏢 Escritório 3D (48x)", "office", "#38bdf8"),
-                ("🛰️ Orbit OS", "orbit", "#f59e0b"),
+                ("🖥️ Abrir App Completa", "graph"),
+                ("✨ Estúdio Prompt Forge", "promptforge"),
+                ("💎 Vault 6x Studio", "vault"),
+                ("🧬 Self-Learn Studio", "selflearn"),
+                ("🏢 Escritório 3D (48x)", "office"),
+                ("🛰️ Orbit OS", "orbit"),
             ]
-            for lbl, sec, col in nav_buttons:
+            for lbl, sec in nav_buttons:
                 btn = tk.Button(
                     nav_bar,
                     text=lbl,
                     font=("Segoe UI", 8, "bold"),
-                    fg="#f8fafc",
-                    bg="#111827",
-                    activebackground="#1e293b",
+                    fg="#cbd5e1",
+                    bg="#0d111a",
+                    activebackground="#171e2d",
                     activeforeground="#ffffff",
+                    highlightbackground="#1e293b",
+                    highlightthickness=1,
                     relief="flat",
-                    bd=1,
+                    bd=0,
                     padx=8,
                     pady=4,
                     cursor="hand2",
@@ -376,17 +394,17 @@ class QuickPromptForgeSpotlight:
                 btn.pack(side="left", padx=(0, 6))
 
             # Seletores de Projeto e Modo de Engenharia
-            ctrl_row = tk.Frame(root, bg="#070a14")
+            ctrl_row = tk.Frame(root, bg="#080b11")
             ctrl_row.pack(fill="x", padx=12, pady=(0, 8))
 
-            tk.Label(ctrl_row, text="📂 Projeto:", font=("Consolas", 9, "bold"), fg="#94a3b8", bg="#070a14").pack(
+            tk.Label(ctrl_row, text="📂 Projeto:", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#080b11").pack(
                 side="left", padx=(0, 6)
             )
             self.ws_var = tk.StringVar(value="brain_mcp" if "brain_mcp" in projects else projects[0])
             ws_cb = ttk.Combobox(ctrl_row, textvariable=self.ws_var, values=projects, width=22, state="readonly")
             ws_cb.pack(side="left", padx=(0, 14))
 
-            tk.Label(ctrl_row, text="🎯 Missão:", font=("Consolas", 9, "bold"), fg="#94a3b8", bg="#070a14").pack(
+            tk.Label(ctrl_row, text="🎯 Missão:", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#080b11").pack(
                 side="left", padx=(0, 6)
             )
             mode_labels = [lbl for _, lbl in self.TASK_MODES]
@@ -403,20 +421,20 @@ class QuickPromptForgeSpotlight:
             self.lang_var = tk.StringVar(value="pt-PT")
             lang_cb = ttk.Combobox(ctrl_row, textvariable=self.lang_var, values=["pt-PT", "en-EN"], width=8, state="readonly")
             lang_cb.pack(side="right")
-            tk.Label(ctrl_row, text="🌐", font=("Consolas", 9, "bold"), fg="#7dd3fc", bg="#070a14").pack(
+            tk.Label(ctrl_row, text="🌐", font=("Segoe UI", 9, "bold"), fg="#94a3b8", bg="#080b11").pack(
                 side="right", padx=(0, 4)
             )
 
             # Input do Pedido Rápido
-            inp_frame = tk.Frame(root, bg="#0f172a", highlightbackground="#a855f7", highlightthickness=1)
+            inp_frame = tk.Frame(root, bg="#0d111a", highlightbackground="#334155", highlightcolor="#6366f1", highlightthickness=1)
             inp_frame.pack(fill="x", padx=12, pady=(0, 8))
 
             self.entry_req = tk.Entry(
                 inp_frame,
                 font=("Segoe UI", 11),
                 fg="#f8fafc",
-                bg="#0f172a",
-                insertbackground="#c084fc",
+                bg="#0d111a",
+                insertbackground="#6366f1",
                 relief="flat",
             )
             self.entry_req.pack(side="left", fill="x", expand=True, padx=10, pady=10)
@@ -427,12 +445,13 @@ class QuickPromptForgeSpotlight:
                 value="💡 Escreve o teu pedido em 1 linha e carrega em Enter para gerar e copiar o Super-Prompt!"
             )
 
+            out_frame = tk.Frame(root, bg="#06080d", highlightbackground="#1e293b", highlightthickness=1)
             output_box = tk.Text(
-                root,
+                out_frame,
                 font=("Consolas", 9),
                 fg="#e2e8f0",
-                bg="#090d18",
-                insertbackground="#38bdf8",
+                bg="#06080d",
+                insertbackground="#6366f1",
                 relief="flat",
                 wrap="word",
                 height=16,
@@ -531,10 +550,10 @@ class QuickPromptForgeSpotlight:
             forge_btn = tk.Button(
                 inp_frame,
                 text="⚡ FORJAR & COPIAR",
-                font=("Consolas", 10, "bold"),
+                font=("Segoe UI", 9, "bold"),
                 fg="#ffffff",
-                bg="#7c3aed",
-                activebackground="#6d28d9",
+                bg="#4f46e5",
+                activebackground="#6366f1",
                 activeforeground="#ffffff",
                 relief="flat",
                 padx=14,
@@ -544,22 +563,24 @@ class QuickPromptForgeSpotlight:
             )
             forge_btn.pack(side="right", padx=6, pady=6)
 
-            # Barra de Ações Diretas Spotlight v6.0 (Quick Rule | Defuddle URL/Clipboard | Resolver Conflitos)
-            quick_act_bar = tk.Frame(root, bg="#070a14")
+            # Barra de Ações Diretas Spotlight v7.0 (Precision Chips)
+            quick_act_bar = tk.Frame(root, bg="#080b11")
             quick_act_bar.pack(fill="x", padx=12, pady=(0, 6))
-            for q_lbl, q_cmd, q_fg in [
-                ("➕ Guardar Regra Global", _do_quick_global_rule, "#6ee7b7"),
-                ("🧹 Defuddle URL / Clipboard ➔ .MD", _do_quick_defuddle, "#fde047"),
-                ("🧬 Fundir Regras Conflituosas", _do_quick_resolve_conflicts, "#7dd3fc"),
+            for q_lbl, q_cmd in [
+                ("➕ Guardar Regra Global", _do_quick_global_rule),
+                ("🧹 Defuddle URL / Clipboard ➔ .MD", _do_quick_defuddle),
+                ("🧬 Fundir Regras Conflituosas", _do_quick_resolve_conflicts),
             ]:
                 tk.Button(
                     quick_act_bar,
                     text=q_lbl,
-                    font=("Consolas", 8, "bold"),
-                    fg=q_fg,
-                    bg="#0f172a",
-                    activebackground="#1e293b",
+                    font=("Segoe UI", 8, "bold"),
+                    fg="#cbd5e1",
+                    bg="#0d111a",
+                    activebackground="#171e2d",
                     activeforeground="#ffffff",
+                    highlightbackground="#1e293b",
+                    highlightthickness=1,
                     relief="flat",
                     padx=9,
                     pady=4,
@@ -574,15 +595,14 @@ class QuickPromptForgeSpotlight:
             st_lbl = tk.Label(
                 root,
                 textvariable=status_var,
-                font=("Consolas", 9, "bold"),
+                font=("Segoe UI", 9, "bold"),
                 fg="#6ee7b7",
-                bg="#070a14",
+                bg="#080b11",
                 anchor="w",
             )
             st_lbl.pack(fill="x", padx=14, pady=(0, 4))
 
             # Output Preview
-            out_frame = tk.Frame(root, bg="#090d18", highlightbackground="#1e293b", highlightthickness=1)
             out_frame.pack(fill="both", expand=True, padx=12, pady=(0, 12))
             output_box.pack(fill="both", expand=True, padx=8, pady=8)
 
@@ -778,7 +798,7 @@ class BrainSystemTrayAgent:
         shell32 = ctypes.windll.shell32
 
         # Garantir uma única instância do Tray Agent
-        mutex = kernel32.CreateMutexW(None, False, "Global\\AntigravityBrainTrayMutex_v5")
+        mutex = kernel32.CreateMutexW(None, False, "Global\\AntigravityBrainTrayMutex_v7")
         if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
             return
 
@@ -825,7 +845,7 @@ class BrainSystemTrayAgent:
         nid.uFlags = NIF_MESSAGE | NIF_ICON | NIF_TIP
         nid.uCallbackMessage = WM_TRAYICON
         nid.hIcon = hicon
-        nid.szTip = "Antigravity Brain v5.0 · Clique=Spotlight (Ctrl+Shift+B) · Duplo Clique=App"
+        nid.szTip = "Antigravity Brain v7.0 · Clique=Spotlight (Ctrl+Shift+B) · Duplo Clique=App"
         self.nid = nid
         shell32.Shell_NotifyIconW(NIM_ADD, ctypes.byref(nid))
 

@@ -1157,8 +1157,14 @@ def run_all_tests() -> None:
         assert "db_engine.py" in routed_scout, f"Query-Routed Scout Map devia priorizar db_engine.py: {routed_scout}"
 
     brain_app_txt = Path(os.path.join(repo_dir, "brain_app.py")).read_text(encoding="utf-8")
-    for app_tok in ("_do_quick_global_rule", "_do_quick_defuddle", "_do_quick_resolve_conflicts"):
-        assert app_tok in brain_app_txt, f"Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
+    for app_tok in (
+        "_do_quick_global_rule",
+        "_do_quick_defuddle",
+        "_do_quick_resolve_conflicts",
+        "Antigravity Brain v7.0 — Precision Studio OS",
+        "#080b11",
+    ):
+        assert app_tok in brain_app_txt, f"Token v7.0 / Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
 
     for gb_ui_token in (
         'id="tabBtnVault"',
@@ -1184,12 +1190,17 @@ def run_all_tests() -> None:
         'id="officeAdvCamDrawer"',
         "function toggleStudioRailCompact()",
         "function toggleStudioAdvDrawer(",
+        "@starting-style",
+        "studio-section-card",
+        "studio-hero-banner",
+        "holo-tower-heat-fill",
+        "Antigravity Brain v7.0 — Precision Studio OS",
         "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
-    print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, 128-D LSH + RRF) OK")
+    print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")
 
 
 if __name__ == "__main__":
