@@ -744,7 +744,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": "index.html not found"}, 404)
                 return
             st = os.stat(INDEX_HTML_PATH)
-            html_etag = f'W/"{int(st.st_mtime)}-{st.st_size}"'
+            html_etag = f'W/"v7.1-carbon-{int(st.st_mtime)}-{st.st_size}"'
             if self.headers.get("If-None-Match", "") == html_etag:
                 self.send_response(304)
                 self.send_header("ETag", html_etag)
@@ -757,7 +757,8 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("ETag", html_etag)
-            self.send_header("Cache-Control", "no-cache")
+            self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
             self.send_header("X-Content-Type-Options", "nosniff")
             self.send_header("X-Frame-Options", "DENY")
             self.send_header("Content-Length", str(len(content)))

@@ -12,36 +12,36 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <style>
     :root {
-      /* Tier 1: Primitive Tokens (OKLCH / Precision Hex) */
-      --color-slate-950: #07090e;
-      --color-slate-900: #090c12;
-      --color-slate-850: #0d111a;
-      --color-slate-800: #121723;
-      --color-slate-700: #171e2d;
-      --color-indigo-500: oklch(0.62 0.21 264);
-      --color-indigo-600: oklch(0.55 0.22 264);
+      /* Tier 1: Primitive Tokens (True Matte Carbon / Obsidian Zinc Studio OS) */
+      --color-slate-950: #08080a;
+      --color-slate-900: #0c0c0f;
+      --color-slate-850: #111116;
+      --color-slate-800: #17171d;
+      --color-slate-700: #1f1f27;
+      --color-indigo-500: oklch(0.68 0.17 162);
+      --color-indigo-600: oklch(0.58 0.16 162);
 
-      /* Tier 2: Semantic Surfaces & Monochromatic Hairline Borders */
-      --bg-canvas: #07090e;
-      --bg-panel: rgba(11, 14, 21, 0.94);
-      --bg-panel-solid: #090c12;
-      --bg-card: #0d111a;
-      --bg-card-elevated: #121723;
-      --bg-hover: #171e2d;
-      --border-subtle: rgba(255, 255, 255, 0.04);
-      --border: rgba(255, 255, 255, 0.075);
-      --border-strong: rgba(255, 255, 255, 0.13);
-      --border-focus: #6366f1;
+      /* Tier 2: Semantic Surfaces & Monochromatic Zinc Hairline Borders */
+      --bg-canvas: #08080a;
+      --bg-panel: rgba(12, 12, 15, 0.96);
+      --bg-panel-solid: #0b0b0e;
+      --bg-card: #111116;
+      --bg-card-elevated: #17171d;
+      --bg-hover: #1e1e26;
+      --border-subtle: rgba(255, 255, 255, 0.045);
+      --border: #23232b;
+      --border-strong: #32323d;
+      --border-focus: #10b981;
 
-      --text-main: #f8fafc;
-      --text-secondary: #cbd5e1;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
+      --text-main: #f4f4f5;
+      --text-secondary: #d4d4d8;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
 
-      --accent: #6366f1;
-      --accent-primary: #4f46e5;
-      --accent-violet: #8b5cf6;
-      --accent-glow: rgba(99, 102, 241, 0.22);
+      --accent: #10b981;
+      --accent-primary: #059669;
+      --accent-violet: #a855f7;
+      --accent-glow: rgba(16, 185, 129, 0.20);
       --emerald: #10b981;
       --amber: #f59e0b;
       --cyan: #06b6d4;
@@ -53,9 +53,9 @@
       --radius-xs: 4px;
       --radius-sm: 6px;
       --radius-md: 8px;
-      --radius-lg: 12px;
-      --shadow-card: 0 8px 24px -6px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.04);
-      --shadow-overlay: 0 24px 60px -8px rgba(0, 0, 0, 0.78), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      --radius-lg: 10px;
+      --shadow-card: 0 10px 28px -8px rgba(0, 0, 0, 0.72), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      --shadow-overlay: 0 24px 64px -8px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.08);
       --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
     }
@@ -75,11 +75,11 @@
       background: transparent;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(148, 163, 184, 0.18);
+      background: rgba(161, 161, 170, 0.2);
       border-radius: 999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(148, 163, 184, 0.34);
+      background: rgba(161, 161, 170, 0.38);
     }
 
     body {
@@ -96,16 +96,16 @@
     }
 
     /* =========================================================================
-       TOP STUDIO COMMAND BAR (.topbar)
+       TOP STUDIO COMMAND BAR (.topbar) — CARBON OBSIDIAN PRECISION
        ========================================================================= */
     .topbar {
-      height: 44px;
-      background: #080b11;
-      border-bottom: 1px solid var(--border);
+      height: 46px;
+      background: #09090c;
+      border-bottom: 1px solid #22222a;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 12px;
+      padding: 0 14px;
       gap: 12px;
       z-index: 40;
       flex-shrink: 0;
@@ -122,29 +122,31 @@
     }
 
     .brand-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 3px;
-      background: #6366f1;
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.16);
+      width: 9px;
+      height: 9px;
+      border-radius: 2px;
+      background: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
       flex-shrink: 0;
     }
 
     .brand-badge {
-      font-size: 9.5px;
+      font-size: 9px;
       font-family: var(--font-mono);
-      font-weight: 600;
-      background: rgba(99, 102, 241, 0.12);
-      color: #a5b4fc;
-      padding: 1px 6px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: rgba(16, 185, 129, 0.14);
+      color: #34d399;
+      padding: 1.5px 6px;
       border-radius: 4px;
-      border: 1px solid rgba(99, 102, 241, 0.26);
+      border: 1px solid rgba(16, 185, 129, 0.35);
       white-space: nowrap;
+      text-transform: uppercase;
     }
 
     .view-tabs {
       display: inline-flex;
-      background: #060911;
+      background: #0b0b0e;
       border: 1px solid var(--border);
       border-radius: 7px;
       padding: 2px;
@@ -172,14 +174,14 @@
 
     .view-tab:hover {
       color: var(--text-main);
-      background: rgba(255, 255, 255, 0.03);
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .view-tab.active {
-      background: rgba(99, 102, 241, 0.16);
-      border-color: rgba(99, 102, 241, 0.42);
+      background: #17171e;
+      border-color: #32323e;
       color: #ffffff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .metrics-strip {
@@ -213,53 +215,55 @@
     .top-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
       flex-shrink: 0;
     }
 
     .btn {
-      background: var(--bg-card);
+      background: #131318;
       color: var(--text-secondary);
-      border: 1px solid var(--border);
-      padding: 4px 8px;
-      border-radius: var(--radius-sm);
+      border: 1px solid #282832;
+      padding: 5px 10px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
       font-family: var(--font-sans);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       white-space: nowrap;
       transition: all 0.14s ease;
     }
 
     .btn:hover {
-      background: var(--bg-hover);
-      border-color: var(--border-strong);
+      background: #1c1c24;
+      border-color: #3f3f4e;
       color: #ffffff;
     }
 
     .btn-primary {
-      background: #4f46e5;
-      border-color: #6366f1;
-      color: #ffffff;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      background: #10b981;
+      border-color: #34d399;
+      color: #052e16;
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
     }
 
     .btn-primary:hover {
-      background: #4338ca;
-      border-color: #818cf8;
+      background: #34d399;
+      border-color: #6ee7b7;
+      color: #022c22;
     }
 
     .btn-diet-lean {
-      background: rgba(16, 185, 129, 0.1);
+      background: rgba(16, 185, 129, 0.12);
       border-color: rgba(16, 185, 129, 0.35);
       color: #6ee7b7;
     }
 
     .btn-diet-full {
-      background: rgba(245, 158, 11, 0.1);
+      background: rgba(245, 158, 11, 0.12);
       border-color: rgba(245, 158, 11, 0.35);
       color: #fcd34d;
     }
@@ -280,7 +284,7 @@
     }
 
     /* =========================================================================
-       VIEW 1: 3-PANE OBSIDIAN & GRAPHIFY WORKSPACE (#graphWorkspace)
+       VIEW 1: 3-PANE CARBON OBSIDIAN STUDIO WORKSPACE (#graphWorkspace)
        ========================================================================= */
     .workspace {
       flex: 1;
@@ -290,9 +294,9 @@
     }
 
     .sidebar-left {
-      width: 288px;
-      background: var(--bg-panel-solid);
-      border-right: 1px solid var(--border);
+      width: 268px;
+      background: #0b0b0e;
+      border-right: 1px solid #22222a;
       display: flex;
       flex-direction: column;
       z-index: 20;
@@ -314,37 +318,39 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(9, 13, 24, 0.65);
+      padding: 9px 12px;
+      border-bottom: 1px solid #1e1e26;
+      background: #0d0d11;
     }
 
     .drawer-title-lbl {
-      font-size: 11px;
+      font-family: var(--font-mono);
+      font-size: 10px;
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--text-secondary);
+      color: #a1a1aa;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
     .drawer-collapse-btn {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      border-radius: 6px;
-      padding: 3px 8px;
-      font-size: 10.5px;
+      background: #14141a;
+      border: 1px solid #272730;
+      color: #a1a1aa;
+      border-radius: 5px;
+      padding: 2.5px 7px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .drawer-collapse-btn:hover {
-      background: rgba(99, 102, 241, 0.16);
-      border-color: rgba(99, 102, 241, 0.45);
+      background: #1f1f29;
+      border-color: #10b981;
       color: #ffffff;
     }
 
@@ -352,20 +358,20 @@
       position: absolute;
       top: 12px;
       z-index: 18;
-      background: rgba(8, 12, 24, 0.9);
+      background: rgba(13, 13, 17, 0.94);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      color: #cbd5e1;
+      border: 1px solid #2c2c36;
+      color: #d4d4d8;
       padding: 6px 11px;
-      border-radius: 8px;
-      font-family: var(--font-sans);
-      font-size: 11px;
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
       font-weight: 600;
       cursor: pointer;
       display: none;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
       transition: all 0.15s ease;
     }
 
@@ -374,9 +380,9 @@
     }
 
     .canvas-drawer-fab:hover {
-      border-color: rgba(129, 140, 248, 0.55);
+      border-color: #10b981;
       color: #ffffff;
-      background: rgba(30, 41, 59, 0.92);
+      background: #181820;
     }
 
     .jev-s1-blade {
@@ -392,7 +398,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      color: #c7d2fe;
+      color: #e4e4e7;
       font-family: var(--font-sans);
       font-weight: 700;
       font-size: 11.5px;
@@ -413,7 +419,7 @@
 
     .jev-tier-bar {
       height: 4px;
-      background: rgba(6, 9, 17, 0.85);
+      background: #08080a;
       border-radius: 999px;
       margin-bottom: 5px;
       overflow: hidden;
@@ -436,7 +442,7 @@
     .cyber-action-btn {
       width: 100%;
       text-align: left;
-      background: rgba(255, 255, 255, 0.025);
+      background: #14141a;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
@@ -450,15 +456,15 @@
     }
 
     .cyber-action-btn:hover {
-      background: rgba(99, 102, 241, 0.14);
-      border-color: rgba(99, 102, 241, 0.42);
+      background: #1d1d26;
+      border-color: #10b981;
       color: #ffffff;
     }
 
     .search-box {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      background: rgba(6, 9, 17, 0.4);
+      padding: 10px 10px 8px;
+      border-bottom: 1px solid #1e1e26;
+      background: #0b0b0e;
     }
 
     .search-input-wrap {
@@ -469,141 +475,183 @@
 
     .search-input {
       width: 100%;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
+      background: #121217;
+      border: 1px solid #262630;
       color: var(--text-main);
-      padding: 7px 10px 7px 30px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
+      padding: 6.5px 10px 6.5px 28px;
+      border-radius: 6px;
+      font-size: 11.5px;
       font-family: var(--font-sans);
       outline: none;
       transition: border-color 0.15s, box-shadow 0.15s;
     }
 
     .search-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.16);
+      border-color: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
     }
 
     .search-icon {
       position: absolute;
       left: 9px;
-      font-size: 11.5px;
+      font-size: 11px;
       color: var(--text-dim);
     }
 
     .filter-row {
       display: flex;
-      gap: 6px;
-      margin-top: 8px;
+      gap: 5px;
+      margin-top: 6px;
     }
 
     .select-sm, .select-ctrl {
       flex: 1;
-      background: var(--bg-card);
+      background: #121217;
       color: var(--text-secondary);
-      border: 1px solid var(--border);
-      padding: 5px 8px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
+      border: 1px solid #262630;
+      padding: 4.5px 7px;
+      border-radius: 5px;
+      font-size: 10.5px;
       font-family: var(--font-sans);
       outline: none;
       cursor: pointer;
     }
 
+    .explorer-adv-details {
+      margin-top: 6px;
+      border: 1px solid #202028;
+      border-radius: 6px;
+      background: #0e0e12;
+      overflow: hidden;
+    }
+
+    .explorer-adv-details summary {
+      padding: 5px 8px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      color: #a1a1aa;
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .explorer-adv-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .explorer-adv-details summary:hover {
+      color: #f4f4f5;
+      background: #14141a;
+    }
+
+    .explorer-adv-body {
+      padding: 6px 8px 8px;
+      border-top: 1px solid #1e1e26;
+    }
+
     .legend-bar {
-      padding: 8px 12px;
-      border-bottom: 1px solid var(--border);
+      padding: 6px 0 0;
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 4px;
     }
 
     .legend-chip {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 10px;
+      font-size: 9.5px;
+      font-family: var(--font-mono);
       font-weight: 500;
       color: var(--text-muted);
-      padding: 2.5px 7px;
-      border-radius: 5px;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border-subtle);
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #14141a;
+      border: 1px solid #24242e;
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .legend-chip:hover {
-      background: rgba(99, 102, 241, 0.12);
-      border-color: rgba(99, 102, 241, 0.35);
+      background: #1e1e28;
+      border-color: #10b981;
       color: #ffffff;
     }
 
     .legend-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 2px;
       display: inline-block;
-      margin-right: 4px;
+      margin-right: 3px;
       flex-shrink: 0;
     }
 
     .vault-tree {
       flex: 1;
       overflow-y: auto;
-      padding: 8px 10px;
+      padding: 8px 8px;
     }
 
     .vault-group {
-      margin-bottom: 12px;
+      margin-bottom: 4px;
     }
 
     .vault-folder {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 8px;
-      font-size: 10.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-dim);
-      border-radius: 5px;
+      padding: 6.5px 9px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: #d4d4d8;
+      background: #101015;
+      border: 1px solid #1f1f27;
+      border-radius: 6px;
       cursor: pointer;
-      margin-bottom: 2px;
+      transition: all 0.12s ease;
     }
 
     .vault-folder:hover {
-      color: var(--text-secondary);
-      background: rgba(255, 255, 255, 0.03);
+      color: #ffffff;
+      background: #17171f;
+      border-color: #2e2e3a;
     }
 
     .vault-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 10px 6px 14px;
-      font-size: 12px;
-      color: var(--text-secondary);
+      gap: 7px;
+      padding: 5.5px 8px 5.5px 12px;
+      font-size: 11.5px;
+      color: #a1a1aa;
       border: 1px solid transparent;
-      border-radius: 6px;
+      border-left: 2px solid #272730;
+      border-radius: 0 5px 5px 0;
       cursor: pointer;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       transition: all 0.12s ease;
-      margin-bottom: 2px;
+      margin: 2px 0 2px 6px;
     }
 
     .vault-item:hover {
-      background: var(--bg-hover);
-      color: #ffffff;
+      background: #16161d;
+      color: #f4f4f5;
+      border-left-color: #71717a;
     }
 
     .vault-item.active {
-      background: rgba(99, 102, 241, 0.15);
-      border-color: rgba(99, 102, 241, 0.38);
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.28);
+      border-left: 2px solid #10b981;
       color: #ffffff;
       font-weight: 600;
     }
@@ -613,15 +661,14 @@
       font-weight: 600;
     }
 
-    /* CENTER PANE: OBSIDIAN + PLANETARY ASTROLABE GRAPH CANVAS */
+    /* CENTER PANE: TRUE MATTE CARBON OBSIDIAN GRAPH CANVAS */
     .canvas-container {
       flex: 1;
       position: relative;
-      background-color: #06080d;
+      background-color: #08080a;
       background-image:
-        radial-gradient(circle at 50% 48%, rgba(99, 102, 241, 0.06) 0%, rgba(11, 14, 21, 0.45) 45%, rgba(6, 8, 13, 0.98) 82%),
-        radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
-      background-size: 100% 100%, 24px 24px;
+        radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
       overflow: hidden;
     }
 
@@ -642,7 +689,7 @@
       inset: 0;
       padding: 58px 22px 24px;
       overflow-y: auto;
-      background: #07090e;
+      background: #08080a;
       z-index: 8;
     }
 
@@ -652,11 +699,11 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       padding: 12px 16px;
-      background: #0b0f18;
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      background: #101015;
+      border: 1px solid #272730;
+      border-radius: 8px;
     }
 
     .bento-ws-strip {
@@ -670,33 +717,33 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      padding: 5px 10px;
-      border-radius: 8px;
+      padding: 4.5px 10px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: 600;
-      color: #cbd5e1;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #d4d4d8;
+      background: #121217;
+      border: 1px solid #262630;
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .bento-ws-chip:hover, .bento-ws-chip.active {
-      background: rgba(99, 102, 241, 0.2);
-      border-color: rgba(129, 140, 248, 0.6);
+      background: rgba(16, 185, 129, 0.15);
+      border-color: #10b981;
       color: #ffffff;
     }
 
     .bento-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(285px, 1fr));
-      gap: 14px;
+      gap: 12px;
     }
 
     .bento-card {
-      background: rgba(11, 16, 32, 0.92);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      border-radius: 11px;
+      background: #101015;
+      border: 1px solid #24242e;
+      border-radius: 8px;
       padding: 13px 15px;
       cursor: pointer;
       display: flex;
@@ -710,49 +757,55 @@
 
     .bento-card:hover {
       transform: translateY(-2px);
-      border-color: rgba(129, 140, 248, 0.55);
-      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45);
+      border-color: #3f3f4e;
+      background: #14141b;
+      box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
     }
 
     .bento-card.active {
-      border-color: #818cf8;
-      background: rgba(30, 41, 82, 0.52);
-      box-shadow: 0 0 0 1px rgba(129, 140, 248, 0.45);
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.35);
     }
 
     .smart-filter-row {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      margin-top: 6px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      margin-top: 7px;
+      background: #070709;
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid #22222a;
     }
 
     .smart-filter-chip {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 3px 7px;
-      border-radius: 6px;
+      justify-content: center;
+      padding: 4px 4px;
+      border-radius: 4px;
       font-size: 10px;
       font-weight: 600;
-      color: var(--text-secondary);
-      background: rgba(15, 23, 42, 0.78);
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #a1a1aa;
+      background: transparent;
+      border: 1px solid transparent;
       cursor: pointer;
       transition: all 0.14s ease;
       user-select: none;
+      white-space: nowrap;
     }
 
     .smart-filter-chip:hover {
-      border-color: rgba(129, 140, 248, 0.45);
-      color: #f8fafc;
+      color: #f4f4f5;
+      background: rgba(255, 255, 255, 0.04);
     }
 
     .smart-filter-chip.active {
-      background: rgba(99, 102, 241, 0.24);
-      border-color: #818cf8;
-      color: #ffffff;
+      background: #1c1c24;
+      border-color: #32323e;
+      color: #10b981;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
     }
 
     .bp-quick-jump-bar {
@@ -763,13 +816,13 @@
       z-index: 15;
       display: flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(6, 9, 20, 0.9);
+      gap: 4px;
+      padding: 4px 6px;
+      border-radius: 8px;
+      background: rgba(12, 12, 16, 0.94);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(129, 140, 248, 0.24);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      border: 1px solid #272730;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.72);
       max-width: calc(100% - 32px);
       overflow-x: auto;
     }
@@ -778,27 +831,28 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3px 8px;
-      border-radius: 999px;
+      padding: 3.5px 8px;
+      border-radius: 5px;
       font-size: 10px;
+      font-family: var(--font-mono);
       font-weight: 600;
-      color: #cbd5e1;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: #a1a1aa;
+      background: #14141a;
+      border: 1px solid #23232c;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.14s ease;
     }
 
     .bp-jump-chip:hover {
-      border-color: rgba(129, 140, 248, 0.55);
+      border-color: #3f3f4e;
       color: #ffffff;
-      background: rgba(30, 41, 59, 0.9);
+      background: #1d1d26;
     }
 
     .bp-jump-chip.active {
-      background: rgba(99, 102, 241, 0.28);
-      border-color: #818cf8;
+      background: rgba(16, 185, 129, 0.16);
+      border-color: #10b981;
       color: #ffffff;
     }
 
@@ -807,11 +861,11 @@
       bottom: 12px;
       margin-top: 16px;
       padding: 10px 16px;
-      border-radius: 12px;
-      background: rgba(15, 23, 42, 0.96);
+      border-radius: 8px;
+      background: rgba(17, 17, 22, 0.96);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(129, 140, 248, 0.5);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65);
+      border: 1px solid #10b981;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.75);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -820,10 +874,10 @@
     }
 
     .bento-action-btn {
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      color: #cbd5e1;
-      border-radius: 6px;
+      background: #16161d;
+      border: 1px solid #292933;
+      color: #d4d4d8;
+      border-radius: 5px;
       padding: 2px 6px;
       font-size: 10px;
       font-weight: 600;
@@ -832,9 +886,9 @@
     }
 
     .bento-action-btn:hover {
-      border-color: #818cf8;
+      border-color: #10b981;
       color: #ffffff;
-      background: rgba(99, 102, 241, 0.22);
+      background: rgba(16, 185, 129, 0.18);
     }
 
     .graph-hud-top {
@@ -845,23 +899,23 @@
       display: flex;
       align-items: center;
       flex-wrap: nowrap;
-      gap: 4px;
+      gap: 3px;
       z-index: 15;
-      background: rgba(6, 9, 20, 0.88);
+      background: rgba(12, 12, 16, 0.94);
       backdrop-filter: blur(14px);
-      border: 1px solid rgba(129, 140, 248, 0.22);
-      padding: 4px 10px;
-      border-radius: 999px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+      border: 1px solid #272730;
+      padding: 4px 6px;
+      border-radius: 8px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
       max-width: calc(100% - 24px);
       overflow-x: auto;
     }
 
     .hud-divider {
       width: 1px;
-      height: 15px;
-      background: rgba(148, 163, 184, 0.2);
-      margin: 0 2px;
+      height: 16px;
+      background: #272730;
+      margin: 0 3px;
       flex-shrink: 0;
     }
 
@@ -869,12 +923,12 @@
       font-family: var(--font-mono);
       font-size: 9.5px;
       font-weight: 700;
-      letter-spacing: 0.05em;
-      color: #94a3b8;
-      padding: 3px 6px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      letter-spacing: 0.06em;
+      color: #10b981;
+      padding: 3.5px 7px;
+      border-radius: 5px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.28);
       user-select: none;
       white-space: nowrap;
     }
@@ -887,32 +941,33 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      padding: 3.5px 9px;
-      border-radius: 999px;
-      font-size: 10.5px;
+      padding: 3.5px 8px;
+      border-radius: 5px;
+      font-size: 10px;
+      font-family: var(--font-mono);
       font-weight: 600;
-      color: #f8fafc;
-      background: rgba(76, 29, 49, 0.55);
-      border: 1px solid rgba(244, 63, 94, 0.42);
+      color: #f4f4f5;
+      background: #17171f;
+      border: 1px solid #2e2e3a;
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.16s ease;
     }
 
     .hud-objectives-pill:hover {
-      border-color: rgba(251, 113, 133, 0.8);
-      background: rgba(76, 29, 49, 0.8);
+      border-color: #f59e0b;
+      color: #fde047;
     }
 
     .hud-pill {
       background: transparent;
       border: 1px solid transparent;
       padding: 3.5px 8px;
-      border-radius: 999px;
+      border-radius: 5px;
       font-family: var(--font-sans);
       font-size: 10.5px;
       font-weight: 600;
-      color: var(--text-muted);
+      color: #a1a1aa;
       display: flex;
       align-items: center;
       gap: 4px;
@@ -921,14 +976,15 @@
     }
 
     .hud-pill:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.05);
+      color: #ffffff;
+      background: #181820;
     }
 
     .hud-pill.active {
-      border-color: rgba(129, 140, 248, 0.48);
+      border-color: #32323e;
       color: #ffffff;
-      background: rgba(99, 102, 241, 0.22);
+      background: #1e1e28;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .graph-settings-panel {
@@ -965,7 +1021,7 @@
 
     .slider {
       width: 100%;
-      accent-color: var(--accent);
+      accent-color: #10b981;
       cursor: pointer;
     }
 
@@ -983,23 +1039,23 @@
     }
 
     .toggle-row:hover {
-      background: rgba(99, 102, 241, 0.12);
+      background: #181820;
       color: #ffffff;
     }
 
     .toggle-row input[type="checkbox"] {
-      accent-color: #818cf8;
+      accent-color: #10b981;
       width: 14px;
       height: 14px;
       cursor: pointer;
       margin: 0;
     }
 
-    /* RIGHT SIDEBAR: NOTE INSPECTOR & CAUSAL LINEAGE */
+    /* RIGHT SIDEBAR: BENTO DOCUMENT INSPECTOR & CAUSAL LINEAGE */
     .sidebar-right {
-      width: 336px;
-      background: var(--bg-panel-solid);
-      border-left: 1px solid var(--border);
+      width: 328px;
+      background: #0b0b0e;
+      border-left: 1px solid #22222a;
       display: flex;
       flex-direction: column;
       z-index: 20;
@@ -1018,101 +1074,113 @@
     }
 
     .inspector-header {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
+      padding: 12px 12px 10px;
+      border-bottom: 1px solid #1e1e26;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 10px;
+      flex-direction: column;
+      gap: 8px;
+      background: #0e0e12;
     }
 
     .inspector-title {
-      font-size: 14px;
+      font-size: 13.5px;
       font-weight: 700;
       line-height: 1.35;
-      color: #ffffff;
+      color: #f4f4f5;
       user-select: text;
     }
 
     .frontmatter {
-      margin: 10px 14px;
-      padding: 9px 11px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      margin: 10px 12px 8px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: 10.5px;
     }
 
     .fm-row {
       display: flex;
-      justify-content: space-between;
-      padding: 3.5px 0;
-      border-bottom: 1px solid var(--border-subtle);
+      flex-direction: column;
+      gap: 2px;
+      padding: 6px 8px;
+      background: #111116;
+      border: 1px solid #22222b;
+      border-radius: 6px;
       font-variant-numeric: tabular-nums;
-    }
-
-    .fm-row:last-child {
-      border-bottom: none;
+      overflow: hidden;
     }
 
     .fm-key {
-      color: var(--text-dim);
+      font-size: 8.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #71717a;
     }
 
     .fm-val {
-      color: #c7d2fe;
+      color: #e4e4e7;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       user-select: text;
     }
 
     .note-body {
-      padding: 2px 14px 12px;
-      font-size: 12.5px;
+      margin: 0 12px 10px;
+      padding: 11px 12px;
+      background: #111116;
+      border: 1px solid #22222b;
+      border-radius: 7px;
+      font-size: 12px;
       line-height: 1.6;
-      color: var(--text-secondary);
+      color: #d4d4d8;
       white-space: pre-wrap;
       user-select: text;
     }
 
     .tag-cloud {
-      padding: 0 14px 10px;
+      padding: 0 12px 8px;
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 4px;
     }
 
     .tag-pill {
       font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: #a5b4fc;
-      background: rgba(99, 102, 241, 0.1);
-      border: 1px solid rgba(99, 102, 241, 0.24);
+      font-size: 10px;
+      color: #34d399;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.25);
       padding: 2px 7px;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .tag-pill:hover {
-      background: rgba(99, 102, 241, 0.22);
+      background: rgba(16, 185, 129, 0.22);
       color: #ffffff;
     }
 
     .causal-lineage-box {
-      margin: 4px 14px 10px;
-      padding: 10px 11px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      margin: 4px 12px 10px;
+      padding: 10px;
+      background: #101015;
+      border: 1px solid #22222b;
+      border-radius: 7px;
       font-family: var(--font-mono);
     }
 
     .cl-step {
-      padding: 7px 9px;
+      padding: 6.5px 8px;
       margin-bottom: 5px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: rgba(6, 9, 17, 0.65);
+      border: 1px solid #22222b;
+      border-left: 2px solid #10b981;
+      border-radius: 4px;
+      background: #0b0b0e;
       font-size: 10px;
       cursor: pointer;
       transition: all 0.14s ease;
@@ -1123,61 +1191,62 @@
     }
 
     .cl-step:hover {
-      background: var(--bg-hover);
-      border-color: rgba(99, 102, 241, 0.4);
+      background: #16161d;
+      border-color: #3f3f4e;
     }
 
     .live-stream-blade {
-      margin: 4px 14px 10px;
+      margin: 4px 12px 10px;
       padding: 9px 11px;
-      background: #060911;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      background: #09090c;
+      border: 1px solid #22222b;
+      border-radius: 6px;
       font-family: var(--font-mono);
       font-size: 10px;
       line-height: 1.5;
-      color: #93c5fd;
+      color: #a1a1aa;
     }
 
     .backlinks-section {
-      padding: 12px 14px;
-      border-top: 1px solid var(--border);
+      padding: 10px 12px;
+      border-top: 1px solid #1e1e26;
     }
 
     .section-subtitle {
-      font-size: 10.5px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-muted);
+      letter-spacing: 0.06em;
+      color: #a1a1aa;
       margin-bottom: 8px;
     }
 
     .backlink-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
+      background: #111116;
+      border: 1px solid #22222b;
+      border-radius: 6px;
       padding: 7px 9px;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       cursor: pointer;
       transition: all 0.14s ease;
     }
 
     .backlink-card:hover {
-      border-color: rgba(99, 102, 241, 0.45);
-      background: var(--bg-hover);
+      border-color: #10b981;
+      background: #17171f;
     }
 
     .backlink-title {
-      font-size: 12px;
+      font-size: 11.5px;
       font-weight: 600;
-      color: var(--text-main);
+      color: #f4f4f5;
       margin-bottom: 2px;
     }
 
     .backlink-meta {
-      font-size: 10.5px;
-      color: var(--text-dim);
+      font-size: 10px;
+      color: #71717a;
       font-family: var(--font-mono);
     }
 
@@ -2328,15 +2397,15 @@
     }
 
     /* =========================================================================
-       v7.0 — LINEAR / RAYCAST DARK PRECISION & LEFT DOCK STUDIO OS SHELL
+       v7.0 — CARBON OBSIDIAN STUDIO OS SHELL & GLOBAL COMPONENT OVERRIDES
        ========================================================================= */
     .rail-collapse-trigger {
       width: 28px;
       height: 28px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-      background: #0d111a;
-      color: var(--text-muted);
+      border-radius: 5px;
+      border: 1px solid #272730;
+      background: #131318;
+      color: #a1a1aa;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -2347,24 +2416,24 @@
     }
 
     .rail-collapse-trigger:hover {
-      background: var(--bg-hover);
+      background: #1d1d25;
       color: #fff;
-      border-color: var(--border-strong);
+      border-color: #10b981;
     }
 
     .cmd-search-omnibox {
       flex: 1;
-      max-width: 520px;
-      height: 29px;
-      background: #0c1018;
-      border: 1px solid var(--border-strong);
-      border-radius: 7px;
+      max-width: 500px;
+      height: 30px;
+      background: #101015;
+      border: 1px solid #272730;
+      border-radius: 6px;
       padding: 0 10px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      color: var(--text-muted);
+      color: #a1a1aa;
       font-size: 11.5px;
       cursor: pointer;
       transition: all 0.15s ease;
@@ -2372,19 +2441,19 @@
     }
 
     .cmd-search-omnibox:hover {
-      background: #111723;
-      border-color: rgba(99, 102, 241, 0.45);
-      color: #e2e8f0;
+      background: #16161d;
+      border-color: #10b981;
+      color: #f4f4f5;
     }
 
     .cmd-search-omnibox kbd {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border);
+      background: #191921;
+      border: 1px solid #2c2c36;
       border-radius: 4px;
       padding: 1px 6px;
       font-family: var(--font-mono);
-      font-size: 10px;
-      color: #94a3b8;
+      font-size: 9.5px;
+      color: #a1a1aa;
     }
 
     .studio-shell-body {
@@ -2392,16 +2461,16 @@
       flex: 1;
       min-height: 0;
       width: 100vw;
-      height: calc(100vh - 70px);
+      height: calc(100vh - 72px);
       overflow: hidden;
       position: relative;
     }
 
     .studio-rail-dock {
-      width: 162px;
+      width: 154px;
       flex-shrink: 0;
-      background: #080b11;
-      border-right: 1px solid var(--border);
+      background: #09090c;
+      border-right: 1px solid #22222a;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -2413,18 +2482,18 @@
     }
 
     body.rail-compact .studio-rail-dock {
-      width: 56px;
+      width: 54px;
       padding: 10px 6px;
     }
 
     .studio-rail-section-lbl {
       font-family: var(--font-mono);
-      font-size: 9px;
+      font-size: 8.5px;
       font-weight: 700;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.10em;
       text-transform: uppercase;
-      color: #475569;
-      padding: 2px 8px 4px;
+      color: #52525b;
+      padding: 2px 8px 5px;
     }
 
     body.rail-compact .studio-rail-section-lbl {
@@ -2444,14 +2513,14 @@
 
     .studio-rail-dock .view-tab {
       width: 100%;
-      height: 32px;
-      padding: 0 9px;
-      border-radius: 6px;
+      height: 31px;
+      padding: 0 8px;
+      border-radius: 5px;
       border: 1px solid transparent;
       border-left: 2px solid transparent;
       background: transparent;
-      color: #94a3b8;
-      font-size: 11.5px;
+      color: #a1a1aa;
+      font-size: 11px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -2463,17 +2532,35 @@
       transition: all 0.14s ease;
     }
 
+    .studio-rail-dock .view-tab .rail-idx {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 700;
+      color: #52525b;
+      background: #121217;
+      border: 1px solid #23232c;
+      border-radius: 3px;
+      padding: 0.5px 4px;
+      flex-shrink: 0;
+    }
+
     .studio-rail-dock .view-tab:hover {
-      background: rgba(255, 255, 255, 0.04);
-      color: #f8fafc;
+      background: #131319;
+      color: #f4f4f5;
     }
 
     .studio-rail-dock .view-tab.active {
-      background: rgba(99, 102, 241, 0.13);
-      border-color: rgba(99, 102, 241, 0.22);
-      border-left: 2px solid #6366f1;
+      background: #15151c;
+      border-color: #292934;
+      border-left: 2px solid #10b981;
       color: #ffffff;
       box-shadow: none;
+    }
+
+    .studio-rail-dock .view-tab.active .rail-idx {
+      color: #10b981;
+      border-color: rgba(16, 185, 129, 0.4);
+      background: rgba(16, 185, 129, 0.12);
     }
 
     body.rail-compact .studio-rail-dock .view-tab {
@@ -2482,8 +2569,9 @@
       font-size: 0;
     }
 
-    body.rail-compact .studio-rail-dock .view-tab::first-letter {
-      font-size: 14px;
+    body.rail-compact .studio-rail-dock .view-tab .rail-idx {
+      font-size: 10px;
+      padding: 2px 5px;
     }
 
     .studio-rail-bottom {
@@ -2491,7 +2579,7 @@
       flex-direction: column;
       gap: 4px;
       padding-top: 8px;
-      border-top: 1px solid var(--border);
+      border-top: 1px solid #1e1e26;
     }
 
     .studio-stage-viewport {
@@ -2515,20 +2603,21 @@
       max-height: 100% !important;
       width: 100% !important;
       max-width: 100% !important;
+      background: #08080a !important;
     }
 
     .studio-statusbar {
       height: 26px;
       flex-shrink: 0;
-      background: #06080d;
-      border-top: 1px solid var(--border);
+      background: #070709;
+      border-top: 1px solid #202028;
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 10px;
       font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: var(--text-muted);
+      font-size: 10px;
+      color: #a1a1aa;
       z-index: 40;
       overflow: hidden;
     }
@@ -2536,18 +2625,18 @@
     .studio-statusbar .metrics-strip {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       overflow-x: auto;
       scrollbar-width: none;
     }
 
     .studio-statusbar .metric-pill {
-      height: 20px;
-      padding: 0 8px;
-      font-size: 10px;
+      height: 19px;
+      padding: 0 7px;
+      font-size: 9.5px;
       border-radius: 4px;
-      background: rgba(255, 255, 255, 0.025);
-      border: 1px solid var(--border);
+      background: #101015;
+      border: 1px solid #22222b;
       display: inline-flex;
       align-items: center;
       gap: 5px;
@@ -2555,20 +2644,20 @@
     }
 
     .studio-statusbar .metric-pill:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: var(--border-strong);
+      background: #181820;
+      border-color: #363644;
     }
 
-    /* Progressive Disclosure Drawers & Sober Linear Cards */
+    /* Progressive Disclosure Drawers & Sober Carbon Cards */
     .studio-adv-drawer {
       display: none;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
       padding: 6px 10px;
-      background: #0a0d15;
-      border: 1px solid var(--border-strong);
-      border-radius: 7px;
+      background: #0e0e13;
+      border: 1px solid #282832;
+      border-radius: 6px;
     }
 
     .studio-adv-drawer.open {
@@ -2581,28 +2670,28 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      background: #0b0f18;
-      border: 1px solid var(--border-strong);
-      border-radius: 10px;
+      background: #101015 !important;
+      border: 1px solid #272730 !important;
+      border-radius: 8px;
       padding: 11px 16px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
 
     .studio-section-card {
-      background: #0a0e16;
-      border: 1px solid var(--border);
-      border-radius: 10px;
+      background: #0e0e13 !important;
+      border: 1px solid #22222b !important;
+      border-radius: 8px;
       padding: 11px 14px;
     }
 
     /* Semantic Precision Utility Classes */
     .text-emerald { color: #34d399; }
     .text-cyan    { color: #38bdf8; }
-    .text-violet  { color: #a5b4fc; }
+    .text-violet  { color: #c084fc; }
     .text-amber   { color: #fbbf24; }
     .text-rose    { color: #fda4af; }
     .bar-cyan     { background: #06b6d4; }
-    .bar-violet   { background: #6366f1; }
+    .bar-violet   { background: #a855f7; }
     .bar-emerald  { background: #10b981; }
     .bar-amber    { background: #f59e0b; }
     .office-btn-micro {
@@ -2611,10 +2700,10 @@
       justify-content: center !important;
     }
     .studio-console-select {
-      background: #0b0f18;
-      color: #cbd5e1;
-      border: 1px solid var(--border-strong);
-      border-radius: 6px;
+      background: #111116;
+      color: #d4d4d8;
+      border: 1px solid #292934;
+      border-radius: 5px;
       padding: 3px 6px;
       font-size: 10.5px;
       font-family: var(--font-mono);
@@ -2622,48 +2711,48 @@
       outline: none;
     }
     .holo-tower-heat-fill {
-      background: linear-gradient(90deg, #06b6d4, #6366f1, #f43f5e);
+      background: linear-gradient(90deg, #10b981, #06b6d4, #f59e0b);
     }
   </style>
 </head>
 <body>
 
-  <!-- TOP BAR (v7.0 LINEAR / RAYCAST PRECISION HEADER) -->
+  <!-- TOP BAR (v7.0 CARBON OBSIDIAN STUDIO OS HEADER) -->
   <header class="topbar">
     <div class="brand" style="gap:9px;">
       <button type="button" class="rail-collapse-trigger" onclick="toggleStudioRailCompact()" title="Alternar barra lateral compacta (Dock Lateral)">
         ☰
       </button>
       <span class="brand-dot"></span>
-      <div style="display:flex; flex-direction:column; line-height:1.15; max-width:210px; overflow:hidden;">
+      <div style="display:flex; flex-direction:column; line-height:1.15; max-width:225px; overflow:hidden;">
         <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-size:13px; font-weight:800; letter-spacing:-0.02em; color:#fff; white-space:nowrap;">Antigravity Brain</span>
-          <span class="brand-badge">v7.0</span>
+          <span style="font-size:12.5px; font-weight:800; letter-spacing:0.01em; color:#f4f4f5; white-space:nowrap; text-transform:uppercase;">Antigravity Brain</span>
+          <span class="brand-badge">OS v7.0</span>
         </div>
-        <span style="font-size:9.5px; color:var(--text-muted); font-family:var(--font-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="lblTopSubConcept">Neural Cortex · JEV-S1</span>
+        <span style="font-size:9px; color:#71717a; font-family:var(--font-mono); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="lblTopSubConcept">CARBON STUDIO · JEV-S1</span>
       </div>
     </div>
 
     <!-- CENTRAL RAYCAST COMMAND OMNIBOX -->
     <button type="button" class="cmd-search-omnibox" onclick="openCommandPalette()" title="Abrir Paleta de Comando Neural Global (Atalho: Ctrl+K ou ⌘K)">
       <span style="display:flex; align-items:center; gap:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-        <span style="color:#818cf8;">🔍</span>
-        <span>⌘K Pesquisa</span>
-        <span style="color:#475569;">·</span>
-        <span style="color:#64748b; font-size:11px;">Memórias, símbolos AST, regras ou comandos...</span>
+        <span style="color:#10b981; font-family:var(--font-mono); font-weight:700;">⌘K</span>
+        <span style="color:#e4e4e7; font-weight:600;">Command Palette</span>
+        <span style="color:#3f3f46;">/</span>
+        <span style="color:#71717a; font-size:11px;">Pesquisar memórias, AST, regras ou executar ação...</span>
       </span>
       <kbd>Ctrl+K</kbd>
     </button>
 
     <div class="top-actions" style="gap:6px;">
-      <button class="btn" onclick="launchBrainSpotlightUI()" style="border-color:var(--border-strong); color:#cbd5e1; background:#0d111a;" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
-        ⚡ Spotlight / App
+      <button class="btn" onclick="launchBrainSpotlightUI()" title="Abrir Quick Prompt Forge Spotlight flutuante ou Janela App Dedicada (Atalho Global Windows: Ctrl+Shift+B)">
+        <span style="color:#10b981; font-family:var(--font-mono);">◈</span> Spotlight
       </button>
-      <button class="btn" id="btnOpenToolsPhysicsModal" onclick="openBrainToolsModal()" style="border-color:var(--border-strong); color:#cbd5e1; background:#0d111a;" title="Abrir Centro Unificado de Ferramentas, Física de Órbitas, AST, Orbit OS e Quota 5h">
-        ⚙️ Ferramentas &amp; Física
+      <button class="btn" id="btnOpenToolsPhysicsModal" onclick="openBrainToolsModal()" title="Abrir Centro Unificado de Ferramentas, Física de Órbitas, AST, Orbit OS e Quota 5h">
+        <span style="color:#a1a1aa; font-family:var(--font-mono);">⚙</span> Motor &amp; Física
       </button>
       <button class="btn btn-primary" onclick="openMemoryModal()">
-        ➕ Nova Memória
+        + Nova Memória
       </button>
     </div>
   </header>
@@ -2677,40 +2766,47 @@
         <div class="studio-rail-section-lbl">Workspaces</div>
         <div class="view-tabs">
           <button class="view-tab active" id="tabBtnGraph" onclick="switchMainView('graph')" title="Atalho: Tecla 1">
-            🕸️ Córtex
+            <span class="rail-idx">01</span>
+            <span>Córtex</span>
           </button>
           <button class="view-tab" id="tabBtnSwarm" onclick="switchMainView('swarm')" title="Atalho: Tecla 2">
-            <span class="pulse-dot"></span>
-            ⚡ Swarm
+            <span class="rail-idx">02</span>
+            <span>Swarm</span>
+            <span class="pulse-dot" style="margin-left:auto;"></span>
           </button>
           <button class="view-tab" id="tabBtnOffice" onclick="switchMainView('office')" title="Atalho: Tecla 3">
-            🏢 Office 3D
+            <span class="rail-idx">03</span>
+            <span>Office 3D</span>
           </button>
           <button class="view-tab" id="tabBtnSelfLearn" onclick="switchMainView('selflearn')" title="Ver onde o Self-Learn está ativo e o Pipeline Neural Gráfico a trabalhar em tempo real (Atalho: Tecla 4)">
-            <span class="pulse-dot" style="background:#a855f7;"></span>
-            🧬 Self-Learn
+            <span class="rail-idx">04</span>
+            <span>Self-Learn</span>
           </button>
           <button class="view-tab" id="tabBtnPromptForge" onclick="switchMainView('promptforge')" title="Estúdio de Criação e Otimização de Prompts com contexto do Brain + Self-Learn para colar no Antigravity (Atalho: Tecla 5)">
-            ✨ Prompt Forge
+            <span class="rail-idx">05</span>
+            <span>Prompt Forge</span>
           </button>
           <button class="view-tab" id="tabBtnVault" onclick="switchMainView('vault')" title="Vault &amp; Defuddle Studio — 6 Painéis (Obsidian .MD + Defuddle + Globo 3D + Importer + Skills MD/Bases/Canvas + AGENTS.md) [Atalho: Tecla 6]">
-            <span class="pulse-dot" style="background:#c084fc;"></span>
-            💎 Vault 6x
+            <span class="rail-idx">06</span>
+            <span>Vault 6x</span>
           </button>
           <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
-            <span class="pulse-dot" id="topTasksPulse" style="background:#10b981;"></span>
-            Tasks (<span id="topTabTasksCount">0</span>)
+            <span class="rail-idx">07</span>
+            <span>Tasks (<span id="topTabTasksCount">0</span>)</span>
+            <span class="pulse-dot" id="topTasksPulse" style="background:#10b981; margin-left:auto;"></span>
           </button>
         </div>
       </div>
 
       <div class="studio-rail-bottom">
-        <div class="studio-rail-section-lbl">Módulos Rápidos</div>
+        <div class="studio-rail-section-lbl">Sistemas</div>
         <button type="button" class="view-tab" onclick="openOrbitOsModal()" title="Abrir Orbit Agent OS & Mission Control Inbox">
-          🛰️ Orbit OS
+          <span class="rail-idx">OS</span>
+          <span>Orbit Mission</span>
         </button>
         <button type="button" class="view-tab" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST, Blast Radius & Graphify BFS">
-          🔎 AST &amp; BFS
+          <span class="rail-idx">AST</span>
+          <span>Graphify BFS</span>
         </button>
       </div>
     </nav>
@@ -2721,92 +2817,100 @@
   <!-- 3-PANE RETRACTABLE BRAIN WORKSPACE -->
   <div class="workspace" id="graphWorkspace">
 
-    <!-- LEFT DRAWER: CLEAN MEMORY EXPLORER & FILTERS -->
+    <!-- LEFT DRAWER: CLEAN CARBON VAULT EXPLORER -->
     <aside class="sidebar-left" id="brainLeftDrawer">
       <div class="drawer-header-bar">
-        <span class="drawer-title-lbl">📂 Explorador do Córtex</span>
+        <span class="drawer-title-lbl"><span style="color:#10b981;">▣</span> Córtex Vault</span>
         <button type="button" class="drawer-collapse-btn" onclick="toggleBrainDrawer('left')" title="Recolher gaveta esquerda para ampliar o grafo">
-          ◀ Recolher
+          ◀ Ocultar
         </button>
       </div>
 
       <div class="search-box">
         <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon" style="font-family:var(--font-mono);">/</span>
           <input
             type="text"
             id="searchInput"
             class="search-input"
-            placeholder="Pesquisar memórias, tópicos ou #tags..."
+            placeholder="Filtrar memórias ou #tags..."
             oninput="debouncedFetchGraph(); refreshInlineToolPrune(this.value);"
           />
         </div>
-        <div class="filter-row">
-          <select id="wsFilter" class="select-sm" onchange="fetchGraph()">
-            <option value="all">📂 Todos Projetos</option>
-          </select>
-          <select id="catFilter" class="select-sm" onchange="fetchGraph()">
-            <option value="all">🏷️ Categorias</option>
-          </select>
-        </div>
         <div class="smart-filter-row">
-          <button type="button" class="smart-filter-chip active" id="smartFilterAll" onclick="setSmartBrainFilter('all')" title="Mostrar todas as memórias">🌐 Todas</button>
-          <button type="button" class="smart-filter-chip" id="smartFilterPinned" onclick="setSmartBrainFilter('pinned')" title="Filtrar apenas memórias Fixadas (Pinned / Directives)">📌 Fixadas</button>
-          <button type="button" class="smart-filter-chip" id="smartFilterRecent" onclick="setSmartBrainFilter('recent')" title="Filtrar as memórias mais recentes">🕒 Recentes</button>
-          <button type="button" class="smart-filter-chip" id="smartFilterOrphan" onclick="setSmartBrainFilter('orphan')" title="Detetar memórias isoladas sem sinapses ou potenciais duplicadas">⚠️ Sem Links</button>
+          <button type="button" class="smart-filter-chip active" id="smartFilterAll" onclick="setSmartBrainFilter('all')" title="Mostrar todas as memórias">Todas</button>
+          <button type="button" class="smart-filter-chip" id="smartFilterPinned" onclick="setSmartBrainFilter('pinned')" title="Filtrar apenas memórias Fixadas (Pinned / Directives)">Fixadas</button>
+          <button type="button" class="smart-filter-chip" id="smartFilterRecent" onclick="setSmartBrainFilter('recent')" title="Filtrar as memórias mais recentes">Recentes</button>
+          <button type="button" class="smart-filter-chip" id="smartFilterOrphan" onclick="setSmartBrainFilter('orphan')" title="Detetar memórias isoladas sem sinapses ou potenciais duplicadas">Órfãs</button>
         </div>
-        <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
-          <select id="brainSortMode" class="select-sm" style="width:100%;" onchange="onBrainSortChange(this.value)" title="Ordenar memórias no Explorador, Galeria e Quadro">
-            <option value="importance">★ Ordenar: Importância &amp; Semântica</option>
-            <option value="recent">🕒 Ordenar: Mais Recentes (ID)</option>
-            <option value="access">🔥 Ordenar: Mais Injetadas (Access)</option>
-            <option value="alpha">🔤 Ordenar: Nome (A-Z)</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="legend-bar" id="legendBar"></div>
+        <details class="explorer-adv-details">
+          <summary>
+            <span>Filtros &amp; Categorias</span>
+            <span style="color:#10b981;">▾</span>
+          </summary>
+          <div class="explorer-adv-body">
+            <div class="filter-row" style="margin-top:0;">
+              <select id="wsFilter" class="select-sm" onchange="fetchGraph()">
+                <option value="all">Todos Projetos</option>
+              </select>
+              <select id="catFilter" class="select-sm" onchange="fetchGraph()">
+                <option value="all">Categorias</option>
+              </select>
+            </div>
+            <div style="margin-top:5px;">
+              <select id="brainSortMode" class="select-sm" style="width:100%;" onchange="onBrainSortChange(this.value)" title="Ordenar memórias no Explorador, Galeria e Quadro">
+                <option value="importance">Ordenar: Importância &amp; RRF</option>
+                <option value="recent">Ordenar: Mais Recentes (ID)</option>
+                <option value="access">Ordenar: Mais Injetadas</option>
+                <option value="alpha">Ordenar: Nome (A-Z)</option>
+              </select>
+            </div>
+            <div class="legend-bar" id="legendBar"></div>
+          </div>
+        </details>
+      </div>
 
       <div class="vault-tree" id="vaultTree"></div>
     </aside>
 
-    <!-- CENTER: SPACIOUS INTERACTIVE PLANETARY GRAPH CANVAS -->
+    <!-- CENTER: SPACIOUS INTERACTIVE CARBON ARCHITECTURAL CANVAS -->
     <main class="canvas-container" id="canvasWrap">
       <!-- Floating Drawer Toggle Handles -->
       <button type="button" class="canvas-drawer-fab" id="btnToggleLeftDrawerFloating" onclick="toggleBrainDrawer('left')" style="left:12px;" title="Mostrar/Ocultar Explorador de Memórias">
-        <span id="lblLeftDrawerFab">◀ Explorador</span>
+        <span id="lblLeftDrawerFab">▣ Vault</span>
       </button>
 
       <button type="button" class="canvas-drawer-fab" id="btnToggleRightDrawerFloating" onclick="toggleBrainDrawer('right')" style="right:12px;" title="Mostrar/Ocultar Inspetor de Memória">
-        <span id="lblRightDrawerFab">Inspetor ▶</span>
+        <span id="lblRightDrawerFab">Inspetor ▣</span>
       </button>
 
-      <!-- Minimalist Centered Top HUD Bar with 3 View Modes: Quadro Blueprint (Zero-Overlap Default), Galeria Bento (Native Scroll), Orbital -->
+      <!-- Minimalist Centered Top Studio Segmented Bar -->
       <div class="graph-hud-top">
-        <span class="hud-zoom-tag" id="lblPlanetaryZoom">QUADRO NEURAL</span>
+        <span class="hud-zoom-tag" id="lblPlanetaryZoom">BLUEPRINT OS</span>
         <span class="hud-dues-badge" id="lblPlanetaryDues">0 sinapses</span>
         <button class="hud-objectives-pill" onclick="focusDailyObjectives()" title="Focar nos Objetivos Críticos & Triangulação Causal do Córtex">
-          <span style="width:6px; height:6px; border-radius:50%; background:#fb7185; display:inline-block;"></span>
-          <span id="lblDailyObjectives">3 objetivos</span>
+          <span style="width:5px; height:5px; border-radius:1px; background:#10b981; display:inline-block;"></span>
+          <span id="lblDailyObjectives">3 metas</span>
         </button>
         <span class="hud-divider"></span>
         <button class="hud-pill active" id="btnBlueprintView" onclick="setBrainViewStyle('blueprint')" style="cursor:pointer;" title="Quadro Arquitetónico Estruturado (Zero sobreposição — Cartões de Domínio & Colunas Kanban)">
-          🗺️ Quadro
+          ▣ Quadro
         </button>
         <button class="hud-pill" id="btnBentoView" onclick="setBrainViewStyle('bento')" style="cursor:pointer;" title="Galeria Bento HTML com Scroll Nativo e Ações em Lote">
-          🍱 Galeria
+          ⊞ Galeria
         </button>
         <button class="hud-pill" id="btnPlanetaryView" onclick="setBrainViewStyle('planetary')" style="cursor:pointer;" title="Estética Astrolábio Planetário Orbital">
-          🪐 Orbital
+          ◎ Orbital
         </button>
         <span class="hud-divider"></span>
         <span id="blueprintPagerWrap" style="display:inline-flex; align-items:center; gap:2px;">
-          <button class="hud-pill" id="btnBpPrevPage" onclick="changeBlueprintPage(-1)" style="cursor:pointer; padding:2px 6px;" title="Página Anterior">◀</button>
-          <span id="lblBpPage" style="font-family:var(--font-mono); font-size:9.5px; color:#cbd5e1; padding:0 4px; white-space:nowrap;">1/1</span>
-          <button class="hud-pill" id="btnBpNextPage" onclick="changeBlueprintPage(1)" style="cursor:pointer; padding:2px 6px;" title="Próxima Página">▶</button>
+          <button class="hud-pill" id="btnBpPrevPage" onclick="changeBlueprintPage(-1)" style="cursor:pointer; padding:2px 6px;" title="Página Anterior">‹</button>
+          <span id="lblBpPage" style="font-family:var(--font-mono); font-size:9.5px; color:#d4d4d8; padding:0 4px; white-space:nowrap;">1/1</span>
+          <button class="hud-pill" id="btnBpNextPage" onclick="changeBlueprintPage(1)" style="cursor:pointer; padding:2px 6px;" title="Próxima Página">›</button>
         </span>
         <button class="hud-pill" id="btnAllLinksHud" onclick="toggleAllLinksHud()" style="cursor:pointer;" title="Mostrar/Ocultar Sinapses Globais (Por defeito: revelar ao passar o rato ou clicar)">
-          Links
+          Traces
         </button>
         <button class="hud-pill active" id="btnGlobalGraph" onclick="setGraphMode('global')" style="cursor:pointer;" title="Vista Global do Córtex">
           Global
@@ -2815,17 +2919,17 @@
           1-Hop
         </button>
         <button class="hud-pill active" id="btnLockOrbitsHud" onclick="toggleLockOrbitsHud()" style="cursor:pointer; display:none;" title="Bloquear/Desbloquear órbitas planetárias">
-          🔒
+          Lock
         </button>
         <button class="hud-pill" onclick="resetCamera()" style="cursor:pointer;" title="Enquadrar grelha no ecrã">
-          🧭
+          Fit
         </button>
         <span class="hud-divider"></span>
-        <button class="hud-pill" id="btnQuickCompactHud" onclick="runQuickMemoryCompact()" style="cursor:pointer; color:#6ee7b7; border-color:rgba(16,185,129,0.35); background:rgba(16,185,129,0.12);" title="Auto-Deduplicador & Compactador Semântico (Funde memórias repetidas ou >=90% idênticas)">
-          🧹 Compactar
+        <button class="hud-pill" id="btnQuickCompactHud" onclick="runQuickMemoryCompact()" style="cursor:pointer; color:#34d399; border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.08);" title="Auto-Deduplicador & Compactador Semântico (Funde memórias repetidas ou >=90% idênticas)">
+          Compactar
         </button>
-        <button class="hud-pill" onclick="openBrainToolsModal()" style="cursor:pointer; color:#c7d2fe; border-color:rgba(129,140,248,0.35); background:rgba(99,102,241,0.14);" title="Abrir Física, Time-Travel e Ferramentas Avançadas">
-          ⚙️ Física
+        <button class="hud-pill" onclick="openBrainToolsModal()" style="cursor:pointer; color:#d4d4d8; border-color:#2c2c36; background:#15151c;" title="Abrir Física, Time-Travel e Ferramentas Avançadas">
+          Física
         </button>
       </div>
 
@@ -2834,63 +2938,63 @@
       <div id="blueprintQuickJumpBar" class="bp-quick-jump-bar"></div>
     </main>
 
-    <!-- RIGHT DRAWER: CONTEXTUAL MEMORY INSPECTOR -->
+    <!-- RIGHT DRAWER: BENTO DOCUMENT INSPECTOR -->
     <aside class="sidebar-right" id="inspectorPane">
       <div class="drawer-header-bar">
-        <span class="drawer-title-lbl" id="inspType">INSPETOR DE MEMÓRIA</span>
+        <span class="drawer-title-lbl" id="inspType">DOCUMENT INSPECTOR</span>
         <button type="button" class="drawer-collapse-btn" onclick="toggleBrainDrawer('right')" title="Recolher inspetor direito para ampliar o grafo">
-          Recolher ▶
+          Ocultar ▶
         </button>
       </div>
 
       <div class="inspector-header">
         <div class="inspector-title" id="inspTitle">Selecione um nó no grafo</div>
-        <div style="display:flex; gap:6px; flex-shrink:0;" id="inspActions"></div>
+        <div style="display:flex; gap:5px; flex-wrap:wrap;" id="inspActions"></div>
       </div>
 
       <div class="frontmatter" id="inspFrontmatter">
-        <div class="fm-row"><span class="fm-key">workspace:</span> <span class="fm-val" id="fmWs">-</span></div>
-        <div class="fm-row"><span class="fm-key">category:</span> <span class="fm-val" id="fmCat">-</span></div>
-        <div class="fm-row"><span class="fm-key">importance:</span> <span class="fm-val" id="fmImp">-</span></div>
-        <div class="fm-row"><span class="fm-key">semantic_32d:</span> <span class="fm-val" id="fmSemSim" style="color:#34d399; font-weight:700;">92% (BM25 + Vetor 32-D)</span></div>
-        <div class="fm-row"><span class="fm-key">access_count:</span> <span class="fm-val" id="fmAcc">-</span></div>
-        <div class="fm-row"><span class="fm-key">created_at:</span> <span class="fm-val" id="fmTime">-</span></div>
+        <div class="fm-row"><span class="fm-key">Workspace</span> <span class="fm-val" id="fmWs">-</span></div>
+        <div class="fm-row"><span class="fm-key">Categoria</span> <span class="fm-val" id="fmCat">-</span></div>
+        <div class="fm-row"><span class="fm-key">Prioridade</span> <span class="fm-val" id="fmImp">-</span></div>
+        <div class="fm-row"><span class="fm-key">Vetor RRF 32-D</span> <span class="fm-val" id="fmSemSim" style="color:#10b981;">92% · BM25</span></div>
+        <div class="fm-row"><span class="fm-key">Injeções</span> <span class="fm-val" id="fmAcc">-</span></div>
+        <div class="fm-row"><span class="fm-key">Timestamp</span> <span class="fm-val" id="fmTime">-</span></div>
       </div>
 
       <div class="tag-cloud" id="inspTags"></div>
 
-      <div class="note-body" id="inspBody" style="font-size:12.5px;">Clique em qualquer neurónio no grafo para inspecionar o seu conteúdo, propriedades YAML, tags semânticas e ligações sinápticas (Backlinks).</div>
+      <div class="note-body" id="inspBody">Clique em qualquer cartão ou nó para inspecionar o conteúdo completo, metadados estruturados, tags e linhagem sináptica.</div>
 
       <div class="backlinks-section">
-        <div class="section-subtitle">🔗 Ligações Sinápticas &amp; Backlinks (<span id="backlinkCount">0</span>)</div>
+        <div class="section-subtitle">Ligações Sinápticas &amp; Backlinks (<span id="backlinkCount">0</span>)</div>
         <div id="backlinksList"></div>
       </div>
 
       <!-- 4-STEP CAUSAL LINEAGE INSPECTOR -->
       <div class="causal-lineage-box" id="causalLineageBox">
-        <div style="font-size:10.5px; font-weight:700; color:#34d399; margin-bottom:8px; display:flex; justify-content:space-between;">
-          <span>TIER: <strong id="fmTier" style="color:#a5b4fc;">[SEMANTIC]</strong></span>
-          <span id="clConfidenceLbl" style="color:var(--text-muted);">CONFIDENCE: 0.99</span>
+        <div style="font-size:9.5px; font-weight:700; color:#10b981; margin-bottom:7px; display:flex; justify-content:space-between;">
+          <span>TIER: <strong id="fmTier" style="color:#f4f4f5;">[SEMANTIC]</strong></span>
+          <span id="clConfidenceLbl" style="color:#71717a;">CONF: 0.99</span>
         </div>
         <div id="causalLineageSteps"></div>
       </div>
 
       <!-- COLLAPSIBLE [BRAIN_MEMORY] STREAM BLADE -->
-      <div style="padding: 8px 14px 4px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="const s=document.getElementById('liveBrainMemoryStream'); if(s) s.style.display = s.style.display==='none' ? 'block' : 'none';">
-        <span style="font-size:10px; font-weight:700; color:var(--text-muted); letter-spacing:0.04em; text-transform:uppercase;">⚡ Contexto `[BRAIN_MEMORY]` Injetado</span>
-        <span style="font-size:10px; color:var(--text-dim);">Mostrar/Ocultar</span>
+      <div style="padding: 8px 12px 6px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-top:1px solid #1e1e26;" onclick="const s=document.getElementById('liveBrainMemoryStream'); if(s) s.style.display = s.style.display==='none' ? 'block' : 'none';">
+        <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:#71717a; letter-spacing:0.06em; text-transform:uppercase;">[BRAIN_MEMORY] Payload</span>
+        <span style="font-family:var(--font-mono); font-size:9.5px; color:#52525b;">▾</span>
       </div>
       <div class="live-stream-blade" id="liveBrainMemoryStream" style="display:none;">
-        <div style="color:#a5b4fc; font-weight:700;">[BRAIN_MEMORY | ws=brain_mcp]</div>
-        <div style="color:#f472b6;">[JEV_S1_ROUTER | intent=ui_3d_interactive]</div>
-        <div style="color:#e2e8f0;">  route = SCOUT ➔ UI-01 (Argon) + API-01</div>
-        <div style="color:#94a3b8;">  latency = 0.011ms | stop_th = 0.28</div>
+        <div style="color:#10b981; font-weight:700;">[BRAIN_MEMORY | ws=brain_mcp]</div>
+        <div style="color:#e4e4e7;">[JEV_S1_ROUTER | intent=ui_3d_interactive]</div>
+        <div style="color:#a1a1aa;">  route = SCOUT ➔ UI-01 (Argon) + API-01</div>
+        <div style="color:#71717a;">  latency = 0.011ms | stop_th = 0.28</div>
         <div style="color:#38bdf8;">[SCOUT_SHARED_MAP | 13 files | 51 symbols]</div>
-        <div style="color:#e2e8f0;">  UI : index.html [60 FPS 3D Studio]</div>
-        <div style="color:#e2e8f0;">  API: swarm_engine.py, db_engine.py, graphify_engine.py</div>
-        <div style="color:#34d399;">📌[PIN][W] Diretiva 3D: Zero-Token Sync</div>
-        <div style="color:#cbd5e1;">  - [S] Ruflo Causal Graph: 297 edges active</div>
-        <div style="color:#cbd5e1;">  - [E] Swarm Auto-Heal: 24/24 tasks PASS</div>
+        <div style="color:#d4d4d8;">  UI : index.html [60 FPS 3D Studio]</div>
+        <div style="color:#d4d4d8;">  API: swarm_engine.py, db_engine.py, graphify_engine.py</div>
+        <div style="color:#34d399;">[PIN][W] Diretiva 3D: Zero-Token Sync</div>
+        <div style="color:#a1a1aa;">  - [S] Ruflo Causal Graph: 297 edges active</div>
+        <div style="color:#a1a1aa;">  - [E] Swarm Auto-Heal: 24/24 tasks PASS</div>
       </div>
     </aside>
   </div>
@@ -5579,25 +5683,26 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
       let html = `
         <button type="button" class="bp-jump-chip ${curWs === 'all' ? 'active' : ''}" onclick="resetVaultWorkspaceFilter()" title="Atalho Tecla [0] — Mapa Global de todos os Workspaces">
-          <span style="font-family:var(--font-mono); font-size:9px; color:#818cf8;">[0]</span>
-          <span>🌐 Global</span>
+          <span style="color:#10b981; font-weight:700;">00</span>
+          <span>GLOBAL</span>
         </button>
       `;
       topWs.forEach(([ws, cnt], idx) => {
         const keyNum = idx + 1;
+        const idxPad = String(keyNum).padStart(2, '0');
         const isAct = curWs === ws;
         html += `
           <button type="button" class="bp-jump-chip ${isAct ? 'active' : ''}" onclick="toggleVaultWorkspaceAccordion('${escapeHtml(ws)}')" title="Atalho Tecla [${keyNum}] — Abrir Workspace ${escapeHtml(ws)} (${cnt} memórias)">
-            <span style="font-family:var(--font-mono); font-size:9px; color:#38bdf8;">[${keyNum}]</span>
-            <span>⬡ ${escapeHtml(ws.length > 16 ? ws.slice(0, 14) + '…' : ws)}</span>
-            <span style="font-family:var(--font-mono); font-size:9px; opacity:0.7;">${cnt}</span>
+            <span style="color:${isAct ? '#10b981' : '#71717a'}; font-weight:700;">${idxPad}</span>
+            <span style="color:#e4e4e7;">${escapeHtml(ws.length > 15 ? ws.slice(0, 13) + '…' : ws).toUpperCase()}</span>
+            <span style="font-size:9px; color:#a1a1aa; background:#1c1c24; padding:0.5px 4px; border-radius:3px;">${cnt}</span>
           </button>
         `;
       });
       if (curWs !== 'all') {
         html += `
-          <button type="button" class="bp-jump-chip" style="border-color:rgba(56,189,248,0.45); color:#38bdf8;" onclick="focusOfficeWorkspace3D('${escapeHtml(curWs)}', event)" title="Saltar para a Secretária Holográfica deste Workspace no Office 3D">
-            🏢 Equipa 3D
+          <button type="button" class="bp-jump-chip" style="border-color:rgba(16,185,129,0.45); color:#34d399;" onclick="focusOfficeWorkspace3D('${escapeHtml(curWs)}', event)" title="Saltar para a Secretária Holográfica deste Workspace no Office 3D">
+            3D FLOOR ➔
           </button>
         `;
       }
@@ -5630,12 +5735,12 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     let userClickedGraphNode = false;
 
     const PLANETARY_CLUSTER_PRESETS = {
-      'brain_mcp':    { title: 'Brain MCP & Jev',    angle: -Math.PI * 0.50, ringR: 255, rx: 145, ry: 82, tilt: -0.24, color: '#818cf8', accent: '#c084fc' },
-      'swarm_24x':    { title: 'Swarm 24x Agents',   angle: -Math.PI * 0.14, ringR: 390, rx: 155, ry: 86, tilt: 0.32,  color: '#38bdf8', accent: '#f43f5e' },
-      'graphify_ast': { title: 'Graphify AST',       angle:  Math.PI * 0.18, ringR: 430, rx: 148, ry: 80, tilt: -0.35, color: '#f43f5e', accent: '#fb7185' },
-      'office_3d':    { title: 'Office 3D Holo',     angle:  Math.PI * 0.50, ringR: 340, rx: 140, ry: 78, tilt: 0.18,  color: '#c084fc', accent: '#f472b6' },
-      'token_diet':   { title: 'Token Diet & Anki',  angle:  Math.PI * 0.82, ringR: 420, rx: 150, ry: 82, tilt: 0.36,  color: '#34d399', accent: '#38bdf8' },
-      'global':       { title: 'Core Architecture',  angle: -Math.PI * 0.82, ringR: 365, rx: 155, ry: 86, tilt: -0.28, color: '#f59e0b', accent: '#a78bfa' }
+      'brain_mcp':    { title: 'Brain MCP & Jev',    angle: -Math.PI * 0.50, ringR: 255, rx: 145, ry: 82, tilt: -0.24, color: '#10b981', accent: '#34d399' },
+      'swarm_24x':    { title: 'Swarm 24x Agents',   angle: -Math.PI * 0.14, ringR: 390, rx: 155, ry: 86, tilt: 0.32,  color: '#06b6d4', accent: '#38bdf8' },
+      'graphify_ast': { title: 'Graphify AST',       angle:  Math.PI * 0.18, ringR: 430, rx: 148, ry: 80, tilt: -0.35, color: '#f59e0b', accent: '#fbbf24' },
+      'office_3d':    { title: 'Office 3D Holo',     angle:  Math.PI * 0.50, ringR: 340, rx: 140, ry: 78, tilt: 0.18,  color: '#a855f7', accent: '#c084fc' },
+      'token_diet':   { title: 'Token Diet & Anki',  angle:  Math.PI * 0.82, ringR: 420, rx: 150, ry: 82, tilt: 0.36,  color: '#34d399', accent: '#10b981' },
+      'global':       { title: 'Core Architecture',  angle: -Math.PI * 0.82, ringR: 365, rx: 155, ry: 86, tilt: -0.28, color: '#e4e4e7', accent: '#a1a1aa' }
     };
 
     function setBrainViewStyle(style) {
@@ -5669,7 +5774,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
       const zoomLbl = document.getElementById('lblPlanetaryZoom');
       if (zoomLbl) {
-        zoomLbl.textContent = style === 'blueprint' ? 'QUADRO NEURAL' : (style === 'bento' ? 'GALERIA BENTO' : '# ZOOM FAR');
+        zoomLbl.textContent = style === 'blueprint' ? 'BLUEPRINT OS' : (style === 'bento' ? 'BENTO ATLAS' : 'ORBITAL OS');
       }
 
       if (style === 'planetary') {
@@ -5712,11 +5817,13 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const slice = memNodes.slice(bentoPage * PAGE_SIZE, (bentoPage + 1) * PAGE_SIZE);
 
       const wsEntries = Object.entries(allKnownCounts).sort((a, b) => b[1] - a[1]);
-      const topWsPills = wsEntries.slice(0, 14).map(([ws, cnt]) => {
+      const topWsPills = wsEntries.slice(0, 14).map(([ws, cnt], idx) => {
         const isAct = curWs === ws;
+        const padIdx = String(idx + 1).padStart(2, '0');
         return `<button type="button" class="bento-ws-chip ${isAct ? 'active' : ''}" onclick="toggleVaultWorkspaceAccordion('${escapeHtml(ws)}')">
-          <span>⬡ ${escapeHtml(ws)}</span>
-          <span style="font-family:var(--font-mono); font-size:10px; opacity:0.75;">${cnt}</span>
+          <span style="font-family:var(--font-mono); font-size:9.5px; color:#71717a;">${padIdx}</span>
+          <span>${escapeHtml(ws)}</span>
+          <span style="font-family:var(--font-mono); font-size:9.5px; color:#a1a1aa;">${cnt}</span>
         </button>`;
       }).join('');
 
@@ -5726,66 +5833,65 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         const dbId = Number(item.db_id || 0);
         const isChecked = dbId && bentoSelectedIds.has(dbId);
         const isPinned = String(item.tags || '').toLowerCase().includes('pinned') || item.category === 'directive';
-        const color = CATEGORY_COLORS[item.category] || '#818cf8';
+        const color = CATEGORY_COLORS[item.category] || '#10b981';
         const glyph = getCategoryGlyph(item.category, item.node_type);
-        const stars = '★'.repeat(Math.max(1, Math.min(5, item.importance || 3)));
+        const prioScore = Math.max(1, Math.min(5, item.importance || 3));
         const factPreview = String(item.fact || '').replace(/\s+/g, ' ').trim().slice(0, 135) + (String(item.fact || '').length > 135 ? '…' : '');
         const tagsArr = String(item.tags || '').split(/[\s,]+/).map(t => t.trim()).filter(Boolean).slice(0, 2);
         const linkCount = item._neighbors ? Math.max(0, item._neighbors.size - 1) : 0;
 
         return `
           <div class="bento-card ${isSel || isChecked ? 'active' : ''}" onclick="focusNodeById('${item.id}')">
-            <div style="position:absolute; top:0; left:0; right:0; height:2px; background:${color}; opacity:0.65;"></div>
             <div>
-              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:8px;">
                 <div style="display:flex; align-items:center; gap:6px;">
-                  ${dbId ? `<input type="checkbox" ${isChecked ? 'checked' : ''} onclick="toggleBentoCardSelect(${dbId}, event)" title="Selecionar para ação em lote" style="accent-color:#6366f1; cursor:pointer; width:13px; height:13px; margin:0;" />` : ''}
-                  <span style="font-size:10px; font-family:var(--font-mono); font-weight:700; color:${color}; background:rgba(255,255,255,0.03); border:1px solid var(--border-strong); padding:2px 6px; border-radius:5px; text-transform:uppercase;">
+                  ${dbId ? `<input type="checkbox" ${isChecked ? 'checked' : ''} onclick="toggleBentoCardSelect(${dbId}, event)" title="Selecionar para ação em lote" style="accent-color:#10b981; cursor:pointer; width:13px; height:13px; margin:0;" />` : ''}
+                  <span style="font-size:9.5px; font-family:var(--font-mono); font-weight:700; color:${color}; background:#16161d; border:1px solid #292934; padding:2px 6px; border-radius:4px; text-transform:uppercase;">
                     ${glyph} ${escapeHtml(item.category || 'memory')}
                   </span>
                 </div>
                 <div style="display:flex; align-items:center; gap:4px;">
-                  <span style="font-size:10px; font-family:var(--font-mono); color:#fbbf24; letter-spacing:1px;">${stars}</span>
-                  ${dbId ? `<button type="button" class="bento-action-btn" style="${isPinned ? 'border-color:#6366f1; color:#a5b4fc;' : ''}" onclick="runBulkMemoryAction('${isPinned ? 'unpin' : 'pin'}', ${dbId}, event)" title="${isPinned ? 'Desafixar' : 'Fixar no topo'}">📌</button>` : ''}
-                  <button type="button" class="bento-action-btn" onclick="quickSwitchTo1Hop('${item.id}', event)" title="Ver ligações 1-Hop no Quadro">🕸️</button>
-                  <button type="button" class="bento-action-btn" onclick="focusOfficeWorkspace3D('${escapeHtml(item.workspace || 'global')}', event)" title="Ver Equipa no Office 3D">🏢</button>
-                  ${dbId ? `<button type="button" class="bento-action-btn" style="color:#fb7185;" onclick="runBulkMemoryAction('delete', ${dbId}, event)" title="Apagar memória">🗑️</button>` : ''}
+                  <span style="font-size:9.5px; font-family:var(--font-mono); font-weight:700; color:${prioScore >= 5 ? '#10b981' : '#a1a1aa'}; background:#16161d; border:1px solid #272730; padding:1.5px 5px; border-radius:4px;">P${prioScore}</span>
+                  ${dbId ? `<button type="button" class="bento-action-btn" style="${isPinned ? 'border-color:#10b981; color:#34d399;' : ''}" onclick="runBulkMemoryAction('${isPinned ? 'unpin' : 'pin'}', ${dbId}, event)" title="${isPinned ? 'Desafixar' : 'Fixar no topo'}">PIN</button>` : ''}
+                  <button type="button" class="bento-action-btn" onclick="quickSwitchTo1Hop('${item.id}', event)" title="Ver ligações 1-Hop no Quadro">1-HOP</button>
+                  <button type="button" class="bento-action-btn" onclick="focusOfficeWorkspace3D('${escapeHtml(item.workspace || 'global')}', event)" title="Ver Equipa no Office 3D">3D</button>
+                  ${dbId ? `<button type="button" class="bento-action-btn" style="color:#fb7185;" onclick="runBulkMemoryAction('delete', ${dbId}, event)" title="Apagar memória">×</button>` : ''}
                 </div>
               </div>
-              <div style="font-size:13px; font-weight:700; color:#f8fafc; line-height:1.35; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+              <div style="font-size:13px; font-weight:700; color:#f4f4f5; line-height:1.35; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
                 ${escapeHtml(item._cleanLabel || item.label)}
               </div>
-              <div style="font-size:11.5px; color:var(--text-muted); line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
+              <div style="font-size:11.5px; color:#a1a1aa; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">
                 ${escapeHtml(factPreview || 'Sem descrição adicional.')}
               </div>
             </div>
-            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; padding-top:8px; border-top:1px solid var(--border); font-size:10px; font-family:var(--font-mono); color:var(--text-dim);">
-              <span style="color:#a5b4fc; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">⬡ ${escapeHtml(item.workspace || 'global')}</span>
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; padding-top:8px; border-top:1px solid #1e1e26; font-size:10px; font-family:var(--font-mono); color:#71717a;">
+              <span style="color:#d4d4d8; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">▣ ${escapeHtml(item.workspace || 'global')}</span>
               <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-                ${tagsArr.map(t => `<span style="color:var(--text-muted);">#${escapeHtml(t.replace(/^#/, '').slice(0, 14))}</span>`).join('')}
-                <span style="color:#38bdf8;">🔗 ${linkCount}</span>
+                ${tagsArr.map(t => `<span style="color:#71717a;">#${escapeHtml(t.replace(/^#/, '').slice(0, 14))}</span>`).join('')}
+                <span style="color:#10b981;">${linkCount} SYN</span>
               </div>
             </div>
           </div>
         `;
       }).join('');
 
-      const wsOptionsHtml = wsEntries.map(([ws]) => `<option value="${escapeHtml(ws)}">📂 ${escapeHtml(ws)}</option>`).join('');
+      const wsOptionsHtml = wsEntries.map(([ws]) => `<option value="${escapeHtml(ws)}">${escapeHtml(ws)}</option>`).join('');
       const bulkBarHtml = bentoSelectedIds.size > 0 ? `
         <div class="bento-bulk-bar">
           <div style="display:flex; align-items:center; gap:10px;">
-            <span style="font-size:12px; font-weight:700; color:#f8fafc;">☑️ ${bentoSelectedIds.size} memórias selecionadas</span>
+            <span style="font-size:12px; font-weight:700; color:#f4f4f5;">${bentoSelectedIds.size} memórias selecionadas</span>
             <button type="button" class="bento-action-btn" onclick="clearBentoSelection()">Limpar seleção</button>
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('pin')">📌 Fixar Selecionadas</button>
-            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('unpin')">📌 Desafixar</button>
+            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('pin')">Fixar Selecionadas</button>
+            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('unpin')">Desafixar</button>
             <select id="bentoBulkTargetWs" class="select-sm" style="min-width:140px;">
-              <option value="global">📂 global</option>
+              <option value="global">global</option>
               ${wsOptionsHtml}
             </select>
-            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('move_workspace')">📂 Mover Workspace</button>
-            <button type="button" class="bento-ws-chip" style="border-color:rgba(244,63,94,0.5); color:#fda4af;" onclick="runBulkMemoryAction('delete')">🗑️ Apagar (${bentoSelectedIds.size})</button>
+            <button type="button" class="bento-ws-chip" onclick="runBulkMemoryAction('move_workspace')">Mover Workspace</button>
+            <button type="button" class="bento-ws-chip" style="border-color:rgba(244,63,94,0.5); color:#fda4af;" onclick="runBulkMemoryAction('delete')">Apagar (${bentoSelectedIds.size})</button>
           </div>
         </div>
       ` : '';
@@ -5793,29 +5899,30 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       container.innerHTML = `
         <div class="bento-top-strip">
           <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span style="font-size:13px; font-weight:800; color:#f8fafc;">🍱 Atlas Bento do Córtex</span>
-            <span style="font-size:11px; font-family:var(--font-mono); color:#94a3b8;">${memNodes.length} memórias filtradas · Zero sobreposição</span>
-            <button type="button" class="bento-ws-chip" style="border-color:rgba(16,185,129,0.4); color:#6ee7b7;" onclick="runQuickMemoryCompact()">🧹 Compactar Duplicadas</button>
+            <span style="font-size:13px; font-weight:800; color:#f4f4f5; text-transform:uppercase; letter-spacing:0.02em;">⊞ Atlas Bento do Córtex</span>
+            <span style="font-size:11px; font-family:var(--font-mono); color:#a1a1aa;">${memNodes.length} memórias filtradas · Zero sobreposição</span>
+            <button type="button" class="bento-ws-chip" style="border-color:rgba(16,185,129,0.4); color:#34d399;" onclick="runQuickMemoryCompact()">Compactar Duplicadas</button>
             ${curWs !== 'all' ? `
-              <button type="button" onclick="focusOfficeWorkspace3D('${escapeHtml(curWs)}', event)" style="background:rgba(56,189,248,0.16); border:1px solid #38bdf8; color:#e0f2fe; border-radius:6px; padding:3px 9px; font-size:10.5px; font-weight:700; cursor:pointer;">🏢 Ver Equipa 3D (${escapeHtml(curWs)})</button>
-              <button type="button" onclick="resetVaultWorkspaceFilter()" style="background:rgba(99,102,241,0.2); border:1px solid #818cf8; color:#fff; border-radius:6px; padding:3px 9px; font-size:10.5px; font-weight:700; cursor:pointer;">🌐 Ver Todos os Workspaces</button>
+              <button type="button" onclick="focusOfficeWorkspace3D('${escapeHtml(curWs)}', event)" style="background:rgba(16,185,129,0.14); border:1px solid #10b981; color:#f4f4f5; border-radius:5px; padding:3px 9px; font-size:10.5px; font-weight:700; cursor:pointer;">3D Team (${escapeHtml(curWs)})</button>
+              <button type="button" onclick="resetVaultWorkspaceFilter()" style="background:#181820; border:1px solid #32323e; color:#fff; border-radius:5px; padding:3px 9px; font-size:10.5px; font-weight:700; cursor:pointer;">Todos os Workspaces</button>
             ` : ''}
           </div>
           <div style="display:flex; align-items:center; gap:8px; font-family:var(--font-mono); font-size:11px;">
-            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(-1)" ${bentoPage <= 0 ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>◀ Anterior</button>
-            <span style="color:#e2e8f0; font-weight:700;">Página ${bentoPage + 1} / ${totalPages}</span>
-            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(1)" ${bentoPage + 1 >= totalPages ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>Próxima ▶</button>
+            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(-1)" ${bentoPage <= 0 ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>‹ Anterior</button>
+            <span style="color:#e4e4e7; font-weight:700;">Pág ${bentoPage + 1} / ${totalPages}</span>
+            <button type="button" class="bento-ws-chip" onclick="changeBentoPage(1)" ${bentoPage + 1 >= totalPages ? 'disabled style="opacity:0.4;cursor:default;"' : ''}>Próxima ›</button>
           </div>
         </div>
         <div class="bento-ws-strip">
           <button type="button" class="bento-ws-chip ${curWs === 'all' ? 'active' : ''}" onclick="resetVaultWorkspaceFilter()">
-            <span>🌐 Todos</span>
-            <span style="font-family:var(--font-mono); font-size:10px; opacity:0.75;">${graphData.stats ? graphData.stats.total_memories : memNodes.length}</span>
+            <span style="font-family:var(--font-mono); font-size:9.5px; color:#10b981;">00</span>
+            <span>Todos</span>
+            <span style="font-family:var(--font-mono); font-size:9.5px; color:#a1a1aa;">${graphData.stats ? graphData.stats.total_memories : memNodes.length}</span>
           </button>
           ${topWsPills}
         </div>
         <div class="bento-grid">
-          ${cardsHtml || '<div style="padding:24px; color:#94a3b8; font-size:13px;">Nenhuma memória encontrada para os filtros selecionados.</div>'}
+          ${cardsHtml || '<div style="padding:24px; color:#a1a1aa; font-size:13px;">Nenhuma memória encontrada para os filtros selecionados.</div>'}
         </div>
         ${bulkBarHtml}
       `;
@@ -6660,19 +6767,19 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const curCat = catSel.value;
 
       const workspaces = (graphData.filters && graphData.filters.workspaces) || [];
-      wsSel.innerHTML = '<option value="all">📂 Todos Workspaces</option>' +
-        workspaces.map(w => `<option value="${w}" ${w === curWs ? 'selected' : ''}>📂 ${w}</option>`).join('');
+      wsSel.innerHTML = '<option value="all">Todos Workspaces</option>' +
+        workspaces.map(w => `<option value="${w}" ${w === curWs ? 'selected' : ''}>${w}</option>`).join('');
       if (typeof syncStudioWorkspaceSelectsUI === 'function') {
         syncStudioWorkspaceSelectsUI();
       }
 
       const categories = (graphData.filters && graphData.filters.categories) || [];
-      catSel.innerHTML = '<option value="all">🏷️ Todas Categorias</option>' +
-        categories.map(c => `<option value="${c}" ${c === curCat ? 'selected' : ''}>🏷️ ${c}</option>`).join('');
+      catSel.innerHTML = '<option value="all">Todas Categorias</option>' +
+        categories.map(c => `<option value="${c}" ${c === curCat ? 'selected' : ''}>${c}</option>`).join('');
 
       const legendBar = document.getElementById('legendBar');
       const catMeta = {
-        workspace: { icon: '⬡', label: 'workspace' },
+        workspace: { icon: '▣', label: 'workspace' },
         checkpoint: { icon: '◆', label: 'checkpoint' },
         architecture: { icon: '❖', label: 'architecture' },
         optimization: { icon: '⚡', label: 'optimization' },
@@ -6685,7 +6792,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const shownCats = ['workspace', 'architecture', 'optimization', 'infra', 'environment', 'preference', 'code_change', 'tag'];
       legendBar.innerHTML = shownCats.map(c => `
         <span class="legend-chip" onclick="filterByCategory('${c}')">
-          <span style="color:${CATEGORY_COLORS[c] || '#94a3b8'}; font-weight:700; font-family:var(--font-mono);">${catMeta[c].icon}</span>
+          <span style="color:${CATEGORY_COLORS[c] || '#a1a1aa'}; font-weight:700; font-family:var(--font-mono);">${catMeta[c].icon}</span>
           ${catMeta[c].label}
         </span>
       `).join('');
@@ -6702,7 +6809,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     }
 
     function getCategoryGlyph(cat, nodeType) {
-      if (nodeType === 'workspace') return '⬡';
+      if (nodeType === 'workspace') return '▣';
       if (nodeType === 'checkpoint') return '◆';
       const map = {
         architecture: '❖',
@@ -6749,9 +6856,9 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       let html = '';
       if (curWsFilter !== 'all') {
         html += `
-          <div style="margin:2px 0 8px; padding:7px 10px; background:rgba(99, 102, 241, 0.14); border:1px solid rgba(129, 140, 248, 0.38); border-radius:8px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-            <span style="font-size:11px; color:#e0e7ff; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">🎯 Ilha: <strong>${escapeHtml(curWsFilter)}</strong></span>
-            <button type="button" onclick="resetVaultWorkspaceFilter()" style="background:rgba(15, 23, 42, 0.85); border:1px solid rgba(148, 163, 184, 0.35); color:#cbd5e1; border-radius:6px; padding:2px 7px; font-size:10px; font-weight:600; cursor:pointer; flex-shrink:0;">🌐 Ver Todas</button>
+          <div style="margin:2px 0 8px; padding:7px 9px; background:rgba(16, 185, 129, 0.1); border:1px solid rgba(16, 185, 129, 0.35); border-radius:6px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <span style="font-size:10.5px; font-family:var(--font-mono); color:#f4f4f5; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">VAULT: <strong style="color:#10b981;">${escapeHtml(curWsFilter)}</strong></span>
+            <button type="button" onclick="resetVaultWorkspaceFilter()" style="background:#14141a; border:1px solid #2e2e3a; color:#d4d4d8; border-radius:4px; padding:2px 7px; font-family:var(--font-mono); font-size:9.5px; font-weight:600; cursor:pointer; flex-shrink:0;">TODOS</button>
           </div>
         `;
       }
@@ -6770,42 +6877,43 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         const visibleItems = items.length > MAX_ITEMS_PER_WS ? items.slice(0, MAX_ITEMS_PER_WS) : items;
         const hiddenCount = items.length - visibleItems.length;
         const isTop7 = idx < 7;
+        const padIdx = String(idx + 1).padStart(2, '0');
 
         html += `
-          <div class="vault-group" style="margin-bottom:3px;">
-            <div class="vault-folder" onclick="toggleVaultWorkspaceAccordion('${escapeHtml(ws)}')" style="${isExpanded ? 'background:rgba(99,102,241,0.12); color:#f8fafc; border-radius:6px;' : ''}">
-              <span style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                <span style="font-family:var(--font-mono); font-size:10px; color:${isExpanded ? '#818cf8' : 'var(--text-muted)'};">${isExpanded ? '▾' : '▸'}</span>
-                <span style="color:${isTop7 ? '#c7d2fe' : 'var(--text-secondary)'};">⬡ ${escapeHtml(ws)}</span>
+          <div class="vault-group">
+            <div class="vault-folder" onclick="toggleVaultWorkspaceAccordion('${escapeHtml(ws)}')" style="${isExpanded ? 'background:#16161e; border-color:#10b981; color:#ffffff;' : ''}">
+              <span style="display:flex; align-items:center; gap:7px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <span style="font-family:var(--font-mono); font-size:9px; font-weight:700; color:${isExpanded ? '#10b981' : '#71717a'}; background:#0b0b0e; border:1px solid #22222b; padding:1px 4px; border-radius:3px;">${padIdx}</span>
+                <span style="color:${isTop7 ? '#f4f4f5' : '#a1a1aa'}; font-size:11px; font-weight:600;">${escapeHtml(ws)}</span>
               </span>
-              <span style="font-size:10px; font-family:var(--font-mono); opacity:0.75;">${totalInWs}</span>
+              <span style="font-size:9.5px; font-family:var(--font-mono); color:${isExpanded ? '#10b981' : '#71717a'}; background:#0b0b0e; border:1px solid #1e1e26; padding:1px 5px; border-radius:4px;">${totalInWs}</span>
             </div>
             ${isExpanded ? `
-              <div style="padding-top:2px; padding-bottom:4px;">
+              <div style="padding-top:3px; padding-bottom:4px;">
                 ${visibleItems.map(item => {
                   const isSel = selId === item.id;
                   const isMatch = item.is_match;
-                  const color = CATEGORY_COLORS[item.category] || '#94a3b8';
+                  const color = CATEGORY_COLORS[item.category] || '#a1a1aa';
                   const glyph = getCategoryGlyph(item.category, item.node_type);
                   const semPct = Math.round((Number(item.semantic_similarity) || 0.85) * 100);
                   return `
                     <div class="vault-item ${isSel ? 'active' : ''} ${isMatch ? 'match-highlight' : ''}"
                          onclick="focusNodeById('${item.id}')" style="justify-content:space-between;">
                       <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
-                        <span style="color:${color}; font-family:var(--font-mono); font-size:11px; width:18px; text-align:center; flex-shrink:0;">${glyph}</span>
+                        <span style="color:${color}; font-family:var(--font-mono); font-size:10px; width:16px; text-align:center; flex-shrink:0;">${glyph}</span>
                         <span style="overflow:hidden; text-overflow:ellipsis;">${escapeHtml(item.label)}</span>
                       </div>
-                      <span style="font-size:9.5px; font-family:var(--font-mono); color:${isMatch ? '#00ff9d' : 'var(--text-dim)'}; flex-shrink:0; margin-left:6px;">${semPct}%</span>
+                      <span style="font-size:9px; font-family:var(--font-mono); color:${isMatch ? '#10b981' : '#52525b'}; flex-shrink:0; margin-left:6px;">${semPct}%</span>
                     </div>
                   `;
                 }).join('')}
-                ${hiddenCount > 0 ? `<div style="padding:4px 10px; font-size:10px; color:var(--text-dim); font-family:var(--font-mono);">+${hiddenCount} memórias adicionais nesta ilha…</div>` : ''}
+                ${hiddenCount > 0 ? `<div style="padding:4px 10px; font-size:9.5px; color:#71717a; font-family:var(--font-mono);">+${hiddenCount} memórias adicionais…</div>` : ''}
               </div>
             ` : ''}
           </div>
         `;
       });
-      tree.innerHTML = html || '<div style="padding:14px; color:var(--text-dim); font-size:12px;">Nenhuma memória encontrada para este filtro.</div>';
+      tree.innerHTML = html || '<div style="padding:14px; color:#71717a; font-size:11.5px;">Nenhuma memória encontrada para este filtro.</div>';
     }
 
     function toggleVaultWorkspaceAccordion(ws) {
@@ -6867,8 +6975,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         cam.y = wrap.clientHeight / 2 - node.y * cam.k;
       }
 
-      // Atualizar Inspetor Direito
-      document.getElementById('inspType').textContent = `${node.node_type.toUpperCase()} • ID: ${node.db_id || node.id}`;
+      // Atualizar Inspetor Direito (Bento Document Inspector)
+      document.getElementById('inspType').textContent = `${node.node_type.toUpperCase()} · #${node.db_id || node.id}`;
       document.getElementById('inspTitle').textContent = node.label;
       document.getElementById('fmWs').textContent = node.workspace || 'global';
       document.getElementById('fmCat').textContent = node.category || 'general';
@@ -6876,15 +6984,17 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const fmTierEl = document.getElementById('fmTier');
       if (fmTierEl) {
         fmTierEl.textContent = `[${tierRaw}]`;
-        fmTierEl.style.color = tierRaw === 'SEMANTIC' ? '#a5b4fc' : (tierRaw === 'EPISODIC' ? '#34d399' : '#38bdf8');
+        fmTierEl.style.color = tierRaw === 'SEMANTIC' ? '#10b981' : (tierRaw === 'EPISODIC' ? '#38bdf8' : '#f59e0b');
       }
-      document.getElementById('fmImp').textContent = '⭐'.repeat(Math.min(5, Math.max(1, node.importance || 3)));
+      const impScore = Math.min(5, Math.max(1, node.importance || 3));
+      const dotsFilled = '●'.repeat(impScore) + '○'.repeat(5 - impScore);
+      document.getElementById('fmImp').textContent = `P${impScore} · ${dotsFilled}`;
       const fmSemEl = document.getElementById('fmSemSim');
       if (fmSemEl) {
         const semVal = Math.round((Number(node.semantic_similarity) || 0.90) * 100);
-        fmSemEl.textContent = `${semVal}% Semântico · BM25 + Vetor 32-D`;
+        fmSemEl.textContent = `${semVal}% · RRF 32-D`;
       }
-      document.getElementById('fmAcc').textContent = `${node.access_count || 0} injeções`;
+      document.getElementById('fmAcc').textContent = `${node.access_count || 0} hits`;
       document.getElementById('fmTime').textContent = node.created_at || node.updated_at || 'Ativo';
       document.getElementById('inspBody').textContent = node.fact || '';
 
@@ -6893,9 +7003,9 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (node.node_type === 'memory' && node.db_id) {
         const isPinned = String(node.tags || '').toLowerCase().includes('pinned') || node.category === 'directive';
         actDiv.innerHTML = `
-          <button class="btn" style="padding:4px 8px; ${isPinned ? 'border-color:rgba(99,102,241,0.5); color:#a5b4fc;' : ''}" onclick="togglePinCurrentMemory(${node.db_id})" title="${isPinned ? 'Desafixar do topo do [BRAIN_MEMORY]' : 'Fixar (Pin) sempre no topo do [BRAIN_MEMORY]'}">📌 ${isPinned ? 'Fixada' : 'Pin'}</button>
-          <button class="btn" style="padding:4px 8px;" onclick="openEditModal()" title="Editar memória">✏️</button>
-          <button class="btn" style="padding:4px 8px; color:var(--red);" onclick="deleteCurrentMemory(${node.db_id})" title="Apagar memória">🗑️</button>
+          <button class="btn" style="padding:3.5px 8px; font-family:var(--font-mono); font-size:10px; ${isPinned ? 'border-color:#10b981; color:#34d399; background:rgba(16,185,129,0.1);' : ''}" onclick="togglePinCurrentMemory(${node.db_id})" title="${isPinned ? 'Desafixar do topo do [BRAIN_MEMORY]' : 'Fixar (Pin) sempre no topo do [BRAIN_MEMORY]'}">${isPinned ? '◈ PINNED' : '◇ PIN'}</button>
+          <button class="btn" style="padding:3.5px 8px; font-family:var(--font-mono); font-size:10px;" onclick="openEditModal()" title="Editar memória">EDIT</button>
+          <button class="btn" style="padding:3.5px 8px; font-family:var(--font-mono); font-size:10px; color:#fb7185;" onclick="deleteCurrentMemory(${node.db_id})" title="Apagar memória">DEL</button>
         `;
       } else {
         actDiv.innerHTML = '';
@@ -6927,23 +7037,23 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         const firstCausal = causalConnected[0] || (connected[0] ? { node: connected[0].node, relation: 'synaptic', dir: '⟷' } : null);
         const secondCausal = causalConnected[1] || (connected[1] ? { node: connected[1].node, relation: 'evolves', dir: '➔' } : null);
         clStepsEl.innerHTML = `
-          <div class="cl-step" style="border-color:rgba(99,102,241,0.35);">
-            <div style="color:#a5b4fc; font-weight:700;">01 · NÓ SELECIONADO [${tierRaw}]</div>
-            <div style="color:#f8fafc;">${escapeHtml(node.label.slice(0, 44))}</div>
+          <div class="cl-step" style="border-left-color:#10b981;">
+            <div style="color:#10b981; font-weight:700;">01 · ACTIVE NODE [${tierRaw}]</div>
+            <div style="color:#f4f4f5;">${escapeHtml(node.label.slice(0, 44))}</div>
           </div>
           ${firstCausal ? `
-          <div class="cl-step" onclick="focusNodeById('${firstCausal.node.id}')">
-            <div style="color:#fbbf24; font-weight:700;">02 · ARESTA CAUSAL [${escapeHtml(firstCausal.relation)}] ${firstCausal.dir}</div>
-            <div style="color:#e2e8f0;">${escapeHtml(firstCausal.node.label.slice(0, 44))}</div>
+          <div class="cl-step" style="border-left-color:#f59e0b;" onclick="focusNodeById('${firstCausal.node.id}')">
+            <div style="color:#fbbf24; font-weight:700;">02 · CAUSAL EDGE [${escapeHtml(firstCausal.relation)}] ${firstCausal.dir}</div>
+            <div style="color:#e4e4e7;">${escapeHtml(firstCausal.node.label.slice(0, 44))}</div>
           </div>` : ''}
           ${secondCausal ? `
-          <div class="cl-step" onclick="focusNodeById('${secondCausal.node.id}')">
-            <div style="color:#34d399; font-weight:700;">03 · EVOLUÇÃO [${escapeHtml(secondCausal.relation)}] ${secondCausal.dir}</div>
-            <div style="color:#e2e8f0;">${escapeHtml(secondCausal.node.label.slice(0, 44))}</div>
+          <div class="cl-step" style="border-left-color:#38bdf8;" onclick="focusNodeById('${secondCausal.node.id}')">
+            <div style="color:#38bdf8; font-weight:700;">03 · EVOLUTION [${escapeHtml(secondCausal.relation)}] ${secondCausal.dir}</div>
+            <div style="color:#e4e4e7;">${escapeHtml(secondCausal.node.label.slice(0, 44))}</div>
           </div>` : ''}
-          <div class="cl-step" onclick="openInspectorModal()">
-            <div style="color:#38bdf8; font-weight:700;">04 · JEV-S1 &amp; VERIFY GATE</div>
-            <div style="color:#cbd5e1;">Route &lt;0.01ms · 48/48 Checks PASS</div>
+          <div class="cl-step" style="border-left-color:#a1a1aa;" onclick="openInspectorModal()">
+            <div style="color:#a1a1aa; font-weight:700;">04 · JEV-S1 VERIFY GATE</div>
+            <div style="color:#d4d4d8;">Route &lt;0.01ms · 48/48 Checks PASS</div>
           </div>
         `;
       }
@@ -6951,11 +7061,11 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       document.getElementById('backlinkCount').textContent = connected.length;
       const blList = document.getElementById('backlinksList');
       blList.innerHTML = connected.map(c => {
-        const rel = c.shared ? `Sinapse via #${c.shared.join(', #')}` : c.kind.replace('_', ' ');
+        const rel = c.shared ? `via #${c.shared.join(', #')}` : c.kind.replace('_', ' ');
         return `
           <div class="backlink-card" onclick="focusNodeById('${c.node.id}')">
             <div class="backlink-title">${escapeHtml(c.node.label)}</div>
-            <div class="backlink-meta">${escapeHtml(rel)} • [${c.node.workspace}]</div>
+            <div class="backlink-meta">${escapeHtml(rel)} · [${c.node.workspace}]</div>
           </div>
         `;
       }).join('');
@@ -7344,12 +7454,30 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       ctx.restore();
     }
 
-    function renderBlueprintBoard(wrapW, wrapH, showPulses, invSqrtK) {
-      // 1. Fundo Arquitetónico Escuro + Grelha Subtil
+    function drawCornerBrackets(x, y, w, h, tickLen, color, lineW) {
       ctx.save();
-      ctx.fillStyle = '#040711';
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+      ctx.lineCap = 'square';
+      ctx.beginPath();
+      // Top-left
+      ctx.moveTo(x, y + tickLen); ctx.lineTo(x, y); ctx.lineTo(x + tickLen, y);
+      // Top-right
+      ctx.moveTo(x + w - tickLen, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + tickLen);
+      // Bottom-right
+      ctx.moveTo(x + w, y + h - tickLen); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w - tickLen, y + h);
+      // Bottom-left
+      ctx.moveTo(x + tickLen, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x, y + h - tickLen);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderBlueprintBoard(wrapW, wrapH, showPulses, invSqrtK) {
+      // 1. Fundo Carbon Obsidian Studio OS + Grelha Arquitetónica de Precisão & Crosshairs (+)
+      ctx.save();
+      ctx.fillStyle = '#08080a';
       ctx.fillRect(-2400, -1800, 4800, 3600);
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.065)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.028)';
       ctx.lineWidth = 1 * invSqrtK;
       const gridStep = 68;
       ctx.beginPath();
@@ -7360,6 +7488,18 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       for (let gy = -544; gy <= 544; gy += gridStep) {
         ctx.moveTo(-952, gy);
         ctx.lineTo(952, gy);
+      }
+      ctx.stroke();
+
+      // Marcas de Calibração Arquitetónica (+) nas interseções principais
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.16)';
+      ctx.lineWidth = 1 * invSqrtK;
+      ctx.beginPath();
+      for (let gx = -952; gx <= 952; gx += gridStep * 2) {
+        for (let gy = -544; gy <= 544; gy += gridStep * 2) {
+          ctx.moveTo(gx - 3.5, gy); ctx.lineTo(gx + 3.5, gy);
+          ctx.moveTo(gx, gy - 3.5); ctx.lineTo(gx, gy + 3.5);
+        }
       }
       ctx.stroke();
 
@@ -7374,8 +7514,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
               cA.y + 24,
               cB.x,
               cB.y + 24,
-              'rgba(129, 140, 248, 0.22)',
-              1.2 * invSqrtK,
+              'rgba(161, 161, 170, 0.16)',
+              1.1 * invSqrtK,
               true
             );
           }
@@ -7404,9 +7544,9 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           drawnCircuits++;
           const isCausal = l.kind === 'causal_link';
           const traceColor = isFocusedLink
-            ? (isCausal ? 'rgba(52, 211, 153, 0.85)' : 'rgba(56, 189, 248, 0.82)')
-            : 'rgba(129, 140, 248, 0.18)';
-          const traceW = (isFocusedLink ? 2.0 : 1.0) * invSqrtK;
+            ? (isCausal ? 'rgba(16, 185, 129, 0.90)' : 'rgba(56, 189, 248, 0.85)')
+            : 'rgba(161, 161, 170, 0.16)';
+          const traceW = (isFocusedLink ? 1.8 : 1.0) * invSqrtK;
           drawOrthogonalCircuit(a.x, a.y, b.x, b.y, traceColor, traceW, !isCausal && !isFocusedLink);
 
           if (showPulses && isFocusedLink) {
@@ -7427,210 +7567,223 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
               py = b.y;
             }
             ctx.beginPath();
-            ctx.arc(px, py, 3.2 * invSqrtK, 0, Math.PI * 2);
-            ctx.fillStyle = isCausal ? '#34d399' : '#38bdf8';
+            ctx.arc(px, py, 3.0 * invSqrtK, 0, Math.PI * 2);
+            ctx.fillStyle = isCausal ? '#10b981' : '#38bdf8';
             ctx.fill();
           }
         }
         ctx.restore();
       }
 
-      // 3A. VISTA GLOBAL DE WORKSPACES: Cartões de Domínio Estruturados (Zero Sobreposição Garantida)
+      // 3A. VISTA GLOBAL DE WORKSPACES: Cartões Carbon Studio OS com Corner Ticks (Zero Sobreposição Garantida)
       if (!blueprintDrilldownMeta) {
         for (let cIdx = 0; cIdx < blueprintCardsMeta.length; cIdx++) {
           const card = blueprintCardsMeta[cIdx];
           const { x, y, w, h, color, displayTitle, wsKey, totalCount, cats, slots, wNode } = card;
           const isWsHovered = hoveredNode && (hoveredNode.id === wNode.id || hoveredNode.workspace === wsKey);
           const isWsSelected = selectedNode && selectedNode.workspace === wsKey && userClickedGraphNode;
+          const idxStr = String(cIdx + 1 + blueprintPage * 12).padStart(2, '0');
 
           ctx.save();
-          // Sombra e corpo do Cartão de Domínio
-          traceRoundedRect(x, y, w, h, 12);
-          ctx.fillStyle = isWsHovered ? 'rgba(13, 20, 38, 0.96)' : 'rgba(9, 14, 28, 0.94)';
+          // Corpo do Cartão Carbon Obsidian
+          traceRoundedRect(x, y, w, h, 8);
+          ctx.fillStyle = isWsHovered ? '#13131a' : '#0d0d12';
           ctx.fill();
-          ctx.lineWidth = (isWsHovered || isWsSelected ? 1.8 : 1.1) * invSqrtK;
-          ctx.strokeStyle = isWsHovered || isWsSelected ? color : 'rgba(148, 163, 184, 0.22)';
+          ctx.lineWidth = (isWsHovered || isWsSelected ? 1.5 : 1.0) * invSqrtK;
+          ctx.strokeStyle = isWsHovered || isWsSelected ? '#10b981' : '#24242e';
           ctx.stroke();
 
-          // Barra de Topo Colorida do Cartão
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(x, y, w, 5);
-          ctx.clip();
-          traceRoundedRect(x, y, w, h, 12);
-          ctx.fillStyle = color;
-          ctx.fill();
-          ctx.restore();
+          // Corner Brackets Arquitetónicos (Estilo Obsidian Studio Vault)
+          drawCornerBrackets(
+            x,
+            y,
+            w,
+            h,
+            8,
+            isWsHovered || isWsSelected ? '#10b981' : '#52525b',
+            (isWsHovered || isWsSelected ? 1.8 : 1.3) * invSqrtK
+          );
 
-          // Cabeçalho do Workspace
-          ctx.font = "700 13px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = '#f8fafc';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          const titleClean = String(displayTitle || wsKey).length > 22 ? String(displayTitle || wsKey).slice(0, 20) + '…' : String(displayTitle || wsKey);
-          ctx.fillText(`⬡ ${titleClean}`, x + 14, y + 23);
-
-          // Badge de Contagem de Memórias
-          const countTxt = `${totalCount} mems`;
-          ctx.font = "700 10px 'JetBrains Mono', monospace";
-          const bw = ctx.measureText(countTxt).width + 14;
-          traceRoundedRect(x + w - bw - 12, y + 13, bw, 20, 6);
-          ctx.fillStyle = `${color}22`;
+          // Badge de Índice Monospace [01] à Esquerda
+          traceRoundedRect(x + 12, y + 12, 24, 19, 4);
+          ctx.fillStyle = isWsHovered || isWsSelected ? 'rgba(16, 185, 129, 0.16)' : '#16161e';
           ctx.fill();
-          ctx.strokeStyle = `${color}66`;
+          ctx.strokeStyle = isWsHovered || isWsSelected ? '#10b981' : '#2c2c38';
           ctx.lineWidth = 0.9 * invSqrtK;
           ctx.stroke();
-          ctx.fillStyle = '#e2e8f0';
+          ctx.font = "700 9.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = isWsHovered || isWsSelected ? '#34d399' : '#a1a1aa';
           ctx.textAlign = 'center';
-          ctx.fillText(countTxt, x + w - bw / 2 - 12, y + 23.5);
+          ctx.textBaseline = 'middle';
+          ctx.fillText(idxStr, x + 24, y + 22);
 
-          // Barra de Distribuição de Categorias (4px)
-          const barX = x + 14;
-          const barY = y + 44;
-          const barW = w - 28;
-          const barH = 4;
-          traceRoundedRect(barX, barY, barW, barH, 2);
-          ctx.fillStyle = 'rgba(30, 41, 59, 0.85)';
+          // Cabeçalho Tipográfico do Workspace
+          ctx.font = "700 12.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#f4f4f5';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          const rawTitle = String(displayTitle || wsKey);
+          const titleClean = rawTitle.length > 19 ? rawTitle.slice(0, 17) + '…' : rawTitle;
+          ctx.fillText(titleClean, x + 43, y + 22);
+
+          // Pílula de Contagem de Notas à Direita
+          const countTxt = `${totalCount} NOTES`;
+          ctx.font = "700 9px 'JetBrains Mono', monospace";
+          const bw = ctx.measureText(countTxt).width + 20;
+          const bx = x + w - bw - 12;
+          traceRoundedRect(bx, y + 12, bw, 19, 4);
+          ctx.fillStyle = '#15151c';
           ctx.fill();
+          ctx.strokeStyle = '#292934';
+          ctx.lineWidth = 0.9 * invSqrtK;
+          ctx.stroke();
+          // Ponto luminoso de estado dentro da pílula
+          ctx.beginPath();
+          ctx.arc(bx + 7, y + 21.5, 2.3, 0, Math.PI * 2);
+          ctx.fillStyle = totalCount >= 20 ? '#10b981' : (color || '#a1a1aa');
+          ctx.fill();
+          ctx.fillStyle = '#d4d4d8';
+          ctx.textAlign = 'left';
+          ctx.fillText(countTxt, bx + 13, y + 22);
 
-          const catEntries = Object.entries(cats || {});
-          const sumCats = catEntries.reduce((acc, [, v]) => acc + v, 0) || 1;
-          let curBarX = barX;
-          for (const [catName, catCnt] of catEntries) {
-            const segW = (catCnt / sumCats) * barW;
-            if (segW < 1) continue;
-            ctx.fillStyle = CATEGORY_COLORS[catName] || color;
-            ctx.fillRect(curBarX, barY, segW, barH);
-            curBarX += segW;
-          }
+          // Linha Divisória Fina + Micro-Barra de Densidade (2px)
+          const barX = x + 12;
+          const barY = y + 42;
+          const barW = w - 24;
+          ctx.fillStyle = '#1d1d26';
+          ctx.fillRect(barX, barY, barW, 2);
+          const fillRatio = Math.min(1.0, Math.max(0.15, Math.log10((totalCount || 1) + 1) / 2.6));
+          ctx.fillStyle = isWsHovered || isWsSelected ? '#10b981' : '#52525b';
+          ctx.fillRect(barX, barY, barW * fillRatio, 2);
 
-          // Top 4 Slots de Memória dentro do Cartão (Estabilizados e sem qualquer sobreposição)
+          // Top 4 Slots de Memória dentro do Cartão (Superfície Carbon #14141a)
           for (let s = 0; s < slots.length; s++) {
             const sl = slots[s];
             const m = sl.node;
             const isSlotHov = hoveredNode && hoveredNode.id === m.id;
             const isSlotSel = selectedNode && selectedNode.id === m.id;
             const isSlotNeighbor = focusTarget && neighborSet.has(m.id);
-            const mCol = CATEGORY_COLORS[m.category] || '#94a3b8';
+            const mCol = CATEGORY_COLORS[m.category] || '#10b981';
 
-            traceRoundedRect(sl.x, sl.y, sl.w, sl.h, 6);
+            traceRoundedRect(sl.x, sl.y, sl.w, sl.h, 5);
             ctx.fillStyle = isSlotSel
-              ? 'rgba(99, 102, 241, 0.28)'
-              : (isSlotHov ? 'rgba(30, 41, 59, 0.95)' : (isSlotNeighbor ? 'rgba(56, 189, 248, 0.14)' : 'rgba(15, 23, 42, 0.78)'));
+              ? 'rgba(16, 185, 129, 0.16)'
+              : (isSlotHov ? '#1b1b24' : (isSlotNeighbor ? 'rgba(56, 189, 248, 0.12)' : '#131319'));
             ctx.fill();
-            ctx.lineWidth = (isSlotSel || isSlotHov || isSlotNeighbor ? 1.3 : 0.8) * invSqrtK;
+            ctx.lineWidth = (isSlotSel || isSlotHov || isSlotNeighbor ? 1.2 : 0.8) * invSqrtK;
             ctx.strokeStyle = isSlotSel
-              ? '#818cf8'
-              : (isSlotHov ? '#38bdf8' : (isSlotNeighbor ? 'rgba(56, 189, 248, 0.55)' : 'rgba(148, 163, 184, 0.14)'));
+              ? '#10b981'
+              : (isSlotHov ? '#52525b' : (isSlotNeighbor ? '#38bdf8' : '#22222b'));
             ctx.stroke();
 
-            // Indicador lateral de categoria
-            ctx.fillStyle = mCol;
-            ctx.fillRect(sl.x + 4, sl.y + 5, 3, sl.h - 10);
+            // Micro-quadrado técnico de categoria (4x4px)
+            ctx.fillStyle = isSlotSel ? '#10b981' : mCol;
+            ctx.fillRect(sl.x + 7, sl.y + sl.h / 2 - 2, 4, 4);
 
             // Título da memória truncado com precisão
-            ctx.font = `${isSlotSel || isSlotHov ? '700' : '500'} 11px 'Plus Jakarta Sans', -apple-system, sans-serif`;
-            ctx.fillStyle = m.is_match ? '#fde047' : (isSlotSel || isSlotHov ? '#ffffff' : '#cbd5e1');
+            ctx.font = `${isSlotSel || isSlotHov ? '600' : '500'} 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif`;
+            ctx.fillStyle = m.is_match ? '#fde047' : (isSlotSel || isSlotHov ? '#ffffff' : '#d4d4d8');
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             const rawLbl = m._cleanLabel || m.label || '';
             const clippedLbl = rawLbl.length > 31 ? rawLbl.slice(0, 29) + '…' : rawLbl;
-            ctx.fillText(clippedLbl, sl.x + 13, sl.y + sl.h / 2 + 0.5);
+            ctx.fillText(clippedLbl, sl.x + 16, sl.y + sl.h / 2 + 0.5);
 
-            // Estrela de importância à direita
-            ctx.font = "600 9.5px 'JetBrains Mono', monospace";
-            ctx.fillStyle = (m.importance || 3) >= 5 ? '#fbbf24' : '#64748b';
+            // Badge Monospace P1..P5 à direita
+            const prio = Math.max(1, Math.min(5, m.importance || 3));
+            ctx.font = "700 8.5px 'JetBrains Mono', monospace";
+            ctx.fillStyle = prio >= 5 ? '#10b981' : '#71717a';
             ctx.textAlign = 'right';
-            ctx.fillText(`★${m.importance || 3}`, sl.x + sl.w - 7, sl.y + sl.h / 2 + 0.5);
+            ctx.fillText(`P${prio}`, sl.x + sl.w - 7, sl.y + sl.h / 2 + 0.5);
           }
 
-          // Rodapé Interativo do Cartão ("Abrir Workspace ➔" + Botão 3D)
+          // Rodapé Interativo do Cartão ("VAULT (345)" + "[3D]" + "EXPLORAR ➔")
           const footY = y + h - 27;
           ctx.beginPath();
           ctx.moveTo(x + 12, footY);
           ctx.lineTo(x + w - 12, footY);
-          ctx.strokeStyle = 'rgba(148, 163, 184, 0.12)';
+          ctx.strokeStyle = '#1e1e26';
           ctx.lineWidth = 1 * invSqrtK;
           ctx.stroke();
 
-          ctx.font = "600 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = isWsHovered ? '#ffffff' : '#94a3b8';
+          ctx.font = "600 9.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = isWsHovered ? '#f4f4f5' : '#71717a';
           ctx.textAlign = 'left';
-          ctx.fillText(`📂 ${tUi('Abrir', 'Open')} (${totalCount})`, x + 14, y + h - 13);
+          ctx.fillText(`VAULT (${totalCount})`, x + 12, y + h - 13);
 
-          // Pílula 🏢 3D no rodapé do Cartão
-          traceRoundedRect(x + w - 126, y + h - 23, 46, 18, 5);
-          ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+          // Pílula [3D] no rodapé do Cartão
+          traceRoundedRect(x + w - 122, y + h - 22, 42, 16, 4);
+          ctx.fillStyle = '#16161e';
           ctx.fill();
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+          ctx.strokeStyle = '#2c2c38';
           ctx.lineWidth = 0.8 * invSqrtK;
           ctx.stroke();
-          ctx.font = "700 9.5px 'JetBrains Mono', monospace";
-          ctx.fillStyle = '#38bdf8';
+          ctx.font = "700 8.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#a1a1aa';
           ctx.textAlign = 'center';
-          ctx.fillText('🏢 3D', x + w - 103, y + h - 13.5);
+          ctx.fillText('3D OS', x + w - 101, y + h - 13.5);
 
-          ctx.font = "700 10.5px 'JetBrains Mono', monospace";
-          ctx.fillStyle = color;
+          ctx.font = "700 9.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = isWsHovered || isWsSelected ? '#10b981' : '#d4d4d8';
           ctx.textAlign = 'right';
-          ctx.fillText(tUi('Explorar ➔', 'Explore ➔'), x + w - 14, y + h - 13);
+          ctx.fillText(tUi('EXPLORAR ➔', 'EXPLORE ➔'), x + w - 12, y + h - 13);
           ctx.restore();
         }
       } else {
-        // 3B. VISTA DRILL-DOWN DE WORKSPACE / 1-HOP: Banner de Topo + Colunas Kanban por Categoria (ou Grelha Limpa)
+        // 3B. VISTA DRILL-DOWN DE WORKSPACE / 1-HOP: Banner Carbon + Colunas Kanban por Categoria (ou Grelha Limpa)
         if (blueprintBackBannerRect) {
           const b = blueprintBackBannerRect;
           ctx.save();
-          traceRoundedRect(b.x, b.y, b.w, b.h, 10);
-          ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+          traceRoundedRect(b.x, b.y, b.w, b.h, 7);
+          ctx.fillStyle = '#101015';
           ctx.fill();
-          ctx.lineWidth = 1.4 * invSqrtK;
-          ctx.strokeStyle = 'rgba(129, 140, 248, 0.45)';
+          ctx.lineWidth = 1.2 * invSqrtK;
+          ctx.strokeStyle = '#292934';
           ctx.stroke();
 
           // Botão Voltar à Esquerda
-          traceRoundedRect(b.x + 8, b.y + 6, 198, b.h - 12, 7);
-          ctx.fillStyle = 'rgba(99, 102, 241, 0.22)';
+          traceRoundedRect(b.x + 8, b.y + 6, 198, b.h - 12, 5);
+          ctx.fillStyle = '#181820';
           ctx.fill();
-          ctx.strokeStyle = '#818cf8';
+          ctx.strokeStyle = '#32323e';
           ctx.lineWidth = 1 * invSqrtK;
           ctx.stroke();
 
-          ctx.font = "700 11px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = '#ffffff';
+          ctx.font = "700 10.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#f4f4f5';
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText(tUi('⬅ Voltar ao Mapa Global', '⬅ Back to Global Map'), b.x + 16, b.y + b.h / 2);
+          ctx.fillText(tUi('⬅ VOLTAR AO MAPA GLOBAL', '⬅ BACK TO GLOBAL MAP'), b.x + 16, b.y + b.h / 2);
 
-          ctx.font = "700 12px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = '#c7d2fe';
-          ctx.fillText(`⬡ Workspace: ${b.wsKey} · ${b.totalMemories} mems (${tUi('Pág', 'Page')} ${blueprintPage + 1}/${blueprintTotalPages})`, b.x + 218, b.y + b.h / 2);
+          ctx.font = "700 11.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#10b981';
+          ctx.fillText(`▣ WORKSPACE: ${String(b.wsKey).toUpperCase()} · ${b.totalMemories} NOTES (${blueprintPage + 1}/${blueprintTotalPages})`, b.x + 218, b.y + b.h / 2);
 
           // Botão Alternar Kanban / Grelha à Direita
           const btnLayoutW = 158;
           const btnLayoutX = b.x + b.w - btnLayoutW - 126;
-          traceRoundedRect(btnLayoutX, b.y + 6, btnLayoutW, b.h - 12, 7);
-          ctx.fillStyle = blueprintDrilldownLayout === 'kanban' ? 'rgba(52, 211, 153, 0.2)' : 'rgba(99, 102, 241, 0.2)';
+          traceRoundedRect(btnLayoutX, b.y + 6, btnLayoutW, b.h - 12, 5);
+          ctx.fillStyle = blueprintDrilldownLayout === 'kanban' ? 'rgba(16, 185, 129, 0.16)' : '#181820';
           ctx.fill();
-          ctx.strokeStyle = blueprintDrilldownLayout === 'kanban' ? '#34d399' : '#818cf8';
+          ctx.strokeStyle = blueprintDrilldownLayout === 'kanban' ? '#10b981' : '#32323e';
           ctx.lineWidth = 1 * invSqrtK;
           ctx.stroke();
-          ctx.font = "700 10.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = '#f8fafc';
+          ctx.font = "700 10px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#f4f4f5';
           ctx.textAlign = 'center';
-          ctx.fillText(blueprintDrilldownLayout === 'kanban' ? tUi('📋 Vista: Kanban (5 Col)', '📋 View: Kanban (5 Col)') : tUi('🟦 Vista: Grelha', '🟦 View: Grid'), btnLayoutX + btnLayoutW / 2, b.y + b.h / 2);
+          ctx.fillText(blueprintDrilldownLayout === 'kanban' ? tUi('VISTA: KANBAN (5 COL)', 'VIEW: KANBAN (5 COL)') : tUi('VISTA: GRELHA', 'VIEW: GRID'), btnLayoutX + btnLayoutW / 2, b.y + b.h / 2);
 
           // Botão Sincronizar Office 3D à Direita
           const btn3DW = 110;
           const btn3DX = b.x + b.w - btn3DW - 8;
-          traceRoundedRect(btn3DX, b.y + 6, btn3DW, b.h - 12, 7);
-          ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+          traceRoundedRect(btn3DX, b.y + 6, btn3DW, b.h - 12, 5);
+          ctx.fillStyle = '#181820';
           ctx.fill();
-          ctx.strokeStyle = '#38bdf8';
+          ctx.strokeStyle = '#32323e';
           ctx.lineWidth = 1 * invSqrtK;
           ctx.stroke();
-          ctx.fillStyle = '#e0f2fe';
-          ctx.fillText(tUi('🏢 Equipa 3D', '🏢 3D Team'), btn3DX + btn3DW / 2, b.y + b.h / 2);
+          ctx.fillStyle = '#34d399';
+          ctx.fillText(tUi('3D FLOOR ➔', '3D TEAM ➔'), btn3DX + btn3DW / 2, b.y + b.h / 2);
           ctx.restore();
         }
 
@@ -7639,32 +7792,32 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           ctx.save();
           for (let s = 0; s < blueprintSwimlanesMeta.length; s++) {
             const lane = blueprintSwimlanesMeta[s];
-            traceRoundedRect(lane.x, lane.y, lane.w, lane.h, 10);
-            ctx.fillStyle = 'rgba(7, 11, 22, 0.78)';
+            traceRoundedRect(lane.x, lane.y, lane.w, lane.h, 7);
+            ctx.fillStyle = '#0c0c10';
             ctx.fill();
             ctx.lineWidth = 1 * invSqrtK;
-            ctx.strokeStyle = 'rgba(148, 163, 184, 0.16)';
+            ctx.strokeStyle = '#22222b';
             ctx.stroke();
 
             // Cabeçalho da Coluna Kanban
-            traceRoundedRect(lane.x + 2, lane.y + 2, lane.w - 4, lane.headerH - 2, 8);
-            ctx.fillStyle = `${lane.color}1c`;
+            traceRoundedRect(lane.x + 2, lane.y + 2, lane.w - 4, lane.headerH - 2, 5);
+            ctx.fillStyle = '#131319';
             ctx.fill();
             ctx.beginPath();
             ctx.moveTo(lane.x + 8, lane.y + lane.headerH);
             ctx.lineTo(lane.x + lane.w - 8, lane.y + lane.headerH);
-            ctx.strokeStyle = `${lane.color}66`;
-            ctx.lineWidth = 1.2 * invSqrtK;
+            ctx.strokeStyle = '#272730';
+            ctx.lineWidth = 1 * invSqrtK;
             ctx.stroke();
 
-            ctx.font = "700 10.5px 'JetBrains Mono', monospace";
-            ctx.fillStyle = lane.color;
+            ctx.font = "700 10px 'JetBrains Mono', monospace";
+            ctx.fillStyle = '#e4e4e7';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
             ctx.fillText(lane.title, lane.x + 12, lane.y + lane.headerH / 2);
 
-            ctx.font = "700 10px 'JetBrains Mono', monospace";
-            ctx.fillStyle = '#e2e8f0';
+            ctx.font = "700 9.5px 'JetBrains Mono', monospace";
+            ctx.fillStyle = '#10b981';
             ctx.textAlign = 'right';
             ctx.fillText(`${lane.totalCount}`, lane.x + lane.w - 12, lane.y + lane.headerH / 2);
           }
@@ -7679,55 +7832,61 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           const isHov = hoveredNode && hoveredNode.id === m.id;
           const isSel = selectedNode && selectedNode.id === m.id;
           const isNeighbor = focusTarget && neighborSet.has(m.id);
-          const col = CATEGORY_COLORS[m.category] || '#818cf8';
+          const col = CATEGORY_COLORS[m.category] || '#10b981';
           const glyph = getCategoryGlyph(m.category, m.node_type);
 
           ctx.save();
-          traceRoundedRect(r.x, r.y, r.w, r.h, 10);
+          traceRoundedRect(r.x, r.y, r.w, r.h, 7);
           ctx.fillStyle = isSel
-            ? 'rgba(30, 41, 82, 0.96)'
-            : (isHov ? 'rgba(17, 25, 48, 0.96)' : 'rgba(10, 15, 30, 0.94)');
+            ? 'rgba(16, 185, 129, 0.14)'
+            : (isHov ? '#17171f' : '#111116');
           ctx.fill();
-          ctx.lineWidth = (isSel || isHov || isNeighbor ? 1.8 : 1.0) * invSqrtK;
-          ctx.strokeStyle = isSel ? '#ffffff' : (isHov ? col : (isNeighbor ? '#38bdf8' : 'rgba(148, 163, 184, 0.22)'));
+          ctx.lineWidth = (isSel || isHov || isNeighbor ? 1.5 : 1.0) * invSqrtK;
+          ctx.strokeStyle = isSel ? '#10b981' : (isHov ? '#52525b' : (isNeighbor ? '#38bdf8' : '#24242e'));
           ctx.stroke();
 
-          // Barra lateral esquerda da categoria
-          ctx.fillStyle = col;
-          ctx.fillRect(r.x + 1, r.y + 8, 3.5, r.h - 16);
+          drawCornerBrackets(
+            r.x,
+            r.y,
+            r.w,
+            r.h,
+            6,
+            isSel ? '#10b981' : '#3f3f46',
+            1.1 * invSqrtK
+          );
 
-          // Linha 1: Categoria + Estrelas de Importância
-          ctx.font = "700 9.5px 'JetBrains Mono', monospace";
+          // Linha 1: Categoria + Badge P1-P5
+          ctx.font = "700 9px 'JetBrains Mono', monospace";
           ctx.fillStyle = col;
           ctx.textAlign = 'left';
           ctx.textBaseline = 'middle';
-          ctx.fillText(`${glyph} ${(m.category || 'memory').toUpperCase()}`, r.x + 12, r.y + 16);
+          ctx.fillText(`${glyph} ${(m.category || 'memory').toUpperCase()}`, r.x + 11, r.y + 16);
 
-          const stars = '★'.repeat(Math.max(1, Math.min(5, m.importance || 3)));
-          ctx.fillStyle = '#fbbf24';
+          const prio = Math.max(1, Math.min(5, m.importance || 3));
+          ctx.fillStyle = prio >= 5 ? '#10b981' : '#a1a1aa';
           ctx.textAlign = 'right';
-          ctx.fillText(stars, r.x + r.w - 10, r.y + 16);
+          ctx.fillText(`P${prio}`, r.x + r.w - 10, r.y + 16);
 
           // Linha 2: Título Principal da Memória
-          ctx.font = "700 11.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = m.is_match ? '#fde047' : '#f8fafc';
+          ctx.font = "700 11px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = m.is_match ? '#fde047' : '#f4f4f5';
           ctx.textAlign = 'left';
           const titleClean = m._cleanLabel || m.label || '';
           const maxTitleChars = r.w < 250 ? 25 : 32;
           const line1 = titleClean.length > maxTitleChars ? titleClean.slice(0, maxTitleChars - 2) + '…' : titleClean;
-          ctx.fillText(line1, r.x + 12, r.y + 38);
+          ctx.fillText(line1, r.x + 11, r.y + 38);
 
           // Linha 3: Excerto do Facto
-          ctx.font = "500 10px 'Plus Jakarta Sans', -apple-system, sans-serif";
-          ctx.fillStyle = '#94a3b8';
+          ctx.font = "500 9.5px 'Plus Jakarta Sans', -apple-system, sans-serif";
+          ctx.fillStyle = '#a1a1aa';
           const factTxt = String(m.fact || '').replace(/\s+/g, ' ').trim();
           const maxFactChars = r.w < 250 ? 30 : 38;
           const line2 = factTxt.length > maxFactChars ? factTxt.slice(0, maxFactChars - 2) + '…' : (factTxt || 'Clique para inspecionar detalhes');
-          ctx.fillText(line2, r.x + 12, r.y + 56);
+          ctx.fillText(line2, r.x + 11, r.y + 56);
 
-          // Linha 4: Rodapé de Tags & Sinapses (Zero sobreposição entre tag esquerda e contador direito)
-          ctx.font = "600 9px 'JetBrains Mono', monospace";
-          ctx.fillStyle = '#64748b';
+          // Linha 4: Rodapé de Tags & Sinapses
+          ctx.font = "600 8.5px 'JetBrains Mono', monospace";
+          ctx.fillStyle = '#71717a';
           const linkCnt = m._neighbors ? Math.max(0, m._neighbors.size - 1) : 0;
           const rawTagsTokens = String(m.tags || '').split(/[\s,]+/).map(t => t.trim()).filter(Boolean);
           const firstTagRaw = rawTagsTokens[0] ? `#${rawTagsTokens[0].replace(/^#/, '')}` : `ID:${m.db_id || m.id}`;
@@ -7736,10 +7895,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           const maxTagChars = r.w < 250 ? 17 : 22;
           const tagClipped = tagCombined.length > maxTagChars ? tagCombined.slice(0, maxTagChars - 2) + '…' : tagCombined;
           ctx.textAlign = 'left';
-          ctx.fillText(tagClipped, r.x + 12, r.y + 74);
-          ctx.fillStyle = '#38bdf8';
+          ctx.fillText(tagClipped, r.x + 11, r.y + 74);
+          ctx.fillStyle = '#10b981';
           ctx.textAlign = 'right';
-          ctx.fillText(`🔗 ${linkCnt}`, r.x + r.w - 10, r.y + 74);
+          ctx.fillText(`${linkCnt} SYN`, r.x + r.w - 10, r.y + 74);
           ctx.restore();
         }
       }
