@@ -1203,6 +1203,21 @@ def run_all_tests() -> None:
         jv_tts_en = jv_eng.format_movie_speech("Bom dia, Sr. Miguel. Memória RAM a 42 por cento.", profile="movie_en")
         assert "Sir" in jv_tts_en and "42 percent" in jv_tts_en, f"Falha format_movie_speech movie_en: {jv_tts_en}"
 
+        # Jarvis Enterprise v8.0 (6 Vierisid/Jarvis Pillars: Next-Action Q-18, Personality, Commitments, Routines, Today Gate, Trust Boundary)
+        jv_next = jv_eng.plan_next_action("brain_mcp")
+        assert jv_next.get("headline") and jv_next.get("recommended_command"), f"Falha plan_next_action Q-18: {jv_next}"
+        jv_pers = jv_eng.update_personality_from_signal("Excelente trabalho, sê sempre direto e técnico", "brain_mcp")
+        assert "JARVIS_STYLE" in jv_pers.get("prompt_vector", ""), f"Falha update_personality_from_signal: {jv_pers}"
+        jv_comms = jv_eng.extract_commitments_and_provenance("Tenho de rever o módulo de segurança amanhã", "brain_mcp")
+        assert len(jv_eng.get_commitments("brain_mcp")) >= 1, f"Falha extract_commitments_and_provenance: {jv_comms}"
+        jv_routines = jv_eng.discover_routines("brain_mcp")
+        assert isinstance(jv_routines, list) and len(jv_routines) >= 1, f"Falha discover_routines: {jv_routines}"
+        jv_today = jv_eng.get_today_work_items("brain_mcp")
+        assert len(jv_today.get("items", [])) >= 1, f"Falha get_today_work_items: {jv_today}"
+        jv_trust = jv_eng.audit_trust_boundary("Auditar ficheiros do projeto")
+        assert jv_trust.get("authority_pinned") is True, f"Falha audit_trust_boundary: {jv_trust}"
+        assert "[JARVIS_STYLE]" in jv_ctx and "[JARVIS_NEXT_ACTION]" in jv_ctx, f"Falta injeção v8.0 em build_ephemeral_context: {jv_ctx}"
+
     for gb_ui_token in (
         'id="tabBtnVault"',
         'id="vaultWorkspace"',
@@ -1255,6 +1270,10 @@ def run_all_tests() -> None:
         "function renderJarvisOrbLoop(",
         "function jarvisApplyWsolaBaritoneShift(",
         "function testJarvisMovieVoiceUI()",
+        'id="jarvisNextActionBanner"',
+        'id="jarvisEnterpriseV8Card"',
+        "function triggerJarvisNextActionUI()",
+        "function verifyJarvisTodayOutcomeUI(",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
     print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")

@@ -588,6 +588,44 @@ def build_ephemeral_context(
                     if sum(len(p) for p in parts) + len(j_line) + 2 <= max_chars:
                         parts.append(j_line)
                         injected_jarvis += 1
+
+                # Enterprise Jarvis v8.0 Next Action & Style Vector injection
+                try:
+                    p_row = j_conn.execute(
+                        "SELECT formality, conciseness, technical_depth, trust_score FROM jarvis_personality WHERE workspace = ? LIMIT 1;",
+                        (workspace,),
+                    ).fetchone()
+                    if not p_row:
+                        p_row = j_conn.execute(
+                            "SELECT formality, conciseness, technical_depth, trust_score FROM jarvis_personality LIMIT 1;"
+                        ).fetchone()
+                    if p_row:
+                        c_p = int(float(p_row["conciseness"] or 0.82) * 100)
+                        td_p = int(float(p_row["technical_depth"] or 0.90) * 100)
+                        tr_p = int(float(p_row["trust_score"] or 0.92) * 100)
+                        t_lbl = "Exec" if float(p_row["formality"] or 0.78) >= 0.7 else "Agile"
+                        style_line = f"[JARVIS_STYLE]: Concise={c_p}% | TechDepth={td_p}% | Trust={tr_p}% | Tone={t_lbl}"
+                        if sum(len(p) for p in parts) + len(style_line) + 2 <= max_chars:
+                            parts.append(style_line)
+                except Exception:
+                    pass
+
+                try:
+                    t_row = j_conn.execute(
+                        "SELECT title, mode FROM jarvis_today_items WHERE workspace = ? AND outcome_verified = 0 ORDER BY action_index ASC LIMIT 1;",
+                        (workspace,),
+                    ).fetchone()
+                    if not t_row:
+                        t_row = j_conn.execute(
+                            "SELECT title, mode FROM jarvis_today_items WHERE outcome_verified = 0 ORDER BY action_index ASC LIMIT 1;"
+                        ).fetchone()
+                    if t_row:
+                        na_title = compress_fact_telegraphic(str(t_row["title"] or ""), 60)
+                        na_line = f"[JARVIS_NEXT_ACTION]: {na_title} ({t_row['mode']})"
+                        if sum(len(p) for p in parts) + len(na_line) + 2 <= max_chars:
+                            parts.append(na_line)
+                except Exception:
+                    pass
     except Exception:
         pass
 

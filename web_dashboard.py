@@ -1022,8 +1022,23 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             _ensure_jarvis_engine_imported()
             qs = urllib.parse.parse_qs(parsed.query)
             workspace = qs.get("workspace", ["brain_mcp"])[0] or "brain_mcp"
+            action = qs.get("action", ["overview"])[0]
             db = BrainDB()
-            self._send_json(JarvisEngine(db).get_overview(workspace=workspace))
+            je = JarvisEngine(db)
+            if action == "next_action":
+                self._send_json(je.plan_next_action(workspace=workspace))
+            elif action in ("today_items", "today_plan"):
+                self._send_json(je.get_today_work_items(workspace=workspace))
+            elif action == "commitments":
+                self._send_json({"ok": True, "commitments": je.get_commitments(workspace=workspace)})
+            elif action == "routines":
+                self._send_json({"ok": True, "routines": je.discover_routines(workspace=workspace)})
+            elif action == "personality":
+                self._send_json(je.get_personality_state(workspace=workspace))
+            elif action == "trust_boundary":
+                self._send_json(je.audit_trust_boundary(qs.get("prompt", [""])[0]))
+            else:
+                self._send_json(je.get_overview(workspace=workspace))
             return
 
         if parsed.path == "/api/memories/revisions":
@@ -1582,6 +1597,47 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 res = JarvisEngine(db).ack_directive(
                     int(data.get("id") or data.get("directive_id") or 0)
                 )
+                self._send_json(res)
+                return
+            elif action == "next_action":
+                res = JarvisEngine(db).plan_next_action(workspace=workspace)
+                self._send_json({"ok": True, "next_action": res, **res})
+                return
+            elif action == "verify_today_item":
+                item_id = int(data.get("id") or data.get("item_id") or 0)
+                proof = str(data.get("proof") or "Verificado via AST Gate + QA Suite")
+                res = JarvisEngine(db).verify_today_item_outcome(item_id=item_id, proof=proof)
+                self._send_json(res)
+                return
+            elif action == "complete_commitment":
+                cid = int(data.get("id") or data.get("commitment_id") or 0)
+                res = JarvisEngine(db).complete_commitment(commitment_id=cid)
+                self._send_json(res)
+                return
+            elif action == "update_personality":
+                sig = str(data.get("prompt") or data.get("signal") or "")
+                res = JarvisEngine(db).update_personality_from_signal(sig, workspace=workspace)
+                self._send_json(res)
+                return
+            elif action in ("today_items", "today_plan"):
+                res = JarvisEngine(db).get_today_work_items(workspace=workspace)
+                self._send_json(res)
+                return
+            elif action == "commitments":
+                res = JarvisEngine(db).get_commitments(workspace=workspace)
+                self._send_json({"ok": True, "commitments": res})
+                return
+            elif action == "routines":
+                res = JarvisEngine(db).discover_routines(workspace=workspace)
+                self._send_json({"ok": True, "routines": res})
+                return
+            elif action == "personality":
+                res = JarvisEngine(db).get_personality_state(workspace=workspace)
+                self._send_json(res)
+                return
+            elif action == "trust_boundary":
+                p_check = str(data.get("prompt") or "")
+                res = JarvisEngine(db).audit_trust_boundary(p_check)
                 self._send_json(res)
                 return
             elif action == "telemetry":

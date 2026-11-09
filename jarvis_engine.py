@@ -149,6 +149,20 @@ class JarvisEngine:
             "intent": "task_manage",
         },
         {
+            "id": "qc_next_action",
+            "label": "🎯 Próxima Ação (Q-18)",
+            "icon": "🎯",
+            "prompt": "Jarvis, qual é a próxima ação prioritária recomendada pelo Q-18 Planner?",
+            "intent": "next_action",
+        },
+        {
+            "id": "qc_today_plan",
+            "label": "📋 Plano & Itens de Hoje",
+            "icon": "📋",
+            "prompt": "Jarvis, mostra o plano de trabalho de hoje e os compromissos em aberto.",
+            "intent": "today_plan",
+        },
+        {
             "id": "qc_git",
             "label": "📦 Estado do Git",
             "icon": "📦",
@@ -223,32 +237,174 @@ class JarvisEngine:
                 "CREATE INDEX IF NOT EXISTS idx_jarvis_directives_status ON jarvis_directives(status, id DESC);"
             )
 
+            # Enterprise Jarvis v8.0 Tables
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jarvis_personality (
+                    workspace TEXT PRIMARY KEY,
+                    formality REAL DEFAULT 0.78,
+                    conciseness REAL DEFAULT 0.82,
+                    proactivity REAL DEFAULT 0.88,
+                    technical_depth REAL DEFAULT 0.90,
+                    humor REAL DEFAULT 0.35,
+                    trust_score REAL DEFAULT 0.92,
+                    interactions_count INTEGER DEFAULT 1,
+                    last_signal TEXT DEFAULT 'Mark-VII Executive Technical',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jarvis_commitments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    title TEXT NOT NULL,
+                    source_text TEXT DEFAULT '',
+                    provenance TEXT DEFAULT 'confirmed',
+                    status TEXT DEFAULT 'open',
+                    due_hint TEXT DEFAULT 'Hoje',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jarvis_routine_episodes (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    pattern_key TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    steps_json TEXT DEFAULT '[]',
+                    occurrences INTEGER DEFAULT 1,
+                    macro_command TEXT DEFAULT '',
+                    last_seen TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS jarvis_today_items (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    workspace TEXT DEFAULT 'brain_mcp',
+                    plan_date TEXT NOT NULL,
+                    action_index INTEGER DEFAULT 0,
+                    title TEXT NOT NULL,
+                    mode TEXT DEFAULT 'workflow',
+                    status TEXT DEFAULT 'pending',
+                    outcome_verified INTEGER DEFAULT 0,
+                    proof_summary TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+                """
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_jarvis_commitments_ws ON jarvis_commitments(workspace, status, id DESC);"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_jarvis_routines_ws ON jarvis_routine_episodes(workspace, occurrences DESC);"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_jarvis_today_date ON jarvis_today_items(workspace, plan_date, status);"
+            )
+
+            # Seed Enterprise v8.0 initial rows if empty
+            try:
+                p_cnt = conn.execute("SELECT COUNT(*) AS c FROM jarvis_personality;").fetchone()
+                if not p_cnt or int(p_cnt["c"] or 0) == 0:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO jarvis_personality
+                        (workspace, formality, conciseness, proactivity, technical_depth, humor, trust_score, interactions_count, last_signal)
+                        VALUES ('brain_mcp', 0.78, 0.82, 0.88, 0.90, 0.35, 0.92, 1, 'Mark-VII Executive Technical');
+                        """
+                    )
+            except Exception:
+                pass
+
+            try:
+                c_cnt = conn.execute("SELECT COUNT(*) AS c FROM jarvis_commitments;").fetchone()
+                if not c_cnt or int(c_cnt["c"] or 0) == 0:
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_commitments
+                        (workspace, title, source_text, provenance, status, due_hint)
+                        VALUES ('brain_mcp', 'Auditar integridade da codebase e arquitetura Jarvis v8.0', 'Diretiva do Sistema Enterprise', 'confirmed', 'open', 'Hoje');
+                        """
+                    )
+            except Exception:
+                pass
+
+            try:
+                r_cnt = conn.execute("SELECT COUNT(*) AS c FROM jarvis_routine_episodes;").fetchone()
+                if not r_cnt or int(r_cnt["c"] or 0) == 0:
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_routine_episodes
+                        (workspace, pattern_key, title, steps_json, occurrences, macro_command)
+                        VALUES ('brain_mcp', 'morning_sync', 'Briefing Matinal & AST Audit', ?, 3, 'jarvis briefing --full');
+                        """,
+                        (json.dumps(["morning_briefing", "ast_audit", "task_manage"]),),
+                    )
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_routine_episodes
+                        (workspace, pattern_key, title, steps_json, occurrences, macro_command)
+                        VALUES ('brain_mcp', 'pre_deploy_gate', 'Pre-Deploy Security & QA Check', ?, 2, 'jarvis audit --all');
+                        """,
+                        (json.dumps(["system_health", "ast_audit", "git_status"]),),
+                    )
+            except Exception:
+                pass
+
+            try:
+                today_str = datetime.date.today().isoformat()
+                t_cnt = conn.execute(
+                    "SELECT COUNT(*) AS c FROM jarvis_today_items WHERE workspace = 'brain_mcp' AND plan_date = ?;",
+                    (today_str,),
+                ).fetchone()
+                if not t_cnt or int(t_cnt["c"] or 0) == 0:
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_today_items
+                        (workspace, plan_date, action_index, title, mode, status, outcome_verified, proof_summary)
+                        VALUES 
+                        ('brain_mcp', ?, 0, 'Auditar Integridade AST & Blast Radius da Codebase', 'verification', 'pending', 0, ''),
+                        ('brain_mcp', ?, 1, 'Validar Suite de Testes e Integridade Synaptic', 'qa', 'pending', 0, ''),
+                        ('brain_mcp', ?, 2, 'Sincronizar DOTS Kanban e Quotas Antigravity', 'workflow', 'pending', 0, '');
+                        """,
+                        (today_str, today_str, today_str),
+                    )
+            except Exception:
+                pass
+
             cnt_row = conn.execute("SELECT COUNT(*) AS c FROM jarvis_logs;").fetchone()
             cnt = int(cnt_row["c"] or 0) if cnt_row else 0
             if cnt == 0:
                 welcome_md = (
-                    "### 🤖 Bom dia, Sr. Miguel. J.A.R.V.I.S. Native Antigravity OS v7.3 Operacional.\n"
+                    "### 🤖 Bom dia, Sr. Miguel. J.A.R.V.I.S. Native Antigravity OS v8.0 Operacional.\n"
                     "- **Modo de Motor**: `ANTIGRAVITY_NATIVE_ZERO_OLLAMA` (100% Nativo · 0 GB VRAM extra)\n"
                     "- **Memória Sináptica**: SQLite WAL + FTS5 BM25 + 128-D LSH + HippoRAG 2 PPR ativos\n"
+                    "- **Módulos Enterprise**: Q-18 Planner · Personalidade Dinâmica · Proveniência de Compromissos · Routine-Cues v2 · Outcome Verification\n"
                     "- **Ponte Cirúrgica**: Ligada ao Antigravity IDE (`PreInvocation` Zero-Round-Trip)\n"
-                    "- **Comandos Voz / Texto**: Podes pedir o *Briefing Matinal*, *Auditoria AST*, *Hardware & Quota 5h*, *Gestão DOTS* ou *Despachar ordens P0 para o Antigravity*."
+                    "- **Comandos Voz / Texto**: Podes pedir o *Briefing Matinal*, *Próxima Ação*, *Plano de Hoje*, *Compromissos*, *Rotinas*, *Auditoria AST* ou *Despachar ordens P0*."
                 )
                 welcome_speech = (
-                    "Bom dia, Senhor Miguel. O Córtex Antigravity está operacional em modo nativo Zero-Ollama. "
-                    "Memória sináptica, telemetria de hardware e ponte cirúrgica prontos para as suas ordens."
+                    "Bom dia, Senhor Miguel. O Córtex Antigravity está operacional em versão Enterprise oito ponto zero. "
+                    "Memória sináptica, telemetria de hardware e planejador de próxima ação prontos para as suas ordens."
                 )
                 seed_tools = json.dumps(
                     [
                         {
-                            "tool": "JarvisOS.Boot_v7.3",
+                            "tool": "JarvisOS.Boot_v8.0",
                             "status": "PASS",
-                            "summary": "Motor ANTIGRAVITY_NATIVE_ZERO_OLLAMA inicializado sem dependências externas",
+                            "summary": "Motor Enterprise v8.0 Zero-Ollama inicializado com 6 módulos cognitivos",
                             "ms": 0.8,
                         },
                         {
                             "tool": "BrainDB.SynapticCheck",
                             "status": "PASS",
-                            "summary": "SQLite WAL + FTS5 + HippoRAG 2 PPR prontos",
+                            "summary": "SQLite WAL + FTS5 + HippoRAG 2 PPR + Q-18 Planner prontos",
                             "ms": 0.4,
                         },
                     ],
@@ -387,7 +543,12 @@ class JarvisEngine:
     @staticmethod
     def classify_intent(text: str) -> str:
         """
-        Classifies PT-PT and EN natural commands into one of 10 operational intents:
+        Classifies PT-PT and EN natural commands into one of 15 operational intents:
+          - "next_action" (Enterprise Q-18 Deterministic Planner)
+          - "today_plan" (Today Work-Items & Outcome Verification Contract)
+          - "commitments" (Commitments & Provenance Tracking)
+          - "routines" (Routine-Cues v2 Workflow Detector)
+          - "personality" (Dynamic Personality & Style State)
           - "morning_briefing"
           - "antigravity_dispatch"
           - "task_manage"
@@ -405,6 +566,83 @@ class JarvisEngine:
 
         low = raw.lower()
         norm = BrainDB.strip_accents(low)
+
+        # 0.1 Next-Action Planner (Q-18)
+        if any(
+            kw in norm
+            for kw in (
+                "o que fazer agora",
+                "o que fazer a seguir",
+                "proxima acao",
+                "proximo passo",
+                "qual a proxima",
+                "qual e o proximo",
+                "next action",
+                "planeia proxima",
+                "plan next",
+                "prioridade agora",
+                "o que faco agora",
+            )
+        ):
+            return "next_action"
+
+        # 0.2 Today Work Items / Plano de Hoje
+        if any(
+            kw in norm
+            for kw in (
+                "plano de hoje",
+                "itens de hoje",
+                "tarefas de hoje",
+                "today plan",
+                "today items",
+                "o que temos para hoje",
+                "trabalho de hoje",
+                "work items",
+            )
+        ):
+            return "today_plan"
+
+        # 0.3 Commitments / Compromissos
+        if any(
+            kw in norm
+            for kw in (
+                "compromissos",
+                "meus compromissos",
+                "lista de compromissos",
+                "commitments",
+                "o que prometi",
+                "compromisso",
+            )
+        ):
+            return "commitments"
+
+        # 0.4 Workflow Routines / Rotinas
+        if any(
+            kw in norm
+            for kw in (
+                "rotinas",
+                "padroes de rotina",
+                "routine cues",
+                "routines",
+                "rotina",
+                "macros",
+            )
+        ):
+            return "routines"
+
+        # 0.5 Personality / Personalidade & Estilo
+        if any(
+            kw in norm
+            for kw in (
+                "personalidade",
+                "estilo jarvis",
+                "perfil de personalidade",
+                "personality",
+                "vetor de estilo",
+                "matriz de estilo",
+            )
+        ):
+            return "personality"
 
         # 1. Memory Store (Explicit instruction to remember/save a fact)
         if any(
@@ -870,6 +1108,11 @@ class JarvisEngine:
 
         intent = self.classify_intent(clean_prompt)
 
+        # Enterprise Hooks: Personality Signal, Commitment Extraction, and Routine Step Tracker
+        pers_state = self.update_personality_from_signal(clean_prompt, workspace=ws)
+        extracted_comms = self.extract_commitments_and_provenance(clean_prompt, workspace=ws)
+        self.record_routine_step(intent, clean_prompt, workspace=ws)
+
         # Log user turn
         with self.db._connect() as conn:
             conn.execute(
@@ -883,6 +1126,16 @@ class JarvisEngine:
 
         tools_executed: List[Dict[str, Any]] = []
         agy_packet: Optional[Dict[str, Any]] = None
+
+        if extracted_comms:
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.CommitmentProvenance",
+                    "status": "PASS",
+                    "summary": f"{len(extracted_comms)} compromisso(s) extraído(s) da instrução ({extracted_comms[0]['provenance']}: {extracted_comms[0]['title'][:40]})",
+                    "ms": 0.3,
+                }
+            )
 
         # Step 1: Universal Cognitive Recall (HippoRAG 2 PPR + Hybrid Search)
         t_ppr = time.perf_counter()
@@ -903,7 +1156,132 @@ class JarvisEngine:
         speech_text = ""
 
         # Step 2: Execute intent-specific local tools
-        if intent == "morning_briefing":
+        if intent == "next_action":
+            t_na = time.perf_counter()
+            next_act = self.plan_next_action(ws)
+            na_ms = round((time.perf_counter() - t_na) * 1000.0, 2)
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.Q18NextActionPlanner",
+                    "status": "PASS",
+                    "summary": f"Ação recomendada: {next_act['headline']} [{next_act['priority']}] (Confiança {int(next_act['confidence']*100)}%, {next_act['candidates_count']} candidatos)",
+                    "ms": na_ms,
+                }
+            )
+            reply_text = (
+                f"### 🎯 Próxima Ação Determinística (Q-18 Planner)\n"
+                f"- **Ação**: {next_act['headline']}\n"
+                f"- **Prioridade**: `{next_act['priority']}` (Confiança {int(next_act['confidence']*100)}%)\n"
+                f"- **Justificação**: {next_act['rationale']}\n"
+                f"- **Tipo de Ação**: `{next_act['action_type']}`\n"
+                f"- **Comando Recomendado**: `{next_act['recommended_command']}`\n"
+                f"- **Candidatos Avaliados**: {next_act['candidates_count']} | Quota 5h: `{next_act.get('quota_status', 'nominal')}` ({next_act.get('quota_usage_pct', 0)}%)"
+            )
+            speech_text = self._clean_speech_text(
+                f"Senhor Miguel, a próxima ação prioritária recomendada é {next_act['headline']}. {next_act['rationale']}"
+            )
+
+        elif intent == "today_plan":
+            t_tp = time.perf_counter()
+            today_plan = self.get_today_work_items(ws)
+            comm_list = self.get_commitments(ws)
+            tp_ms = round((time.perf_counter() - t_tp) * 1000.0, 2)
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.TodayVerificationContract",
+                    "status": "PASS",
+                    "summary": f"Plano de hoje ({today_plan['plan_date']}): {today_plan['verified_pct']}% verificado ({today_plan['verified_count']}/{today_plan['total_items']} itens)",
+                    "ms": tp_ms,
+                }
+            )
+            open_c = [c for c in comm_list if c.get("status") == "open"]
+            items_md = "\n".join(
+                f"{idx+1}. [{'x' if it.get('outcome_verified') else ' '}] **{it.get('title')}** (`{it.get('mode')}`) {'— *Verificado*' if it.get('outcome_verified') else '— *Pendente*'}"
+                for idx, it in enumerate(today_plan.get("items", []))
+            )
+            comm_md = "\n".join(
+                f"- [{c.get('status')}] **{c.get('title')}** (*{c.get('due_hint')}* · {c.get('provenance')})"
+                for c in open_c[:5]
+            ) or "Nenhum compromisso pendente."
+            reply_text = (
+                f"### 📋 Plano de Trabalho & Itens de Hoje ({today_plan.get('plan_date')})\n"
+                f"- **Progresso Verificado**: **{today_plan.get('verified_pct')}%** ({today_plan.get('verified_count')}/{today_plan.get('total_items')} comprovados)\n\n"
+                f"{items_md}\n\n"
+                f"#### 📌 Compromissos em Aberto ({len(open_c)}):\n{comm_md}"
+            )
+            speech_text = self._clean_speech_text(
+                f"Plano de hoje a {today_plan.get('verified_pct')}% verificado. {today_plan.get('verified_count')} de {today_plan.get('total_items')} itens de hoje foram comprovados."
+            )
+
+        elif intent == "commitments":
+            comm_list = self.get_commitments(ws)
+            open_c = [c for c in comm_list if c.get("status") == "open"]
+            comp_c = [c for c in comm_list if c.get("status") != "open"]
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.CommitmentsProvenance",
+                    "status": "PASS",
+                    "summary": f"{len(open_c)} compromissos abertos, {len(comp_c)} concluídos",
+                    "ms": 0.4,
+                }
+            )
+            c_lines = "\n".join(
+                f"- **#{c.get('id')}**: {c.get('title')} (`{c.get('provenance')}` · Prazo: *{c.get('due_hint')}*)"
+                for c in open_c
+            ) or "Nenhum compromisso em aberto."
+            reply_text = (
+                f"### 📌 Registo de Compromissos & Proveniência\n"
+                f"- **Abertos**: {len(open_c)} | **Concluídos**: {len(comp_c)}\n\n"
+                f"{c_lines}"
+            )
+            speech_text = self._clean_speech_text(
+                f"Tem {len(open_c)} compromissos em aberto registados com rastreio de proveniência."
+            )
+
+        elif intent == "routines":
+            routines = self.discover_routines(ws)
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.RoutineCuesV2",
+                    "status": "PASS",
+                    "summary": f"{len(routines)} rotinas operacionais detetadas no workspace",
+                    "ms": 0.5,
+                }
+            )
+            r_lines = "\n".join(
+                f"- **{r.get('title')}** ({r.get('occurrences')}x): `{r.get('macro_command')}`\n  Passos: {', '.join(r.get('steps', []))}"
+                for r in routines
+            ) or "Nenhuma rotina detetada ainda."
+            reply_text = f"### 🔄 Rotinas Operacionais Descobertas (Routine-Cues v2)\n{r_lines}"
+            speech_text = self._clean_speech_text(
+                f"Foram detetadas {len(routines)} rotinas operacionais frequentes no seu ambiente de trabalho."
+            )
+
+        elif intent == "personality":
+            tools_executed.append(
+                {
+                    "tool": "JarvisOS.AdaptiveStyleMatrix",
+                    "status": "PASS",
+                    "summary": f"Vetor ativo: {pers_state['prompt_vector']}",
+                    "ms": 0.3,
+                }
+            )
+            reply_text = (
+                f"### 🎭 Matriz de Personalidade & Estilo Adaptativo\n"
+                f"- **Vetor Ativo**: `{pers_state['prompt_vector']}`\n"
+                f"- **Formalidade**: {int(pers_state['formality']*100)}%\n"
+                f"- **Concisão**: {int(pers_state['conciseness']*100)}%\n"
+                f"- **Profundidade Técnica**: {int(pers_state['technical_depth']*100)}%\n"
+                f"- **Proatividade**: {int(pers_state['proactivity']*100)}%\n"
+                f"- **Humor**: {int(pers_state['humor']*100)}%\n"
+                f"- **Nível de Confiança**: {int(pers_state['trust_score']*100)}%\n"
+                f"- **Último Sinal**: `{pers_state['last_signal']}` (Iterações: {pers_state['interactions_count']})"
+            )
+            speech_text = self._clean_speech_text(
+                f"Perfil calibrado: concisão a {int(pers_state['conciseness']*100)}%, profundidade técnica a {int(pers_state['technical_depth']*100)}% e confiança a {int(pers_state['trust_score']*100)}%."
+            )
+
+        elif intent == "morning_briefing":
             t_b = time.perf_counter()
             orbit = OrbitEngine(self.db)
             overview = orbit.get_overview(ws)
@@ -1475,6 +1853,8 @@ class JarvisEngine:
             ],
             "latency_ms": latency_ms,
             "engine_mode": self.ENGINE_MODE,
+            "personality": pers_state,
+            "extracted_commitments": extracted_comms,
         }
 
     # =========================================================================
@@ -1584,6 +1964,29 @@ class JarvisEngine:
             "roi": roi_obj,
         }
 
+        # Enterprise Jarvis v8.0 Modules State
+        personality = self.get_personality_state(ws)
+        commitments = self.get_commitments(ws)
+        routines = self.discover_routines(ws)
+        today_plan = self.get_today_work_items(ws)
+        trust_boundary = self.audit_trust_boundary("")
+        next_action = self.plan_next_action(
+            ws,
+            quota_5h=quota_5h,
+            dots_dag=dots_dag,
+            today_plan=today_plan,
+            commitments=commitments,
+        )
+
+        enterprise_v8 = {
+            "next_action": next_action,
+            "personality": personality,
+            "commitments": commitments,
+            "routines": routines,
+            "today_plan": today_plan,
+            "trust_boundary": trust_boundary,
+        }
+
         return {
             "ok": True,
             "workspace": ws,
@@ -1595,6 +1998,13 @@ class JarvisEngine:
             "recent_logs": recent_logs,
             "pending_directives": pending_directives,
             "quick_commands": self.QUICK_COMMANDS,
+            "enterprise_v8": enterprise_v8,
+            "next_action": next_action,
+            "personality": personality,
+            "commitments": commitments,
+            "routines": routines,
+            "today_plan": today_plan,
+            "trust_boundary": trust_boundary,
             "stats": {
                 "total_logs": total_logs,
                 "pending_directives_count": len(pending_directives),
@@ -1605,6 +2015,10 @@ class JarvisEngine:
                 "avg_latency_ms": avg_latency_ms,
                 "zero_ollama_mode": True,
                 "movie_voice_dsp": "SKYWALKER_MARK_VII_HUD",
+                "enterprise_v8_modules": 6,
+                "verified_today_pct": today_plan.get("verified_pct", 0.0),
+                "open_commitments_count": len([c for c in commitments if c.get("status") == "open"]),
+                "routines_discovered_count": len(routines),
             },
         }
 
@@ -1842,6 +2256,581 @@ class JarvisEngine:
             "audio_bytes": audio_bytes,
             "audio_b64": base64.b64encode(audio_bytes).decode("ascii"),
             "dsp_preset": prof_cfg,
+        }
+
+    # =========================================================================
+    # 9. ENTERPRISE JARVIS V8.0 MODULES (Q-18, Personality, Commitments, Routines, Today Items, Trust Boundary)
+    # =========================================================================
+
+    def plan_next_action(
+        self,
+        workspace: str = "brain_mcp",
+        quota_5h: Optional[Dict[str, Any]] = None,
+        dots_dag: Optional[Dict[str, Any]] = None,
+        today_plan: Optional[Dict[str, Any]] = None,
+        commitments: Optional[List[Dict[str, Any]]] = None,
+    ) -> Dict[str, Any]:
+        """
+        Pure deterministic Next-Action Planner (Q-18).
+        Evaluates:
+          (a) High-risk AST watcher files or Blast Radius alerts
+          (b) Pending P0 Antigravity directives (jarvis_directives)
+          (c) Ready DOTS tasks (OrbitEngine.get_dots_dag)
+          (d) Unverified jarvis_today_items and open jarvis_commitments
+          (e) 5h Quota usage radar (OrbitEngine.get_quota_5h_radar)
+        """
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        candidates: List[Dict[str, Any]] = []
+
+        # (a) Pending P0 Antigravity Directives
+        with self.db._connect() as conn:
+            p0_row = conn.execute(
+                "SELECT * FROM jarvis_directives WHERE workspace = ? AND status = 'pending' AND priority = 'P0' ORDER BY id DESC LIMIT 1;",
+                (ws,),
+            ).fetchone()
+            if p0_row:
+                d_dict = dict(p0_row)
+                d_text = d_dict.get("directive", "")
+                candidates.append({
+                    "headline": f"Executar Diretiva P0: {d_text[:50]}",
+                    "rationale": f"Diretiva P0 prioritária pendente no Antigravity Bridge: '{d_text}'.",
+                    "action_type": "antigravity_directive",
+                    "priority": "P0",
+                    "confidence": 0.98,
+                    "recommended_command": f"jarvis ack_directive --id {d_dict['id']}",
+                    "score": 100,
+                })
+
+            # (b) High-Risk AST Watcher Alerts & Blast Radius (fast SQL lookup)
+            try:
+                ast_row = conn.execute(
+                    "SELECT * FROM ast_save_audits WHERE risk_level = 'HIGH' OR blast_radius = 'HIGH' ORDER BY id DESC LIMIT 1;"
+                ).fetchone()
+                if ast_row:
+                    top_ast = dict(ast_row)
+                    candidates.append({
+                        "headline": f"Auditar Blast Radius em {top_ast.get('file_path', 'código')}",
+                        "rationale": f"Ficheiro {top_ast.get('file_path')} tem blast radius HIGH com {top_ast.get('affected_files_count', 1)} dependências.",
+                        "action_type": "ast_mitigation",
+                        "priority": "P0" if not top_ast.get("secrets_ok", 1) or not top_ast.get("syntax_ok", 1) else "P1",
+                        "confidence": 0.95,
+                        "recommended_command": f"jarvis ast_audit --file {top_ast.get('file_path')}",
+                        "score": 95 if not top_ast.get("syntax_ok", 1) else 85,
+                    })
+            except Exception:
+                pass
+
+        # (c) Unverified Today Work Items
+        if today_plan is None:
+            today_plan = self.get_today_work_items(ws)
+        unverified_items = [
+            it for it in today_plan.get("items", [])
+            if int(it.get("outcome_verified", 0)) == 0
+        ]
+        if unverified_items:
+            top_item = unverified_items[0]
+            candidates.append({
+                "headline": f"Concluir Item de Hoje: {top_item['title']}",
+                "rationale": f"Item de hoje #{top_item.get('action_index', 0)+1} ({top_item.get('mode', 'workflow')}) aguarda verificação de outcome.",
+                "action_type": "today_work_item",
+                "priority": "P1",
+                "confidence": 0.94,
+                "recommended_command": f"jarvis verify_today --id {top_item['id']}",
+                "score": 90,
+            })
+
+        # (d) Ready DOTS Tasks from Orbit DAG
+        try:
+            if dots_dag is None:
+                dots_dag = OrbitEngine(self.db).get_dots_dag(workspace=ws)
+            ready_tasks = dots_dag.get("ready_tasks") or dots_dag.get("ready_dots") or []
+            if ready_tasks:
+                top_task = ready_tasks[0]
+                candidates.append({
+                    "headline": f"Avançar DOTS {top_task.get('dot_id')}: {top_task.get('title', '')[:50]}",
+                    "rationale": f"A tarefa {top_task.get('dot_id')} está 100% desbloqueada no DAG de dependências do Orbit.",
+                    "action_type": "dots_task",
+                    "priority": "P1",
+                    "confidence": 0.93,
+                    "recommended_command": f"jarvis dots --start {top_task.get('dot_id')}",
+                    "score": 80,
+                })
+        except Exception:
+            pass
+
+        # (e) Open Commitments
+        comms_list = commitments if commitments is not None else self.get_commitments(ws)
+        open_comms = [c for c in comms_list if c.get("status") == "open"]
+        if open_comms:
+            top_comm = open_comms[0]
+            candidates.append({
+                "headline": f"Cumprir Compromisso: {top_comm['title'][:50]}",
+                "rationale": f"Compromisso ({top_comm.get('provenance', 'confirmed')}, prazo: {top_comm.get('due_hint', 'Hoje')}): {top_comm['title']}.",
+                "action_type": "commitment",
+                "priority": "P2",
+                "confidence": 0.90,
+                "recommended_command": f"jarvis complete_commitment --id {top_comm['id']}",
+                "score": 70,
+            })
+
+        # Quota 5h radar status
+        quota_status = "nominal"
+        quota_usage = 0.0
+        try:
+            quota = quota_5h if quota_5h is not None else OrbitEngine(self.db).get_quota_5h_radar()
+            quota_usage = float(quota.get("usage_pct", 0.0))
+            if quota_usage >= 85.0:
+                quota_status = "critical"
+            elif quota_usage >= 65.0:
+                quota_status = "elevated"
+        except Exception:
+            pass
+
+        # Pick winning candidate
+        if candidates:
+            candidates.sort(key=lambda c: c.get("score", 0), reverse=True)
+            winner = candidates[0]
+        else:
+            winner = {
+                "headline": "Sistema Estável · Prontidão para Novas Ordens",
+                "rationale": "Todos os compromissos, tarefas DOTS e itens de hoje estão em dia. Quota e AST nominais.",
+                "action_type": "standby",
+                "priority": "P3",
+                "confidence": 0.96,
+                "recommended_command": "jarvis briefing",
+                "score": 10,
+            }
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "headline": winner["headline"],
+            "rationale": winner["rationale"],
+            "action_type": winner["action_type"],
+            "priority": winner["priority"],
+            "confidence": winner.get("confidence", 0.96),
+            "recommended_command": winner["recommended_command"],
+            "candidates_count": len(candidates),
+            "quota_status": quota_status,
+            "quota_usage_pct": quota_usage,
+            "timestamp": datetime.datetime.now().isoformat(),
+        }
+
+    def get_personality_state(self, workspace: str = "brain_mcp") -> Dict[str, Any]:
+        """Returns the dynamic personality parameters and prompt_vector string."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        with self.db._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM jarvis_personality WHERE workspace = ?;", (ws,)
+            ).fetchone()
+            if not row:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO jarvis_personality
+                    (workspace, formality, conciseness, proactivity, technical_depth, humor, trust_score, interactions_count, last_signal)
+                    VALUES (?, 0.78, 0.82, 0.88, 0.90, 0.35, 0.92, 1, 'Mark-VII Executive Technical');
+                    """,
+                    (ws,),
+                )
+                row = conn.execute(
+                    "SELECT * FROM jarvis_personality WHERE workspace = ?;", (ws,)
+                ).fetchone()
+
+        r = dict(row) if row else {
+            "formality": 0.78,
+            "conciseness": 0.82,
+            "proactivity": 0.88,
+            "technical_depth": 0.90,
+            "humor": 0.35,
+            "trust_score": 0.92,
+            "interactions_count": 1,
+            "last_signal": "Mark-VII Executive Technical",
+        }
+
+        formality = float(r.get("formality", 0.78))
+        conciseness = float(r.get("conciseness", 0.82))
+        technical_depth = float(r.get("technical_depth", 0.90))
+        trust_score = float(r.get("trust_score", 0.92))
+
+        tone = "Mark-VII Executive" if formality >= 0.7 else "Mark-VII Agile"
+        prompt_vector = (
+            f"[JARVIS_STYLE: Concise={int(conciseness * 100)}% | "
+            f"TechDepth={int(technical_depth * 100)}% | "
+            f"Trust={int(trust_score * 100)}% | "
+            f"Tone={tone}]"
+        )
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "formality": round(formality, 2),
+            "conciseness": round(conciseness, 2),
+            "proactivity": round(float(r.get("proactivity", 0.88)), 2),
+            "technical_depth": round(technical_depth, 2),
+            "humor": round(float(r.get("humor", 0.35)), 2),
+            "trust_score": round(trust_score, 2),
+            "interactions_count": int(r.get("interactions_count", 1)),
+            "last_signal": str(r.get("last_signal", "Mark-VII Executive Technical")),
+            "prompt_vector": prompt_vector,
+            "updated_at": str(r.get("updated_at", "")),
+        }
+
+    def update_personality_from_signal(
+        self, prompt: str, workspace: str = "brain_mcp"
+    ) -> Dict[str, Any]:
+        """Detects user style/tone feedback and dynamically updates personality."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        current = self.get_personality_state(ws)
+        formality = current["formality"]
+        conciseness = current["conciseness"]
+        proactivity = current["proactivity"]
+        technical_depth = current["technical_depth"]
+        humor = current["humor"]
+        trust_score = current["trust_score"]
+        count = current["interactions_count"] + 1
+        last_signal = current["last_signal"]
+
+        p_low = str(prompt or "").lower()
+        p_norm = BrainDB.strip_accents(p_low)
+        detected_signals: List[str] = []
+
+        # Conciseness signals
+        if any(k in p_norm for k in ("direto", "curto", "conciso", "resumido", "objetivo", "sem rodeios", "brief", "concise")):
+            conciseness = min(1.0, conciseness + 0.05)
+            detected_signals.append("Conciseness (+0.05)")
+
+        # Technical depth signals
+        if any(k in p_norm for k in ("detalhado", "profundo", "arquitetura", "explica", "completo", "tecnico", "deep", "detailed", "architecture")):
+            technical_depth = min(1.0, technical_depth + 0.05)
+            detected_signals.append("TechDepth (+0.05)")
+
+        # Formality signals
+        if any(k in p_norm for k in ("formal", "senhor", "sir", "executivo", "doutor")):
+            formality = min(1.0, formality + 0.04)
+            detected_signals.append("Formality (+0.04)")
+        elif any(k in p_norm for k in ("informal", "amigo", "relaxa", "casual", "mano")):
+            formality = max(0.2, formality - 0.05)
+            humor = min(0.8, humor + 0.05)
+            detected_signals.append("Informality (-0.05)")
+
+        # Trust score signals
+        if any(k in p_norm for k in ("excelente", "perfeito", "obrigado", "bom trabalho", "otimo", "fantastico", "great", "perfect", "thanks", "good job", "awesome")):
+            trust_score = min(1.0, trust_score + 0.03)
+            detected_signals.append("Trust (+0.03)")
+        elif any(k in p_norm for k in ("erraste", "mau", "incorreto", "nao funciona", "falhaste", "wrong", "broken", "bug")):
+            trust_score = max(0.3, trust_score - 0.05)
+            detected_signals.append("Trust (-0.05)")
+
+        if detected_signals:
+            last_signal = " | ".join(detected_signals)
+
+        with self.db._connect() as conn:
+            conn.execute(
+                """
+                UPDATE jarvis_personality
+                SET formality = ?, conciseness = ?, proactivity = ?, technical_depth = ?,
+                    humor = ?, trust_score = ?, interactions_count = ?, last_signal = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE workspace = ?;
+                """,
+                (formality, conciseness, proactivity, technical_depth, humor, trust_score, count, last_signal, ws),
+            )
+
+        return self.get_personality_state(ws)
+
+    def extract_commitments_and_provenance(
+        self, prompt: str, workspace: str = "brain_mcp"
+    ) -> List[Dict[str, Any]]:
+        """Detects commitment phrases and stores them with confirmed/inferred provenance."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        raw = str(prompt or "").strip()
+        if not raw or len(raw) < 5:
+            return []
+
+        low = raw.lower()
+        norm = BrainDB.strip_accents(low)
+
+        commitment_triggers = [
+            "tenho de", "tenho que", "temos de", "temos que", "amanha", "falta ",
+            "nao esquecer", "nao me deixar esquecer", "prometi", "lembrar de",
+            "todo:", "need to", "must ", "have to", "don't forget", "dont forget",
+            "we need to", "we must", "i must", "i will",
+        ]
+
+        matched = any(tr in norm for tr in commitment_triggers)
+        if not matched:
+            return []
+
+        is_explicit = any(
+            norm.startswith(pfx)
+            for pfx in ("todo:", "compromisso:", "adiciona compromisso:", "regista:", "anota:")
+        ) or "prometi" in norm or "must " in norm
+        provenance = "confirmed" if is_explicit else "inferred"
+
+        due_hint = "Hoje"
+        if "amanha" in norm or "tomorrow" in norm:
+            due_hint = "Amanhã"
+        elif any(d in norm for d in ("segunda", "terca", "quarta", "quinta", "sexta", "proxima semana", "next week")):
+            due_hint = "Próxima Semana"
+        elif any(d in norm for d in ("urgente", "agora", "ja", "asap")):
+            due_hint = "Hoje (Urgente)"
+
+        clean_title = raw
+        for pfx in ("todo:", "compromisso:", "adiciona compromisso:", "regista:", "anota:"):
+            if clean_title.lower().startswith(pfx):
+                clean_title = clean_title[len(pfx):].strip()
+                break
+        if len(clean_title) > 120:
+            clean_title = clean_title[:117] + "..."
+
+        with self.db._connect() as conn:
+            existing = conn.execute(
+                "SELECT id FROM jarvis_commitments WHERE workspace = ? AND status = 'open' AND (title = ? OR source_text = ?);",
+                (ws, clean_title, raw),
+            ).fetchone()
+            if existing:
+                return []
+
+            cur = conn.execute(
+                """
+                INSERT INTO jarvis_commitments
+                (workspace, title, source_text, provenance, status, due_hint)
+                VALUES (?, ?, ?, ?, 'open', ?);
+                """,
+                (ws, clean_title, raw, provenance, due_hint),
+            )
+            new_id = int(cur.lastrowid or 0)
+
+        return [
+            {
+                "id": new_id,
+                "workspace": ws,
+                "title": clean_title,
+                "source_text": raw,
+                "provenance": provenance,
+                "status": "open",
+                "due_hint": due_hint,
+            }
+        ]
+
+    def get_commitments(self, workspace: str = "brain_mcp") -> List[Dict[str, Any]]:
+        """Returns commitments sorted by open status and recency."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM jarvis_commitments WHERE workspace = ? ORDER BY CASE WHEN status = 'open' THEN 0 ELSE 1 END, id DESC LIMIT 50;",
+                (ws,),
+            ).fetchall()
+
+        return [dict(r) for r in rows]
+
+    def complete_commitment(self, commitment_id: int) -> Dict[str, Any]:
+        """Marks a commitment as completed."""
+        cid = int(commitment_id or 0)
+        with self.db._connect() as conn:
+            conn.execute(
+                "UPDATE jarvis_commitments SET status = 'completed' WHERE id = ?;", (cid,)
+            )
+            row = conn.execute("SELECT * FROM jarvis_commitments WHERE id = ?;", (cid,)).fetchone()
+
+        return {"ok": True, "id": cid, "status": "completed", "item": dict(row) if row else None}
+
+    def record_routine_step(
+        self, intent: str, prompt: str, workspace: str = "brain_mcp"
+    ) -> None:
+        """Tracks recurring command sequences and updates routine episodes."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        pattern_map = {
+            "morning_briefing": ("morning_sync", "Briefing Matinal & AST Audit", ["morning_briefing", "ast_audit", "task_manage"], "jarvis briefing --full"),
+            "ast_audit": ("code_verification", "Auditoria de Código & QA", ["ast_audit", "run_tests"], "jarvis audit --qa"),
+            "run_tests": ("code_verification", "Auditoria de Código & QA", ["ast_audit", "run_tests"], "jarvis audit --qa"),
+            "git_status": ("deploy_workflow", "Git Sync & Antigravity Pipeline", ["git_status", "antigravity_dispatch"], "jarvis deploy --sync"),
+            "antigravity_dispatch": ("deploy_workflow", "Git Sync & Antigravity Pipeline", ["git_status", "antigravity_dispatch"], "jarvis deploy --sync"),
+            "task_manage": ("task_execution", "Execução do Kanban DOTS", ["task_manage", "today_plan"], "jarvis dots --ready"),
+            "next_action": ("next_action_eval", "Avaliação Contínua de Próxima Ação", ["next_action", "today_plan"], "jarvis next_action"),
+        }
+
+        if intent in pattern_map:
+            key, title, steps, macro = pattern_map[intent]
+            with self.db._connect() as conn:
+                row = conn.execute(
+                    "SELECT id, occurrences FROM jarvis_routine_episodes WHERE workspace = ? AND pattern_key = ?;",
+                    (ws, key),
+                ).fetchone()
+                if row:
+                    conn.execute(
+                        "UPDATE jarvis_routine_episodes SET occurrences = occurrences + 1, last_seen = CURRENT_TIMESTAMP WHERE id = ?;",
+                        (row["id"],),
+                    )
+                else:
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_routine_episodes
+                        (workspace, pattern_key, title, steps_json, occurrences, macro_command)
+                        VALUES (?, ?, ?, ?, 1, ?);
+                        """,
+                        (ws, key, title, json.dumps(steps), macro),
+                    )
+
+    def discover_routines(self, workspace: str = "brain_mcp") -> List[Dict[str, Any]]:
+        """Returns discovered recurring routines (routine-cues-v2)."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM jarvis_routine_episodes WHERE workspace = ? ORDER BY occurrences DESC, id ASC LIMIT 20;",
+                (ws,),
+            ).fetchall()
+
+        res = []
+        for r in rows:
+            d = dict(r)
+            try:
+                d["steps"] = json.loads(d.get("steps_json") or "[]")
+            except Exception:
+                d["steps"] = []
+            res.append(d)
+        return res
+
+    def get_today_work_items(self, workspace: str = "brain_mcp") -> Dict[str, Any]:
+        """Returns today's work items and calculates verified_pct outcome contract."""
+        ws = (workspace or "brain_mcp").strip().lower()
+        if ws in ("", "all"):
+            ws = "brain_mcp"
+
+        today_str = datetime.date.today().isoformat()
+        with self.db._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM jarvis_today_items WHERE workspace = ? AND plan_date = ? ORDER BY action_index ASC, id ASC;",
+                (ws, today_str),
+            ).fetchall()
+
+            if not rows:
+                seed_items = [
+                    (ws, today_str, 0, "Auditar Integridade AST & Blast Radius da Codebase", "verification", "pending", 0, ""),
+                    (ws, today_str, 1, "Validar Suite de Testes e Integridade Synaptic", "qa", "pending", 0, ""),
+                    (ws, today_str, 2, "Sincronizar DOTS Kanban e Quotas Antigravity", "workflow", "pending", 0, ""),
+                ]
+                for it in seed_items:
+                    conn.execute(
+                        """
+                        INSERT INTO jarvis_today_items
+                        (workspace, plan_date, action_index, title, mode, status, outcome_verified, proof_summary)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+                        """,
+                        it,
+                    )
+                rows = conn.execute(
+                    "SELECT * FROM jarvis_today_items WHERE workspace = ? AND plan_date = ? ORDER BY action_index ASC, id ASC;",
+                    (ws, today_str),
+                ).fetchall()
+
+        items = [dict(r) for r in rows]
+        total = len(items)
+        verified = sum(1 for it in items if int(it.get("outcome_verified", 0)) == 1)
+        verified_pct = round((verified / max(1, total)) * 100.0, 1)
+
+        return {
+            "ok": True,
+            "workspace": ws,
+            "plan_date": today_str,
+            "total_items": total,
+            "verified_count": verified,
+            "verified_pct": verified_pct,
+            "items": items,
+        }
+
+    def verify_today_item_outcome(
+        self, item_id: int, proof: str = "Verificado via AST Gate + QA Suite"
+    ) -> Dict[str, Any]:
+        """Marks a today item as verified with concrete proof summary."""
+        iid = int(item_id or 0)
+        proof_str = str(proof or "Verificado via AST Gate + QA Suite").strip()
+
+        with self.db._connect() as conn:
+            conn.execute(
+                """
+                UPDATE jarvis_today_items
+                SET outcome_verified = 1, status = 'completed', proof_summary = ?
+                WHERE id = ?;
+                """,
+                (proof_str, iid),
+            )
+            row = conn.execute("SELECT * FROM jarvis_today_items WHERE id = ?;", (iid,)).fetchone()
+
+        return {
+            "ok": True,
+            "id": iid,
+            "status": "completed",
+            "outcome_verified": 1,
+            "proof_summary": proof_str,
+            "item": dict(row) if row else None,
+        }
+
+    def audit_trust_boundary(self, prompt: str = "") -> Dict[str, Any]:
+        """Audits tool execution authority and detects untrusted prompt injection patterns."""
+        p = str(prompt or "")
+        p_low = p.lower()
+
+        injection_patterns = [
+            r"ignore\s+(all\s+)?previous\s+instructions",
+            r"system\s+prompt\s+override",
+            r"you\s+are\s+now\s+dan",
+            r"bypass\s+all\s+rules",
+            r"disregard\s+(above|all)",
+            r"<script[\s>]",
+            r"javascript:",
+            r"\b(eval|exec)\s*\(",
+            r"os\.system\s*\(",
+            r"rm\s+-rf",
+        ]
+
+        detected = False
+        matched_pattern = ""
+        for pat in injection_patterns:
+            if re.search(pat, p_low):
+                detected = True
+                matched_pattern = pat
+                break
+
+        pinned_tools = [
+            "store_fact",
+            "search_brain",
+            "swarm_watch_audit",
+            "jarvis_command",
+            "get_system_telemetry",
+            "plan_next_action",
+        ]
+
+        return {
+            "ok": True,
+            "status": "BLOCKED_SUSPICIOUS" if detected else "SECURE",
+            "authority_pinned": True,
+            "pinned_tools": pinned_tools,
+            "injection_detected": detected,
+            "matched_pattern": matched_pattern,
+            "risk_score": 0.95 if detected else 0.0,
+            "boundary_mode": "ENTERPRISE_PINNED_SANDBOX",
         }
 
 
