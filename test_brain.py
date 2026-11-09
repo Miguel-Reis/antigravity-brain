@@ -1198,6 +1198,10 @@ def run_all_tests() -> None:
         from brain_inject import build_ephemeral_context
         jv_ctx = build_ephemeral_context([], {"goal": "Sessão ativa"}, "brain_mcp", db=gb_db)
         assert "[JARVIS_DIRECTIVE]" in jv_ctx, f"[JARVIS_DIRECTIVE] não injetado no PreInvocation: {jv_ctx}"
+        jv_tts_pt = jv_eng.synthesize_speech_bytes("Às suas ordens, Senhor Miguel.", profile="movie_pt")
+        assert jv_tts_pt.get("ok") is True and len(jv_tts_pt.get("audio_bytes", b"")) > 200, f"Falha synthesize_speech_bytes movie_pt: {jv_tts_pt}"
+        jv_tts_en = jv_eng.format_movie_speech("Bom dia, Sr. Miguel. Memória RAM a 42 por cento.", profile="movie_en")
+        assert "Sir" in jv_tts_en and "42 percent" in jv_tts_en, f"Falha format_movie_speech movie_en: {jv_tts_en}"
 
     for gb_ui_token in (
         'id="tabBtnVault"',
@@ -1244,9 +1248,13 @@ def run_all_tests() -> None:
         'id="jarvisWorkspace"',
         'id="jarvisOrbCanvas"',
         'id="jarvisChatLog"',
+        'id="jarvisVoiceProfileSelect"',
+        'id="btnJarvisTestMovieVoice"',
         "function fetchJarvisStudioPage(",
         "function sendJarvisCommandUI(",
         "function renderJarvisOrbLoop(",
+        "function jarvisApplyWsolaBaritoneShift(",
+        "function testJarvisMovieVoiceUI()",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
     print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")

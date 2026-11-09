@@ -995,6 +995,29 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(orbit.get_mission_control_inbox())
             return
 
+        if parsed.path == "/api/jarvis/tts":
+            _ensure_jarvis_engine_imported()
+            qs = urllib.parse.parse_qs(parsed.query)
+            text_q = qs.get("text", [""])[0] or "Às suas ordens, Senhor. Todos os sistemas do Córtex encontram-se operacionais."
+            prof_q = qs.get("profile", ["movie_pt"])[0] or "movie_pt"
+            fmt_q = qs.get("format", ["json"])[0] or "json"
+            db = BrainDB()
+            tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
+            if fmt_q in ("binary", "raw", "audio"):
+                raw_audio = tts_res.get("audio_bytes", b"")
+                mime = tts_res.get("mime_type", "audio/mpeg")
+                self.send_response(200)
+                self._send_cors_headers()
+                self.send_header("Content-Type", mime)
+                self.send_header("Content-Length", str(len(raw_audio)))
+                self.send_header("Cache-Control", "public, max-age=3600")
+                self.end_headers()
+                self.wfile.write(raw_audio)
+                return
+            json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
+            self._send_json(json_out)
+            return
+
         if parsed.path == "/api/jarvis":
             _ensure_jarvis_engine_imported()
             qs = urllib.parse.parse_qs(parsed.query)
@@ -1510,11 +1533,28 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi(workspace=req_ws)})
             return
 
+        if parsed.path == "/api/jarvis/tts":
+            _ensure_jarvis_engine_imported()
+            data = body if isinstance(body, dict) else {}
+            text_q = str(data.get("text") or data.get("prompt") or "Às suas ordens, Senhor.")
+            prof_q = str(data.get("profile") or "movie_pt")
+            tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
+            json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
+            self._send_json(json_out)
+            return
+
         if parsed.path == "/api/jarvis":
             _ensure_jarvis_engine_imported()
             data = body if isinstance(body, dict) else {}
             action = str(data.get("action") or "command").strip() or "command"
             workspace = str(data.get("workspace", "brain_mcp")).strip() or "brain_mcp"
+            if action == "tts":
+                text_q = str(data.get("text") or data.get("prompt") or "Às suas ordens, Senhor.")
+                prof_q = str(data.get("profile") or "movie_pt")
+                tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
+                json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
+                self._send_json(json_out)
+                return
             if action in ("command", "chat"):
                 res = JarvisEngine(db).process_command(
                     prompt=data.get("prompt", ""),

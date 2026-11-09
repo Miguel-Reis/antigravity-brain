@@ -1,16 +1,23 @@
 import ast
+import base64
 import ctypes
 import datetime
+import io
 import json
+import math
 import os
 import platform
 import re
 import shutil
 import socket
+import struct
 import subprocess
 import sys
 import threading
 import time
+import urllib.parse
+import urllib.request
+import wave
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -25,6 +32,8 @@ from ast_impact_watcher import AstImpactWatcher
 
 _JARVIS_INIT_LOCK = threading.Lock()
 _INITIALIZED_JARVIS_DBS: set[str] = set()
+_JARVIS_TTS_CACHE: Dict[str, Tuple[bytes, str, str]] = {}
+_JARVIS_TTS_LOCK = threading.Lock()
 
 
 class _MEMORYSTATUSEX(ctypes.Structure):
@@ -941,9 +950,9 @@ class JarvisEngine:
                 f"- **Mission Control Inbox**: `{inbox_pending}` itens a aguardar aprovação humana · ROI estimado: **${val_usd:,} USD**"
             )
             speech_text = (
-                f"Bom dia, Sr. Miguel. O Córtex Antigravity está operacional em modo nativo Zero-Ollama. "
-                f"Memória RAM a {telem['ram_pct']} por cento, quota de 5 horas em {quota['usage_pct']} por cento, "
-                f"e {len(ready_tasks)} tarefas DOTS prontas para execução."
+                f"Às suas ordens, Senhor Miguel. Todos os sistemas do Córtex Antigravity encontram-se operacionais. "
+                f"Memória física a {telem['ram_pct']} por cento, radar de quota de 5 horas em {quota['usage_pct']} por cento, "
+                f"e {len(ready_tasks)} tarefas DOTS prontas para execução imediata."
             )
 
         elif intent == "system_health":
@@ -1562,12 +1571,12 @@ class JarvisEngine:
         roi_obj = orbit_overview.get("roi", {})
 
         greeting_str = (
-            f"Bom dia, Sr. Miguel. O Córtex Antigravity está operacional em `{ws}` "
+            f"Às suas ordens, Sr. Miguel. O Córtex Antigravity está operacional em `{ws}` "
             f"(RAM {telemetry['ram_pct']}% · Quota 5h {quota_5h['usage_pct']}% · {ready_cnt} DOTS prontos)."
         )
         morning_briefing = {
             "headline": greeting_str,
-            "greeting": "Bom dia, Sr. Miguel. O Córtex Antigravity está operacional.",
+            "greeting": "Às suas ordens, Senhor Miguel. Todos os sistemas do Córtex Antigravity encontram-se operacionais.",
             "summary": greeting_str,
             "points": orbit_overview.get("brief_points", []),
             "ready_dots_count": ready_cnt,
@@ -1579,6 +1588,7 @@ class JarvisEngine:
             "ok": True,
             "workspace": ws,
             "engine_mode": self.ENGINE_MODE,
+            "voice_profiles": self.VOICE_PROFILES,
             "telemetry": telemetry,
             "quota_5h": quota_5h,
             "morning_briefing": morning_briefing,
@@ -1594,7 +1604,244 @@ class JarvisEngine:
                 "ready_dots_count": ready_cnt,
                 "avg_latency_ms": avg_latency_ms,
                 "zero_ollama_mode": True,
+                "movie_voice_dsp": "SKYWALKER_MARK_VII_HUD",
             },
+        }
+
+    # =========================================================================
+    # 8. SKYWALKER SOUND / MARK-VII HELMET NEURAL VOICE SYNTHESIZER (`/api/jarvis/tts`)
+    # =========================================================================
+    VOICE_PROFILES: Dict[str, Dict[str, Any]] = {
+        "movie_pt": {
+            "id": "movie_pt",
+            "label": "🎬 Filme Mark-VII HUD (PT-PT · Barítono Paul Bettany)",
+            "lang": "pt-PT",
+            "edge_voice": "pt-PT-DuarteNeural",
+            "wsola_stretch": 1.28,
+            "playback_rate": 0.815,
+            "helmet_dsp": True,
+            "chorus_wet": 0.26,
+            "slapback_wet": 0.11,
+            "presence_db": 4.6,
+            "chest_db": 4.2,
+        },
+        "movie_en": {
+            "id": "movie_en",
+            "label": "🇬🇧 Original MCU J.A.R.V.I.S. (EN-GB · British HUD)",
+            "lang": "en-GB",
+            "edge_voice": "en-GB-RyanNeural",
+            "wsola_stretch": 1.27,
+            "playback_rate": 0.82,
+            "helmet_dsp": True,
+            "chorus_wet": 0.28,
+            "slapback_wet": 0.12,
+            "presence_db": 4.8,
+            "chest_db": 4.0,
+        },
+        "studio_pt": {
+            "id": "studio_pt",
+            "label": "🔊 Voz Studio Limpa (PT-PT · Sem Filtro Capacete)",
+            "lang": "pt-PT",
+            "edge_voice": "pt-PT-DuarteNeural",
+            "wsola_stretch": 1.22,
+            "playback_rate": 0.86,
+            "helmet_dsp": False,
+            "chorus_wet": 0.0,
+            "slapback_wet": 0.0,
+            "presence_db": 2.0,
+            "chest_db": 2.5,
+        },
+    }
+
+    @classmethod
+    def format_movie_speech(cls, text: str, profile: str = "movie_pt") -> str:
+        """
+        Shapes spoken text with authentic MCU J.A.R.V.I.S. diction in either
+        cultivated European Portuguese (`movie_pt`) or British English (`movie_en`).
+        """
+        clean = cls._clean_speech_text(text or "", max_chars=320)
+        if not clean:
+            return (
+                "At your service, Sir. All Antigravity Cortex systems are online and operational."
+                if profile == "movie_en"
+                else "Às suas ordens, Senhor. Todos os sistemas do Córtex Antigravity encontram-se operacionais."
+            )
+
+        if profile == "movie_en":
+            # Translate common Portuguese telemetry phrases into authentic British MCU J.A.R.V.I.S.
+            en_txt = clean
+            replacements = [
+                (r"(?i)bom dia,?\s*(?:sr\.?|senhor)\s*miguel\.?", "Good morning, Sir."),
+                (r"(?i)às suas ordens,?\s*(?:sr\.?|senhor)(?:\s*miguel)?\.?", "At your service, Sir."),
+                (r"(?i)todos os sistemas do c[óo]rtex(?:\s+antigravity)?\s+encontram-se operacionais\.?", "All Antigravity Cortex systems are online and operational."),
+                (r"(?i)o c[óo]rtex antigravity est[áa] operacional(?: em modo nativo zero-ollama)?\.?", "The Antigravity Cortex is fully operational in native Zero-Ollama mode."),
+                (r"(?i)mem[óo]ria(?: f[íi]sica| ram)?(?: em| a)?\s*([\d\.]+)\s*por cento", r"physical memory is at \1 percent"),
+                (r"(?i)(?:radar de )?quota de 5 horas(?: em| a)?\s*([\d\.]+)\s*por cento", r"five-hour quota radar stands at \1 percent"),
+                (r"(?i)e (\d+) tarefas dots prontas(?: para execu[çc][ãa]o(?: imediata)?)?", r"with \1 DOTS tasks ready for immediate deployment"),
+                (r"(?i)diagn[óo]stico de sistema conclu[íi]do\.?", "System diagnostics complete, Sir."),
+                (r"(?i)auditoria ast conclu[íi]da em (\d+) ficheiros\.?", r"AST structural scan completed across \1 files, Sir."),
+                (r"(?i)diretiva cir[úu]rgica n[úu]mero (\d+) empacotada e despachada para o antigravity ide com prioridade m[áa]xima p0\.?", r"Surgical directive number \1 has been compiled and dispatched to the Antigravity IDE at priority P-Zero, Sir."),
+                (r"(?i)facto registado com sucesso na mem[óo]ria permanente.*$", "Fact permanently committed to the synaptic memory matrix, Sir."),
+                (r"(?i)sistemas jarvis operacionais no projeto\s+([A-Za-z0-9_\-]+)\.?", r"J.A.R.V.I.S. systems online for workspace \1, Sir."),
+                (r"(?i)ponte antigravity pronta com zero consumo de mem[óo]ria gr[áa]fica\.?", "Antigravity neural bridge standing by with zero graphics memory overhead."),
+            ]
+            for pat, rep in replacements:
+                en_txt = re.sub(pat, rep, en_txt)
+            if not re.search(r"\bSir\b", en_txt, re.I):
+                en_txt = en_txt.rstrip(".") + ", Sir."
+            return en_txt
+
+        # Cultivated European Portuguese movie diction
+        pt_txt = clean
+        pt_txt = re.sub(r"\bSr\.\s*Miguel\b", "Senhor Miguel", pt_txt, flags=re.I)
+        pt_txt = re.sub(r"\bRAM\b", "memória física", pt_txt)
+        pt_txt = re.sub(r"\bP0\b", "P-Zero", pt_txt)
+        pt_txt = re.sub(r"\bAST\b", "A-S-T", pt_txt)
+        if not re.search(r"\bSenhor\b", pt_txt, re.I):
+            pt_txt = pt_txt.rstrip(".!") + ", Senhor."
+        return pt_txt
+
+    @staticmethod
+    def _split_tts_chunks(text: str, max_len: int = 175) -> List[str]:
+        sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", text) if s.strip()]
+        chunks: List[str] = []
+        cur = ""
+        for s in sentences:
+            if len(s) > max_len:
+                if cur:
+                    chunks.append(cur.strip())
+                    cur = ""
+                words = s.split()
+                sub = ""
+                for w in words:
+                    if len(sub) + len(w) + 1 <= max_len:
+                        sub = f"{sub} {w}".strip()
+                    else:
+                        if sub:
+                            chunks.append(sub)
+                        sub = w
+                if sub:
+                    chunks.append(sub)
+            elif len(cur) + len(s) + 1 <= max_len:
+                cur = f"{cur} {s}".strip()
+            else:
+                if cur:
+                    chunks.append(cur.strip())
+                cur = s
+        if cur:
+            chunks.append(cur.strip())
+        return chunks or [text[:max_len]]
+
+    @staticmethod
+    def _generate_fallback_hud_wav(text: str, sample_rate: int = 24000) -> bytes:
+        """
+        Generates a deterministic 16-bit PCM WAV Stark HUD harmonic telemetry cadenced
+        sequence if external neural TTS is unreachable (100% offline fallback).
+        """
+        words = max(3, min(18, len((text or "Senhor").split())))
+        dur_sec = min(2.2, 0.35 + words * 0.09)
+        n_samples = int(sample_rate * dur_sec)
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(sample_rate)
+            frames = bytearray()
+            for i in range(n_samples):
+                t = i / float(sample_rate)
+                # Syllabic envelope + baritone fundamental (122 Hz) + Stark HUD formants
+                syll = 0.55 + 0.45 * math.sin(2.0 * math.pi * 4.8 * t)
+                env = min(1.0, i / 600.0) * min(1.0, (n_samples - i) / 1200.0) * syll
+                f0 = 122.0 + 14.0 * math.sin(2.0 * math.pi * 1.7 * t)
+                sig = (
+                    0.50 * math.sin(2.0 * math.pi * f0 * t)
+                    + 0.28 * math.sin(2.0 * math.pi * (f0 * 2.0) * t)
+                    + 0.14 * math.sin(2.0 * math.pi * 1480.0 * t)
+                    + 0.08 * math.sin(2.0 * math.pi * 2850.0 * t)
+                )
+                val = int(max(-32767, min(32767, sig * env * 14000.0)))
+                frames.extend(struct.pack("<h", val))
+            wf.writeframes(bytes(frames))
+        return buf.getvalue()
+
+    def synthesize_speech_bytes(
+        self, text: str, profile: str = "movie_pt"
+    ) -> Dict[str, Any]:
+        """
+        Synthesizes neural speech audio bytes for J.A.R.V.I.S. and returns both raw bytes
+        and Base64 + Skywalker Sound Mark-VII Helmet DSP parameters for the WebAudio engine.
+        """
+        prof_key = profile if profile in self.VOICE_PROFILES else "movie_pt"
+        prof_cfg = self.VOICE_PROFILES[prof_key]
+        spoken_text = self.format_movie_speech(text, profile=prof_key)
+        cache_key = f"{prof_key}::{spoken_text}"
+
+        with _JARVIS_TTS_LOCK:
+            cached = _JARVIS_TTS_CACHE.get(cache_key)
+        if cached is not None:
+            audio_bytes, mime_type, provider = cached
+            return {
+                "ok": True,
+                "profile": prof_key,
+                "provider": f"{provider}_cached",
+                "mime_type": mime_type,
+                "text_spoken": spoken_text,
+                "audio_bytes": audio_bytes,
+                "audio_b64": base64.b64encode(audio_bytes).decode("ascii"),
+                "dsp_preset": prof_cfg,
+            }
+
+        lang_code = prof_cfg["lang"]
+        chunks = self._split_tts_chunks(spoken_text, max_len=175)
+        mp3_buffer = bytearray()
+        provider_used = "neural_https_stream"
+        mime_type = "audio/mpeg"
+
+        try:
+            for ch in chunks:
+                q_enc = urllib.parse.quote(ch)
+                url = (
+                    f"https://translate.google.com/translate_tts"
+                    f"?ie=UTF-8&tl={lang_code}&client=tw-ob&ttsspeed=1&q={q_enc}"
+                )
+                req = urllib.request.Request(
+                    url,
+                    headers={
+                        "User-Agent": (
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+                        ),
+                        "Referer": "https://translate.google.com/",
+                    },
+                )
+                with urllib.request.urlopen(req, timeout=5.0) as resp:
+                    part = resp.read()
+                    if part:
+                        mp3_buffer.extend(part)
+        except Exception:
+            mp3_buffer.clear()
+
+        if len(mp3_buffer) > 256:
+            audio_bytes = bytes(mp3_buffer)
+        else:
+            audio_bytes = self._generate_fallback_hud_wav(spoken_text)
+            mime_type = "audio/wav"
+            provider_used = "stark_hud_local_wav"
+
+        with _JARVIS_TTS_LOCK:
+            if len(_JARVIS_TTS_CACHE) > 64:
+                _JARVIS_TTS_CACHE.clear()
+            _JARVIS_TTS_CACHE[cache_key] = (audio_bytes, mime_type, provider_used)
+
+        return {
+            "ok": True,
+            "profile": prof_key,
+            "provider": provider_used,
+            "mime_type": mime_type,
+            "text_spoken": spoken_text,
+            "audio_bytes": audio_bytes,
+            "audio_b64": base64.b64encode(audio_bytes).decode("ascii"),
+            "dsp_preset": prof_cfg,
         }
 
 
