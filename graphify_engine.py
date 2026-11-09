@@ -19,8 +19,10 @@ Inspirado na arquitetura Graphify (safishamsi/graphify):
 """
 
 import ast
+import math
 import os
 import re
+import subprocess
 import time
 from collections import deque
 from pathlib import Path
@@ -53,6 +55,79 @@ class GraphifyEngine:
         )
         self._cache: Optional[Dict[str, Any]] = None
         self._cache_ts: float = 0.0
+
+    def _mine_git_cochange_edges(self, root_path: Path) -> List[Dict[str, Any]]:
+        """
+        Mines Git commit history (`git log --name-only --pretty=format:COMMIT:%H -n 60`)
+        and computes pairwise file co-change coupling:
+            Coupling(A, B) = |C(A ∩ B)| / sqrt(|C(A)| * |C(B)|)
+        """
+        ws_root = Path(root_path).resolve()
+        commits_files: List[Set[str]] = []
+        try:
+            raw_out = subprocess.check_output(
+                ["git", "log", "--name-only", "--pretty=format:COMMIT:%H", "-n", "60"],
+                cwd=str(ws_root),
+                stderr=subprocess.DEVNULL,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=2.5,
+            )
+            current_set: Set[str] = set()
+            for raw_line in raw_out.splitlines():
+                line = raw_line.strip()
+                if not line:
+                    continue
+                if line.startswith("COMMIT:"):
+                    if len(current_set) >= 2:
+                        commits_files.append(current_set)
+                    current_set = set()
+                else:
+                    norm_f = line.replace("\\", "/").lstrip("/")
+                    if (ws_root / norm_f).is_file():
+                        current_set.add(norm_f)
+            if len(current_set) >= 2:
+                commits_files.append(current_set)
+        except Exception:
+            commits_files = []
+
+        file_counts: Dict[str, int] = {}
+        pair_counts: Dict[Tuple[str, str], int] = {}
+        for c_set in commits_files:
+            if len(c_set) > 50:
+                continue
+            sorted_f = sorted(c_set)
+            for f_a in sorted_f:
+                file_counts[f_a] = file_counts.get(f_a, 0) + 1
+            for i in range(len(sorted_f)):
+                for j in range(i + 1, len(sorted_f)):
+                    pair_key = (sorted_f[i], sorted_f[j])
+                    pair_counts[pair_key] = pair_counts.get(pair_key, 0) + 1
+
+        cochange_edges: List[Dict[str, Any]] = []
+        for (f_a, f_b), shared in pair_counts.items():
+            cnt_a = file_counts.get(f_a, 1)
+            cnt_b = file_counts.get(f_b, 1)
+            coupling = shared / math.sqrt(max(1, cnt_a * cnt_b))
+            if coupling >= 0.2:
+                w = round(min(1.0, coupling), 2)
+                cochange_edges.append(
+                    {
+                        "file_a": f_a,
+                        "file_b": f_b,
+                        "source": f"file:{f_a}",
+                        "target": f"file:{f_b}",
+                        "shared_commits": shared,
+                        "coupling": w,
+                        "weight": w,
+                        "edge_type": "CO_CHANGED",
+                        "confidence": "INFERRED",
+                    }
+                )
+
+        cochange_edges.sort(key=lambda x: (x["weight"], x["shared_commits"]), reverse=True)
+        return cochange_edges[:24]
 
     def build_codebase_knowledge_graph(
         self, workspace_path: str = "", force_rebuild: bool = False
@@ -105,6 +180,7 @@ class GraphifyEngine:
             edge_type: str,
             confidence: str = "EXTRACTED",
             explanation: str = "",
+            weight: Optional[float] = None,
         ) -> None:
             if source == target or source not in nodes or target not in nodes:
                 return
@@ -112,13 +188,15 @@ class GraphifyEngine:
             if key in edge_keys:
                 return
             edge_keys.add(key)
+            conf_score = CONFIDENCE_SCORES.get(confidence, 0.85)
             edges.append(
                 {
                     "source": source,
                     "target": target,
                     "edge_type": edge_type,
                     "confidence": confidence,
-                    "confidence_score": CONFIDENCE_SCORES.get(confidence, 0.85),
+                    "confidence_score": conf_score,
+                    "weight": round(float(weight), 2) if weight is not None else conf_score,
                     "explanation": explanation or f"{source} --[{edge_type}]--> {target}",
                 }
             )
@@ -210,10 +288,12 @@ class GraphifyEngine:
                     f"{rel} declara a tabela SQLite '{tname}' (L{line_no})",
                 )
 
-        # Parse AST de cada ficheiro Python para extrair Classes, Funções, Tools MCP e Rotas HTTP
+        # Parse AST de cada ficheiro Python para extrair Classes, Funções, Tools MCP, Testes e Rotas HTTP
         py_asts: Dict[str, ast.AST] = {}
         for rel, _, txt in py_files:
             file_nid = f"file:{rel}"
+            fname_only = Path(rel).name.lower()
+            is_test_file = fname_only.startswith("test_") or fname_only.endswith("_test.py")
             try:
                 tree = ast.parse(txt)
                 py_asts[rel] = tree
@@ -229,6 +309,7 @@ class GraphifyEngine:
                         "CLASS",
                         file_rel=rel,
                         line=getattr(node, "lineno", 1),
+                        meta={"is_test": is_test_file or node.name.lower().startswith("test")},
                     )
                     register_symbol(node.name, cls_nid)
                     add_edge(
@@ -242,14 +323,15 @@ class GraphifyEngine:
                         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                             if item.name.startswith("__") and item.name != "__init__":
                                 continue
-                            fn_nid = f"fn:{node.name}.{item.name}"
+                            is_test_m = is_test_file and item.name.startswith("test_")
+                            fn_nid = f"test:{node.name}.{item.name}" if is_test_m else f"fn:{node.name}.{item.name}"
                             add_node(
                                 fn_nid,
                                 f"{node.name}.{item.name}",
-                                "FUNCTION",
+                                "TEST_CASE" if is_test_m else "FUNCTION",
                                 file_rel=rel,
                                 line=getattr(item, "lineno", 1),
-                                meta={"class": node.name, "method": item.name},
+                                meta={"class": node.name, "method": item.name, "is_test": is_test_m},
                             )
                             register_symbol(item.name, fn_nid)
                             register_symbol(f"{node.name}.{item.name}", fn_nid)
@@ -282,6 +364,59 @@ class GraphifyEngine:
                             "EXTRACTED",
                             f"{rel} expõe a ferramenta MCP @{node.name}",
                         )
+                    elif is_test_file and (node.name.startswith("test_") or node.name.startswith("run_all_tests")):
+                        if node.name.startswith("test_"):
+                            t_nid = f"test:{node.name}"
+                            add_node(
+                                t_nid,
+                                node.name,
+                                "TEST_CASE",
+                                file_rel=rel,
+                                line=getattr(node, "lineno", 1),
+                                meta={"is_test": True},
+                            )
+                            register_symbol(node.name, t_nid)
+                            add_edge(
+                                file_nid,
+                                t_nid,
+                                "CONTAINS",
+                                "EXTRACTED",
+                                f"{rel} define o caso de teste {node.name}",
+                            )
+                        else:
+                            fn_nid = f"fn:{node.name}"
+                            add_node(
+                                fn_nid,
+                                node.name,
+                                "FUNCTION",
+                                file_rel=rel,
+                                line=getattr(node, "lineno", 1),
+                                meta={"is_test": True},
+                            )
+                            register_symbol(node.name, fn_nid)
+                            add_edge(
+                                file_nid,
+                                fn_nid,
+                                "CONTAINS",
+                                "EXTRACTED",
+                                f"{rel} define a suite de testes {node.name}",
+                            )
+                            t_nid = f"test:{node.name}"
+                            add_node(
+                                t_nid,
+                                f"test_suite:{node.name}",
+                                "TEST_CASE",
+                                file_rel=rel,
+                                line=getattr(node, "lineno", 1),
+                                meta={"is_test": True},
+                            )
+                            add_edge(
+                                file_nid,
+                                t_nid,
+                                "CONTAINS",
+                                "EXTRACTED",
+                                f"{rel} executa caso de teste {node.name}",
+                            )
                     else:
                         fn_nid = f"fn:{node.name}"
                         add_node(
@@ -290,6 +425,7 @@ class GraphifyEngine:
                             "FUNCTION",
                             file_rel=rel,
                             line=getattr(node, "lineno", 1),
+                            meta={"is_test": is_test_file and "test" in node.name.lower()},
                         )
                         register_symbol(node.name, fn_nid)
                         add_edge(
@@ -569,13 +705,26 @@ class GraphifyEngine:
                             )
                     for item in node.body:
                         if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                            fn_nid = f"fn:{node.name}.{item.name}"
-                            if fn_nid in nodes:
-                                inspect_callable(item, fn_nid)
+                            for cand_nid in (f"test:{node.name}.{item.name}", f"fn:{node.name}.{item.name}"):
+                                if cand_nid in nodes:
+                                    inspect_callable(item, cand_nid)
                 elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    nid = f"mcp:{node.name}" if f"mcp:{node.name}" in nodes else f"fn:{node.name}"
-                    if nid in nodes:
-                        inspect_callable(node, nid)
+                    for cand_nid in (f"mcp:{node.name}", f"test:{node.name}", f"fn:{node.name}"):
+                        if cand_nid in nodes:
+                            inspect_callable(node, cand_nid)
+
+        # PASSO 3.5: Minerar Acoplamento Temporal Git (CO_CHANGED edges)
+        cochange_edges = self._mine_git_cochange_edges(ws_root)
+        for ce in cochange_edges:
+            if ce["source"] in nodes and ce["target"] in nodes:
+                add_edge(
+                    ce["source"],
+                    ce["target"],
+                    "CO_CHANGED",
+                    "INFERRED",
+                    f"{ce['file_a']} e {ce['file_b']} co-alterados no Git (coupling={ce['weight']:.2f}, {ce['shared_commits']} commits)",
+                    weight=ce["weight"],
+                )
 
         # PASSO 4: Calcular Graus, PageRank (d=0.85, 20 iterações), Centralidade, God Nodes e Comunidades Topológicas
         in_neighbors: Dict[str, List[str]] = {nid: [] for nid in nodes}
@@ -689,6 +838,7 @@ class GraphifyEngine:
                 "node_type": n["node_type"],
                 "file": n["file"],
                 "line": n["line"],
+                "is_test": bool(n.get("meta", {}).get("is_test", False) or n["node_type"] == "TEST_CASE"),
                 "in_degree": n["in_degree"],
                 "out_degree": n["out_degree"],
                 "degree": n["degree"],
@@ -740,6 +890,7 @@ class GraphifyEngine:
                 "graph_compact_tokens": graph_summary_tokens,
                 "compression_ratio": compression_ratio,
             },
+            "cochange_edges": cochange_edges,
             "nodes": serializable_nodes,
             "edges": edges,
         }

@@ -37,6 +37,33 @@ def resolve_transcript_path(payload: Dict[str, Any]) -> Optional[str]:
     return None
 
 
+def clean_system_envelope(text: str) -> str:
+    """Remove cabeçalhos e tags de sistema (<SYSTEM_MESSAGE>, [Message] timestamp=..., <USER_REQUEST>, [BRAIN_MEMORY])."""
+    if not text:
+        return ""
+    s = str(text)
+    s = re.sub(
+        r"The following is a <SYSTEM_MESSAGE>.*?(?=<SYSTEM_MESSAGE>|$)",
+        "",
+        s,
+        flags=re.DOTALL | re.I,
+    )
+    s = re.sub(
+        r"</?(?:SYSTEM_MESSAGE|USER_REQUEST|EPHEMERAL_MESSAGE)>",
+        "",
+        s,
+        flags=re.I,
+    )
+    s = re.sub(
+        r"\[Message\]\s*timestamp=\S+\s+sender=\S+\s+priority=\S+\s+content=",
+        "",
+        s,
+        flags=re.I,
+    )
+    s = re.sub(r"\[BRAIN_MEMORY[^\]]*\]", "", s)
+    return " ".join(s.split()).strip()
+
+
 def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optional[str], bool]:
     """Lê o último USER_INPUT do transcript.jsonl e deteta se é um subagente (sem tags <USER_REQUEST>)."""
     if not transcript_path or not os.path.isfile(transcript_path):
@@ -66,11 +93,11 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                 match = re.search(
                     r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>",
                     content,
-                     flags=re.DOTALL,
+                    flags=re.DOTALL,
                 )
                 if match:
-                    return match.group(1).strip(), False
-                clean_sub = content.strip()[:1000]
+                    return clean_system_envelope(match.group(1).strip()), False
+                clean_sub = clean_system_envelope(content)[:1000]
                 return clean_sub, bool(clean_sub)
 
             if step.get("type") == "SYSTEM_MESSAGE":
@@ -82,7 +109,7 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                     flags=re.DOTALL,
                 )
                 if m_sub:
-                    return " ".join(m_sub.group(1).strip().split())[:1000], True
+                    return clean_system_envelope(m_sub.group(1))[:1000], True
     except Exception:
         return None, False
     return None, False
@@ -396,6 +423,75 @@ def compute_adaptive_budget(user_query: str) -> int:
     return MAX_EPHEMERAL_CHARS
 
 
+def get_notice_lookahead_alerts(
+    db: BrainDB,
+    workspace: str,
+    recent_actions: Optional[List[str]] = None,
+    user_query: str = "",
+) -> List[str]:
+    """
+    Notice Lookahead: se recent_actions (ou a query atual) tocaram em ficheiros específicos,
+    recolhe alertas recentes HIGH/CRITICAL de ast_impact_alerts / ast_save_audits ou memórias bug_fix
+    que referenciem esses ficheiros.
+    """
+    blob = " ".join(recent_actions or []) + " " + (user_query or "")
+    touched_files = {
+        m.lower()
+        for m in re.findall(
+            r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|tsx|jsx|json|md|go|rs|cpp|c))\b",
+            blob,
+        )
+    }
+    if not touched_files:
+        return []
+
+    notices: List[str] = []
+    seen_files: set[str] = set()
+    try:
+        with db._connect() as conn:
+            for tbl in ("ast_impact_alerts", "ast_save_audits"):
+                try:
+                    rows = conn.execute(
+                        f"""
+                        SELECT file_path, risk_level, summary FROM {tbl}
+                        WHERE risk_level IN ('HIGH', 'CRITICAL')
+                        ORDER BY id DESC LIMIT 12;
+                        """
+                    ).fetchall()
+                    for r in rows:
+                        fp = os.path.basename(str(r["file_path"] or "")).lower()
+                        if fp in touched_files and fp not in seen_files:
+                            seen_files.add(fp)
+                            notices.append(
+                                f"⚠️[LOOKAHEAD|{fp}|{r['risk_level']}]:{compress_fact_telegraphic(str(r['summary'] or ''), 85)}"
+                            )
+                except Exception:
+                    pass
+
+            mem_rows = conn.execute(
+                """
+                SELECT topic, fact, category FROM memories
+                WHERE superseded_by IS NULL
+                  AND (category IN ('bug_fix', 'bugfix') OR tags LIKE '%high_risk_save_alert%' OR tags LIKE '%bugfix%')
+                  AND workspace IN (?, 'global')
+                ORDER BY importance DESC, id DESC LIMIT 15;
+                """,
+                (workspace,),
+            ).fetchall()
+            for mr in mem_rows:
+                m_txt = f"{mr['topic']} {mr['fact']}".lower()
+                for tf in touched_files:
+                    if tf in m_txt and tf not in seen_files:
+                        seen_files.add(tf)
+                        notices.append(
+                            f"⚠️[LOOKAHEAD|{tf}|bug_fix]:{compress_fact_telegraphic(str(mr['fact'] or ''), 85)}"
+                        )
+                        break
+    except Exception:
+        pass
+    return notices[:2]
+
+
 def build_ephemeral_context(
     memories: List[Dict[str, Any]],
     checkpoint: Optional[Dict[str, Any]],
@@ -407,6 +503,8 @@ def build_ephemeral_context(
     micro_mode: bool = False,
     orbit_brief: Optional[Dict[str, Any]] = None,
     user_query: str = "",
+    recent_actions: Optional[List[str]] = None,
+    lookahead_notices: Optional[List[str]] = None,
 ) -> str:
     """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
     is_micro = bool(micro_mode or max_chars <= 380)
@@ -497,6 +595,17 @@ def build_ephemeral_context(
     # Se estivermos em Modo Micro-Prompt (confirmação rápida <90 tokens), parar aqui!
     if is_micro:
         return "\n".join(parts)[:max_chars]
+
+    # Notice Lookahead: incluir alertas recentes HIGH/CRITICAL de ast_impact_alerts ou bug_fix nos ficheiros tocados
+    if lookahead_notices:
+        for ln_notice in lookahead_notices[:2]:
+            parts.append(ln_notice)
+    elif recent_actions:
+        try:
+            for ln_notice in get_notice_lookahead_alerts(BrainDB(), workspace, recent_actions, user_query)[:2]:
+                parts.append(ln_notice)
+        except Exception:
+            pass
 
     # OTIMIZAÇÃO #1: Se o Scout Map já foi injetado nesta conversa e não mudou, usar marcador 0-token
     if delta_info and delta_info.get("scout_unchanged"):
@@ -791,10 +900,10 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         user_query = f"workspace {ws} architecture environment"
 
     swarm_eng = SwarmEngine(db)
+    recent_actions = extract_latest_tool_actions(transcript_path)
     if not db.mark_turn_injected(conv_id, user_query):
         try:
-            real_actions = extract_latest_tool_actions(transcript_path)
-            swarm_eng.on_turn_step(inv_num, real_actions, conversation_id=conv_id, workspace=ws)
+            swarm_eng.on_turn_step(inv_num, recent_actions, conversation_id=conv_id, workspace=ws)
             err_sig = extract_latest_tool_error(transcript_path)
             if err_sig and db.mark_turn_injected(conv_id, f"__err_reflexion__:{err_sig[:80]}"):
                 fixes = db.search_memories(query=err_sig, workspace=ws, n_results=2, update_stats=False)
@@ -810,6 +919,16 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
                         }
                     ]
                 }
+            if recent_actions:
+                lookahead_mid = get_notice_lookahead_alerts(db, ws, recent_actions, "")
+                if lookahead_mid and db.mark_turn_injected(conv_id, f"__lookahead__:{lookahead_mid[0][:75]}"):
+                    return {
+                        "injectSteps": [
+                            {
+                                "ephemeralMessage": " | ".join(lookahead_mid)
+                            }
+                        ]
+                    }
         except Exception:
             pass
         return {}
@@ -867,7 +986,9 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     except Exception:
         scout_map = ""
 
-    if not memories and not checkpoint and not scout_map:
+    lookahead_notices = get_notice_lookahead_alerts(db, ws, recent_actions, user_query)
+
+    if not memories and not checkpoint and not scout_map and not lookahead_notices:
         return {}
 
     delta_info = db.compute_session_delta(
@@ -886,6 +1007,8 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         delta_info=delta_info,
         micro_mode=False,
         user_query=user_query,
+        recent_actions=recent_actions,
+        lookahead_notices=lookahead_notices,
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)

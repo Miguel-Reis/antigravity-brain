@@ -1,3 +1,4 @@
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -6,7 +7,7 @@ import sys
 import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
@@ -663,7 +664,32 @@ def _get_cached_diet_audit(force: bool = False) -> Tuple[List[Dict[str, Any]], D
     return _DIET_CACHE["mcp"], _DIET_CACHE["plug"], _DIET_CACHE["is_lean"]
 
 
+MAX_POST_BYTES = 4 * 1024 * 1024
+
+
+def _safe_int(
+    val: Any,
+    default: int = 0,
+    min_v: Optional[int] = None,
+    max_v: Optional[int] = None,
+) -> int:
+    try:
+        if val is None or val == "":
+            res = default
+        else:
+            res = int(val)
+    except (ValueError, TypeError):
+        res = default
+    if min_v is not None and res < min_v:
+        res = min_v
+    if max_v is not None and res > max_v:
+        res = max_v
+    return res
+
+
 class BrainDashboardHandler(BaseHTTPRequestHandler):
+    timeout = 15.0
+
     def log_message(self, format: str, *args: Any) -> None:
         # Silenciar logs HTTP verbosos
         pass
@@ -675,10 +701,12 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         return "http://127.0.0.1:8765"
 
     def _is_trusted_local_origin(self) -> bool:
+        sec_site = str(self.headers.get("Sec-Fetch-Site") or "").strip().lower()
+        if sec_site == "cross-site":
+            return False
         origin = str(self.headers.get("Origin") or "").strip()
         if not origin:
-            sec_site = str(self.headers.get("Sec-Fetch-Site") or "").strip().lower()
-            return sec_site in ("", "same-origin", "none")
+            return sec_site in ("", "same-origin", "same-site", "none")
         return origin in ("http://127.0.0.1:8765", "http://localhost:8765", "http://127.0.0.1:3000", "http://localhost:3000")
 
     def _send_json(self, data: Any, status: int = 200) -> None:
@@ -731,12 +759,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path in ("/health", "/api/health"):
-            self._send_json({"status": "ok", "service": "antigravity-brain-v4.5"})
-            return
-
-        if parsed.path == "/favicon.ico":
-            self.send_response(204)
-            self.end_headers()
+            self._send_json({"status": "ok", "service": "antigravity-brain-v7.1"})
             return
 
         if parsed.path in ("/", "/index.html"):
@@ -768,31 +791,39 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path in ("/favicon.ico", "/brain_app.ico", "/brain_app.png"):
-            from brain_app import ensure_app_icons
-
-            icons = ensure_app_icons()
             is_png = parsed.path.endswith(".png")
-            f_path = icons["png"] if is_png else icons["ico"]
+            f_path = os.path.join(CURRENT_DIR, "brain_app.png" if is_png else "brain_app.ico")
             if os.path.isfile(f_path):
                 with open(f_path, "rb") as fh:
                     raw_bytes = fh.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "image/png" if is_png else "image/x-icon")
-                self.send_header("Cache-Control", "public, max-age=86400")
-                self.send_header("Content-Length", str(len(raw_bytes)))
-                self.end_headers()
-                if self.command != "HEAD":
-                    self.wfile.write(raw_bytes)
-                return
+                content_type = "image/png" if is_png else "image/x-icon"
+            else:
+                svg_icon = (
+                    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+                    '<rect width="64" height="64" rx="14" fill="#08080a"/>'
+                    '<circle cx="32" cy="32" r="18" fill="none" stroke="#10b981" stroke-width="4"/>'
+                    '<circle cx="32" cy="32" r="6" fill="#10b981"/>'
+                    "</svg>"
+                )
+                raw_bytes = svg_icon.encode("utf-8")
+                content_type = "image/svg+xml"
+            self.send_response(200)
+            self.send_header("Content-Type", content_type)
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.send_header("Content-Length", str(len(raw_bytes)))
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(raw_bytes)
+            return
 
         if parsed.path == "/manifest.json":
             manifest = {
-                "name": "Antigravity Brain v5.0 — Neural OS & Prompt Forge",
+                "name": "Antigravity Brain v7.1 — Carbon Studio OS",
                 "short_name": "Brain OS",
                 "start_url": "/?app=1#graph",
                 "display": "standalone",
-                "background_color": "#070a14",
-                "theme_color": "#070a14",
+                "background_color": "#08080a",
+                "theme_color": "#08080a",
                 "icons": [
                     {"src": "/brain_app.png", "sizes": "256x256", "type": "image/png"},
                     {"src": "/favicon.ico", "sizes": "64x64 32x32 16x16", "type": "image/x-icon"},
@@ -821,7 +852,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/swarm":
             qs = urllib.parse.parse_qs(parsed.query)
             run_id_raw = qs.get("run_id", [""])[0]
-            run_id = int(run_id_raw) if run_id_raw.isdigit() else None
+            run_id = _safe_int(run_id_raw, default=0, min_v=1) or None
             db = BrainDB()
             swarm = SwarmEngine(db)
             self._send_json(swarm.get_swarm_dashboard(run_id))
@@ -847,7 +878,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(parsed.query)
             ws = qs.get("workspace", ["brain_mcp"])[0]
             q = qs.get("q", [""])[0]
-            sim_turn = int(qs.get("turn", ["1"])[0] or 1)
+            sim_turn = _safe_int(qs.get("turn", ["1"])[0], default=1, min_v=1, max_v=10000)
             db = BrainDB()
             self._send_json(generate_inspector_preview(db=db, workspace=ws, query=q, simulate_turn=sim_turn))
             return
@@ -891,7 +922,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/api/ast/watch":
             qs = urllib.parse.parse_qs(parsed.query)
-            limit = int(qs.get("limit", ["10"])[0] or 10)
+            limit = _safe_int(qs.get("limit", ["10"])[0], default=10, min_v=1, max_v=200)
             watcher = get_global_watcher(CURRENT_DIR)
             self._send_json(watcher.get_watcher_status(limit=limit))
             return
@@ -920,7 +951,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             qs = urllib.parse.parse_qs(parsed.query)
             src = qs.get("source", ["triggerAstSaveAuditUI"])[0]
             tgt = qs.get("target", ["ast_save_audits"])[0]
-            hops = int(qs.get("max_hops", ["6"])[0] or 6)
+            hops = _safe_int(qs.get("max_hops", ["6"])[0], default=6, min_v=1, max_v=20)
             swarm = SwarmEngine(BrainDB())
             self._send_json(
                 swarm.find_graph_path(
@@ -947,7 +978,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/memories/revisions":
             qs = urllib.parse.parse_qs(parsed.query)
             mid_raw = qs.get("memory_id", [""])[0]
-            mid = int(mid_raw) if mid_raw.isdigit() else None
+            mid = _safe_int(mid_raw, default=0, min_v=1) or None
             db = BrainDB()
             self._send_json({"ok": True, "revisions": db.get_memory_revisions(memory_id=mid, limit=25)})
             return
@@ -989,8 +1020,19 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Origem cruzada não autorizada (CSRF Protection)"}, 403)
             return
         parsed = urllib.parse.urlparse(self.path)
-        length = int(self.headers.get("Content-Length", 0) or 0)
-        body_raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+        raw_len = self.headers.get("Content-Length", "0")
+        try:
+            length = int(raw_len or 0)
+        except (ValueError, TypeError):
+            self._send_json({"error": "Cabeçalho Content-Length inválido."}, 400)
+            return
+        if length < 0:
+            self._send_json({"error": "Cabeçalho Content-Length inválido."}, 400)
+            return
+        if length > MAX_POST_BYTES:
+            self._send_json({"error": "Payload excede o limite máximo permitido (4 MB)."}, 413)
+            return
+        body_raw = self.rfile.read(length).decode("utf-8", errors="replace") if length > 0 else "{}"
         try:
             body = json.loads(body_raw) if body_raw else {}
         except json.JSONDecodeError:
@@ -1005,26 +1047,72 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             workspace = str(body.get("workspace", "global")).strip() or "global"
             category = str(body.get("category", "general")).strip() or "general"
             tags = str(body.get("tags", "")).strip()
-            importance = int(body.get("importance", 4) or 4)
+            importance = _safe_int(body.get("importance", 4), default=4, min_v=1, max_v=5)
             mem_id = body.get("id")
 
             if not topic or not fact:
                 self._send_json({"error": "Tópico e facto são obrigatórios."}, 400)
                 return
 
-            if mem_id:
+            if mem_id is not None and str(mem_id).strip() != "":
+                mid = _safe_int(mem_id, default=0, min_v=1)
+                if mid <= 0:
+                    self._send_json({"error": "ID de memória inválido."}, 400)
+                    return
+                topic = db.redact_secrets(topic)
+                fact = db.redact_secrets(fact)
+                ws_norm = workspace.lower()
+                cat_norm = category.lower()
+                hash_fn = getattr(db, "_hash_fact", None)
+                f_hash = hash_fn(ws_norm, topic, fact) if callable(hash_fn) else db._compute_hash(topic, fact, ws_norm)
+                sem_vec = db.compute_semantic_vector(f"{topic} {fact} {tags} {cat_norm}")
+                emb_json = json.dumps(sem_vec)
+                bq_fn = getattr(db, "quantize_binary", None) or getattr(db, "compute_binary_vector", None)
+                emb_bq = (
+                    bq_fn(sem_vec)
+                    if callable(bq_fn)
+                    else format(sum((1 << i) for i, v in enumerate(sem_vec[:128]) if float(v) > 0.0), "032x")
+                )
                 with db._connect() as conn:
-                    conn.execute(
-                        """
-                        UPDATE memories
-                        SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?,
-                            source_agent = 'human_ui', trust_score = 1.0, human_locked = 1,
-                            last_accessed = CURRENT_TIMESTAMP
-                        WHERE id = ?;
-                        """,
-                        (topic, fact, workspace.lower(), category.lower(), tags, importance, int(mem_id)),
-                    )
-                self._send_json({"ok": True, "id": int(mem_id), "updated": True, "human_locked": 1})
+                    cols = {r["name"] for r in conn.execute("PRAGMA table_info(memories);").fetchall()}
+                    try:
+                        if "embedding_bq" in cols:
+                            conn.execute(
+                                """
+                                UPDATE memories
+                                SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?,
+                                    fact_hash = ?, embedding_json = ?, embedding_bq = ?,
+                                    source_agent = 'human_ui', trust_score = 1.0, human_locked = 1,
+                                    last_accessed = CURRENT_TIMESTAMP
+                                WHERE id = ?;
+                                """,
+                                (topic, fact, ws_norm, cat_norm, tags, importance, f_hash, emb_json, emb_bq, mid),
+                            )
+                        else:
+                            conn.execute(
+                                """
+                                UPDATE memories
+                                SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?,
+                                    fact_hash = ?, embedding_json = ?,
+                                    source_agent = 'human_ui', trust_score = 1.0, human_locked = 1,
+                                    last_accessed = CURRENT_TIMESTAMP
+                                WHERE id = ?;
+                                """,
+                                (topic, fact, ws_norm, cat_norm, tags, importance, f_hash, emb_json, mid),
+                            )
+                    except Exception:
+                        conn.execute(
+                            """
+                            UPDATE memories
+                            SET topic = ?, fact = ?, workspace = ?, category = ?, tags = ?, importance = ?,
+                                embedding_json = ?,
+                                source_agent = 'human_ui', trust_score = 1.0, human_locked = 1,
+                                last_accessed = CURRENT_TIMESTAMP
+                            WHERE id = ?;
+                            """,
+                            (topic, fact, ws_norm, cat_norm, tags, importance, emb_json, mid),
+                        )
+                self._send_json({"ok": True, "id": mid, "updated": True, "human_locked": 1})
             else:
                 row_id, is_new = db.store_fact(
                     topic=topic,
@@ -1077,8 +1165,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/swarm/action":
             action = str(body.get("action", "verify_all")).strip()
             lane = str(body.get("lane", "")).strip()
-            run_id_raw = body.get("run_id")
-            run_id = int(run_id_raw) if str(run_id_raw or "").isdigit() else None
+            run_id = _safe_int(body.get("run_id"), default=0, min_v=1) or None
             ws_path = str(body.get("workspace_path", "")).strip() or CURRENT_DIR
             mode = str(body.get("mode", "full")).strip()
             swarm = SwarmEngine(db)
@@ -1091,7 +1178,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
         if parsed.path == "/api/swarm/task":
             task_code = str(body.get("task_code", "")).strip()
             status = str(body.get("status", "done")).strip()
-            progress = int(body.get("progress", 100))
+            progress = _safe_int(body.get("progress", 100), default=100, min_v=0, max_v=100)
             summary = str(body.get("summary", "")).strip()
             swarm = SwarmEngine(db)
             dash = swarm.update_task_status(task_code=task_code, status=status, progress=progress, summary=summary)
@@ -1144,7 +1231,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/memories/pin":
-            mem_id = int(body.get("id", 0) or 0)
+            mem_id = _safe_int(body.get("id", 0), default=0, min_v=0)
             res = db.toggle_pin_memory(mem_id)
             self._send_json(res)
             return
@@ -1163,7 +1250,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/memories/rollback":
-            rev_id = int(body.get("revision_id") or body.get("id") or 0)
+            rev_id = _safe_int(body.get("revision_id") or body.get("id"), default=0, min_v=0)
             res = db.rollback_memory(revision_id=rev_id)
             self._send_json(res, 200 if res.get("ok") else 400)
             return
@@ -1188,7 +1275,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json({**res, "office": swarm.get_office_state()})
             return
 
-        if parsed.path == "/api/update":
+        if parsed.path in ("/api/update", "/api/update/apply"):
             res = check_and_apply_update(force_fetch=True)
             self._send_json({"ok": True, **res})
             return
@@ -1204,8 +1291,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 target_files = [str(f).strip() for f in raw_files if str(f).strip()]
             else:
                 target_files = []
-            sandbox_id_raw = body.get("sandbox_id")
-            sandbox_id = int(sandbox_id_raw) if str(sandbox_id_raw or "").isdigit() else None
+            sandbox_id = _safe_int(body.get("sandbox_id"), default=0, min_v=1) or None
             swarm = SwarmEngine(db)
             res = swarm.manage_subagent_sandbox(
                 action=action,
@@ -1249,12 +1335,12 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             action = str(body.get("action", "")).strip()
             orbit = _get_fresh_orbit_engine(db)
             if action == "approve_item":
-                item_id = int(body.get("id", 0) or 0)
+                item_id = _safe_int(body.get("id", 0), default=0, min_v=0)
                 res = orbit.approve_inbox_item(item_id=item_id, workspace_path=CURRENT_DIR)
             elif action == "approve_all":
                 res = orbit.approve_all_inbox(workspace_path=CURRENT_DIR)
             elif action == "redirect_item":
-                item_id = int(body.get("id", 0) or 0)
+                item_id = _safe_int(body.get("id", 0), default=0, min_v=0)
                 note = str(body.get("redirect_note", "")).strip()
                 res = orbit.redirect_inbox_item(item_id=item_id, redirect_note=note)
             elif action == "broadcast":
@@ -1294,7 +1380,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                     agent_id=str(body.get("agent_id", "arch-01")),
                     assignee=str(body.get("assignee", "")),
                     close_reason=str(body.get("close_reason", "")),
-                    priority=int(body.get("priority", 4) or 4),
+                    priority=_safe_int(body.get("priority", 4), default=4, min_v=1, max_v=5),
                     summary=str(body.get("summary", "")),
                 )
                 res = {**dot_res, "dot": dot_res}
@@ -1378,7 +1464,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
                 rc_res = orbit.resolve_global_rule_conflicts(workspace=ws)
                 res = {**rc_res, "self_learn": orbit.get_self_learn_status(workspace=ws)}
             elif action == "file_edit_gc":
-                max_pw = int(body.get("max_per_workspace", 2) or 2)
+                max_pw = _safe_int(body.get("max_per_workspace", 2), default=2, min_v=1, max_v=50)
                 res = orbit.compact_redundant_file_edits(max_per_workspace=max_pw)
             elif action == "quota_5h_radar":
                 res = orbit.get_5h_quota_radar()
@@ -1397,34 +1483,21 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             return
 
         if parsed.path == "/api/app/launch":
-            from brain_app import ensure_desktop_shortcuts, launch_native_app_window
-
-            act = str(body.get("action", "open_window")).strip().lower()
-            sec = str(body.get("section", "graph")).strip().lower()
-            if act == "open_spotlight":
-                pyw = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
-                if not os.path.isfile(pyw):
-                    pyw = sys.executable
-                subprocess.Popen(
-                    [pyw, os.path.join(CURRENT_DIR, "brain_app.py"), "--spotlight"],
-                    cwd=CURRENT_DIR,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    creationflags=0x08000000 if os.name == "nt" else 0,
-                )
-                self._send_json({"ok": True, "action": "open_spotlight"})
-                return
-            if act == "create_shortcut":
-                sc_res = ensure_desktop_shortcuts()
-                self._send_json(sc_res)
-                return
-            win_res = launch_native_app_window(section=sec)
-            self._send_json(win_res)
+            self._send_json(
+                {
+                    "ok": True,
+                    "mode": "web_dashboard",
+                    "url": f"http://127.0.0.1:{PORT}/#graph",
+                }
+            )
             return
 
         self._send_json({"error": "Endpoint desconhecido"}, 404)
 
     def do_DELETE(self) -> None:
+        if not self._is_trusted_local_origin():
+            self._send_json({"error": "Forbidden: Cross-Origin request blocked"}, 403)
+            return
         _GRAPH_PAYLOAD_CACHE.clear()
         parsed = urllib.parse.urlparse(self.path)
         if parsed.path.startswith("/api/memories/"):
@@ -1439,6 +1512,22 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 class ReusableThreadingHTTPServer(ThreadingHTTPServer):
     allow_reuse_address = True
     daemon_threads = True
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=16, thread_name_prefix="BrainHTTP"
+        )
+
+    def process_request(self, request: Any, client_address: Any) -> None:
+        self._executor.submit(self.process_request_thread, request, client_address)
+
+    def server_close(self) -> None:
+        super().server_close()
+        try:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
 
 
 def start_self_learn_sentinel_daemon(interval_seconds: float = 90.0) -> None:

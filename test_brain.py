@@ -892,15 +892,10 @@ def run_all_tests() -> None:
         assert sl_ui_token in html_content, f"Token Self-Learn / Prompt Forge v4.9 em falta em index.html: {sl_ui_token}"
     print("[PASS] Self-Learn Studio Gráfico (60 FPS Neural Pipeline) & Prompt Forge + Antigravity Skills v4.9 OK")
 
-    # 25. Testar App Desktop Nativa v5.0 (brain_app.py + Ícones .ico/.png + System Tray + Spotlight Ctrl+Shift+B)
-    from brain_app import QuickPromptForgeSpotlight, ensure_app_icons, ensure_desktop_shortcuts
-
-    app_icons = ensure_app_icons()
-    assert os.path.isfile(app_icons["ico"]) and os.path.getsize(app_icons["ico"]) > 500, f"Ícone .ico inválido: {app_icons}"
-    sc_info = ensure_desktop_shortcuts()
-    assert sc_info.get("ok") is True or sc_info.get("reason") == "non-windows", f"Falha ao criar atalho Desktop: {sc_info}"
-    assert len(QuickPromptForgeSpotlight.TASK_MODES) >= 8
-    print("[PASS] App Desktop Nativa v5.0 (brain_app.py + Ícone .ico + System Tray + Spotlight Ctrl+Shift+B + Atalho Desktop) OK")
+    # 25. Verificar Remoção Limpa da App Desktop (Substituída 100% pela Web Dashboard Carbon Studio OS v7.1)
+    assert not os.path.exists(os.path.join(repo_dir, "brain_app.py")), "brain_app.py devia ter sido removido"
+    assert not os.path.exists(os.path.join(repo_dir, "BrainApp.bat")), "BrainApp.bat devia ter sido removido"
+    print("[PASS] Remoção Limpa da App Desktop (100% Web Dashboard Carbon Studio OS v7.1) OK")
 
     # 26. Testar Sistema Bilingue PT-PT / EN-EN e Erradicação de Strings em Francês
     for forbidden_french in ("îlots", "à relier", "objectifs du jour", "Verrouillé"):
@@ -1156,15 +1151,39 @@ def run_all_tests() -> None:
         routed_scout = select_relevant_scout_map(sample_scout, user_query="otimizar db_engine.py sqlite", max_len=160)
         assert "db_engine.py" in routed_scout, f"Query-Routed Scout Map devia priorizar db_engine.py: {routed_scout}"
 
-    brain_app_txt = Path(os.path.join(repo_dir, "brain_app.py")).read_text(encoding="utf-8")
-    for app_tok in (
-        "_do_quick_global_rule",
-        "_do_quick_defuddle",
-        "_do_quick_resolve_conflicts",
-        "Antigravity Brain v7.0 — Precision Studio OS",
-        "#080b11",
-    ):
-        assert app_tok in brain_app_txt, f"Token v7.0 / Ação rápida Spotlight em falta em brain_app.py: {app_tok}"
+        # 29.5 Tecnologias de Fronteira v7.2 (128-Bit BQ Hamming, HippoRAG 2 PPR, Ebbinghaus, Bi-Temporal Superseding)
+        bq_hex = gb_db.quantize_vector_128bit(vec128)
+        assert len(bq_hex) == 32, f"Esperado hex BQ de 32 chars (128 bits), obtido {len(bq_hex)}"
+        assert gb_db.hamming_similarity_128bit(bq_hex, bq_hex) == 1.0
+        ret_high = gb_db.compute_ebbinghaus_retention(age_days=10.0, access_count=25, importance=5, tier="semantic")
+        ret_low = gb_db.compute_ebbinghaus_retention(age_days=10.0, access_count=0, importance=2, tier="working")
+        assert ret_high > ret_low, f"Ebbinghaus retention devia premiar reforço espaçado: {ret_high} vs {ret_low}"
+
+        # Bi-Temporal Automatic Contradiction Superseding + HippoRAG 2 PPR
+        id_v1, _ = gb_db.store_fact(
+            topic="Porta HTTP Dashboard v1",
+            fact="Em web_dashboard.py o servidor web HTTP corre na porta 8080 com ThreadPoolExecutor.",
+            workspace="new_project",
+            category="architecture",
+            importance=4,
+        )
+        id_v2, _ = gb_db.store_fact(
+            topic="Porta HTTP Dashboard v2",
+            fact="Em web_dashboard.py o servidor web HTTP corre na porta 8765 com ThreadPoolExecutor.",
+            workspace="new_project",
+            category="architecture",
+            importance=5,
+        )
+        assert id_v2 != id_v1
+        ppr_scores = gb_db.compute_memory_ppr({id_v2: 1.0}, [(id_v2, id_v1, "supersedes")])
+        assert ppr_scores.get(id_v1, 0.0) > 0.0, f"HippoRAG 2 PPR devia propagar score na aresta: {ppr_scores}"
+
+        # MCP 2026 Resources & Prompts
+        from server import mcp as mcp_srv
+        res_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 91, "method": "resources/list", "params": {}})
+        assert len(res_list["result"]["resources"]) >= 4, f"MCP 2026 resources/list incompleto: {res_list}"
+        prm_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 92, "method": "prompts/list", "params": {}})
+        assert len(prm_list["result"]["prompts"]) >= 3, f"MCP 2026 prompts/list incompleto: {prm_list}"
 
     for gb_ui_token in (
         'id="tabBtnVault"',

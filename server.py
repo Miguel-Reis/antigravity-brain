@@ -8,7 +8,7 @@ import json
 import os
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 # Guardar o stdout original exclusivamente para o protocolo JSON-RPC MCP
 _MCP_RAW_STDOUT = sys.stdout
@@ -33,7 +33,25 @@ class StdioMCPServer:
         self.version = version
         self._tools: Dict[str, Dict[str, Any]] = {}
 
-    def tool(self, name: Optional[str] = None, description: Optional[str] = None) -> Callable:
+    READ_ONLY_TOOLS = {
+        "search_brain",
+        "brain_stats",
+        "swarm_status",
+        "swarm_symbol_lookup",
+        "swarm_impact_graph",
+        "brain_prune_tools",
+        "swarm_watch_audit",
+        "swarm_graph_path",
+        "orbit_briefing_roi",
+    }
+    DESTRUCTIVE_TOOLS = {"forget_fact"}
+
+    def tool(
+        self,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        annotations: Optional[Dict[str, Any]] = None,
+    ) -> Callable:
         def decorator(fn: Callable) -> Callable:
             tool_name = name or fn.__name__
             doc = inspect.getdoc(fn) or description or f"Executes {tool_name}"
@@ -77,6 +95,8 @@ class StdioMCPServer:
                 ann = param.annotation
                 json_type = type_map.get(ann, "string")
                 prop_schema: Dict[str, Any] = {"type": json_type}
+                if param_name in param_docs:
+                    prop_schema["description"] = param_docs[param_name]
                 if param.default is inspect.Parameter.empty:
                     required.append(param_name)
                 else:
@@ -90,6 +110,16 @@ class StdioMCPServer:
             if required:
                 input_schema["required"] = required
 
+            is_ro = tool_name in self.READ_ONLY_TOOLS
+            is_destr = tool_name in self.DESTRUCTIVE_TOOLS
+            tool_annotations: Dict[str, Any] = {
+                "readOnlyHint": is_ro,
+                "idempotentHint": True if (is_ro or is_destr or tool_name in ("store_fact", "save_checkpoint", "swarm_scout")) else False,
+                "destructiveHint": is_destr,
+            }
+            if annotations:
+                tool_annotations.update(annotations)
+
             self._tools[tool_name] = {
                 "fn": fn,
                 "signature": sig,
@@ -97,6 +127,7 @@ class StdioMCPServer:
                     "name": tool_name,
                     "description": short_desc[:115],
                     "inputSchema": input_schema,
+                    "annotations": tool_annotations,
                 },
             }
             return fn
@@ -200,13 +231,130 @@ class StdioMCPServer:
                 }
 
         if method == "resources/list":
-            return {"jsonrpc": "2.0", "id": req_id, "result": {"resources": []}}
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "resources": [
+                        {
+                            "uri": "brain://memories/pinned",
+                            "name": "Pinned Directives & Global Rules",
+                            "description": "High-priority pinned memories, human-locked directives, and distilled Self-Learn rules",
+                            "mimeType": "text/markdown",
+                        },
+                        {
+                            "uri": "brain://scout/map",
+                            "name": "Scout Shared Codebase Map",
+                            "description": "Single-pass AST codebase map ([SCOUT_SHARED_MAP]) with surgical :Lstart-end pointers",
+                            "mimeType": "text/markdown",
+                        },
+                        {
+                            "uri": "brain://graph/report",
+                            "name": "Graphify Architecture Report & God Nodes",
+                            "description": "Multi-modal knowledge graph report with God Nodes, PageRank, and topological communities",
+                            "mimeType": "text/markdown",
+                        },
+                        {
+                            "uri": "brain://orbit/briefing",
+                            "name": "Orbit Morning Briefing & ROI",
+                            "description": "Executive morning briefing, 5h quota radar, and engineering ROI metrics",
+                            "mimeType": "text/markdown",
+                        },
+                    ]
+                },
+            }
 
         if method == "resources/templates/list":
-            return {"jsonrpc": "2.0", "id": req_id, "result": {"resourceTemplates": []}}
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "resourceTemplates": [
+                        {
+                            "uriTemplate": "brain://workspace/{workspace}/checkpoint",
+                            "name": "Workspace Checkpoint",
+                            "description": "Active project checkpoint, goal, next tasks, and key files for a workspace",
+                            "mimeType": "text/markdown",
+                        },
+                        {
+                            "uriTemplate": "brain://symbol/{symbol_name}",
+                            "name": "AST Symbol Slice",
+                            "description": "Surgical AST symbol lookup with [start_line, end_line] and code snippet",
+                            "mimeType": "text/markdown",
+                        },
+                    ]
+                },
+            }
+
+        if method == "resources/read":
+            uri = str((params or {}).get("uri") or "").strip()
+            text_out = self._resolve_resource_uri(uri)
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "contents": [
+                        {
+                            "uri": uri,
+                            "mimeType": "text/markdown",
+                            "text": text_out,
+                        }
+                    ]
+                },
+            }
 
         if method == "prompts/list":
-            return {"jsonrpc": "2.0", "id": req_id, "result": {"prompts": []}}
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "prompts": [
+                        {
+                            "name": "ultraplan-scout",
+                            "description": "Deep architectural planning workflow grounded in [SCOUT_SHARED_MAP] and Graphify God Nodes",
+                            "arguments": [
+                                {"name": "goal", "description": "Architectural feature or refactoring goal", "required": True},
+                                {"name": "workspace", "description": "Target workspace name", "required": False},
+                            ],
+                        },
+                        {
+                            "name": "bugfix-lineage",
+                            "description": "Deterministic root-cause debugging prompt using AST slices, blast radius, and regression tests",
+                            "arguments": [
+                                {"name": "issue", "description": "Bug symptom or stack trace", "required": True},
+                                {"name": "target_file", "description": "Suspected file or symbol", "required": False},
+                            ],
+                        },
+                        {
+                            "name": "swarm-dispatch",
+                            "description": "Asymmetric Swarm 4-lane decomposition (UI, API, TESTS, DOCS) with surgical file ownership",
+                            "arguments": [
+                                {"name": "mission", "description": "Multi-file engineering mission to parallelize", "required": True},
+                                {"name": "workspace", "description": "Target workspace name", "required": False},
+                            ],
+                        },
+                    ]
+                },
+            }
+
+        if method == "prompts/get":
+            prompt_name = str((params or {}).get("name") or "").strip()
+            prompt_args = (params or {}).get("arguments") or {}
+            prompt_payload = self._build_prompt_payload(prompt_name, prompt_args)
+            if prompt_payload is None:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {
+                        "code": -32602,
+                        "message": f"Unknown prompt: {prompt_name}",
+                    },
+                }
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": prompt_payload,
+            }
 
         if method == "logging/setLevel":
             return {"jsonrpc": "2.0", "id": req_id, "result": {}}
@@ -219,6 +367,143 @@ class StdioMCPServer:
                 "message": f"Method not found: {method}",
             },
         }
+
+    def _resolve_resource_uri(self, uri: str) -> str:
+        try:
+            if uri == "brain://memories/pinned":
+                mems = db.search_memories("", workspace="all", n_results=12, update_stats=False)
+                lines = ["# 📌 Pinned Directives & Global Rules\n"]
+                for m in mems:
+                    lines.append(f"- **[{m.get('workspace', 'global')}] {m.get('topic')}**: {m.get('fact')}")
+                return "\n".join(lines)
+            if uri == "brain://scout/map":
+                scout_res = swarm.run_codebase_scout(CURRENT_DIR)
+                return str(scout_res.get("shared_map") or "# Scout Shared Map\n")
+            if uri == "brain://graph/report":
+                rep = swarm.generate_architecture_report(workspace_path=CURRENT_DIR, write_to_disk=False)
+                return str(rep.get("markdown") or "# Graphify Architecture Report\n")
+            if uri == "brain://orbit/briefing":
+                brief = orbit.get_executive_briefing_and_roi()
+                return f"# 🪐 Orbit Morning Briefing & ROI\n\n```json\n{json.dumps(brief, indent=2, ensure_ascii=False)}\n```"
+            if uri.startswith("brain://workspace/") and uri.endswith("/checkpoint"):
+                ws_part = uri[len("brain://workspace/") : -len("/checkpoint")].strip("/") or "brain_mcp"
+                chk = db.get_checkpoint(ws_part) or {}
+                return (
+                    f"# 🏁 Checkpoint — `{ws_part}`\n\n"
+                    f"- **Project**: {chk.get('project', ws_part)}\n"
+                    f"- **Goal**: {chk.get('goal', 'N/A')}\n"
+                    f"- **Status**: {chk.get('status', 'Active')}\n"
+                    f"- **Key Files**: {chk.get('key_files', 'N/A')}\n"
+                )
+            if uri.startswith("brain://symbol/"):
+                sym_name = uri[len("brain://symbol/") :].strip("/")
+                lookup = swarm.lookup_symbol(sym_name, workspace_path=CURRENT_DIR)
+                return f"# 🔍 AST Symbol Slice: `{sym_name}`\n\n```json\n{json.dumps(lookup, indent=2, ensure_ascii=False)}\n```"
+        except Exception as exc:
+            return f"# Resource Error (`{uri}`)\n\n{exc}"
+        return f"# Resource `{uri}`\n\nNo content found for `{uri}`."
+
+    def _build_prompt_payload(self, prompt_name: str, args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        if prompt_name == "ultraplan-scout":
+            goal = str(args.get("goal") or "Design and implement architectural upgrade").strip()
+            ws = str(args.get("workspace") or "brain_mcp").strip()
+            text = (
+                f"# 📐 Ultraplan Scout Protocol — `{ws}`\n\n"
+                f"**Goal**: {goal}\n\n"
+                f"1. Read `[SCOUT_SHARED_MAP]` and `brain://graph/report` once to identify God Nodes and target `:Lstart-end` slices.\n"
+                f"2. Formulate a bounded multi-phase plan with explicit interface contracts and zero blind overwrites.\n"
+                f"3. Verify all changes via AST compilation and automated tests before completion."
+            )
+            return {
+                "description": f"Ultraplan architectural specification for {ws}",
+                "messages": [{"role": "user", "content": {"type": "text", "text": text}}],
+            }
+        if prompt_name == "bugfix-lineage":
+            issue = str(args.get("issue") or "Investigate and fix reported regression").strip()
+            target_file = str(args.get("target_file") or "workspace").strip()
+            text = (
+                f"# 🐛 Bugfix Lineage & Root-Cause Protocol\n\n"
+                f"**Issue**: {issue}\n"
+                f"**Target**: `{target_file}`\n\n"
+                f"1. Use `swarm_symbol_lookup` and `swarm_impact_graph` on `{target_file}` to isolate exact `:Lstart-end` lines and callers.\n"
+                f"2. Apply a surgical `edit_file` fix preserving existing contracts and docstrings.\n"
+                f"3. Run regression tests and append `<!-- brain: Bugfix | Root cause and fix -->`."
+            )
+            return {
+                "description": f"Root-cause bugfix workflow for {target_file}",
+                "messages": [{"role": "user", "content": {"type": "text", "text": text}}],
+            }
+        if prompt_name == "swarm-dispatch":
+            mission = str(args.get("mission") or "Execute parallel multi-lane sprint").strip()
+            ws = str(args.get("workspace") or "brain_mcp").strip()
+            text = (
+                f"# 🐝 Asymmetric Swarm 4-Lane Dispatch (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`) — `{ws}`\n\n"
+                f"**Mission**: {mission}\n\n"
+                f"- **Lane 1 (`DB-HOOKS`)**: Core storage, schema, and hooks.\n"
+                f"- **Lane 2 (`API-ENGINES`)**: Backend engines, AST graph, and MCP protocol.\n"
+                f"- **Lane 3 (`UI-GATEWAY`)**: HTTP routes and 60 FPS frontend UI.\n"
+                f"- **Lane 4 (`QA-VERIFY`)**: End-to-end test suite and transactional sandbox verification."
+            )
+            return {
+                "description": f"Asymmetric Swarm 4-lane dispatch plan for {ws}",
+                "messages": [{"role": "user", "content": {"type": "text", "text": text}}],
+            }
+        return None
+
+    def _read_message(self, in_stream: Any) -> Tuple[Optional[Any], bool]:
+        """
+        Reads a single JSON-RPC message supporting both Content-Length (exact UTF-8 byte framing)
+        and newline-delimited JSON-RPC, while remaining 100% compatible with both binary-backed
+        streams (`sys.stdin.buffer`) and `io.StringIO` in unit tests.
+        """
+        use_buffer = hasattr(in_stream, "buffer") and getattr(in_stream, "buffer", None) is not None
+        raw_stream = in_stream.buffer if use_buffer else in_stream
+
+        while True:
+            line = raw_stream.readline()
+            if not line:
+                return None, False
+
+            line_str = line.decode("utf-8", errors="replace") if isinstance(line, (bytes, bytearray)) else str(line)
+            stripped = line_str.strip()
+            if not stripped:
+                continue
+
+            if stripped.lower().startswith("content-length:"):
+                length = int(stripped.split(":", 1)[1].strip())
+                while True:
+                    hdr_line = raw_stream.readline()
+                    if not hdr_line:
+                        break
+                    hdr_str = (
+                        hdr_line.decode("utf-8", errors="replace")
+                        if isinstance(hdr_line, (bytes, bytearray))
+                        else str(hdr_line)
+                    )
+                    if hdr_str.strip() == "":
+                        break
+
+                if isinstance(line, (bytes, bytearray)):
+                    raw_bytes = raw_stream.read(length)
+                    if not raw_bytes:
+                        return None, True
+                    raw_body = raw_bytes.decode("utf-8", errors="replace")
+                else:
+                    # io.StringIO compatibility with exact UTF-8 byte length framing
+                    chunks: List[str] = []
+                    bytes_read = 0
+                    while bytes_read < length:
+                        ch = raw_stream.read(1)
+                        if not ch:
+                            break
+                        chunks.append(ch)
+                        bytes_read += len(ch.encode("utf-8"))
+                    raw_body = "".join(chunks)
+                    if not raw_body:
+                        return None, True
+                return json.loads(raw_body), True
+
+            return json.loads(stripped), False
 
     def _write_message(self, out_stream: Any, payload: Dict[str, Any], use_content_length: bool = False) -> None:
         body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
@@ -245,28 +530,11 @@ class StdioMCPServer:
         use_content_length = False
         while True:
             try:
-                line = in_stream.readline()
-                if not line:
+                msg, is_cl = self._read_message(in_stream)
+                if msg is None:
                     break
-
-                stripped = line.strip()
-                if not stripped:
-                    continue
-
-                # Suporte híbrido: Content-Length (LSP-style) ou JSON-RPC por linha (MCP stdio standard)
-                if stripped.lower().startswith("content-length:"):
+                if is_cl:
                     use_content_length = True
-                    length = int(stripped.split(":", 1)[1].strip())
-                    while True:
-                        hdr_line = in_stream.readline()
-                        if not hdr_line or hdr_line.strip() == "":
-                            break
-                    raw_body = in_stream.read(length)
-                    if not raw_body:
-                        break
-                    msg = json.loads(raw_body)
-                else:
-                    msg = json.loads(stripped)
 
                 if isinstance(msg, list):
                     responses = []

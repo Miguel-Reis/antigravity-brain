@@ -67,8 +67,86 @@ class AstImpactWatcher:
                 );
                 CREATE INDEX IF NOT EXISTS idx_ast_save_audits_file
                 ON ast_save_audits(file_path, id DESC);
+
+                CREATE TABLE IF NOT EXISTS ast_file_hashes (
+                    file_path TEXT PRIMARY KEY,
+                    workspace TEXT DEFAULT 'global',
+                    sha256 TEXT NOT NULL,
+                    mtime_ns INTEGER DEFAULT 0,
+                    symbols_json TEXT DEFAULT '{}',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
+                CREATE TABLE IF NOT EXISTS ast_symbol_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    file_path TEXT NOT NULL,
+                    symbol_name TEXT NOT NULL,
+                    symbol_kind TEXT DEFAULT 'function',
+                    start_line INTEGER DEFAULT 1,
+                    end_line INTEGER DEFAULT 1,
+                    sha256 TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(file_path, symbol_name)
+                );
                 """
             )
+
+    @staticmethod
+    def _scan_brace_end_line(lines: List[str], start_idx: int, max_scan: int = 400) -> int:
+        """
+        Scans brace depth `{` / `}` from `start_idx` up to `max_scan` lines, ignoring braces
+        inside string literals ('...', "...", `...`) and comments (//..., /*...*/).
+        """
+        brace_depth = 0
+        started_brace = False
+        in_Quote: Optional[str] = None
+        in_block_comment = False
+        limit_idx = min(len(lines), start_idx + max_scan)
+
+        for idx in range(start_idx, limit_idx):
+            ln = lines[idx]
+            i = 0
+            n = len(ln)
+            while i < n:
+                ch = ln[i]
+                nxt = ln[i + 1] if i + 1 < n else ""
+                if in_block_comment:
+                    if ch == "*" and nxt == "/":
+                        in_block_comment = False
+                        i += 2
+                        continue
+                    i += 1
+                    continue
+                if in_Quote is not None:
+                    if ch == "\\":
+                        i += 2
+                        continue
+                    if ch == in_Quote:
+                        in_Quote = None
+                    i += 1
+                    continue
+                if ch == "/" and nxt == "/":
+                    break
+                if ch == "/" and nxt == "*":
+                    in_block_comment = True
+                    i += 2
+                    continue
+                if ch in ("'", '"', "`"):
+                    in_Quote = ch
+                    i += 1
+                    continue
+                if ch == "{":
+                    brace_depth += 1
+                    started_brace = True
+                elif ch == "}":
+                    brace_depth -= 1
+                    if started_brace and brace_depth <= 0:
+                        return idx + 1
+                i += 1
+            if not started_brace and idx > start_idx + 3:
+                break
+
+        return limit_idx if started_brace else min(len(lines), start_idx + 24)
 
     @staticmethod
     def extract_symbol_hashes(file_path: Path, content: str) -> Dict[str, Dict[str, Any]]:
@@ -126,7 +204,7 @@ class AstImpactWatcher:
                 if not sym_name or len(sym_name) < 2:
                     continue
                 s_line = idx + 1
-                e_line = min(len(lines), s_line + 24)
+                e_line = AstImpactWatcher._scan_brace_end_line(lines, idx, max_scan=400)
                 chunk = "\n".join(lines[idx:e_line])
                 c_sha = hashlib.sha256(chunk.encode("utf-8")).hexdigest()[:12]
                 symbols[sym_name] = {
@@ -197,8 +275,45 @@ class AstImpactWatcher:
         content = target_p.read_text(encoding="utf-8", errors="ignore")
         file_sha = hashlib.sha256(content.encode("utf-8")).hexdigest()[:16]
         stat_info = target_p.stat()
+        ws_name = BrainDB.normalize_workspace(str(ws_root))
 
         prev_state = self._file_state_cache.get(rel_path)
+        if prev_state is None:
+            try:
+                with self.db._connect() as conn:
+                    fh_row = conn.execute(
+                        "SELECT sha256, mtime_ns, symbols_json FROM ast_file_hashes WHERE file_path = ?;",
+                        (rel_path,),
+                    ).fetchall()
+                    sym_rows = conn.execute(
+                        "SELECT symbol_name, symbol_kind, start_line, end_line, sha256 FROM ast_symbol_snapshots WHERE file_path = ?;",
+                        (rel_path,),
+                    ).fetchall()
+                    if fh_row or sym_rows:
+                        loaded_syms: Dict[str, Dict[str, Any]] = {}
+                        if fh_row:
+                            try:
+                                loaded_syms = json.loads(fh_row[0]["symbols_json"] or "{}")
+                            except Exception:
+                                loaded_syms = {}
+                        for sr in sym_rows:
+                            s_nm = str(sr["symbol_name"])
+                            loaded_syms[s_nm] = {
+                                "name": s_nm,
+                                "kind": str(sr["symbol_kind"] or "function"),
+                                "start_line": int(sr["start_line"] or 1),
+                                "end_line": int(sr["end_line"] or 1),
+                                "sha256": str(sr["sha256"] or ""),
+                            }
+                        prev_state = {
+                            "sha256": str(fh_row[0]["sha256"] or "") if fh_row else "",
+                            "mtime_ns": int(fh_row[0]["mtime_ns"] or 0) if fh_row else 0,
+                            "symbols": loaded_syms,
+                        }
+                        self._file_state_cache[rel_path] = prev_state
+            except Exception:
+                prev_state = None
+
         if prev_state and prev_state.get("sha256") == file_sha and not force:
             return {
                 "ok": True,
@@ -220,8 +335,9 @@ class AstImpactWatcher:
             for old_name in prev_syms:
                 if old_name not in curr_symbols:
                     changed_symbols.append(old_name)
-        else:
-            # First snapshot or forced audit: pick top exported symbols in the file
+
+        if not changed_symbols and (not prev_state or force):
+            # First snapshot or forced audit on unchanged file: pick top exported symbols in the file
             top_syms = [
                 k for k, v in curr_symbols.items() if v.get("kind") in ("class", "function", "symbol") and "." not in k
             ]
@@ -232,6 +348,51 @@ class AstImpactWatcher:
             "sha256": file_sha,
             "symbols": curr_symbols,
         }
+        try:
+            with self.db._connect() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO ast_file_hashes (file_path, workspace, sha256, mtime_ns, symbols_json, updated_at)
+                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(file_path) DO UPDATE SET
+                        workspace = excluded.workspace,
+                        sha256 = excluded.sha256,
+                        mtime_ns = excluded.mtime_ns,
+                        symbols_json = excluded.symbols_json,
+                        updated_at = CURRENT_TIMESTAMP;
+                    """,
+                    (
+                        rel_path,
+                        ws_name,
+                        file_sha,
+                        int(stat_info.st_mtime_ns),
+                        json.dumps(curr_symbols),
+                    ),
+                )
+                conn.execute("DELETE FROM ast_symbol_snapshots WHERE file_path = ?;", (rel_path,))
+                for s_name, s_meta in curr_symbols.items():
+                    conn.execute(
+                        """
+                        INSERT INTO ast_symbol_snapshots (file_path, symbol_name, symbol_kind, start_line, end_line, sha256, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                        ON CONFLICT(file_path, symbol_name) DO UPDATE SET
+                            symbol_kind = excluded.symbol_kind,
+                            start_line = excluded.start_line,
+                            end_line = excluded.end_line,
+                            sha256 = excluded.sha256,
+                            updated_at = CURRENT_TIMESTAMP;
+                        """,
+                        (
+                            rel_path,
+                            s_name,
+                            str(s_meta.get("kind") or "function"),
+                            int(s_meta.get("start_line") or 1),
+                            int(s_meta.get("end_line") or 1),
+                            str(s_meta.get("sha256") or ""),
+                        ),
+                    )
+        except Exception:
+            pass
 
         # Run impact analysis on the file and the primary changed symbols
         file_stem = target_p.stem
@@ -452,6 +613,132 @@ class AstImpactWatcher:
             "total_audits": int(total_row["total_audits"] or 0) if total_row else 0,
             "high_risk_total": int(total_row["high_risk_total"] or 0) if total_row else 0,
             "audits": audits,
+        }
+
+    def analyze_git_diff_blast_radius(self, workspace_path: str = "") -> Dict[str, Any]:
+        """
+        Parses `git diff HEAD -U0` (or compares against persisted AST symbol snapshots),
+        maps modified line ranges to AST symbols, and resolves reverse callers,
+        Git co-changed files (`CO_CHANGED`), and targeted test functions.
+        """
+        import subprocess
+        from graphify_engine import get_graphify_engine
+
+        t0 = time.perf_counter()
+        ws_root = Path(workspace_path).resolve() if workspace_path else self.workspace_root.resolve()
+        ws_name = BrainDB.normalize_workspace(str(ws_root))
+
+        file_line_ranges: Dict[str, List[Tuple[int, int]]] = {}
+        try:
+            diff_out = subprocess.check_output(
+                ["git", "diff", "HEAD", "-U0"],
+                cwd=str(ws_root),
+                stderr=subprocess.DEVNULL,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=2.5,
+            )
+            curr_file = ""
+            hunk_re = re.compile(r"^@@\s+-\d+(?:,\d+)?\s+\+(\d+)(?:,(\d+))?\s+@@")
+            for raw_ln in diff_out.splitlines():
+                if raw_ln.startswith("+++ b/"):
+                    curr_file = raw_ln[6:].strip().replace("\\", "/")
+                    file_line_ranges.setdefault(curr_file, [])
+                elif curr_file and raw_ln.startswith("@@"):
+                    hm = hunk_re.match(raw_ln)
+                    if hm:
+                        s_ln = int(hm.group(1))
+                        cnt = int(hm.group(2)) if hm.group(2) is not None else 1
+                        e_ln = max(s_ln, s_ln + max(1, cnt) - 1)
+                        file_line_ranges[curr_file].append((s_ln, e_ln))
+        except Exception:
+            pass
+
+        modified_files: List[str] = []
+        modified_symbols: List[str] = []
+
+        # Map diff hunks to AST symbols
+        for rel_f, ranges in file_line_ranges.items():
+            fp = ws_root / rel_f
+            if not fp.is_file():
+                continue
+            modified_files.append(rel_f)
+            content = fp.read_text(encoding="utf-8", errors="ignore")
+            syms = self.extract_symbol_hashes(fp, content)
+            for s_name, s_meta in syms.items():
+                sym_s = int(s_meta.get("start_line", 1))
+                sym_e = int(s_meta.get("end_line", sym_s))
+                for h_s, h_e in ranges:
+                    if not (h_e < sym_s or h_s > sym_e):
+                        if s_name not in modified_symbols:
+                            modified_symbols.append(s_name)
+                        break
+
+        # Fallback to persisted SQLite symbol snapshots if git diff had no uncommitted hunks
+        if not modified_files:
+            with self.db._connect() as conn:
+                snap_files = conn.execute(
+                    "SELECT DISTINCT file_path FROM ast_symbol_snapshots LIMIT 40;"
+                ).fetchall()
+                for sf in snap_files:
+                    rel_f = str(sf["file_path"])
+                    fp = ws_root / rel_f
+                    if not fp.is_file():
+                        continue
+                    content = fp.read_text(encoding="utf-8", errors="ignore")
+                    curr_syms = self.extract_symbol_hashes(fp, content)
+                    sym_rows = conn.execute(
+                        "SELECT symbol_name, sha256 FROM ast_symbol_snapshots WHERE file_path = ?;",
+                        (rel_f,),
+                    ).fetchall()
+                    prev_map = {str(sr["symbol_name"]): str(sr["sha256"]) for sr in sym_rows}
+                    file_mod = False
+                    for s_name, s_meta in curr_syms.items():
+                        if s_name not in prev_map or prev_map[s_name] != s_meta.get("sha256"):
+                            file_mod = True
+                            if s_name not in modified_symbols:
+                                modified_symbols.append(s_name)
+                    if file_mod and rel_f not in modified_files:
+                        modified_files.append(rel_f)
+
+        reverse_callers: List[str] = []
+        targeted_tests: List[str] = []
+        for sym in (modified_symbols[:5] or [Path(f).stem for f in modified_files[:3]]):
+            base_s = sym.split(".")[-1]
+            imp = self.swarm.analyze_impact_graph(target=base_s, workspace_path=str(ws_root))
+            for c in imp.get("callers", []):
+                if c["file"] not in reverse_callers:
+                    reverse_callers.append(c["file"])
+            for t in imp.get("recommended_tests", []):
+                if t not in targeted_tests:
+                    targeted_tests.append(t)
+
+        g_eng = get_graphify_engine(str(ws_root))
+        cochange_edges = g_eng._mine_git_cochange_edges(ws_root)
+        co_changed_files: List[str] = []
+        mod_set = set(modified_files)
+        for ce in cochange_edges:
+            if not mod_set or ce["file_a"] in mod_set or ce["file_b"] in mod_set:
+                for cand_f in (ce["file_a"], ce["file_b"]):
+                    if cand_f not in co_changed_files:
+                        co_changed_files.append(cand_f)
+
+        blast_radius = (
+            "HIGH"
+            if len(reverse_callers) >= 5 or len(modified_symbols) >= 4
+            else ("MEDIUM" if (reverse_callers or modified_symbols) else "LOW")
+        )
+        return {
+            "ok": True,
+            "workspace": ws_name,
+            "modified_files": modified_files,
+            "modified_symbols": modified_symbols,
+            "reverse_callers": reverse_callers[:12],
+            "co_changed_files": co_changed_files[:10],
+            "targeted_tests": targeted_tests or ["test_brain.py"],
+            "blast_radius": blast_radius,
+            "latency_ms": round((time.perf_counter() - t0) * 1000.0, 2),
         }
 
 

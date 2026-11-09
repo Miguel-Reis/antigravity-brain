@@ -104,8 +104,6 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
                 "brain_inject.py",
                 "brain_harvest.py",
                 "web_dashboard.py",
-                "brain_app.py",
-                "BrainApp.bat",
                 "auto_updater.py",
                 "index.html",
                 "install.py",
@@ -136,50 +134,49 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
         json.dumps(mcp_cfg, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    # 5. Registar Auto-Start no arranque do Windows (HKCU\...\Run\AntigravityBrain) + Atalho no Ambiente de Trabalho
-    startup_registered = False
+    # 5. Limpar antigo registo Auto-Start do Windows (HKCU\...\Run\AntigravityBrain) e atalhos legados se existirem
     if os.name == "nt":
         try:
             import winreg
 
-            pythonw_exe = os.path.join(os.path.dirname(sys.executable), "pythonw.exe")
-            if not os.path.isfile(pythonw_exe):
-                pythonw_exe = sys.executable
-            app_script = str(REPO_DIR / "brain_app.py")
-            cmd_val = f'"{pythonw_exe}" "{app_script}" --tray-only'
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
                 r"Software\Microsoft\Windows\CurrentVersion\Run",
                 0,
-                winreg.KEY_SET_VALUE,
+                winreg.KEY_SET_VALUE | winreg.KEY_QUERY_VALUE,
             ) as key:
-                winreg.SetValueEx(key, "AntigravityBrain", 0, winreg.REG_SZ, cmd_val)
-            startup_registered = True
-        except Exception:
-            startup_registered = False
-
-        try:
-            if str(REPO_DIR) not in sys.path:
-                sys.path.insert(0, str(REPO_DIR))
-            from brain_app import ensure_app_icons, ensure_desktop_shortcuts
-
-            ensure_app_icons()
-            ensure_desktop_shortcuts()
+                try:
+                    winreg.DeleteValue(key, "AntigravityBrain")
+                except FileNotFoundError:
+                    pass
         except Exception:
             pass
+
+        for d_cand in (
+            HOME_DIR / "Desktop",
+            HOME_DIR / "Ambiente de Trabalho",
+            HOME_DIR / "OneDrive" / "Desktop",
+            HOME_DIR / "OneDrive" / "Ambiente de Trabalho",
+        ):
+            if d_cand.is_dir():
+                for sc_name in ("Antigravity Brain.lnk", "Antigravity Brain.url"):
+                    sc_path = d_cand / sc_name
+                    if sc_path.is_file():
+                        try:
+                            sc_path.unlink()
+                        except Exception:
+                            pass
 
     if not silent:
         print("✅ Hooks globais configurados em:", global_hooks_path)
         print("✅ Plugin Antigravity Brain v2.4 instalado em:", PLUGINS_DIR)
         print("✅ Servidor MCP registado em:", mcp_cfg_path)
-        if startup_registered:
-            print("✅ Auto-Start no arranque do Windows (HKCU Run) ativado!")
 
     return {
         "hooks_path": str(global_hooks_path),
         "plugin_dir": str(PLUGINS_DIR),
         "mcp_config": str(mcp_cfg_path),
-        "startup_registered": startup_registered,
+        "startup_registered": False,
     }
 
 

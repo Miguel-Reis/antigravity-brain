@@ -75,8 +75,12 @@ _THREAD_LOCAL = threading.local()
 SECRET_REDACT_RE = re.compile(
     r"(?:AIza[0-9A-Za-z\-_]{20,}|ya29\.[0-9A-Za-z\-_]{20,}|gh[pousr]_[0-9A-Za-z]{20,}|"
     r"github_pat_[0-9A-Za-z_]{25,}|sk-ant-[0-9A-Za-z_\-]{16,}|sk-(?:proj-|svcacct-)?[0-9A-Za-z_\-]{16,}|"
+    r"(?:sk|rk)_live_[0-9a-zA-Z]{20,}|"
     r"(?:AKIA|ASIA|AROA)[0-9A-Z]{16}|xox[baprs]-[0-9a-zA-Z\-]{10,}|hf_[0-9a-zA-Z]{20,}|"
-    r"Bearer\s+[0-9A-Za-z\-._~+/]{20,}=*)"
+    r"Bearer\s+[0-9A-Za-z\-._~+/]{20,}=*|"
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----|"
+    r"(?:postgres|postgresql|mysql|mongodb(?:\+srv)?|redis)://[^:\s]+:[^@\s]+@|"
+    r"eyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,})"
 )
 SECRET_KV_REDACT_RE = re.compile(
     r"((?:api[_-]?key|secret[_-]?key|access[_-]?token|auth[_-]?token|password|passwd|client[_-]?secret)\s*[:=]\s*['\"])([^'\"]{8,})(['\"])",
@@ -93,6 +97,44 @@ class BrainDB:
         out = SECRET_REDACT_RE.sub("[REDACTED_SECRET]", str(text))
         out = SECRET_KV_REDACT_RE.sub(r"\1[REDACTED_SECRET]\3", out)
         return out
+
+    @classmethod
+    def scan_secrets(cls, text: str) -> List[str]:
+        """Scans text for secrets, PEM keys, DB URIs, Stripe live keys, and JWTs; returns matched snippets."""
+        if not text:
+            return []
+        s = str(text)
+        matches: List[str] = [m.group(0) for m in SECRET_REDACT_RE.finditer(s)]
+        for m in SECRET_KV_REDACT_RE.finditer(s):
+            matches.append(m.group(0))
+        return matches
+
+    @staticmethod
+    def strip_control_tags(text: str) -> str:
+        """Remove cabeçalhos e tags de controlo (<SYSTEM_MESSAGE>, <USER_REQUEST>, [BRAIN_MEMORY]) de tópicos, factos e goals."""
+        if not text:
+            return ""
+        s = str(text)
+        s = re.sub(
+            r"The following is a <SYSTEM_MESSAGE>.*?(?=<SYSTEM_MESSAGE>|$)",
+            "",
+            s,
+            flags=re.DOTALL | re.I,
+        )
+        s = re.sub(
+            r"\[Message\]\s*timestamp=\S+\s+sender=\S+\s+priority=\S+\s+content=",
+            "",
+            s,
+            flags=re.I,
+        )
+        s = re.sub(
+            r"</?(?:SYSTEM_MESSAGE|USER_REQUEST|EPHEMERAL_MESSAGE)>",
+            "",
+            s,
+            flags=re.I,
+        )
+        s = re.sub(r"\[BRAIN_MEMORY[^\]]*\]", "", s)
+        return s.strip()
 
     @staticmethod
     def strip_accents(text: str) -> str:
@@ -181,7 +223,9 @@ class BrainDB:
                     fact_hash TEXT UNIQUE,
                     access_count INTEGER DEFAULT 0,
                     last_accessed TIMESTAMP,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    valid_from TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    embedding_bq TEXT DEFAULT ''
                 );
                 """
             )
@@ -201,17 +245,30 @@ class BrainDB:
                 ("last_accessed", "TIMESTAMP"),
                 ("tier", "TEXT DEFAULT 'semantic'"),
                 ("superseded_by", "INTEGER DEFAULT NULL"),
+                ("valid_from", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
                 ("valid_until", "TIMESTAMP DEFAULT NULL"),
                 ("embedding_json", "TEXT DEFAULT '[]'"),
+                ("embedding_bq", "TEXT DEFAULT ''"),
                 ("source_agent", "TEXT DEFAULT 'system'"),
                 ("trust_score", "REAL DEFAULT 0.85"),
                 ("human_locked", "INTEGER DEFAULT 0"),
             ]
             for col_name, col_def in migrations:
                 if col_name not in existing_cols:
-                    conn.execute(
-                        f"ALTER TABLE memories ADD COLUMN {col_name} {col_def};"
-                    )
+                    try:
+                        conn.execute(
+                            f"ALTER TABLE memories ADD COLUMN {col_name} {col_def};"
+                        )
+                    except sqlite3.OperationalError:
+                        # Fallback caso SQLite rejeite DEFAULT CURRENT_TIMESTAMP em ALTER TABLE
+                        base_type = col_def.split()[0]
+                        conn.execute(
+                            f"ALTER TABLE memories ADD COLUMN {col_name} {base_type};"
+                        )
+                        if col_name == "valid_from":
+                            conn.execute(
+                                "UPDATE memories SET valid_from = created_at WHERE valid_from IS NULL;"
+                            )
 
             conn.execute(
                 "CREATE UNIQUE INDEX IF NOT EXISTS idx_memories_hash ON memories(fact_hash) WHERE fact_hash IS NOT NULL;"
@@ -372,90 +429,139 @@ class BrainDB:
                 """
             )
 
-            # 6. Limpeza automática de entradas duplicadas de ficheiros ou regex corrompido
+            # 5B. Tabelas de AST Hash, Impact Alerts e Symbol Snapshots
             conn.execute(
                 """
-                DELETE FROM memories
-                WHERE LENGTH(fact) > 650
-                   OR topic LIKE '%\\s*%'
-                   OR topic LIKE '%Topico%'
-                   OR topic LIKE '%Short Topic%';
-                """
-            )
-            conn.execute(
-                """
-                DELETE FROM memories
-                WHERE category = 'code_change'
-                  AND id NOT IN (
-                      SELECT MAX(id) FROM memories
-                      WHERE category = 'code_change'
-                      GROUP BY workspace, topic
-                  );
-                """
-            )
-            conn.execute(
-                """
-                DELETE FROM telemetry
-                WHERE id NOT IN (
-                    SELECT id FROM telemetry ORDER BY id DESC LIMIT 2500
+                CREATE TABLE IF NOT EXISTS ast_file_hashes (
+                    file_path TEXT PRIMARY KEY,
+                    workspace TEXT DEFAULT 'global',
+                    sha256 TEXT NOT NULL,
+                    mtime_ns INTEGER DEFAULT 0,
+                    symbols_json TEXT DEFAULT '{}',
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
                 """
             )
-            # 7. Higienização automática de falsos workspaces (subpastas Next.js [id], clusters internos e caminhos com //)
-            ws_remap = {
-                "brain_mcp": (
-                    "office_3d", "swarm_24x", "graphify_ast", "token_diet",
-                    "antigravity-brain", "claude-architect-coder", "strix", "antigravity-backup",
-                ),
-                "global": (
-                    "brain", "scratch", "test", "ui-ux-pro-max-skill", "ultraplan",
-                    "network_infra", "vps_infra", "docs", "templates",
-                ),
-                "mike-gsp": (
-                    "panel", "hypervisor", "vm-manager", "api", "configparse", "dev",
-                    "executor", "sysinfo", "steamcmd", "[id]", "[backupid]", "apps",
-                    "nodes", "sftp", "ssh-keys", "shared-types", "binary", "databases",
-                    "docker-runtime", "dockerruntime", "fastdl", "watchdog", "drizzle",
-                    "host", "infra", "lend", "locations", "mike-daemon", "nests",
-                    "node-manager", "operations", "protection", "push", "query",
-                    "servers", "startup", "system", "template-manager", "workflows", "internal", "nginx",
-                ),
-                "project-jarvis": ("llm", "backend"),
-                "roblox": ("roblox-studio", "monetization", "app"),
-                "mt2": (
-                    "00_automation", "boost", "build", "char_encoding", "find",
-                    "unpacked", "install", "image", "_m2bob_1091_extract", "xc_decode",
-                ),
-                "anti": ("aura",),
-                "trovettt": ("troveauto",),
-            }
-            for target_ws, bogus_tuple in ws_remap.items():
-                placeholders = ",".join("?" for _ in bogus_tuple)
-                conn.execute(
-                    f"UPDATE OR IGNORE memories SET workspace = ? WHERE LOWER(workspace) IN ({placeholders});",
-                    (target_ws, *bogus_tuple),
-                )
-                conn.execute(
-                    f"DELETE FROM memories WHERE LOWER(workspace) IN ({placeholders});",
-                    bogus_tuple,
-                )
-
-            # 8. v6.2 Domain Sanitizer & Quarantine: isolar memórias de construção civil/arquitetura física
-            #    que estavam em 'global' para o seu próprio workspace ('arquitetura_civil')
             conn.execute(
                 """
-                UPDATE OR IGNORE memories
-                SET workspace = 'arquitetura_civil'
-                WHERE workspace = 'global'
-                  AND (
-                      topic LIKE '%Alçado%'
-                      OR topic LIKE '%MQT%'
-                      OR fact LIKE '%barramento armado%'
-                      OR fact LIKE '%ETICS%'
-                      OR fact LIKE '%cunhais%'
-                  );
+                CREATE TABLE IF NOT EXISTS ast_impact_alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    file_path TEXT NOT NULL,
+                    workspace TEXT DEFAULT 'global',
+                    risk_level TEXT DEFAULT 'LOW',
+                    blast_radius TEXT DEFAULT 'LOW',
+                    affected_files_count INTEGER DEFAULT 0,
+                    total_references INTEGER DEFAULT 0,
+                    changed_symbols_json TEXT DEFAULT '[]',
+                    summary TEXT DEFAULT '',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS ast_symbol_snapshots (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    file_path TEXT NOT NULL,
+                    symbol_name TEXT NOT NULL,
+                    symbol_kind TEXT DEFAULT 'function',
+                    start_line INTEGER DEFAULT 1,
+                    end_line INTEGER DEFAULT 1,
+                    sha256 TEXT NOT NULL,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(file_path, symbol_name)
+                );
+                """
+            )
+
+            user_ver_row = conn.execute("PRAGMA user_version;").fetchone()
+            user_ver = int(user_ver_row[0]) if user_ver_row else 0
+            if user_ver < 72:
+                # 6. Limpeza automática de entradas duplicadas de ficheiros ou regex corrompido
+                conn.execute(
+                    """
+                    DELETE FROM memories
+                    WHERE LENGTH(fact) > 650
+                       OR topic LIKE '%\\s*%'
+                       OR topic LIKE '%Topico%'
+                       OR topic LIKE '%Short Topic%';
+                    """
+                )
+                conn.execute(
+                    """
+                    DELETE FROM memories
+                    WHERE category = 'code_change'
+                      AND id NOT IN (
+                          SELECT MAX(id) FROM memories
+                          WHERE category = 'code_change'
+                          GROUP BY workspace, topic
+                      );
+                    """
+                )
+                conn.execute(
+                    """
+                    DELETE FROM telemetry
+                    WHERE id NOT IN (
+                        SELECT id FROM telemetry ORDER BY id DESC LIMIT 2500
+                    );
+                    """
+                )
+                # 7. Higienização automática de falsos workspaces (subpastas Next.js [id], clusters internos e caminhos com //)
+                ws_remap = {
+                    "brain_mcp": (
+                        "office_3d", "swarm_24x", "graphify_ast", "token_diet",
+                        "antigravity-brain", "claude-architect-coder", "strix", "antigravity-backup",
+                    ),
+                    "global": (
+                        "brain", "scratch", "test", "ui-ux-pro-max-skill", "ultraplan",
+                        "network_infra", "vps_infra", "docs", "templates",
+                    ),
+                    "mike-gsp": (
+                        "panel", "hypervisor", "vm-manager", "api", "configparse", "dev",
+                        "executor", "sysinfo", "steamcmd", "[id]", "[backupid]", "apps",
+                        "nodes", "sftp", "ssh-keys", "shared-types", "binary", "databases",
+                        "docker-runtime", "dockerruntime", "fastdl", "watchdog", "drizzle",
+                        "host", "infra", "lend", "locations", "mike-daemon", "nests",
+                        "node-manager", "operations", "protection", "push", "query",
+                        "servers", "startup", "system", "template-manager", "workflows", "internal", "nginx",
+                    ),
+                    "project-jarvis": ("llm", "backend"),
+                    "roblox": ("roblox-studio", "monetization", "app"),
+                    "mt2": (
+                        "00_automation", "boost", "build", "char_encoding", "find",
+                        "unpacked", "install", "image", "_m2bob_1091_extract", "xc_decode",
+                    ),
+                    "anti": ("aura",),
+                    "trovettt": ("troveauto",),
+                }
+                for target_ws, bogus_tuple in ws_remap.items():
+                    placeholders = ",".join("?" for _ in bogus_tuple)
+                    conn.execute(
+                        f"UPDATE OR IGNORE memories SET workspace = ? WHERE LOWER(workspace) IN ({placeholders});",
+                        (target_ws, *bogus_tuple),
+                    )
+                    conn.execute(
+                        f"DELETE FROM memories WHERE LOWER(workspace) IN ({placeholders});",
+                        bogus_tuple,
+                    )
+
+                # 8. v6.2 Domain Sanitizer & Quarantine: isolar memórias de construção civil/arquitetura física
+                #    que estavam em 'global' para o seu próprio workspace ('arquitetura_civil')
+                conn.execute(
+                    """
+                    UPDATE OR IGNORE memories
+                    SET workspace = 'arquitetura_civil'
+                    WHERE workspace = 'global'
+                      AND (
+                          topic LIKE '%Alçado%'
+                          OR topic LIKE '%MQT%'
+                          OR fact LIKE '%barramento armado%'
+                          OR fact LIKE '%ETICS%'
+                          OR fact LIKE '%cunhais%'
+                      );
+                    """
+                )
+                conn.execute("PRAGMA user_version = 72;")
 
     @staticmethod
     def _compute_hash(topic: str, fact: str, workspace: str = "global") -> str:
@@ -463,6 +569,11 @@ class BrainDB:
         return hashlib.sha256(norm.encode("utf-8")).hexdigest()[:32]
 
     _WS_CFG_CACHE: Dict[str, Any] = {"mtime": -1.0, "known_roots": ["brain_mcp"], "aliases": {}}
+    _FILE_EXT_SUFFIXES = (
+        ".py", ".js", ".ts", ".tsx", ".jsx", ".json", ".md", ".html", ".css",
+        ".db", ".jsonl", ".txt", ".yml", ".yaml", ".toml", ".bat", ".sh",
+        ".exe", ".ico", ".png", ".jpg", ".svg", ".go", ".rs", ".cpp", ".c", ".h",
+    )
 
     @staticmethod
     def normalize_workspace(workspace_path: Optional[str]) -> str:
@@ -472,6 +583,10 @@ class BrainDB:
         low = clean.lower()
         if not low:
             return "global"
+
+        def _is_rejected_part(part: str) -> bool:
+            p = part.lower()
+            return p.startswith(".") or p.endswith(BrainDB._FILE_EXT_SUFFIXES)
 
         # 1. Se for um caminho dentro de .gemini/antigravity/brain/<uuid> ou .gemini/config, é global
         if (
@@ -489,7 +604,7 @@ class BrainDB:
         m_scratch = re.search(r"/antigravity/scratch/([^/]+)", low)
         if m_scratch:
             proj = m_scratch.group(1)
-            if "." in proj or proj in ("", "scratch"):
+            if _is_rejected_part(proj) or proj in ("", "scratch"):
                 return "global"
             return proj
 
@@ -497,16 +612,16 @@ class BrainDB:
         m_desk = re.search(r"/desktop/([^/]+)", low)
         if m_desk:
             proj = m_desk.group(1)
-            if "." not in proj and not proj.startswith("."):
+            if not _is_rejected_part(proj):
                 return "mt2" if proj == "00_automation" else proj
 
         # 5. Se estiver dentro de Documents/<pasta>/<projeto>, extrair o projeto raiz
         m_docs = re.search(r"/documents/([^/]+)(?:/([^/]+))?", low)
         if m_docs:
             p1, p2 = m_docs.group(1), m_docs.group(2)
-            if p1 in ("craft anything", "projects", "repos", "github", "work", "workspace", "workspaces") and p2 and "." not in p2:
+            if p1 in ("craft anything", "projects", "repos", "github", "work", "workspace", "workspaces") and p2 and not _is_rejected_part(p2):
                 return p2
-            if p1 and "." not in p1:
+            if p1 and not _is_rejected_part(p1):
                 return p1
 
         # 6. Carregar mapeamento local privado (.brain_workspaces.json, com cache em memória por mtime)
@@ -559,7 +674,7 @@ class BrainDB:
         for part in reversed(parts):
             if re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", part):
                 continue
-            if part.startswith("[") or part.startswith(".") or "." in part:
+            if part.startswith("[") or _is_rejected_part(part):
                 continue
             if part not in generic_folders and part not in ignored_sys:
                 return part
@@ -569,7 +684,7 @@ class BrainDB:
             base in generic_folders
             or base in ignored_sys
             or base.startswith("[")
-            or base.startswith(".")
+            or _is_rejected_part(base)
             or re.match(r"^[0-9a-f]{8}-[0-9a-f]{4}-", base)
         ):
             return "global"
@@ -763,8 +878,8 @@ class BrainDB:
         aplicando a hierarquia de confiança Orbit ('Human Edits Always Win') e inferindo ligações causais.
         Retorna (row_id, is_new).
         """
-        topic = self.redact_secrets(topic.strip())
-        fact = self.redact_secrets(fact.strip())
+        topic = self.redact_secrets(self.strip_control_tags(topic.strip()))
+        fact = self.redact_secrets(self.strip_control_tags(fact.strip()))
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
         importance = max(1, min(5, int(importance)))
         resolved_tier = tier or self.classify_memory_tier(category, topic, fact, tags)
@@ -772,7 +887,9 @@ class BrainDB:
         resolved_lock = int(human_locked) if human_locked is not None else (1 if is_human_src else 0)
         resolved_trust = float(trust_score) if trust_score is not None else (1.0 if resolved_lock else (0.75 if "subagent" in source_agent.lower() else 0.85))
         f_hash = self._compute_hash(topic, fact, ws)
-        emb_json = json.dumps(self.compute_semantic_vector(f"{topic} {fact} {tags} {category}"))
+        emb_vec = self.compute_semantic_vector(f"{topic} {fact} {tags} {category}")
+        emb_json = json.dumps(emb_vec)
+        emb_bq = self.quantize_vector_128bit(emb_vec)
 
         with self._connect() as conn:
             # Regra Orbit 'Human Edits Always Win': se já existe memória bloqueada pelo humano com o mesmo tópico neste workspace,
@@ -816,6 +933,7 @@ class BrainDB:
                         tags = CASE WHEN ? != '' THEN ? ELSE tags END,
                         tier = ?,
                         embedding_json = ?,
+                        embedding_bq = ?,
                         source_agent = CASE WHEN ? = 1 THEN ? ELSE COALESCE(source_agent, ?) END,
                         trust_score = MAX(COALESCE(trust_score, 0.85), ?),
                         human_locked = MAX(COALESCE(human_locked, 0), ?),
@@ -830,6 +948,7 @@ class BrainDB:
                         tags,
                         resolved_tier,
                         emb_json,
+                        emb_bq,
                         resolved_lock,
                         source_agent,
                         source_agent,
@@ -842,8 +961,8 @@ class BrainDB:
 
             cur = conn.execute(
                 """
-                INSERT INTO memories (topic, fact, workspace, category, tags, importance, tier, fact_hash, embedding_json, source_agent, trust_score, human_locked, last_accessed)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP);
+                INSERT INTO memories (topic, fact, workspace, category, tags, importance, tier, fact_hash, embedding_json, embedding_bq, source_agent, trust_score, human_locked, valid_from, last_accessed)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
                 """,
                 (
                     topic,
@@ -855,6 +974,7 @@ class BrainDB:
                     resolved_tier,
                     f_hash,
                     emb_json,
+                    emb_bq,
                     source_agent,
                     resolved_trust,
                     resolved_lock,
@@ -877,8 +997,64 @@ class BrainDB:
                     (new_id, int(supersedes_id)),
                 )
 
+            file_refs = set(
+                re.findall(
+                    r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|tsx|jsx|json|md|go|rs|cpp|c))\b",
+                    f"{topic} {fact}",
+                )
+            )
+
+            # 1b) Tech 4: Graphiti-Style Bi-Temporal Automatic Contradiction Superseding
+            if not supersedes_id:
+                norm_top = re.sub(r"\s+", " ", topic.strip().lower())
+                active_same_cat = conn.execute(
+                    """
+                    SELECT id, topic, fact, embedding_json FROM memories
+                    WHERE workspace = ? AND category = ? AND id != ?
+                      AND superseded_by IS NULL AND COALESCE(human_locked, 0) = 0
+                    ORDER BY id DESC LIMIT 20;
+                    """,
+                    (ws, category, new_id),
+                ).fetchall()
+                for cand in active_same_cat:
+                    c_id = int(cand["id"])
+                    c_fact = str(cand["fact"] or "").strip()
+                    if c_fact == fact:
+                        continue
+                    c_norm_top = re.sub(r"\s+", " ", str(cand["topic"] or "").strip().lower())
+                    c_files = set(
+                        re.findall(
+                            r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|tsx|jsx|json|md|go|rs|cpp|c))\b",
+                            f"{cand['topic']} {c_fact}",
+                        )
+                    )
+                    same_primary_files = bool(file_refs and c_files and (file_refs & c_files))
+                    c_vec: List[float] = []
+                    try:
+                        c_vec = json.loads(cand["embedding_json"] or "[]")
+                    except Exception:
+                        c_vec = []
+                    if not c_vec:
+                        c_vec = self.compute_semantic_vector(f"{cand['topic']} {c_fact} {category}")
+                    cos_sim = self.cosine_similarity(emb_vec, c_vec)
+                    if (
+                        c_norm_top == norm_top
+                        or (same_primary_files and cos_sim >= 0.88)
+                        or (cos_sim >= 0.92 and c_norm_top[:14] == norm_top[:14] and "#" not in norm_top)
+                    ):
+                        conn.execute(
+                            "UPDATE memories SET superseded_by = ?, valid_until = CURRENT_TIMESTAMP WHERE id = ?;",
+                            (new_id, c_id),
+                        )
+                        conn.execute(
+                            """
+                            INSERT OR IGNORE INTO memory_edges (source_id, target_id, relation, weight)
+                            VALUES (?, ?, 'supersedes', 0.95);
+                            """,
+                            (new_id, c_id),
+                        )
+
             # 2) Inferir arestas causais automáticas com memórias do mesmo componente/ficheiro
-            file_refs = set(re.findall(r"\b([a-zA-Z0-9_\-]+\.(?:py|html|js|ts|json|md))\b", f"{topic} {fact}"))
             topic_words = [w.lower() for w in re.findall(r"[a-zA-Z0-9_]{4,}", topic) if w.lower() not in STOPWORDS]
             prev_rows = conn.execute(
                 """
@@ -982,7 +1158,12 @@ class BrainDB:
         ]
         c_vec: List[float] = []
         for cluster in concept_clusters:
-            hits = sum(1.0 for kw in cluster if kw in words or (len(kw) >= 4 and kw in low))
+            hits = sum(
+                1.0
+                for kw in cluster
+                if any(w == kw or (len(kw) >= 4 and w.startswith(kw)) for w in words)
+                or ("_" in kw and kw in low)
+            )
             c_vec.append(min(3.0, hits))
 
         c_norm = math.sqrt(sum(v * v for v in c_vec))
@@ -1007,15 +1188,23 @@ class BrainDB:
             scale_w = math.sqrt(0.18) if c_norm > 1e-6 else math.sqrt(0.65)
             word_lsh = [v / w_norm * scale_w for v in word_lsh]
 
-        # 48 dimensões LSH de trigramas e tetragramas morfológicos
+        # 48 dimensões LSH de trigramas e tetragramas morfológicos delimitados por palavra
         char_lsh = [0.0] * 48
-        clean_chars = re.sub(r"[^a-z0-9]", "", low)[:260]
-        for i in range(len(clean_chars) - 2):
-            tri = clean_chars[i : i + 3]
-            h = ((ord(tri[0]) * 31 + ord(tri[1])) * 31 + ord(tri[2])) & 0xFFFFFFFF
-            bucket = h % 48
-            sign = 1.0 if ((h >> 6) & 1) == 0 else -1.0
-            char_lsh[bucket] += sign * 0.35
+        for w in word_list[:48]:
+            padded = f"<{w}>"
+            plen = len(padded)
+            for i in range(plen - 2):
+                tri = padded[i : i + 3]
+                h = ((ord(tri[0]) * 31 + ord(tri[1])) * 31 + ord(tri[2])) & 0xFFFFFFFF
+                bucket = h % 48
+                sign = 1.0 if ((h >> 6) & 1) == 0 else -1.0
+                char_lsh[bucket] += sign * 0.35
+            for i in range(plen - 3):
+                quad = padded[i : i + 4]
+                h4 = (((ord(quad[0]) * 31 + ord(quad[1])) * 31 + ord(quad[2])) * 31 + ord(quad[3])) & 0xFFFFFFFF
+                bucket4 = h4 % 48
+                sign4 = 1.0 if ((h4 >> 7) & 1) == 0 else -1.0
+                char_lsh[bucket4] += sign4 * 0.25
 
         ch_norm = math.sqrt(sum(v * v for v in char_lsh))
         if ch_norm > 1e-6:
@@ -1027,6 +1216,101 @@ class BrainDB:
         if norm > 1e-6:
             vec = [round(v / norm, 4) for v in vec]
         return vec
+
+    @staticmethod
+    def quantize_vector_128bit(vec: List[float]) -> str:
+        """
+        Tech 1: 128-Bit Binary Quantization (BQ):
+        Empacota um vetor float 128-D numa string hex lowercase de 32 caracteres (128 bits),
+        onde o bit i é 1 se vec[i] > 0 else 0.
+        """
+        bits = 0
+        for i in range(128):
+            val = vec[i] if i < len(vec) else 0.0
+            if val > 0.0:
+                bits |= (1 << (127 - i))
+        return f"{bits:032x}"
+
+    @staticmethod
+    def hamming_similarity_128bit(hex_a: str, hex_b: str) -> float:
+        """
+        Tech 1: Bitwise Hamming Similarity (POPCNT):
+        Calcula 1.0 - ((int(hex_a, 16) ^ int(hex_b, 16)).bit_count() / 128.0) em <0.01ms.
+        """
+        if not hex_a or not hex_b:
+            return 0.0
+        try:
+            return 1.0 - ((int(hex_a, 16) ^ int(hex_b, 16)).bit_count() / 128.0)
+        except ValueError:
+            return 0.0
+
+    def compute_memory_ppr(
+        self,
+        seed_scores: Dict[int, float],
+        edges: List[Tuple[int, int, str]],
+        damping: float = 0.50,
+        iterations: int = 3,
+    ) -> Dict[int, float]:
+        """
+        Tech 2: HippoRAG 2 Personalized PageRank (PPR):
+        Executa 3 iterações esparsas de Personalized PageRank sobre memory_edges
+        ponderadas por relação (fixed_by: 1.0, supersedes: 0.95, evolves: 0.85, co_learned: 0.75).
+        """
+        if not seed_scores:
+            return {}
+        rel_weights = {
+            "fixed_by": 1.0,
+            "supersedes": 0.95,
+            "evolves": 0.85,
+            "co_learned": 0.75,
+        }
+        positive_seeds = {int(k): max(0.0, float(v)) for k, v in seed_scores.items() if float(v) > 0.0}
+        total_seed = sum(positive_seeds.values())
+        if total_seed <= 1e-9:
+            return {int(k): 0.0 for k in seed_scores}
+
+        p0 = {k: v / total_seed for k, v in positive_seeds.items()}
+        adj: Dict[int, List[Tuple[int, float]]] = {}
+        for edge in edges:
+            if len(edge) < 2:
+                continue
+            u, v = int(edge[0]), int(edge[1])
+            rel = str(edge[2] if len(edge) >= 3 else "evolves").strip().lower()
+            w = rel_weights.get(rel, 0.75)
+            adj.setdefault(u, []).append((v, w))
+            adj.setdefault(v, []).append((u, w * 0.85))
+
+        scores = dict(p0)
+        for _ in range(max(1, int(iterations))):
+            next_scores: Dict[int, float] = {nid: (1.0 - damping) * p_val for nid, p_val in p0.items()}
+            for u, u_sc in scores.items():
+                if u_sc <= 1e-8:
+                    continue
+                nbrs = adj.get(u)
+                if not nbrs:
+                    next_scores[u] = next_scores.get(u, 0.0) + damping * u_sc
+                else:
+                    w_sum = sum(w for _, w in nbrs) or 1.0
+                    for v, w in nbrs:
+                        next_scores[v] = next_scores.get(v, 0.0) + damping * u_sc * (w / w_sum)
+            scores = next_scores
+        return scores
+
+    @staticmethod
+    def compute_ebbinghaus_retention(
+        age_days: float, access_count: int, importance: int, tier: str = "episodic"
+    ) -> float:
+        """
+        Tech 3: Ebbinghaus Spaced-Reinforcement Forgetting Curve:
+        Calcula a retenção exponencial reforçada pelo número de acessos e importância.
+        """
+        base_half_life = 120.0 if tier == "semantic" else (3.0 if tier == "working" else 14.0)
+        half_life = (
+            base_half_life
+            * (1.0 + 1.2 * math.log1p(max(0, int(access_count or 0))))
+            * max(0.5, float(importance or 3) / 3.0)
+        )
+        return math.exp(-max(0.0, float(age_days or 0.0)) / max(1.0, half_life))
 
     @staticmethod
     def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:
@@ -1054,9 +1338,9 @@ class BrainDB:
         include_superseded: bool = False,
     ) -> List[Dict[str, Any]]:
         """
-        Pesquisa Híbrida Jev-Mem System-1 + Ruflo Causal Graph:
-        FTS5 BM25 + Token Overlap + Tier Weight (working/episodic/semantic) +
-        Centralidade Causal (memory_edges) + Adaptive Stopping por Confiança Marginal.
+        Pesquisa Híbrida Jev-Mem System-1 + HippoRAG 2 PPR + 4-Way RRF + Ebbinghaus Retention:
+        FTS5 BM25 + 128-D LSH / 128-Bit BQ Hamming + Personalized PageRank (memory_edges) +
+        Ebbinghaus Spaced-Reinforcement Forgetting Curve + Adaptive Stopping.
         """
         ws = self.normalize_workspace(workspace)
         tokens = self.extract_search_tokens(query)
@@ -1069,23 +1353,30 @@ class BrainDB:
             if total == 0:
                 return []
 
-            # Mapa de grau causal (Ruflo Causal Graph Centrality)
+            # Mapa de grau causal e arestas para HippoRAG 2 PPR (Ruflo Causal Graph Centrality)
             causal_deg: Dict[int, int] = {}
-            for er in conn.execute("SELECT source_id, target_id FROM memory_edges;").fetchall():
+            edge_tuples: List[Tuple[int, int, str]] = []
+            for er in conn.execute("SELECT source_id, target_id, COALESCE(relation, 'evolves') as relation FROM memory_edges;").fetchall():
                 s_id, t_id = int(er["source_id"]), int(er["target_id"])
+                rel_str = str(er["relation"] or "evolves")
                 causal_deg[s_id] = causal_deg.get(s_id, 0) + 1
                 causal_deg[t_id] = causal_deg.get(t_id, 0) + 1
+                edge_tuples.append((s_id, t_id, rel_str))
 
             candidates: Dict[int, Dict[str, Any]] = {}
 
-            # 1. Pesquisa FTS5 BM25 se tivermos tokens válidos (Sintaxe FTS5 limpa: sem aspas antes de *)
+            # 1. Pesquisa FTS5 BM25 se tivermos tokens válidos (divide tokens com '.' ou '-' em partes alfanuméricas)
             if tokens:
                 fts_terms = []
+                seen_fts = set()
                 fts_keywords = {"not", "and", "or", "near"}
                 for tok in tokens:
-                    safe_tok = re.sub(r"[^a-zA-Z0-9_]", "", tok)
-                    if len(safe_tok) >= 2:
-                        if safe_tok.lower() in fts_keywords:
+                    for safe_tok in [p for p in re.split(r"[^a-zA-Z0-9_]+", tok) if len(p) >= 2]:
+                        low_tok = safe_tok.lower()
+                        if low_tok in seen_fts:
+                            continue
+                        seen_fts.add(low_tok)
+                        if low_tok in fts_keywords:
                             fts_terms.append(f'"{safe_tok}"')
                         else:
                             fts_terms.append(f"{safe_tok}*")
@@ -1136,18 +1427,12 @@ class BrainDB:
                     d["score"] = 0.0
                     candidates[rid] = d
 
-            # 3. Re-ranking Híbrido Jev-Mem v6.2 (Reciprocal Rank Fusion RRF k=60 + 128-D LSH Cosseno + Cross-Domain Relevance Gate)
+            # 3. Re-ranking Híbrido Jev-Mem (4-Way Weighted RRF + 128-D LSH / 128-Bit BQ + HippoRAG 2 PPR + Ebbinghaus)
             query_vec = self.compute_semantic_vector(query)
+            query_bq = self.quantize_vector_128bit(query_vec)
             scored_list: List[Dict[str, Any]] = []
 
-            # Pré-calcular ranks BM25 e Semântico para Reciprocal Rank Fusion (RRF k=60)
-            bm25_sorted_ids = [
-                cid for cid, citem in sorted(candidates.items(), key=lambda kv: kv[1].get("score", 0.0), reverse=True)
-            ]
-            bm25_rank_map = {cid: idx + 1 for idx, cid in enumerate(bm25_sorted_ids)}
-
-            sem_map: Dict[int, float] = {}
-            for rid, item in candidates.items():
+            def _eval_sem(item: Dict[str, Any]) -> float:
                 raw_emb = item.get("embedding_json")
                 item_vec: List[float] = []
                 if raw_emb and raw_emb != "[]":
@@ -1159,16 +1444,71 @@ class BrainDB:
                     item_vec = self.compute_semantic_vector(
                         f"{item['topic']} {item['fact']} {item.get('tags', '')} {item.get('category', '')}"
                     )
-                sem_map[rid] = self.cosine_similarity(query_vec, item_vec)
+                cos_val = self.cosine_similarity(query_vec, item_vec)
+                raw_bq = str(item.get("embedding_bq") or "")
+                if len(raw_bq) == 32:
+                    bq_sim = self.hamming_similarity_128bit(query_bq, raw_bq)
+                    return max(cos_val, cos_val * 0.85 + max(0.0, bq_sim - 0.5) * 0.30)
+                return cos_val
+
+            sem_map: Dict[int, float] = {rid: _eval_sem(item) for rid, item in candidates.items()}
+
+            # Tech 2: HippoRAG 2 Personalized PageRank (multi-hop causal expansion)
+            seed_scores: Dict[int, float] = {}
+            for rid, item in candidates.items():
+                s_val = float(item.get("score", 0.0)) + sem_map.get(rid, 0.0) * 5.0
+                if s_val > 0.05:
+                    seed_scores[int(rid)] = s_val
+            ppr_map = self.compute_memory_ppr(seed_scores, edge_tuples, damping=0.50, iterations=3)
+
+            # Incluir vizinhos causais multi-hop descobertos pelo PPR que não estavam nos candidatos iniciais
+            extra_ppr_ids = [
+                nid for nid, p_sc in sorted(ppr_map.items(), key=lambda kv: kv[1], reverse=True)
+                if nid not in candidates and p_sc > 0.01
+            ][:5]
+            if extra_ppr_ids:
+                ph = ",".join("?" for _ in extra_ppr_ids)
+                for r in conn.execute(f"SELECT * FROM memories WHERE id IN ({ph});", extra_ppr_ids).fetchall():
+                    d = dict(r)
+                    if not include_superseded and d.get("superseded_by"):
+                        continue
+                    d["score"] = 0.0
+                    rid = int(d["id"])
+                    candidates[rid] = d
+                    sem_map[rid] = _eval_sem(d)
+
+            # Pré-calcular os 4 Ranks para 4-Way Weighted RRF (bm25_rank, sem_rank, ppr_rank, salience_rank)
+            bm25_sorted_ids = [
+                cid for cid, citem in sorted(candidates.items(), key=lambda kv: kv[1].get("score", 0.0), reverse=True)
+            ]
+            bm25_rank_map = {cid: idx + 1 for idx, cid in enumerate(bm25_sorted_ids)}
 
             sem_sorted_ids = [cid for cid, _ in sorted(sem_map.items(), key=lambda kv: kv[1], reverse=True)]
             sem_rank_map = {cid: idx + 1 for idx, cid in enumerate(sem_sorted_ids)}
+
+            ppr_sorted_ids = [
+                cid for cid, _ in sorted(candidates.items(), key=lambda kv: ppr_map.get(int(kv[0]), 0.0), reverse=True)
+            ]
+            ppr_rank_map = {cid: idx + 1 for idx, cid in enumerate(ppr_sorted_ids)}
+
+            salience_scores: Dict[int, float] = {
+                cid: (
+                    float(citem.get("importance", 3)) * 1.5
+                    + float(citem.get("trust_score") if citem.get("trust_score") is not None else 0.85) * 2.0
+                    + math.log1p(max(0, int(citem.get("access_count") or 0)))
+                )
+                for cid, citem in candidates.items()
+            }
+            sal_sorted_ids = [cid for cid, _ in sorted(salience_scores.items(), key=lambda kv: kv[1], reverse=True)]
+            salience_rank_map = {cid: idx + 1 for idx, cid in enumerate(sal_sorted_ids)}
 
             for rid, item in candidates.items():
                 text_blob = self.strip_accents(f"{item['topic']} {item['fact']} {item.get('tags', '')}").lower()
                 overlap = sum(1 for tok in tokens if tok in text_blob)
                 sem_sim = sem_map.get(rid, 0.0)
+                ppr_sc = ppr_map.get(int(rid), 0.0)
                 item["semantic_similarity"] = round(sem_sim, 3)
+                item["ppr_score"] = round(ppr_sc, 4)
 
                 is_transferable_global = str(item.get("category") or "") in (
                     "learned_rule",
@@ -1182,15 +1522,26 @@ class BrainDB:
                 # Se a memória não pertence ao workspace ativo e não tem sobreposição real com a query, não contamina o turno
                 if tokens:
                     if item["workspace"] != ws:
-                        if overlap == 0 and sem_sim < 0.24:
+                        if overlap == 0 and sem_sim < 0.24 and ppr_sc < 0.08:
                             continue
-                    elif item["score"] == 0.0 and overlap == 0 and sem_sim < 0.22:
+                    elif item["score"] == 0.0 and overlap == 0 and sem_sim < 0.22 and ppr_sc < 0.08:
                         continue
 
-                # Reciprocal Rank Fusion (RRF k=60)
+                # 4-Way Weighted RRF (bm25_rank, sem_rank, ppr_rank, salience_rank)
                 r_bm25 = bm25_rank_map.get(rid, 50)
                 r_sem = sem_rank_map.get(rid, 50)
-                rrf_boost = (90.0 / (60.0 + r_bm25)) + (90.0 / (60.0 + r_sem))
+                r_ppr = ppr_rank_map.get(rid, 50)
+                r_sal = salience_rank_map.get(rid, 50)
+                item["bm25_rank"] = r_bm25
+                item["sem_rank"] = r_sem
+                item["ppr_rank"] = r_ppr
+                item["salience_rank"] = r_sal
+                rrf_boost = (
+                    (75.0 / (60.0 + r_bm25))
+                    + (75.0 / (60.0 + r_sem))
+                    + (45.0 / (60.0 + r_ppr))
+                    + (35.0 / (60.0 + r_sal))
+                )
                 item["rrf_score"] = round(rrf_boost, 3)
 
                 ws_boost = (
@@ -1201,7 +1552,7 @@ class BrainDB:
                 imp_boost = float(item.get("importance", 3)) * 0.4
                 overlap_boost = overlap * 1.85
                 sem_boost = sem_sim * 4.8
-                c_boost = min(2.0, causal_deg.get(int(rid), 0) * 0.45)
+                c_boost = min(2.4, causal_deg.get(int(rid), 0) * 0.45 + ppr_sc * 3.5)
                 trust_val = float(item.get("trust_score") if item.get("trust_score") is not None else 0.85)
                 h_lock = int(item.get("human_locked") or 0)
                 trust_boost = max(0.0, (trust_val - 0.70) * 3.0) + (2.4 if h_lock else 0.0)
@@ -1218,16 +1569,25 @@ class BrainDB:
                     if ("." in tok or "_" in tok or any(c.isdigit() for c in tok)) and tok in text_blob:
                         exact_tech_boost += 3.0
 
+                # Tech 3: Ebbinghaus Spaced-Reinforcement Forgetting Curve
                 recency_mult = 1.0
+                retention = 1.0
                 ts_str = str(item.get("last_accessed") or item.get("created_at") or "")
                 if ts_str:
                     try:
                         dt = datetime.datetime.fromisoformat(ts_str.replace("Z", ""))
                         now_utc = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None)
                         age_days = max(0.0, (now_utc - dt).total_seconds() / 86400.0)
-                        recency_mult = 1.0 + 0.35 * math.exp(-age_days / 14.0)
+                        retention = self.compute_ebbinghaus_retention(
+                            age_days=age_days,
+                            access_count=int(item.get("access_count") or 0),
+                            importance=int(item.get("importance") or 3),
+                            tier=mem_tier,
+                        )
+                        recency_mult = 1.0 + 0.40 * retention
                     except Exception:
                         recency_mult = 1.1
+                item["ebbinghaus_retention"] = round(retention, 4)
 
                 raw_final = (
                     item["score"] + rrf_boost + overlap_boost + sem_boost + ws_boost + imp_boost + exact_tech_boost + c_boost + trust_boost
@@ -1288,10 +1648,10 @@ class BrainDB:
         notes: str = "",
     ) -> None:
         ws = self.normalize_workspace(workspace) if ("/" in workspace or "\\" in workspace) else (workspace.strip().lower() or "global")
-        goal = self.redact_secrets(goal)
-        last_completed = self.redact_secrets(last_completed)
-        next_tasks = self.redact_secrets(next_tasks)
-        notes = self.redact_secrets(notes)
+        goal = self.redact_secrets(self.strip_control_tags(goal))
+        last_completed = self.redact_secrets(self.strip_control_tags(last_completed))
+        next_tasks = self.redact_secrets(self.strip_control_tags(next_tasks))
+        notes = self.redact_secrets(self.strip_control_tags(notes))
         with self._connect() as conn:
             conn.execute(
                 """
@@ -1481,6 +1841,9 @@ class BrainDB:
             by_tier = conn.execute(
                 "SELECT COALESCE(tier, 'semantic') as t, COUNT(*) as c FROM memories GROUP BY t;"
             ).fetchall()
+            by_ws = conn.execute(
+                "SELECT COALESCE(workspace, 'global') as ws, COUNT(*) as c FROM memories GROUP BY ws ORDER BY c DESC;"
+            ).fetchall()
 
             # Métricas da Janela Deslizante de 5 Horas (5h Quota Window)
             w5 = conn.execute(
@@ -1524,6 +1887,7 @@ class BrainDB:
                 "net_tokens_saved": int(tel["total_saved_tokens"]) - int(tel["total_injected_tokens"]),
                 "categories": {r["category"]: r["c"] for r in by_cat},
                 "tiers": {r["t"]: r["c"] for r in by_tier},
+                "by_workspace": {r["ws"]: r["c"] for r in by_ws},
                 "quota_5h": {
                     "turns_5h": turns_5h,
                     "saved_5h": saved_5h,
@@ -1707,6 +2071,118 @@ class BrainDB:
             "healthy_memories": int(healthy_total),
             "revisions_tracked": int(revs_count),
             "fts5_optimized": True,
+        }
+
+    consolidate_brain_doctor = run_memory_doctor
+
+    def deduplicate_memories(
+        self, workspace: str = "all", similarity_threshold: float = 0.84
+    ) -> Dict[str, Any]:
+        """
+        Varre memórias ativas e não-bloqueadas no workspace, encontra quase-duplicados com
+        similaridade cosseno/BQ >= similarity_threshold na mesma categoria/tópico, funde
+        access_count e importance na linha canónica e apaga a linha redundante.
+        """
+        ws_filter = (workspace or "all").strip().lower()
+        removed_ids: List[int] = []
+
+        with self._connect() as conn:
+            if ws_filter not in ("all", ""):
+                norm_ws = self.normalize_workspace(ws_filter) if ("/" in ws_filter or "\\" in ws_filter) else ws_filter
+                rows = conn.execute(
+                    """
+                    SELECT id, workspace, category, topic, fact, tags, importance, access_count, embedding_json, embedding_bq
+                    FROM memories
+                    WHERE workspace = ? AND superseded_by IS NULL AND COALESCE(human_locked, 0) = 0
+                    ORDER BY importance DESC, id ASC;
+                    """,
+                    (norm_ws,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    """
+                    SELECT id, workspace, category, topic, fact, tags, importance, access_count, embedding_json, embedding_bq
+                    FROM memories
+                    WHERE superseded_by IS NULL AND COALESCE(human_locked, 0) = 0
+                    ORDER BY importance DESC, id ASC;
+                    """
+                ).fetchall()
+
+            canon_by_bucket: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+
+            for r in rows:
+                d = dict(r)
+                mid = int(d["id"])
+                ws = str(d.get("workspace") or "global").strip().lower()
+                cat = str(d.get("category") or "general").strip().lower()
+                topic = str(d.get("topic") or "").strip()
+                norm_top = re.sub(r"\s*(?:\(#?\d+\)|#\d+)\s*$", "", re.sub(r"\s+", " ", topic.lower()))
+                d["_norm_top"] = norm_top
+
+                raw_emb = d.get("embedding_json")
+                vec: List[float] = []
+                if raw_emb and raw_emb != "[]":
+                    try:
+                        vec = json.loads(raw_emb)
+                    except Exception:
+                        vec = []
+                if not vec:
+                    vec = self.compute_semantic_vector(f"{topic} {d.get('fact', '')} {d.get('tags', '')} {cat}")
+                d["_vec"] = vec
+                bq = str(d.get("embedding_bq") or "")
+                if len(bq) != 32:
+                    bq = self.quantize_vector_128bit(vec)
+                d["_bq"] = bq
+
+                bucket = (ws, cat)
+                kept_list = canon_by_bucket.setdefault(bucket, [])
+                matched_canon: Optional[Dict[str, Any]] = None
+
+                for c_mem in kept_list:
+                    if c_mem["_norm_top"] == norm_top:
+                        matched_canon = c_mem
+                        break
+                    cos_sim = self.cosine_similarity(vec, c_mem["_vec"])
+                    bq_sim = self.hamming_similarity_128bit(bq, c_mem["_bq"])
+                    if cos_sim >= similarity_threshold or (bq_sim >= similarity_threshold and cos_sim >= similarity_threshold - 0.06):
+                        matched_canon = c_mem
+                        break
+
+                if matched_canon is not None:
+                    cid = int(matched_canon["id"])
+                    new_imp = max(int(matched_canon.get("importance") or 3), int(d.get("importance") or 3))
+                    new_acc = int(matched_canon.get("access_count") or 0) + int(d.get("access_count") or 0)
+                    p_tags = set(str(matched_canon.get("tags") or "").split()) | set(str(d.get("tags") or "").split())
+                    new_tags = " ".join(sorted(p_tags))
+                    new_fact = (
+                        str(d.get("fact") or "")
+                        if len(str(d.get("fact") or "")) > len(str(matched_canon.get("fact") or ""))
+                        else str(matched_canon.get("fact") or "")
+                    )
+                    conn.execute(
+                        "UPDATE memories SET fact = ?, tags = ?, importance = ?, access_count = ? WHERE id = ?;",
+                        (new_fact, new_tags, new_imp, new_acc, cid),
+                    )
+                    matched_canon["fact"] = new_fact
+                    matched_canon["tags"] = new_tags
+                    matched_canon["importance"] = new_imp
+                    matched_canon["access_count"] = new_acc
+                    removed_ids.append(mid)
+                else:
+                    kept_list.append(d)
+
+            if removed_ids:
+                ph = ",".join("?" for _ in removed_ids)
+                conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", removed_ids)
+                conn.execute(
+                    f"DELETE FROM memory_edges WHERE source_id IN ({ph}) OR target_id IN ({ph});",
+                    removed_ids + removed_ids,
+                )
+
+        return {
+            "ok": True,
+            "healed_duplicates": len(removed_ids),
+            "removed_ids": removed_ids,
         }
 
     def get_memory_revisions(self, memory_id: Optional[int] = None, limit: int = 20) -> List[Dict[str, Any]]:

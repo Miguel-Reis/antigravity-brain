@@ -924,20 +924,63 @@ class OrbitEngine:
         all_dots = [dict(r) for r in rows]
         status_by_id: Dict[str, str] = {str(d["dot_id"]): str(d["status"]) for d in all_dots}
 
+        # Topological cycle detection (3-color DFS) across depends_on graph
+        deps_graph: Dict[str, List[str]] = {}
+        for d in all_dots:
+            try:
+                raw_deps = json.loads(d.get("depends_on_json") or "[]")
+                if not isinstance(raw_deps, list):
+                    raw_deps = []
+            except Exception:
+                raw_deps = []
+            clean_deps = [str(x) for x in raw_deps if x]
+            d["depends_on"] = clean_deps
+            deps_graph[str(d["dot_id"])] = clean_deps
+
+        visit_state: Dict[str, int] = {}  # 0=unvisited, 1=visiting, 2=visited
+        cycle_nodes_set: set[str] = set()
+
+        def _dfs_cycle(node_id: str, stack: List[str]) -> bool:
+            state = visit_state.get(node_id, 0)
+            if state == 1:
+                if node_id in stack:
+                    idx = stack.index(node_id)
+                    for c_nid in stack[idx:]:
+                        cycle_nodes_set.add(c_nid)
+                else:
+                    cycle_nodes_set.add(node_id)
+                return True
+            if state == 2:
+                return node_id in cycle_nodes_set
+            visit_state[node_id] = 1
+            stack.append(node_id)
+            found_cycle = False
+            for dep_id in deps_graph.get(node_id, []):
+                if dep_id in deps_graph and _dfs_cycle(dep_id, stack):
+                    found_cycle = True
+                    cycle_nodes_set.add(node_id)
+            stack.pop()
+            visit_state[node_id] = 2
+            return found_cycle
+
+        for did in deps_graph:
+            if visit_state.get(did, 0) == 0:
+                _dfs_cycle(did, [])
+
+        cycle_detected = len(cycle_nodes_set) > 0
+
         ready_dots: List[Dict[str, Any]] = []
         blocked_dots: List[Dict[str, Any]] = []
         claimed_dots: List[Dict[str, Any]] = []
         done_dots: List[Dict[str, Any]] = []
 
         for d in all_dots:
-            try:
-                deps = json.loads(d.get("depends_on_json") or "[]")
-                if not isinstance(deps, list):
-                    deps = []
-            except Exception:
-                deps = []
-            d["depends_on"] = [str(x) for x in deps if x]
+            did = str(d["dot_id"])
             unresolved = [dep_id for dep_id in d["depends_on"] if status_by_id.get(dep_id, "open") != "done"]
+            in_cycle = did in cycle_nodes_set
+            d["has_cycle"] = in_cycle
+            if in_cycle and "CYCLE_DETECTED" not in unresolved:
+                unresolved = list(unresolved) + ["CYCLE_DETECTED"]
             d["blocked_by"] = unresolved
             st = str(d.get("status") or "open").lower()
             if st == "done":
@@ -948,7 +991,7 @@ class OrbitEngine:
                 d["dag_state"] = "claimed"
                 d["is_ready"] = False
                 claimed_dots.append(d)
-            elif len(unresolved) == 0:
+            elif len(unresolved) == 0 and not in_cycle:
                 d["dag_state"] = "ready"
                 d["is_ready"] = True
                 ready_dots.append(d)
@@ -960,6 +1003,8 @@ class OrbitEngine:
 
         return {
             "ok": True,
+            "cycle_detected": cycle_detected,
+            "cycle_nodes": sorted(cycle_nodes_set),
             "total_count": len(all_dots),
             "ready_count": len(ready_dots),
             "blocked_count": len(blocked_dots),
@@ -1652,10 +1697,6 @@ class OrbitEngine:
             if purge_ids:
                 ph = ",".join("?" for _ in purge_ids)
                 conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", purge_ids)
-                try:
-                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", purge_ids)
-                except Exception:
-                    pass
                 ephemeral_purged = len(purge_ids)
 
         # 1. Absorver Meta-Regras de todos os projetos (Self-Learn) e Bugs Resolvidos (Auto-Bugfix)
@@ -1719,10 +1760,39 @@ class OrbitEngine:
                                 if fsize > 65536:
                                     fh.seek(fsize - 65536)
                                 tail_txt = fh.read().decode("utf-8", errors="ignore")
-                            matches = re.findall(
-                                r"<!--\s*brain:\s*([^|\n`{}]{3,80}?)\s*\|\s*(.{10,320}?)\s*-->",
-                                tail_txt,
+                            brain_tag_re = re.compile(
+                                r"<!--\s*brain:\s*([^|\n`{}]{3,80}?)\s*\|\s*(.{10,320}?)\s*-->"
                             )
+                            matches: List[Tuple[str, str]] = []
+                            for raw_ln in tail_txt.splitlines():
+                                ln_str = raw_ln.strip()
+                                if not ln_str or "brain:" not in ln_str:
+                                    continue
+                                try:
+                                    step = json.loads(ln_str)
+                                    if not isinstance(step, dict) or step.get("type") != "PLANNER_RESPONSE":
+                                        continue
+                                    c_val = step.get("content")
+                                    c_txt = (
+                                        "\n".join(str(x) for x in c_val)
+                                        if isinstance(c_val, list)
+                                        else str(c_val or "")
+                                    )
+                                    if "<SYSTEM_MESSAGE>" in c_txt or "TOOL_RESPONSE" in c_txt:
+                                        continue
+                                    for m_top, m_fact in brain_tag_re.findall(c_txt):
+                                        if "<SYSTEM_MESSAGE>" not in m_fact and "TOOL_RESPONSE" not in m_fact:
+                                            matches.append((m_top, m_fact))
+                                except Exception:
+                                    if (
+                                        ln_str.startswith("{")
+                                        or "TOOL_RESPONSE" in ln_str
+                                        or "<SYSTEM_MESSAGE>" in ln_str
+                                        or '"USER_INPUT"' in ln_str
+                                    ):
+                                        continue
+                                    for m_top, m_fact in brain_tag_re.findall(ln_str):
+                                        matches.append((m_top, m_fact))
                             for t_top, t_fact in matches[-3:]:
                                 clean_t = t_top.strip()
                                 clean_f = " ".join(t_fact.strip().split())
@@ -1846,10 +1916,6 @@ class OrbitEngine:
             if removed_ids:
                 ph = ",".join("?" for _ in removed_ids)
                 conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", removed_ids)
-                try:
-                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", removed_ids)
-                except Exception:
-                    pass
         return {
             "ok": True,
             "compacted_removed": len(removed_ids),
@@ -1927,10 +1993,6 @@ class OrbitEngine:
             if removed_ids:
                 ph = ",".join("?" for _ in removed_ids)
                 conn.execute(f"DELETE FROM memories WHERE id IN ({ph});", removed_ids)
-                try:
-                    conn.execute(f"DELETE FROM memories_fts WHERE rowid IN ({ph});", removed_ids)
-                except Exception:
-                    pass
 
             # Deduplicar também learned_playbook_json em self_learn_projects
             sl_rows = conn.execute("SELECT workspace, learned_playbook_json FROM self_learn_projects;").fetchall()
@@ -2918,25 +2980,48 @@ class OrbitEngine:
             try:
                 import ipaddress
                 import socket
+                import urllib.error
                 import urllib.parse
                 import urllib.request
 
-                parsed_u = urllib.parse.urlparse(source_url)
-                host_u = (parsed_u.hostname or "").strip().lower()
-                if host_u in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "169.254.169.254"):
-                    raise ValueError("Host local/interno bloqueado por política SSRF")
-                try:
-                    ip_obj = ipaddress.ip_address(socket.gethostbyname(host_u))
-                    if ip_obj.is_private or ip_obj.is_loopback or ip_obj.is_link_local:
-                        raise ValueError("IP privado/loopback bloqueado por política SSRF")
-                except ValueError as ve:
-                    if "SSRF" in str(ve):
-                        raise
+                def _validate_ssrf_target(target_url: str) -> None:
+                    parsed_u = urllib.parse.urlparse(target_url)
+                    if parsed_u.scheme.lower() not in ("http", "https"):
+                        raise ValueError("Esquema URL inválido bloqueado por política SSRF")
+                    host_u = (parsed_u.hostname or "").strip().lower()
+                    if not host_u or host_u in ("localhost", "127.0.0.1", "0.0.0.0", "::1", "169.254.169.254"):
+                        raise ValueError("Host local/interno bloqueado por política SSRF")
+                    try:
+                        addr_infos = socket.getaddrinfo(host_u, None)
+                    except socket.gaierror as ge:
+                        raise ValueError(f"Falha DNS para {host_u}: {ge}") from ge
+                    if not addr_infos:
+                        raise ValueError("Nenhum endereço resolvido para o host")
+                    for info in addr_infos:
+                        raw_ip = str(info[4][0]).split("%")[0]
+                        ip = ipaddress.ip_address(raw_ip)
+                        if (
+                            ip.is_private
+                            or ip.is_loopback
+                            or ip.is_link_local
+                            or ip.is_reserved
+                            or ip.is_multicast
+                            or ip.is_unspecified
+                        ):
+                            raise ValueError(f"IP privado/loopback/reservado ({ip}) bloqueado por política SSRF")
+
+                class _SafeSSRFRedirectHandler(urllib.request.HTTPRedirectHandler):
+                    def redirect_request(self, req, fp, code, msg, headers, newurl):
+                        _validate_ssrf_target(newurl)
+                        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+                _validate_ssrf_target(source_url)
                 req = urllib.request.Request(
                     source_url,
                     headers={"User-Agent": "Mozilla/5.0 (AntigravityBrainDefuddle/5.4)"},
                 )
-                with urllib.request.urlopen(req, timeout=6) as resp:
+                opener = urllib.request.build_opener(_SafeSSRFRedirectHandler())
+                with opener.open(req, timeout=6) as resp:
                     raw_html = resp.read(524288).decode("utf-8", errors="replace")
                 src = raw_html
             except Exception as exc:
@@ -3054,16 +3139,18 @@ class OrbitEngine:
         vault_dir = self._get_vault_dir(ws)
         md_file_path = vault_dir / f"{slug}.md"
 
+        clean_title = extracted_title
+        markdown_out = final_md
         if save_to_vault:
             try:
                 md_file_path.write_text(final_md, encoding="utf-8")
-                self.db.add_memory(
-                    topic=f"[Vault .MD] {extracted_title}",
-                    fact=f"Nota Defuddle guardada em .brain_vault/{ws}/{slug}.md (-{reduction_pct}% tokens, {saved_tokens} tok poupados). Links: {wikilinks_footer}",
-                    category="vault_clip",
-                    importance=4,
+                self.db.store_fact(
+                    topic=f"[Vault Clip] {clean_title[:70]}",
+                    fact=markdown_out[:1200],
                     workspace=ws,
-                    tags=f"vault,defuddle,{ws}",
+                    category="architecture",
+                    tags="defuddle,vault,clip",
+                    importance=4,
                 )
             except Exception:
                 pass
@@ -3237,7 +3324,7 @@ class OrbitEngine:
         with self.db._connect() as conn:
             total_mems = int(conn.execute("SELECT COUNT(*) FROM memories;").fetchone()[0] or 0)
             try:
-                total_links = int(conn.execute("SELECT COUNT(*) FROM synapses;").fetchone()[0] or 0)
+                total_links = int(conn.execute("SELECT COUNT(*) FROM memory_edges;").fetchone()[0] or 0)
             except Exception:
                 total_links = total_mems * 3
             ws_rows = conn.execute(
@@ -3512,7 +3599,7 @@ class OrbitEngine:
                     SELECT topic, fact FROM memories
                     WHERE workspace IN ('global', 'global_self_learn', ?)
                       AND category IN ('learned_rule', 'directive', 'architecture', 'bug_fix')
-                    ORDER BY importance DESC, confidence_score DESC, id DESC
+                    ORDER BY importance DESC, COALESCE(trust_score, 1.0) DESC, id DESC
                     LIMIT 6
                     """,
                     (ws,),

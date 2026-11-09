@@ -5,10 +5,37 @@ import sys
 import time
 from typing import Any, Dict, List
 
-from brain_inject import resolve_transcript_path
+from brain_inject import resolve_smart_active_workspace, resolve_transcript_path
 from db_engine import BrainDB
 from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
+
+
+def clean_system_envelope(text: str) -> str:
+    """Remove cabeçalhos e tags de sistema (<SYSTEM_MESSAGE>, [Message] timestamp=..., <USER_REQUEST>, [BRAIN_MEMORY])."""
+    if not text:
+        return ""
+    s = str(text)
+    s = re.sub(
+        r"The following is a <SYSTEM_MESSAGE>.*?(?=<SYSTEM_MESSAGE>|$)",
+        "",
+        s,
+        flags=re.DOTALL | re.I,
+    )
+    s = re.sub(
+        r"</?(?:SYSTEM_MESSAGE|USER_REQUEST|EPHEMERAL_MESSAGE)>",
+        "",
+        s,
+        flags=re.I,
+    )
+    s = re.sub(
+        r"\[Message\]\s*timestamp=\S+\s+sender=\S+\s+priority=\S+\s+content=",
+        "",
+        s,
+        flags=re.I,
+    )
+    s = re.sub(r"\[BRAIN_MEMORY[^\]]*\]", "", s)
+    return " ".join(s.split()).strip()
 
 
 def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: BrainDB) -> int:
@@ -40,6 +67,7 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
     # Isola apenas os passos após o último USER_INPUT (ou SYSTEM_MESSAGE inicial em subagentes)
     last_user_idx = 0
     turn_user_goal = ""
+    is_subagent = False
     for idx in range(len(steps) - 1, -1, -1):
         st_type = steps[idx].get("type")
         if st_type == "USER_INPUT":
@@ -47,13 +75,19 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
             raw_u = str(steps[idx].get("content") or "")
             m_req = re.search(r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>", raw_u, flags=re.DOTALL)
             if m_req:
-                turn_user_goal = " ".join(m_req.group(1).split())[:110]
+                turn_user_goal = clean_system_envelope(m_req.group(1))[:110]
+            elif "<SYSTEM_MESSAGE>" in raw_u or "sender=" in raw_u:
+                is_subagent = True
+                turn_user_goal = clean_system_envelope(raw_u)[:110]
+            else:
+                turn_user_goal = clean_system_envelope(raw_u)[:110]
             break
         if st_type == "SYSTEM_MESSAGE" and last_user_idx == 0:
             raw_sys = str(steps[idx].get("content") or "")
             if "sender=" in raw_sys and "sender=system" not in raw_sys:
                 last_user_idx = idx
-                turn_user_goal = " ".join(raw_sys.split())[:110]
+                is_subagent = True
+                turn_user_goal = clean_system_envelope(raw_sys)[:110]
                 break
 
     turn_steps = steps[last_user_idx:]
@@ -164,10 +198,11 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
         )
 
     if modified_files or completed_actions:
+        checkpoint_goal = "" if is_subagent else (turn_user_goal or f"Desenvolvimento ativo em {workspace}")
         db.save_checkpoint(
             workspace=workspace,
             project=workspace,
-            goal=turn_user_goal or f"Desenvolvimento ativo em {workspace}",
+            goal=checkpoint_goal,
             status="Ativo • Auto-Synced",
             last_completed="; ".join(completed_actions[-3:])[:300],
             key_files=", ".join(modified_files[-6:])[:200],
@@ -179,7 +214,7 @@ def harvest_latest_turn(transcript_path: str, workspace: str, conv_id: str, db: 
 
     if harvested_count > 0:
         try:
-            db.consolidate_brain_doctor()
+            db.run_memory_doctor()
         except Exception:
             pass
 
@@ -224,6 +259,10 @@ def handle_stop(raw_stdin: str) -> Dict[str, Any]:
 
         db = BrainDB()
         ws = db.normalize_workspace(raw_ws)
+        if ws == "global":
+            resolved_ws = resolve_smart_active_workspace(db, "", conv_id)
+            if resolved_ws and resolved_ws != "global":
+                ws = resolved_ws
         transcript_path = resolve_transcript_path(payload)
         if transcript_path:
             harvest_latest_turn(transcript_path, ws, conv_id, db)

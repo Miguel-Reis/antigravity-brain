@@ -243,6 +243,8 @@ ALL_BRAIN_MCP_TOOLS = [
     "swarm_watch_audit",
     "swarm_graph_path",
     "swarm_architecture_report",
+    "orbit_mission_control",
+    "orbit_briefing_roi",
 ]
 
 INTENT_TOOL_ROUTING: Dict[str, Dict[str, Any]] = {
