@@ -1,14 +1,14 @@
 <div align="center">
 
-# 🧠 Antigravity Brain v7.2 — Carbon Studio OS
+# 🧠 Antigravity Brain v7.3 — Carbon Studio OS & J.A.R.V.I.S. Native Bridge
 
-**Zero-Round-Trip Persistent Memory Engine, 128-Bit Binary Quantization + HippoRAG 2 PPR, Bi-Temporal Graphiti Memory, Git Co-Change Graphify, 48-Agent Asymmetric Swarm & Carbon Studio OS for AI Coding Agents**
+**Zero-Round-Trip Persistent Memory Engine, J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge + Voice STT/TTS), 128-Bit Binary Quantization + HippoRAG 2 PPR, Bi-Temporal Graphiti Memory, Git Co-Change Graphify & 48-Agent Asymmetric Swarm**
 
-[![Version](https://img.shields.io/badge/version-7.2.0_Carbon_OS-10b981?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
+[![Version](https://img.shields.io/badge/version-7.3.0_Jarvis_Carbon_OS-10b981?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
 [![Python](https://img.shields.io/badge/python-3.10%2B%20(Zero--Deps)-38bdf8?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/SQLite_WAL-FTS5_%2B_128--Bit_BQ_%2B_HippoRAG_2_PPR-10b981?style=for-the-badge&logo=sqlite&logoColor=white)](./db_engine.py)
-[![Graphify](https://img.shields.io/badge/Graphify_AST-562_Nodes_%C2%B7_1823_Edges_%C2%B7_Git_Co--Change-f59e0b?style=for-the-badge)](./graphify_engine.py)
-[![MCP 2026](https://img.shields.io/badge/MCP_2026-18_Tools_%2B_Resources_%2B_Prompts-e4e4e7?style=for-the-badge)](./server.py)
+[![Jarvis](https://img.shields.io/badge/JARVIS_OS-Zero--Ollama_Antigravity_Bridge_%2B_Voice-06b6d4?style=for-the-badge)](./jarvis_engine.py)
+[![MCP 2026](https://img.shields.io/badge/MCP_2026-19_Tools_%2B_Resources_%2B_Prompts-e4e4e7?style=for-the-badge)](./server.py)
 [![Tests](https://img.shields.io/badge/Tests-27%2F27_Passing-10b981?style=for-the-badge)](./test_brain.py)
 
 *Built with 100% Python Standard Library (`sqlite3`, `ast`, `http.server`, `concurrent.futures`) and Vanilla HTML5 / Canvas2D / ECS `Float32Array` SoA — zero `pip` packages required, zero cloud telemetry, sub-10ms local execution.*
@@ -95,9 +95,10 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 | **`04`** | **Self-Learn** (`/#selflearn`) | • **60 FPS Neural Pipeline Canvas**: Interactive 5-stage evolution loop, **Global Brain Top-3 Universal Wisdom**, **Rule Conflict Resolver**, **File-Edit GC**, and **Bugfix-to-Test Synthesizer**. |
 | **`05`** | **Prompt Forge** (`/#promptforge`) | • **6-Section Technical Specification Synthesizer**: Combines AST `:Lstart-end` pointers, Self-Learn Meta-Rules, DOTS tasks, and **Antigravity Skills (`SKILL.md`)** in `PT-PT` or `EN-EN` with 1-click **Swarm 48x Launch**. |
 | **`06`** | **Vault 6x** (`/#vault`) | • **Interactive Markdown Vault Studio**: Live `.md` editor with `[[wikilinks]]`, **Defuddle Web/HTML Clipper** (with IPv4/IPv6 SSRF protection), **Universal `AGENTS.md` Repo Sync**, and 6 live telemetry canvases. |
-| **`07`** | **Tasks** (`/#tasks`) | • **Git-Native `.dots/*.md` DAG Tracker**: Create, start, complete, and inspect dependency graphs with automatic topological cycle detection. |
-| **`08`** | **OS Orbit Mission** (`/#orbit`) | • **Mission Control Modal**: Approval Inbox (*"Needs Your Yes"*), Trust Hierarchy locks, Fleet Broadcasts, 4-IDE MCP Bridge, **Live 5h Quota Radar**, and Engineering ROI Ledger. |
-| **`09`** | **AST Graphify BFS** (`/#ast`) | • **Codebase Knowledge Graph (`562` Nodes, `1,823` Edges)**: Symbol lookup (`:Lstart-end`), Git Co-Change blast-radius prediction, God Nodes, and multi-modal BFS shortest path (`2,104x` compression). |
+| **`07`** | **Tasks** (`/#tasks`) | • **Dedicated 4-Column Kanban & Topological `.dots/*.md` DAG Studio**: Unifies DOTS DAG tasks, live Antigravity subagents, and 48-worker Swarm lanes with an interactive Bézier DAG canvas (`#tasksDagCanvas`). |
+| **`08`** | **Jarvis OS** (`/#jarvis`) | • **J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge)**: 60 FPS Acoustic Core (`#jarvisOrbCanvas`), continuous PT-PT/EN Speech Recognition (`STT`) + Neural Speech Synthesis (`TTS`), sub-15ms ReAct local tool execution (`PPR`, `AST`, `Git`, `DOTS`, `Windows RAM/CPU/Disk Telemetry`), and 1-click surgical `[JARVIS_DIRECTIVE]` injection into Antigravity IDE. |
+| **`OS`** | **Orbit Mission** (`/#orbit`) | • **Mission Control Modal**: Approval Inbox (*"Needs Your Yes"*), Trust Hierarchy locks, Fleet Broadcasts, 4-IDE MCP Bridge, **Live 5h Quota Radar**, and Engineering ROI Ledger. |
+| **`AST`** | **Graphify BFS** (`/#ast`) | • **Codebase Knowledge Graph (`611` Nodes, `2,013` Edges)**: Symbol lookup (`:Lstart-end`), Git Co-Change blast-radius prediction, God Nodes, and multi-modal BFS shortest path (`2,349x` compression). |
 
 > **Keyboard Shortcuts**:
 > - `Ctrl+K` / `⌘K` — Open **Omni-Search Command Palette** (jump to any view, run studio actions, or search live memory nodes)
@@ -146,6 +147,7 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 | **AST & Graphify** | `swarm_architecture_report` | `false` | Generate the deterministic [`GRAPH_REPORT.md`](./GRAPH_REPORT.md) with God Nodes, communities, and Git couplings. |
 | **Orbit Agent OS** | `orbit_mission_control` | `false` | Manage Approval Inbox, Fleet Broadcasts, Handoffs, DOTS DAG tasks, Self-Learn, Vault, or Prompt Forge. |
 | **Orbit Agent OS** | `orbit_briefing_roi` | `true` | Generate the executive Morning Brief, 5h Quota Radar, and Engineering ROI report. |
+| **Jarvis OS** | `jarvis_command` | `false` | Execute a natural language command or query through the local J.A.R.V.I.S. Cognitive OS & Antigravity Bridge (`brain://jarvis/status`). |
 
 ---
 
@@ -223,6 +225,7 @@ Output (`27/27 PASS`):
 | [`brain_inject.py`](./brain_inject.py) | `PreInvocation` hook: Smart Active-Repo Resolver, Session Delta (`DELTA_CACHE`), TOON telegraphic formatter, Query-Routed `[SCOUT_SHARED_MAP]`, Global Brain Top-3 injection, and **Notice Lookahead**. |
 | [`brain_harvest.py`](./brain_harvest.py) | `Stop` hook: `<SYSTEM_MESSAGE>` hygiene filter, zero-token harvesting of `<!-- brain: Topic \| Fact -->` annotations, file edits, subagent handoffs, and Memory Doctor compaction. |
 | [`orbit_engine.py`](./orbit_engine.py) | Orbit Agent OS engine: Approval Inbox, Trust Hierarchy, Fleet Broadcasts, `.dots/*.md` DAG with cycle detection, Recursive Self-Learning, Global Meta-Brain, Prompt Forge, and Vault 6x Studio (with IPv4/IPv6 SSRF protection). |
+| [`jarvis_engine.py`](./jarvis_engine.py) | **J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge)**: Bilingual PT/EN intent router, real Windows hardware telemetry (`GlobalMemoryStatusEx`), autonomous ReAct tool loop (`PPR`, `AST`, `Git`, `DOTS`, `QA`), speech synthesizer formatter, and `[JARVIS_DIRECTIVE]` bridge queue. |
 | [`swarm_engine.py`](./swarm_engine.py) | Asymmetric 48-worker Swarm orchestrator (`4 lanes × 12 workers`), `SCOUT-01` AST indexer, Ruflo Pheromone EMA, **physical `zlib`+`base64` rollback sandboxes**, and 3D Office state manager. |
 | [`graphify_engine.py`](./graphify_engine.py) | Multi-modal AST & architecture knowledge graph (`562` nodes, `1,823` edges), **Git Co-Change Coupling Miner (`CO_CHANGED`)**, `TEST_CASE` indexer, God Node detector, and BFS shortest-path solver. |
 | [`ast_impact_watcher.py`](./ast_impact_watcher.py) | Persistent SQLite AST symbol SHA-256 snapshotter, **Git Diff Blast-Radius Analyzer**, multi-language brace scanner, and unified AI-Defence secret scanner. |

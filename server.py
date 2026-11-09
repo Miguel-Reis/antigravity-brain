@@ -31,6 +31,7 @@ class StdioMCPServer:
     def __init__(self, name: str, version: str = "2.4.0") -> None:
         self.name = name
         self.version = version
+        self.db: Any = None
         self._tools: Dict[str, Dict[str, Any]] = {}
 
     READ_ONLY_TOOLS = {
@@ -153,6 +154,23 @@ class StdioMCPServer:
                 coerced[k] = v
         return coerced
 
+    def call_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Any:
+        args = arguments or {}
+        if name == "jarvis_command":
+            from jarvis_engine import JarvisEngine
+
+            prompt = str(args.get("prompt") or "")
+            workspace = str(args.get("workspace") or "brain_mcp")
+            auto_dispatch_agy = bool(args.get("auto_dispatch_agy", False))
+            return JarvisEngine(self.db or db).process_command(
+                prompt, workspace=workspace, auto_dispatch_agy=auto_dispatch_agy
+            )
+        tool_entry = self._tools.get(name)
+        if not tool_entry:
+            raise ValueError(f"Unknown tool: {name}")
+        call_args = self._coerce_args(tool_entry["signature"], args)
+        return tool_entry["fn"](**call_args)
+
     def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         method = req.get("method", "")
         req_id = req.get("id")
@@ -259,6 +277,12 @@ class StdioMCPServer:
                             "name": "Orbit Morning Briefing & ROI",
                             "description": "Executive morning briefing, 5h quota radar, and engineering ROI metrics",
                             "mimeType": "text/markdown",
+                        },
+                        {
+                            "uri": "brain://jarvis/status",
+                            "name": "J.A.R.V.I.S. Cognitive OS & Antigravity Bridge Status",
+                            "description": "Live status, telemetry, pending Antigravity directives, and logs from J.A.R.V.I.S. Cognitive OS",
+                            "mimeType": "application/json",
                         },
                     ]
                 },
@@ -385,6 +409,11 @@ class StdioMCPServer:
             if uri == "brain://orbit/briefing":
                 brief = orbit.get_executive_briefing_and_roi()
                 return f"# 🪐 Orbit Morning Briefing & ROI\n\n```json\n{json.dumps(brief, indent=2, ensure_ascii=False)}\n```"
+            if uri == "brain://jarvis/status":
+                from jarvis_engine import JarvisEngine
+
+                ov = JarvisEngine(self.db or db).get_overview("brain_mcp")
+                return json.dumps(ov, indent=2, ensure_ascii=False)
             if uri.startswith("brain://workspace/") and uri.endswith("/checkpoint"):
                 ws_part = uri[len("brain://workspace/") : -len("/checkpoint")].strip("/") or "brain_mcp"
                 chk = db.get_checkpoint(ws_part) or {}
@@ -579,6 +608,7 @@ except Exception:
 
 # Create the MCP server
 mcp = MCPServer("antigravity-brain")
+mcp.db = db
 
 
 
@@ -881,6 +911,30 @@ def orbit_mission_control(
 def orbit_briefing_roi() -> str:
     """Returns the Orbit Agent OS Morning Brief, Engineering Savings / ROI Calculator (Hours + USD saved), Memory Trust Hierarchy stats, Agent Chaining Hand-offs, and Cross-IDE MCP Bridge status."""
     return json.dumps(orbit.get_executive_briefing_and_roi(), indent=2, ensure_ascii=False)
+
+
+@mcp.tool()
+def jarvis_command(
+    prompt: str,
+    workspace: str = "brain_mcp",
+    auto_dispatch_agy: bool = False,
+) -> str:
+    """Execute a natural language command or query through the local J.A.R.V.I.S. Cognitive OS & Antigravity Bridge
+
+    Args:
+        prompt: Natural language command, question, or directive for J.A.R.V.I.S.
+        workspace: Target workspace identifier (default 'brain_mcp')
+        auto_dispatch_agy: Automatically dispatch mission directive to Antigravity
+    """
+    from jarvis_engine import JarvisEngine
+
+    res = JarvisEngine(mcp.db or db).process_command(
+        prompt, workspace=workspace, auto_dispatch_agy=auto_dispatch_agy
+    )
+    return json.dumps(res, indent=2, ensure_ascii=False)
+
+
+TOOLS: List[Dict[str, Any]] = [t["schema"] for t in mcp._tools.values()]
 
 
 if __name__ == "__main__":

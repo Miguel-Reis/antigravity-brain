@@ -1185,6 +1185,20 @@ def run_all_tests() -> None:
         prm_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 92, "method": "prompts/list", "params": {}})
         assert len(prm_list["result"]["prompts"]) >= 3, f"MCP 2026 prompts/list incompleto: {prm_list}"
 
+        # Jarvis Cognitive OS v7.3 (Zero-Ollama Antigravity Bridge)
+        from jarvis_engine import JarvisEngine
+        jv_eng = JarvisEngine(gb_db)
+        jv_tel = jv_eng.get_system_telemetry()
+        assert jv_tel.get("engine_mode") == "ANTIGRAVITY_NATIVE_ZERO_OLLAMA", f"Modo Jarvis inesperado: {jv_tel}"
+        assert jv_tel.get("ram_total_gb", 0) > 0, f"Telemetria RAM inválida: {jv_tel}"
+        jv_cmd = jv_eng.process_command("Bom dia Jarvis, ponto de situação do projeto", workspace="brain_mcp")
+        assert jv_cmd.get("ok") is True and jv_cmd.get("reply_text") and jv_cmd.get("speech_text"), f"Falha process_command Jarvis: {jv_cmd}"
+        jv_disp = jv_eng.dispatch_to_antigravity("Auditar db_engine.py e validar PPR", workspace="brain_mcp", priority="P0")
+        assert jv_disp.get("ok") is True and len(jv_eng.get_pending_directives("brain_mcp")) >= 1, f"Falha dispatch_to_antigravity: {jv_disp}"
+        from brain_inject import build_ephemeral_context
+        jv_ctx = build_ephemeral_context([], {"goal": "Sessão ativa"}, "brain_mcp", db=gb_db)
+        assert "[JARVIS_DIRECTIVE]" in jv_ctx, f"[JARVIS_DIRECTIVE] não injetado no PreInvocation: {jv_ctx}"
+
     for gb_ui_token in (
         'id="tabBtnVault"',
         'id="vaultWorkspace"',
@@ -1226,6 +1240,13 @@ def run_all_tests() -> None:
         "function createNewTaskFromPageUI()",
         "03 // ARCHITECTURAL 3D COMMAND FLOOR",
         "07 // UNIFIED TASKS, SUBAGENTS &amp; DOTS DAG COMMAND CENTER",
+        'id="tabBtnJarvis"',
+        'id="jarvisWorkspace"',
+        'id="jarvisOrbCanvas"',
+        'id="jarvisChatLog"',
+        "function fetchJarvisStudioPage(",
+        "function sendJarvisCommandUI(",
+        "function renderJarvisOrbLoop(",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
     print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")

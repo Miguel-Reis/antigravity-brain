@@ -27,6 +27,12 @@ from db_engine import BrainDB, seed_initial_memories
 import orbit_engine as _orbit_engine_mod
 from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
+try:
+    import jarvis_engine as _jarvis_engine_mod
+    from jarvis_engine import JarvisEngine
+except Exception:
+    _jarvis_engine_mod = None  # type: ignore
+    JarvisEngine = None  # type: ignore
 from token_diet import (
     audit_mcp_servers,
     audit_plugins,
@@ -61,6 +67,20 @@ def _get_fresh_orbit_engine(db: BrainDB) -> Any:
     except Exception:
         pass
     return OrbitEngine(db)
+
+
+def _ensure_jarvis_engine_imported() -> None:
+    """Garante que JarvisEngine está importado (inclusive se jarvis_engine.py foi criado em paralelo)."""
+    global JarvisEngine, _jarvis_engine_mod
+    if JarvisEngine is None:
+        try:
+            import jarvis_engine as _je_mod
+            from jarvis_engine import JarvisEngine as _JE
+
+            _jarvis_engine_mod = _je_mod
+            JarvisEngine = _JE
+        except Exception:
+            pass
 
 
 def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
@@ -975,6 +995,14 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(orbit.get_mission_control_inbox())
             return
 
+        if parsed.path == "/api/jarvis":
+            _ensure_jarvis_engine_imported()
+            qs = urllib.parse.parse_qs(parsed.query)
+            workspace = qs.get("workspace", ["brain_mcp"])[0] or "brain_mcp"
+            db = BrainDB()
+            self._send_json(JarvisEngine(db).get_overview(workspace=workspace))
+            return
+
         if parsed.path == "/api/memories/revisions":
             qs = urllib.parse.parse_qs(parsed.query)
             mid_raw = qs.get("memory_id", [""])[0]
@@ -1481,6 +1509,73 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             req_ws = str(body.get("workspace", "all"))
             self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi(workspace=req_ws)})
             return
+
+        if parsed.path == "/api/jarvis":
+            _ensure_jarvis_engine_imported()
+            data = body if isinstance(body, dict) else {}
+            action = str(data.get("action") or "command").strip() or "command"
+            workspace = str(data.get("workspace", "brain_mcp")).strip() or "brain_mcp"
+            if action in ("command", "chat"):
+                res = JarvisEngine(db).process_command(
+                    prompt=data.get("prompt", ""),
+                    workspace=data.get("workspace", "brain_mcp"),
+                    auto_dispatch_agy=bool(data.get("auto_dispatch_agy", False)),
+                )
+                self._send_json(res)
+                return
+            elif action == "briefing":
+                res = JarvisEngine(db).process_command(
+                    "Bom dia Jarvis, faz o briefing matinal completo",
+                    workspace=data.get("workspace", "brain_mcp"),
+                )
+                self._send_json(res)
+                return
+            elif action == "dispatch_antigravity":
+                res = JarvisEngine(db).dispatch_to_antigravity(
+                    directive=data.get("directive") or data.get("prompt", ""),
+                    workspace=data.get("workspace", "brain_mcp"),
+                    priority=data.get("priority", "P0"),
+                )
+                self._send_json(res)
+                return
+            elif action == "ack_directive":
+                res = JarvisEngine(db).ack_directive(
+                    int(data.get("id") or data.get("directive_id") or 0)
+                )
+                self._send_json(res)
+                return
+            elif action == "telemetry":
+                self._send_json({"ok": True, "telemetry": JarvisEngine(db).get_system_telemetry()})
+                return
+            elif action == "clear_history":
+                je_inst = JarvisEngine(db)
+                if hasattr(je_inst, "clear_logs") and callable(getattr(je_inst, "clear_logs")):
+                    clear_res = je_inst.clear_logs(workspace=workspace)
+                    if isinstance(clear_res, dict):
+                        self._send_json({"ok": True, **clear_res})
+                        return
+                with db._connect() as conn:
+                    try:
+                        first_row = conn.execute(
+                            "SELECT id FROM jarvis_logs ORDER BY id ASC LIMIT 1;"
+                        ).fetchone()
+                        if first_row:
+                            conn.execute("DELETE FROM jarvis_logs WHERE id != ?;", (first_row["id"],))
+                        else:
+                            conn.execute("DELETE FROM jarvis_logs;")
+                    except Exception:
+                        pass
+                overview = JarvisEngine(db).get_overview(workspace=workspace)
+                self._send_json({"ok": True, **overview})
+                return
+            else:
+                res = JarvisEngine(db).process_command(
+                    prompt=data.get("prompt", ""),
+                    workspace=data.get("workspace", "brain_mcp"),
+                    auto_dispatch_agy=bool(data.get("auto_dispatch_agy", False)),
+                )
+                self._send_json(res)
+                return
 
         if parsed.path == "/api/app/launch":
             self._send_json(

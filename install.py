@@ -96,6 +96,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
                 "server.py",
                 "db_engine.py",
                 "orbit_engine.py",
+                "jarvis_engine.py",
                 "jev_s1_engine.py",
                 "swarm_engine.py",
                 "graphify_engine.py",

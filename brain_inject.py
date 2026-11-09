@@ -505,6 +505,7 @@ def build_ephemeral_context(
     user_query: str = "",
     recent_actions: Optional[List[str]] = None,
     lookahead_notices: Optional[List[str]] = None,
+    db: Optional[BrainDB] = None,
 ) -> str:
     """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
     is_micro = bool(micro_mode or max_chars <= 380)
@@ -536,6 +537,59 @@ def build_ephemeral_context(
         c_files = (checkpoint.get("key_files") or "N/A").strip()[:75]
         chk_line = f"CHK({checkpoint.get('project') or workspace}):Goal={c_goal}|St={c_status}|Files={c_files}"
         parts.append(chk_line[:220])
+
+    # Injetar Diretivas Pendentes do J.A.R.V.I.S. Studio (jarvis_directives)
+    try:
+        from db_engine import DEFAULT_DB_PATH, _INITIALIZED_DBS
+
+        if db is not None:
+            cand_dbs = [db]
+        else:
+            cand_dbs = [
+                BrainDB(db_path=p_str)
+                for p_str in list(_INITIALIZED_DBS)
+                if os.path.isfile(p_str) and os.path.abspath(p_str) != os.path.abspath(DEFAULT_DB_PATH)
+            ] + [BrainDB()]
+
+        injected_jarvis = 0
+        for j_db in cand_dbs:
+            if injected_jarvis >= 2:
+                break
+            with j_db._connect() as j_conn:
+                has_j_tbl = j_conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table' AND name='jarvis_directives';"
+                ).fetchone()
+                if not has_j_tbl:
+                    continue
+                j_rows = j_conn.execute(
+                    """
+                    SELECT * FROM jarvis_directives
+                    WHERE status = 'pending'
+                    ORDER BY id DESC
+                    LIMIT 2;
+                    """
+                ).fetchall()
+                for jr in j_rows:
+                    if injected_jarvis >= 2:
+                        break
+                    jr_dict = dict(jr)
+                    j_prio = str(jr_dict.get("priority") or "P0").strip()
+                    j_dir = compress_fact_telegraphic(str(jr_dict.get("directive") or ""), 95)
+                    j_ctx = compress_fact_telegraphic(
+                        str(
+                            jr_dict.get("surgical_context")
+                            or jr_dict.get("context")
+                            or jr_dict.get("target_files")
+                            or workspace
+                        ),
+                        65,
+                    )
+                    j_line = f"[JARVIS_DIRECTIVE]: {j_prio} | {j_dir} ({j_ctx})"
+                    if sum(len(p) for p in parts) + len(j_line) + 2 <= max_chars:
+                        parts.append(j_line)
+                        injected_jarvis += 1
+    except Exception:
+        pass
 
     # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining c/ Delta Dedupe)
     is_delta = bool(delta_info and delta_info.get("is_delta_turn"))
@@ -746,6 +800,7 @@ def generate_inspector_preview(
         delta_info=delta_info,
         micro_mode=micro_active,
         user_query=effective_query,
+        db=db,
     )
     est_tokens = max(1, len(ephemeral_text) // 4)
     saved_vs_raw = max(0, raw_tokens_est - est_tokens)
@@ -952,6 +1007,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             max_chars=budget_chars,
             jev_route=jev_route,
             micro_mode=True,
+            db=db,
         )
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         injected_tokens = max(1, len(ephemeral_msg) // 4)
@@ -988,7 +1044,17 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
 
     lookahead_notices = get_notice_lookahead_alerts(db, ws, recent_actions, user_query)
 
-    if not memories and not checkpoint and not scout_map and not lookahead_notices:
+    has_jarvis_pending = False
+    try:
+        with db._connect() as j_conn:
+            if j_conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='jarvis_directives';").fetchone():
+                has_jarvis_pending = bool(
+                    j_conn.execute("SELECT 1 FROM jarvis_directives WHERE status IN ('pending', 'injected') LIMIT 1;").fetchone()
+                )
+    except Exception:
+        has_jarvis_pending = False
+
+    if not memories and not checkpoint and not scout_map and not lookahead_notices and not has_jarvis_pending:
         return {}
 
     delta_info = db.compute_session_delta(
@@ -1009,6 +1075,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         user_query=user_query,
         recent_actions=recent_actions,
         lookahead_notices=lookahead_notices,
+        db=db,
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)
