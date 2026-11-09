@@ -1217,6 +1217,15 @@ def run_all_tests() -> None:
         "STUDIO v5.3",
         "4 × 12 workers (48)",
         "96 / 96",
+        'id="tasksWorkspace"',
+        'id="tasksKanbanGrid"',
+        'id="tasksDagCanvas"',
+        "function fetchTasksStudioPage(",
+        "function renderTasksStudioPage()",
+        "function renderTasksDagCanvas()",
+        "function createNewTaskFromPageUI()",
+        "03 // ARCHITECTURAL 3D COMMAND FLOOR",
+        "07 // UNIFIED TASKS, SUBAGENTS &amp; DOTS DAG COMMAND CENTER",
     ):
         assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
     print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")

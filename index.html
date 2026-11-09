@@ -1751,13 +1751,14 @@
     }
 
     /* =========================================================================
-       VIEW 3: 3D AGENT OFFICE STUDIO (#officeWorkspace) — ZERO-OVERLAP HUD
+       VIEW 3: 3D AGENT OFFICE STUDIO (#officeWorkspace) — CARBON STUDIO OS v7.2
+       DOCKED TOP/BOTTOM RAILS + UNOBSTRUCTED 3D STAGE + INTEGRATED INSPECTOR
        ========================================================================= */
     .office-workspace {
       flex: 1;
       display: none;
       overflow: hidden;
-      background: radial-gradient(circle at 45% 42%, #111116 0%, #08080a 76%);
+      background: #08080b;
       position: relative;
     }
 
@@ -1771,11 +1772,13 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      background: radial-gradient(circle at 50% 45%, #121218 0%, #08080b 82%);
     }
 
     #office3DCanvas {
+      flex: 1;
       width: 100%;
-      height: 100%;
+      min-height: 0;
       display: block;
       cursor: grab;
     }
@@ -1784,47 +1787,44 @@
       cursor: grabbing;
     }
 
-    /* Clean 2-Row Top HUD Dock inside 3D Stage */
+    /* Docked Top Studio Header inside 3D Stage — Zero Canvas Obstruction */
     .office-hud-top {
-      position: absolute;
-      top: 10px;
-      left: 12px;
-      right: 12px;
+      position: relative;
       display: flex;
       flex-direction: column;
       gap: 6px;
-      pointer-events: none;
+      padding: 8px 14px;
+      background: #0c0c10;
+      border-bottom: 1px solid var(--border);
       z-index: 18;
+      flex-shrink: 0;
     }
 
     .office-stat-bar {
       display: flex;
       align-items: center;
-      gap: 6px;
-      pointer-events: auto;
-      flex-wrap: nowrap;
-      overflow-x: auto;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .office-cam-bar {
       display: flex;
       align-items: center;
-      gap: 4px;
-      pointer-events: auto;
+      gap: 5px;
       flex-wrap: wrap;
-      background: rgba(11, 11, 14, 0.94);
+      background: #111116;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 4px 6px;
-      box-shadow: var(--shadow-card);
+      border-radius: 6px;
+      padding: 4px 8px;
     }
 
     .office-badge {
-      background: rgba(11, 11, 14, 0.94);
+      background: #121217;
       border: 1px solid var(--border);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
+      padding: 3.5px 9px;
+      border-radius: 5px;
+      font-size: 10.5px;
       color: var(--text-secondary);
       display: inline-flex;
       align-items: center;
@@ -1840,16 +1840,16 @@
 
     .office-badge strong {
       font-family: var(--font-mono);
-      font-size: 11.5px;
+      font-size: 11px;
       font-variant-numeric: tabular-nums;
     }
 
     .office-btn {
-      background: rgba(17, 17, 22, 0.92);
+      background: #15151c;
       border: 1px solid var(--border);
       color: var(--text-secondary);
-      padding: 4px 8px;
-      border-radius: 6px;
+      padding: 3.5px 8px;
+      border-radius: 5px;
       font-family: var(--font-sans);
       font-size: 10.5px;
       font-weight: 600;
@@ -1868,7 +1868,7 @@
     }
 
     .office-btn.primary {
-      background: rgba(16, 185, 129, 0.22);
+      background: rgba(16, 185, 129, 0.2);
       border-color: #10b981;
       color: #ffffff;
     }
@@ -1879,28 +1879,22 @@
       color: #6ee7b7;
     }
 
-    /* Quick Agent Follow Switcher Dock — Pinned neatly below Top HUD Bar between Left Radar & Right Inspector */
+    /* Docked Quick Agent Follow Switcher Strip below Top HUD */
     .office-quick-agent-dock {
-      position: absolute;
-      top: 112px;
-      left: 204px;
-      right: 292px;
+      position: relative;
       z-index: 17;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 4px;
-      background: rgba(11, 11, 14, 0.94);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 4px 8px;
-      box-shadow: var(--shadow-card);
-      pointer-events: auto;
+      gap: 5px;
+      background: #0a0a0e;
+      border-bottom: 1px solid var(--border);
+      padding: 5px 14px;
       overflow-x: auto;
+      flex-shrink: 0;
     }
 
     .quick-ag-btn {
-      background: var(--bg-card);
+      background: #121218;
       border: 1px solid var(--border);
       border-radius: 5px;
       color: var(--text-secondary);
@@ -1920,17 +1914,17 @@
       color: #ffffff;
     }
 
-    /* Left Blades: Orbital Radar & Camera Deck — Positioned safely below Top HUD */
+    /* Compact Corner Minimap Radar — Non-obstructive bottom-left corner */
     .office-radar-wrap {
       position: absolute;
-      top: 112px;
+      bottom: 78px;
       left: 12px;
-      width: 184px;
-      height: 196px;
-      background: rgba(11, 11, 14, 0.95);
+      width: 158px;
+      height: 168px;
+      background: rgba(11, 11, 15, 0.92);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 8px;
+      border-radius: 8px;
+      padding: 7px;
       z-index: 16;
       pointer-events: auto;
       display: flex;
@@ -1941,56 +1935,37 @@
 
     .office-radar-title {
       width: 100%;
-      font-family: var(--font-sans);
-      font-size: 10px;
+      font-family: var(--font-mono);
+      font-size: 9px;
       font-weight: 700;
       color: var(--text-muted);
       display: flex;
       justify-content: space-between;
-      margin-bottom: 4px;
-      letter-spacing: 0.04em;
+      margin-bottom: 3px;
+      letter-spacing: 0.05em;
     }
 
+    /* Hide redundant duplicate camera deck (controls live cleanly in top bar) */
     .office-holo-deck {
-      position: absolute;
-      top: 316px;
-      left: 12px;
-      width: 184px;
-      background: rgba(11, 11, 14, 0.95);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 8px;
-      z-index: 16;
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-      box-shadow: var(--shadow-card);
+      display: none !important;
     }
 
-    /* Right Blade: Holographic Desk Heatmap Tower Inspector — Safely below Top HUD */
+    /* Docked Desk Heatmap Tower Inspector inside Right Sidebar */
     .office-holo-tower-inspector {
-      position: absolute;
-      top: 112px;
-      right: 12px;
-      width: 272px;
-      background: rgba(11, 11, 14, 0.96);
+      margin: 0 12px 8px;
+      background: #111116;
       border: 1px solid rgba(16, 185, 129, 0.35);
-      border-radius: var(--radius-lg);
-      padding: 10px 12px;
-      z-index: 19;
-      pointer-events: auto;
-      box-shadow: var(--shadow-card);
+      border-radius: 7px;
+      padding: 9px 11px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      transition: opacity 0.2s ease, transform 0.2s ease;
+      gap: 5px;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
     .office-holo-tower-inspector.hidden-layer {
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(-8px);
+      display: none !important;
     }
 
     .holo-tower-heat-track {
@@ -2026,44 +2001,38 @@
       color: #ffffff;
     }
 
-    /* Bottom Neural Console & Legend Strip */
+    /* Docked Bottom Neural Telemetry & Legend Footer Bar */
     .office-neural-console {
-      position: absolute;
-      bottom: 46px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: min(720px, calc(100% - 410px));
-      background: rgba(11, 11, 14, 0.95);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 8px 14px;
+      position: relative;
+      width: 100%;
+      background: #0c0c10;
+      border-top: 1px solid var(--border);
+      padding: 6px 14px;
       z-index: 16;
-      pointer-events: auto;
-      box-shadow: var(--shadow-card);
       font-family: var(--font-mono);
+      flex-shrink: 0;
     }
 
     .office-hud-bottom {
-      position: absolute;
-      bottom: 10px;
-      left: 12px;
-      background: rgba(11, 11, 14, 0.94);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 6px 12px;
+      position: relative;
+      background: #09090c;
+      border-top: 1px solid var(--border);
+      padding: 5px 14px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      font-size: 10.5px;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 10px;
       color: var(--text-muted);
       z-index: 15;
-      pointer-events: auto;
+      flex-shrink: 0;
+      flex-wrap: wrap;
     }
 
     /* Right Roster & Selected Agent Inspector Sidebar */
     .office-sidebar {
-      width: 348px;
-      background: var(--bg-panel-solid);
+      width: 368px;
+      background: #0c0c10;
       border-left: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -2072,22 +2041,24 @@
     }
 
     .office-side-head {
-      padding: 11px 14px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      background: #0f0f14;
     }
 
     .office-selected-card {
       margin: 10px 12px 8px;
       padding: 11px;
-      background: var(--bg-card);
+      background: #121218;
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: 7px;
       display: flex;
       flex-direction: column;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     .roster-filter-bar {
@@ -2096,14 +2067,15 @@
       padding: 0 12px 8px;
       border-bottom: 1px solid var(--border);
       margin-bottom: 4px;
+      flex-shrink: 0;
     }
 
     .roster-filter-pill {
       flex: 1;
-      background: var(--bg-card);
+      background: #121218;
       border: 1px solid var(--border);
       color: var(--text-muted);
-      border-radius: 6px;
+      border-radius: 5px;
       padding: 4px 5px;
       font-size: 10px;
       font-weight: 600;
@@ -2144,9 +2116,9 @@
     }
 
     .roster-card {
-      background: var(--bg-card);
+      background: #121218;
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
+      border-radius: 6px;
       padding: 8px 10px;
       cursor: pointer;
       transition: all 0.14s ease;
@@ -2156,12 +2128,152 @@
       flex-shrink: 0;
     }
 
+    /* =========================================================================
+       VIEW 7: DEDICATED TASKS & DOTS DAG STUDIO (#tasksWorkspace)
+       ========================================================================= */
+    .tasks-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .tasks-kpi-card {
+      background: #111116;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tasks-kpi-label {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tasks-kpi-value {
+      font-family: var(--font-mono);
+      font-size: 20px;
+      font-weight: 800;
+      color: #ffffff;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+
+    .tasks-kpi-sub {
+      font-size: 10px;
+      color: var(--text-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tasks-creator-bar {
+      background: #111116;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 2.2fr 1fr 0.9fr 1fr 1.2fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .tasks-kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 360px;
+    }
+
+    .tasks-kanban-col {
+      background: #0e0e13;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      min-height: 340px;
+      max-height: 480px;
+      overflow: hidden;
+    }
+
+    .tasks-col-head {
+      padding: 9px 12px;
+      background: #13131a;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .tasks-col-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .tk-card {
+      background: #14141c;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 9px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      flex-shrink: 0;
+    }
+
+    .tk-card:hover {
+      border-color: var(--border-strong);
+      background: #181822;
+    }
+
+    .tk-card.selected {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .tk-card-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #f4f4f5;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .tk-chip {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      font-weight: 600;
+      padding: 1.5px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: #101015;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
     #pfHistoryList > div,
     #slPageRulesList > div,
     #slPageEventsList > div,
     #orbitSelfLearnProjectsList > div,
     #orbitSelfLearnPlaybookList > div,
-    .office-roster-list > div {
+    .office-roster-list > div,
+    .tasks-col-body > div {
       flex-shrink: 0;
     }
 
@@ -2787,7 +2899,7 @@
             <span class="rail-idx">06</span>
             <span>Vault 6x</span>
           </button>
-          <button class="view-tab" id="tabBtnTasks" onclick="openOfficeTasksTab()" title="Ver todas as Tasks a correr em tempo real na App Antigravity, Subagentes e Swarm">
+          <button class="view-tab" id="tabBtnTasks" onclick="switchMainView('tasks')" title="Página Dedicada de Tasks, Subagentes, Swarm &amp; DOTS DAG Studio [Atalho: Tecla 7]">
             <span class="rail-idx">07</span>
             <span>Tasks (<span id="topTabTasksCount">0</span>)</span>
             <span class="pulse-dot" id="topTasksPulse" style="background:#10b981; margin-left:auto;"></span>
@@ -3459,34 +3571,44 @@
     </div>
   </div>
 
-  <!-- 3D AGENT OFFICE LIVE VIEW -->
+  <!-- =========================================================================
+       03 // 3D AGENT OFFICE STUDIO (CARBON STUDIO OS v7.2 — UNOBSTRUCTED STAGE)
+       ========================================================================= -->
   <div class="office-workspace" id="officeWorkspace">
     <div class="office-stage" id="officeStageWrap">
-      <!-- Top HUD (Clean 2-row studio dock) -->
+      <!-- Top Docked Studio Header & Camera Control Bar -->
       <div class="office-hud-top">
         <div class="office-stat-bar">
-          <div class="office-badge" title="Total de Bonecos/Agentes no Escritório 3D">
-            🏢 Equipa: <strong id="offStatTotal" style="color:#fff;">0</strong>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#10b981; letter-spacing:0.06em; padding:3px 8px; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:5px;">
+              03 // ARCHITECTURAL 3D COMMAND FLOOR
+            </span>
+            <div class="office-badge" title="Total de Bonecos/Agentes no Escritório 3D">
+              🏢 Frota: <strong id="offStatTotal" style="color:#fff;">0</strong>
+            </div>
+            <div class="office-badge" style="cursor:pointer;" onclick="setOfficeRosterFilter('working')" title="Agentes sentados nas secretárias 3D a programar/executar ferramentas">
+              <span class="pulse-dot"></span>
+              💻 Ativos: <strong id="offStatWorking" style="color:#10b981;">0</strong>
+            </div>
+            <div class="office-badge" style="cursor:pointer; border-color:rgba(16,185,129,0.35);" onclick="switchMainView('tasks')" title="Abrir Página Dedicada 07 Tasks &amp; DOTS DAG Studio">
+              📋 Tasks Studio: <strong id="offStatTasks" style="color:#6ee7b7;">0</strong>
+            </div>
+            <div class="office-badge" style="cursor:pointer;" onclick="setOfficeRosterFilter('paused')" title="Agentes em pausa no Lounge / Máquina de Café / Sofá">
+              ☕ Lounge: <strong id="offStatPaused" style="color:#f59e0b;">0</strong>
+            </div>
+            <div class="office-badge" title="Conversas reais e Subagentes detetados em ~/.gemini/antigravity/brain">
+              💬 Sessões: <strong id="offStatConvs" style="color:#06b6d4;">0</strong>
+            </div>
           </div>
-          <div class="office-badge" style="cursor:pointer;" onclick="setOfficeRosterFilter('working')" title="Agentes sentados nas secretárias 3D a programar/executar ferramentas">
-            <span class="pulse-dot"></span>
-            💻 Trabalho: <strong id="offStatWorking" style="color:#34d399;">0</strong>
-          </div>
-          <div class="office-badge" style="cursor:pointer;" onclick="setOfficeRosterFilter('tasks')" title="Clique para abrir a aba de Tasks em Curso na barra lateral">
-            ⚡ Tasks: <strong id="offStatTasks" style="color:#a5b4fc;">0</strong>
-          </div>
-          <div class="office-badge" style="cursor:pointer;" onclick="setOfficeRosterFilter('paused')" title="Agentes em pausa no Lounge / Máquina de Café / Sofá">
-            ☕ Lounge: <strong id="offStatPaused" style="color:#fbbf24;">0</strong>
-          </div>
-          <div class="office-badge" title="Conversas reais e Subagentes detetados em ~/.gemini/antigravity/brain">
-            💬 Sessões: <strong id="offStatConvs" style="color:#38bdf8;">0</strong>
-          </div>
-          <div class="office-badge" title="Performance de renderização isométrica 3D em tempo real">
-            🎞️ 3D: <strong id="offStatFps" style="color:#c7d2fe;">60 FPS</strong>
-          </div>
-          <div class="office-badge" id="offStatCullBadge" style="cursor:pointer; border-color:rgba(56,189,248,0.35);" onclick="toggleOfficeFrustumCulling()" title="Frustum Culling 3D Ativo: Descarta agentes e objetos 3D fora da área de visão ativa para reduzir a carga na CPU. Clique para alternar ON/OFF.">
-            👁️ Frustum: <strong id="offStatCulled" style="color:#38bdf8;">8/8 Vis</strong>
-            <span id="offStatCullSaved" style="font-size:10px; color:#34d399; margin-left:3px;">(0 culled)</span>
+
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="office-badge" title="Performance de renderização isométrica 3D em tempo real">
+              🎞️ <strong id="offStatFps" style="color:#e4e4e7;">60 FPS</strong>
+            </div>
+            <div class="office-badge" id="offStatCullBadge" style="cursor:pointer; border-color:rgba(6,182,212,0.35);" onclick="toggleOfficeFrustumCulling()" title="Frustum Culling 3D Ativo: Descarta agentes e objetos 3D fora da área de visão ativa para reduzir a carga na CPU. Clique para alternar ON/OFF.">
+              👁️ <strong id="offStatCulled" style="color:#06b6d4;">8/8 Vis</strong>
+              <span id="offStatCullSaved" style="font-size:9.5px; color:#10b981; margin-left:3px;">(0 culled)</span>
+            </div>
           </div>
         </div>
 
@@ -3512,18 +3634,21 @@
           <button class="office-btn" onclick="setOfficeCameraPreset('lounge')" title="Zona 6: Zona de Pausa, Sofás, Arcade e Café Espresso">
             ☕ Lounge
           </button>
+          <button class="office-btn" onclick="setOfficeCameraPreset('mcp_room')" title="Zona 2: Sala de Servidores MCP 3D">
+            🖥️ MCP
+          </button>
           <button class="office-btn primary" onclick="triggerSwarmFromOffice()" title="Lança Swarm Run de 24 Lanes em paralelo a partir do Escritório 3D">
-            ⚡ Swarm
+            ⚡ Swarm Run
+          </button>
+          <button class="office-btn emerald" onclick="switchMainView('tasks')" title="Ir para a Página Dedicada 07 Tasks &amp; DOTS DAG">
+            📋 Abrir Tasks ➔
           </button>
           <button type="button" class="office-btn" id="btnToggleOfficeAdv" onclick="toggleStudioAdvDrawer('officeAdvCamDrawer', this)" title="Mostrar/Ocultar Controlos 3D, FX Holográficos, Som e Simulação de Equipa">
-            🎛️ Controlos 3D &amp; FX ▾
+            🎛️ Opções 3D &amp; Equipa ▾
           </button>
           <div class="studio-adv-drawer" id="officeAdvCamDrawer">
             <button class="office-btn primary" id="btnOfficeFrustumCull" onclick="toggleOfficeFrustumCulling()" aria-pressed="true" title="Frustum Culling 3D: Descarta cálculos de projeção, animação e draw calls de agentes fora do campo de visão ativo (reduz carga na CPU)">
               👁️ Culling: ON
-            </button>
-            <button class="office-btn" onclick="setOfficeCameraPreset('mcp_room')" title="Zona 2: Sala de Servidores MCP 3D">
-              🖥️ MCP
             </button>
             <button class="office-btn" id="btnOfficeAutoRotate" onclick="toggleOfficeAutoRotate()" title="Rodar câmara 3D automaticamente 360°">
               🔄 Orbit 360°
@@ -3531,7 +3656,7 @@
             <button class="office-btn primary" id="btnOfficeHeatmap" onclick="toggleOfficeHeatmap3D()" title="Mostra/Oculta Torres Holográficas 3D do Mapa de Calor sobre as Secretárias dos Agentes">
               🔥 Heatmap 3D: ON
             </button>
-            <button class="office-btn" id="btnPulseHoloTowers" onclick="pulseOfficeHoloTowers3D()" style="border-color:rgba(244,63,94,0.4); color:#fda4af;" title="Dispara um pulso holográfico de atividade de edição em todas as Torres 3D das Secretárias">
+            <button class="office-btn" id="btnPulseHoloTowers" onclick="pulseOfficeHoloTowers3D()" style="border-color:rgba(16,185,129,0.4); color:#6ee7b7;" title="Dispara um pulso holográfico de atividade de edição em todas as Torres 3D das Secretárias">
               🗼 Pulso Torres 3D
             </button>
             <button class="office-btn" id="btnOfficeSound" onclick="toggleOfficeSound3D()" title="Ativa/Desativa Sintetizador WebAudio 3D (som de teclado, café espresso e portal quântico)">
@@ -3559,76 +3684,36 @@
         </div>
       </div>
 
-      <!-- 3D Viewport Canvas -->
-      <canvas id="office3DCanvas"></canvas>
-
-      <!-- QUICK AGENT FOLLOW SWITCHER DOCK (TOP-CENTER OF 3D CANVAS) -->
+      <!-- Docked Quick Agent Follow Switcher Strip -->
       <div class="office-quick-agent-dock" id="officeQuickAgentDock" title="Saltar rapidamente a câmara em Modo Follow entre agentes (Atalhos: teclas [ e ])">
+        <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:var(--text-muted); margin-right:4px;">FOLLOW:</span>
         <button type="button" class="quick-ag-btn" onclick="cycleOfficeFollowAgent(-1)" title="Agente Anterior (Atalho: [)">◀ [</button>
         <div id="officeQuickAgentList" style="display:flex; align-items:center; gap:4px;"></div>
         <button type="button" class="quick-ag-btn" onclick="cycleOfficeFollowAgent(1)" title="Agente Seguinte (Atalho: ])">] ▶</button>
       </div>
 
-      <!-- INTERACTIVE 3D HOLOGRAPHIC DESK HEATMAP TOWER INSPECTOR (TOP-RIGHT OF 3D CANVAS) -->
-      <div class="office-holo-tower-inspector" id="officeHoloTowerInspector" role="region" aria-label="Inspetor de Torre Holográfica 3D do Mapa de Calor">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-          <span style="font-size:10px; font-weight:800; color:#f8fafc; letter-spacing:0.05em; text-transform:uppercase;" id="holoInspDeskAgent">🗼 TORRE HOLO #01 · ARCH-01</span>
-          <div style="display:flex; align-items:center; gap:4px;">
-            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(-1)" title="Torre Holográfica Anterior">◀</button>
-            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(1)" title="Seguinte Torre Holográfica">▶</button>
-          </div>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
-          <div style="font-family:var(--font-mono); font-size:12.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="holoInspFileName">swarm_engine.py</div>
-          <span class="rc-badge working" id="holoInspHeatBadge" style="font-size:9px;">🔥 92% HOT</span>
-        </div>
-        <div class="holo-tower-heat-track">
-          <div class="holo-tower-heat-fill" id="holoInspHeatBar" style="width:92%;"></div>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); font-family:var(--font-mono);" id="holoInspStats">
-          <span>✏️ <strong style="color:#fff;" id="holoInspEdits">8</strong> edits</span>
-          <span>📏 <strong style="color:#cbd5e1;" id="holoInspLines">3267</strong>L</span>
-          <span>⚡ Ativ: <strong class="text-emerald" id="holoInspIntensity">95%</strong></span>
-        </div>
-        <div style="display:flex; flex-wrap:wrap; gap:4px;" id="holoInspSymbols"></div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:2px;">
-          <button type="button" class="office-btn office-btn-micro" onclick="inspectSelectedHoloTowerAst()" title="Abrir Explorador AST & Blast Radius para este ficheiro">🔎 AST</button>
-          <button type="button" class="office-btn office-btn-micro" onclick="boostSelectedHoloTowerActivity()" title="Simular rajada de edições de código na Torre Holográfica 3D">⚡ Pulso</button>
-          <button type="button" class="office-btn office-btn-micro" onclick="auditSelectedHoloTowerFile()" title="Executar File-Save AST & Impact Audit neste ficheiro">🛡️ Audit</button>
-        </div>
-      </div>
+      <!-- Unobstructed 3D Viewport Canvas -->
+      <canvas id="office3DCanvas"></canvas>
 
-      <!-- ORBITAL RADAR MINIMAP 2D (LEFT BLADE) -->
+      <!-- Compact Corner Radar Minimap 2D -->
       <div class="office-radar-wrap" id="officeRadarWrap" title="Clique num ponto luminoso do Radar Orbital para selecionar e focar esse Agente 3D">
         <div class="office-radar-title">
-          <span>RADAR ORBITAL 2D</span>
-          <span style="color:#34d399; font-family:var(--font-mono);" id="radarBlipCount">6 AG</span>
+          <span>RADAR 2D</span>
+          <span style="color:#10b981; font-family:var(--font-mono);" id="radarBlipCount">6 AG</span>
         </div>
-        <canvas id="officeRadarCanvas" width="164" height="164" style="width:164px; height:164px; cursor:crosshair;"></canvas>
+        <canvas id="officeRadarCanvas" width="140" height="140" style="width:140px; height:140px; cursor:crosshair;"></canvas>
       </div>
 
-      <!-- CAMERA & FX HOLOGRAPHIC DECK (LEFT BLADE) -->
+      <!-- Hidden Legacy Holo Deck (kept for DOM compatibility) -->
       <div class="office-holo-deck" id="officeHoloDeck">
-        <div style="font-size:10px; font-weight:700; color:var(--text-muted); margin-bottom:2px; letter-spacing:0.04em; text-transform:uppercase;">
-          Câmara &amp; Presets 3D
-        </div>
-        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('overview')">1 · Visão Isométrica</button>
-        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('command')">2 · Ponte Comando Argon</button>
-        <button class="cyber-action-btn" onclick="toggleOfficeAutoRotate()">3 · Órbita 360°</button>
-        <button class="cyber-action-btn" onclick="setOfficeCameraPreset('swarm_wing')">4 · Ala Engenharia Swarm</button>
-        <button class="cyber-action-btn" onclick="toggleOfficeHeatmap3D()">5 · Torres Heatmap 3D</button>
-        <button class="cyber-action-btn" onclick="toggleCrtScanlines()">6 · Efeito Scanlines CRT</button>
         <button class="cyber-action-btn" id="btnHoloFollow" onclick="toggleOfficeFollowMode()">[7] FOLLOW AGENT: ON</button>
         <button class="cyber-action-btn" id="btnHoloFrustumCull" onclick="toggleOfficeFrustumCulling()">[8] FRUSTUM CULL: ON</button>
       </div>
 
-      <!-- NEURAL DIRECTIVE CONSOLE (BOTTOM-CENTER) -->
+      <!-- Docked Bottom Neural Directive Bar -->
       <div class="office-neural-console">
-        <div style="display:flex; justify-content:space-between; align-items:center; font-size:9.5px; font-weight:700; color:var(--text-muted); margin-bottom:4px; letter-spacing:0.04em;">
-          <span>DIRETIVA NEURAL &amp; ORBIT BROADCAST · ENVIAR ORDEM REAL À FROTA 3D</span>
-          <span class="text-emerald">● ORBIT OS + JEV-S1 LIVE</span>
-        </div>
         <div style="display:flex; gap:8px; align-items:center;">
+          <span style="font-size:9.5px; font-weight:800; color:#10b981; letter-spacing:0.05em; white-space:nowrap;">DIRETIVA 3D</span>
           <select id="officeBottomScopeSelect" class="studio-console-select">
             <option value="selected_agent">🎯 Agente Selecionado</option>
             <option value="all_fleet">🌐 Broadcast: Toda a Frota</option>
@@ -3637,35 +3722,41 @@
             <option value="dept:TESTS">🏢 Broadcast: Dept TESTS</option>
             <option value="dept:DOCS">🏢 Broadcast: Dept DOCS</option>
           </select>
-          <span style="color:#10b981; font-weight:800; font-size:12.5px;">&gt;</span>
+          <span style="color:#10b981; font-weight:800; font-size:12px;">&gt;</span>
           <input
             type="text"
             id="officeBottomConsoleInput"
             value="@ARCH-01 Auditar bugs AST + correr QA 48/48 + Work-Steal rebalance"
-            style="flex:1; background:transparent; border:none; color:#f8fafc; font-family:var(--font-mono); font-size:12px; font-weight:600; outline:none;"
+            style="flex:1; background:#08080b; border:1px solid var(--border); border-radius:5px; padding:4px 9px; color:#f8fafc; font-family:var(--font-mono); font-size:11.5px; font-weight:600; outline:none;"
             onkeydown="if(event.key==='Enter') sendBottomConsoleDirective()"
           />
           <button class="office-btn primary" onclick="sendBottomConsoleDirective()" style="padding:4px 11px; font-size:10.5px;">Executar ➔</button>
         </div>
       </div>
 
-      <!-- Bottom Legend HUD -->
+      <!-- Docked Bottom Studio Status & Legend Footer -->
       <div class="office-hud-bottom">
-        <span><i class="legend-dot" style="background:#10b981;"></i><strong>WORKING:</strong> Secretária + Código 3D</span>
-        <span><i class="legend-dot" style="background:#f43f5e;"></i><strong>HOLO TOWERS:</strong> Calor de Ficheiros</span>
-        <span><i class="legend-dot" style="background:#f59e0b;"></i><strong>LOUNGE:</strong> Café Espresso / Pausa</span>
-        <span><i class="legend-dot" style="background:#06b6d4;"></i><strong>PORTAL:</strong> Entrada Quântica 3D</span>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <span><i class="legend-dot" style="background:#10b981;"></i><strong>WORKING:</strong> Secretária + Código 3D</span>
+          <span><i class="legend-dot" style="background:#06b6d4;"></i><strong>HOLO TOWERS:</strong> Calor AST de Ficheiros</span>
+          <span><i class="legend-dot" style="background:#f59e0b;"></i><strong>LOUNGE:</strong> Café Espresso / Pausa</span>
+          <span><i class="legend-dot" style="background:#a1a1aa;"></i><strong>GATEWAY:</strong> Portal de Subagentes</span>
+        </div>
+        <span style="font-family:var(--font-mono); font-size:9.5px; color:var(--text-dim);">CARBON STUDIO 3D ENGINE · ARRASTE PARA RODAR · SCROLL PARA ZOOM</span>
       </div>
     </div>
 
-    <!-- Right Roster & Selected Agent Inspector -->
+    <!-- Right Roster, Selected Agent & Holo Tower Inspector Sidebar -->
     <aside class="office-sidebar">
       <div class="office-side-head">
         <div>
-          <div style="font-size:10px; color:#10b981; text-transform:uppercase; font-weight:700; letter-spacing:0.05em;">INSPETOR DE AGENTES 3D</div>
-          <div style="font-size:13px; font-weight:700; color:#fff;">Equipa &amp; Subagentes Ativos</div>
+          <div style="font-family:var(--font-mono); font-size:9.5px; color:#10b981; text-transform:uppercase; font-weight:800; letter-spacing:0.06em;">03 // COMMAND ROSTER &amp; INSPECTOR</div>
+          <div style="font-size:12.5px; font-weight:700; color:#fff;">Frota 3D &amp; Telemetria de Agente</div>
         </div>
-        <button class="office-btn" onclick="fetchOfficeState(true)" title="Atualizar estado agora">🔄</button>
+        <div style="display:flex; gap:4px;">
+          <button class="office-btn emerald" onclick="switchMainView('tasks')" title="Abrir Página Dedicada de Tasks (07)">📋 Tasks</button>
+          <button class="office-btn" onclick="fetchOfficeState(true)" title="Atualizar estado agora">🔄</button>
+        </div>
       </div>
 
       <!-- Selected 3D Character Card -->
@@ -3674,22 +3765,23 @@
           <span style="font-size:10px; color:#6ee7b7; font-family:var(--font-mono); font-weight:700; text-transform:uppercase;" id="offSelDept">ARCH-01 · ARGON</span>
           <span class="rc-badge working" id="offSelStatus">WORKING</span>
         </div>
-        <div style="font-size:13.5px; font-weight:700; color:#fff;" id="offSelName">ARCH-01 • Principal Architect</div>
-        <div style="font-size:10.5px; color:#34d399; font-family:var(--font-mono); font-weight:600;">EMA PHEROMONE: 99% · TIER: [SEMANTIC]</div>
-        <div style="font-size:11px; color:var(--text-muted);" id="offSelRole">Modelo: Gemini 4 Argon</div>
-        <div style="font-size:10.5px; color:var(--text-secondary); background:#08080a; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono);" id="offSelTask">
-          Selecione qualquer boneco no escritório 3D ou no Radar Orbital para seguir a câmara ou enviar ordens reais ao backend.
+        <div style="font-size:13px; font-weight:700; color:#fff;" id="offSelName">ARCH-01 • Principal Architect</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+          <div style="font-size:9.5px; color:#10b981; font-family:var(--font-mono); background:#0b0b0f; padding:3px 6px; border-radius:4px; border:1px solid var(--border);">PHEROMONE: 99%</div>
+          <div style="font-size:9.5px; color:var(--text-muted); font-family:var(--font-mono); background:#0b0b0f; padding:3px 6px; border-radius:4px; border:1px solid var(--border); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="offSelRole">Gemini 4 Argon</div>
+        </div>
+        <div style="font-size:10.5px; color:var(--text-secondary); background:#09090c; padding:6px 8px; border:1px solid var(--border); border-radius:5px; font-family:var(--font-mono); max-height:54px; overflow-y:auto;" id="offSelTask">
+          Selecione qualquer agente no escritório 3D ou no Radar para seguir a câmara ou enviar ordens ao backend.
         </div>
 
         <!-- Chat / Comando Direto ao Boneco 3D -->
-        <div style="display:flex; flex-direction:column; gap:5px; margin-top:3px; padding-top:6px; border-top:1px solid var(--border);">
-          <div style="font-size:9.5px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:0.04em;">Ordens Rápidas no Backend</div>
+        <div style="display:flex; flex-direction:column; gap:5px; margin-top:2px; padding-top:6px; border-top:1px solid var(--border);">
           <div style="display:flex; gap:5px;">
             <input
               type="text"
               id="offDirectCmdInput"
-              placeholder="Ex: Audita bugs em swarm_engine.py..."
-              style="flex:1; background:#08080a; border:1px solid var(--border); border-radius:5px; padding:5px 8px; color:#fff; font-size:11px; font-family:var(--font-mono); outline:none;"
+              placeholder="Ordem direta ao agente selecionado..."
+              style="flex:1; background:#08080b; border:1px solid var(--border); border-radius:5px; padding:4px 8px; color:#fff; font-size:10.5px; font-family:var(--font-mono); outline:none;"
               onkeydown="if(event.key==='Enter') sendDirectOrderToAgent()"
             />
             <button class="office-btn primary" onclick="sendDirectOrderToAgent()" title="Envia a instrução ao boneco 3D">
@@ -3697,22 +3789,22 @@
             </button>
           </div>
           <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:4px;">
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')" title="Audita sintaxe AST Python + JS + FTS5">Bugs</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')" title="Executa Scan AST completo da codebase">AST</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')" title="Executa Suite QA 48/48 e valida tasks">QA 48</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Correr doctor e fundir duplicados')" title="Executa Memory Doctor FTS5">Doctor</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Analisar quota lean e tokens MCP')" title="Calcula consumo de tokens MCP e poupança Scout">Quota</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Analisar heatmap e ficheiros críticos')" title="Lista os top ficheiros mais quentes do Heatmap">Heat</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="quickOrderAgent('Verificar git status e último commit')" title="Inspeciona estado Git real do repositório">Git</button>
-            <button class="office-btn" style="font-size:9.5px; padding:4px 3px; justify-content:center;" onclick="triggerSwarmAction('work_steal')" title="Ruflo Work-Stealing Rebalance">Steal</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Auditar bugs e otimizar performance')" title="Audita sintaxe AST Python + JS + FTS5">Bugs</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Atualizar [SCOUT_SHARED_MAP] e rotas AST')" title="Executa Scan AST completo da codebase">AST</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Validar 48/48 testes automáticos')" title="Executa Suite QA 48/48 e valida tasks">QA 48</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Correr doctor e fundir duplicados')" title="Executa Memory Doctor FTS5">Doctor</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Analisar quota lean e tokens MCP')" title="Calcula consumo de tokens MCP e poupança Scout">Quota</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Analisar heatmap e ficheiros críticos')" title="Lista os top ficheiros mais quentes do Heatmap">Heat</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="quickOrderAgent('Verificar git status e último commit')" title="Inspeciona estado Git real do repositório">Git</button>
+            <button class="office-btn" style="font-size:9.5px; padding:3.5px 3px; justify-content:center;" onclick="triggerSwarmAction('work_steal')" title="Ruflo Work-Stealing Rebalance">Steal</button>
           </div>
         </div>
 
         <div style="display:flex; gap:5px; margin-top:2px; flex-wrap:wrap;">
-          <button class="office-btn" style="flex:1; min-width:110px; justify-content:center;" id="btnOffToggleState" onclick="toggleSelectedOfficeAgent()">
-            ☕ Alternar Estado
+          <button class="office-btn" style="flex:1; min-width:100px; justify-content:center;" id="btnOffToggleState" onclick="toggleSelectedOfficeAgent()">
+            ☕ Alternar
           </button>
-          <button class="office-btn primary" id="btnOffFollowAgent" onclick="toggleOfficeFollowMode()" aria-pressed="true" title="Ativar/Desativar Modo Follow (a câmara acompanha este boneco automaticamente enquanto caminha)">
+          <button class="office-btn primary" id="btnOffFollowAgent" onclick="toggleOfficeFollowMode()" aria-pressed="true" title="Ativar/Desativar Modo Follow">
             🎯 Follow: ON
           </button>
           <button class="office-btn" onclick="focusCameraOnSelectedAgent()" title="Centrar câmara 3D neste boneco">
@@ -3721,20 +3813,49 @@
         </div>
       </div>
 
+      <!-- Docked Holographic Desk Heatmap Tower Inspector -->
+      <div class="office-holo-tower-inspector" id="officeHoloTowerInspector" role="region" aria-label="Inspetor de Torre Holográfica 3D do Mapa de Calor">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+          <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#10b981; letter-spacing:0.05em; text-transform:uppercase;" id="holoInspDeskAgent">🗼 TORRE HOLO #01 · ARCH-01</span>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(-1)" title="Torre Holográfica Anterior">◀</button>
+            <button type="button" class="blade-toggle-btn" onclick="cycleOfficeHoloTower(1)" title="Seguinte Torre Holográfica">▶</button>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+          <div style="font-family:var(--font-mono); font-size:11.5px; font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="holoInspFileName">swarm_engine.py</div>
+          <span class="rc-badge working" id="holoInspHeatBadge" style="font-size:9px;">🔥 92% HOT</span>
+        </div>
+        <div class="holo-tower-heat-track">
+          <div class="holo-tower-heat-fill" id="holoInspHeatBar" style="width:92%;"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:9.5px; color:var(--text-muted); font-family:var(--font-mono);" id="holoInspStats">
+          <span>✏️ <strong style="color:#fff;" id="holoInspEdits">8</strong> edits</span>
+          <span>📏 <strong style="color:#cbd5e1;" id="holoInspLines">3267</strong>L</span>
+          <span>⚡ Ativ: <strong class="text-emerald" id="holoInspIntensity">95%</strong></span>
+        </div>
+        <div style="display:flex; flex-wrap:wrap; gap:4px;" id="holoInspSymbols"></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; margin-top:2px;">
+          <button type="button" class="office-btn office-btn-micro" onclick="inspectSelectedHoloTowerAst()" title="Abrir Explorador AST &amp; Blast Radius para este ficheiro">🔎 AST</button>
+          <button type="button" class="office-btn office-btn-micro" onclick="boostSelectedHoloTowerActivity()" title="Simular rajada de edições de código na Torre Holográfica 3D">⚡ Pulso</button>
+          <button type="button" class="office-btn office-btn-micro" onclick="auditSelectedHoloTowerFile()" title="Executar File-Save AST &amp; Impact Audit neste ficheiro">🛡️ Audit</button>
+        </div>
+      </div>
+
       <!-- Live Running Task Banner -->
-      <div id="officeActiveTaskBanner" onclick="setOfficeRosterFilter('tasks')" style="display:none; margin:0 12px 8px; padding:7px 10px; border-radius:7px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.35); cursor:pointer; align-items:center; justify-content:space-between; gap:8px;">
+      <div id="officeActiveTaskBanner" onclick="switchMainView('tasks')" style="display:none; margin:0 12px 8px; padding:7px 10px; border-radius:6px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.35); cursor:pointer; align-items:center; justify-content:space-between; gap:8px;">
         <div style="display:flex; align-items:center; gap:7px; overflow:hidden;">
           <span class="pulse-dot" style="background:#10b981; flex-shrink:0;"></span>
           <span style="font-size:10.5px; font-weight:600; color:#6ee7b7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" id="officeBannerTaskText">Tasks em execução...</span>
         </div>
-        <span style="font-size:9.5px; font-family:var(--font-mono); color:#fff; background:rgba(16,185,129,0.25); padding:2px 6px; border-radius:4px; flex-shrink:0;">Ver →</span>
+        <span style="font-size:9.5px; font-family:var(--font-mono); color:#fff; background:rgba(16,185,129,0.25); padding:2px 6px; border-radius:4px; flex-shrink:0;">Página Tasks →</span>
       </div>
 
-      <!-- Roster & Tasks Filter Tabs (HIG Quick Filter) -->
+      <!-- Roster & Tasks Filter Tabs -->
       <div class="roster-filter-bar">
         <button class="roster-filter-pill active" id="rfBtn_all" onclick="setOfficeRosterFilter('all')">Todos</button>
         <button class="roster-filter-pill" id="rfBtn_tasks" onclick="setOfficeRosterFilter('tasks')">📋 Tasks (<span id="rfTasksCount">0</span>)</button>
-        <button class="roster-filter-pill" id="rfBtn_working" onclick="setOfficeRosterFilter('working')">⚡ Trabalho</button>
+        <button class="roster-filter-pill" id="rfBtn_working" onclick="setOfficeRosterFilter('working')">⚡ Ativos</button>
         <button class="roster-filter-pill" id="rfBtn_paused" onclick="setOfficeRosterFilter('paused')">☕ Pausa</button>
         <button class="roster-filter-pill" id="rfBtn_mcp" onclick="setOfficeRosterFilter('mcp')">🖥️ MCPs</button>
       </div>
@@ -4468,6 +4589,205 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         </div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       07 // TASKS & DOTS DAG COMMAND CENTER (#tasksWorkspace)
+       ========================================================================= -->
+  <div class="swarm-workspace" id="tasksWorkspace" style="padding:12px 16px; gap:12px; width:100%; max-width:100vw; height:calc(100vh - 50px); overflow-x:hidden; overflow-y:auto; box-sizing:border-box;">
+    <!-- Top Studio Hero Header -->
+    <div class="studio-hero-banner">
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="studio-hero-icon" style="border-color:rgba(16,185,129,0.4); color:#10b981; font-family:var(--font-mono); font-weight:800;">07</div>
+        <div>
+          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span class="studio-hero-title">07 // UNIFIED TASKS, SUBAGENTS &amp; DOTS DAG COMMAND CENTER</span>
+            <span class="rc-badge working" id="tasksPageStatusPill">● DOTS + SWARM + SUBAGENTS LIVE</span>
+          </div>
+          <div class="studio-hero-sub">
+            Orquestração unificada de tarefas com grafo de dependências acíclico (<code>.dots/*.md</code>), filas ativas de Subagentes Antigravity e Lanes 48-Worker do Swarm.
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
+        <select id="tasksWsFilterSelect" class="studio-console-select" onchange="renderTasksStudioPage()" title="Filtrar tarefas por projeto/workspace">
+          <option value="all">🌐 Todos Workspaces</option>
+        </select>
+        <select id="tasksSourceFilterSelect" class="studio-console-select" onchange="renderTasksStudioPage()" title="Filtrar por origem da tarefa">
+          <option value="all">🗂️ Todas Origens (DOTS + Subagents + Swarm)</option>
+          <option value="dots">🎯 DOTS DAG (.dots/*.md)</option>
+          <option value="live">💬 Subagentes &amp; Sessões Live</option>
+          <option value="swarm">⚡ Swarm 48-Worker Lanes</option>
+        </select>
+        <input
+          type="text"
+          id="tasksSearchInput"
+          placeholder="Pesquisar tarefa, agente, ID ou ficheiro..."
+          oninput="renderTasksStudioPage()"
+          style="width:220px; background:#09090c; border:1px solid var(--border); border-radius:6px; padding:5px 10px; color:#f4f4f5; font-size:11px; font-family:var(--font-mono); outline:none;"
+        />
+        <button class="office-btn emerald" onclick="syncDotsMarkdownFromTasksPageUI()" title="Sincronizar tarefas DOTS com ficheiros Markdown em .dots/*.md">
+          📄 Sync .dots/*.md
+        </button>
+        <button class="office-btn primary" onclick="executeAllReadyTasksFromPageUI()" title="Iniciar imediatamente todas as tarefas na coluna PRONTAS (DOTS Ready)">
+          ⚡ Executar Prontas
+        </button>
+        <button class="office-btn" onclick="completeAllTasksFromPageUI()" title="Marcar todas as tarefas em execução como concluídas (DONE)">
+          ✓ Concluir Ativas
+        </button>
+        <button class="office-btn" onclick="fetchTasksStudioPage(true)" title="Atualizar estado de todas as tarefas">
+          🔄 Atualizar
+        </button>
+      </div>
+    </div>
+
+    <!-- 6-Card Carbon KPI Telemetry Strip -->
+    <div class="tasks-kpi-grid">
+      <div class="tasks-kpi-card">
+        <div class="tasks-kpi-label">TOTAL TAREFAS ATIVAS &amp; DAG</div>
+        <div class="tasks-kpi-value" id="tkKpiTotal">0</div>
+        <div class="tasks-kpi-sub" id="tkKpiTotalSub">DOTS + Subagentes + Swarm</div>
+      </div>
+      <div class="tasks-kpi-card" style="border-color:rgba(6,182,212,0.3);">
+        <div class="tasks-kpi-label" style="color:#67e8f9;">🎯 PRONTAS (DOTS READY)</div>
+        <div class="tasks-kpi-value" style="color:#22d3ee;" id="tkKpiReady">0</div>
+        <div class="tasks-kpi-sub">Zero bloqueios no grafo DAG</div>
+      </div>
+      <div class="tasks-kpi-card" style="border-color:rgba(16,185,129,0.35);">
+        <div class="tasks-kpi-label" style="color:#6ee7b7;">⚡ EM EXECUÇÃO (RUNNING)</div>
+        <div class="tasks-kpi-value" style="color:#10b981;" id="tkKpiRunning">0</div>
+        <div class="tasks-kpi-sub" id="tkKpiRunningSub">Subagentes e Workers ativos</div>
+      </div>
+      <div class="tasks-kpi-card" style="border-color:rgba(245,158,11,0.3);">
+        <div class="tasks-kpi-label" style="color:#fcd34d;">⏳ BLOQUEADAS / FILA</div>
+        <div class="tasks-kpi-value" style="color:#f59e0b;" id="tkKpiBlocked">0</div>
+        <div class="tasks-kpi-sub">Aguardam dependências upstream</div>
+      </div>
+      <div class="tasks-kpi-card">
+        <div class="tasks-kpi-label" style="color:#a1a1aa;">✓ CONCLUÍDAS (DONE)</div>
+        <div class="tasks-kpi-value" style="color:#e4e4e7;" id="tkKpiDone">0</div>
+        <div class="tasks-kpi-sub" id="tkKpiPctSub">Taxa de conclusão: 0%</div>
+      </div>
+      <div class="tasks-kpi-card">
+        <div class="tasks-kpi-label">INTEGRIDADE TOPOLÓGICA DAG</div>
+        <div class="tasks-kpi-value" style="color:#10b981; font-size:15px;" id="tkKpiDagHealth">ACÍCLICO · OK</div>
+        <div class="tasks-kpi-sub" id="tkKpiVaultPath">.dots/*.md sincronizado</div>
+      </div>
+    </div>
+
+    <!-- Inline Task Creator Bar (Creates real DOTS DAG task or dispatches to agent) -->
+    <div class="tasks-creator-bar">
+      <input
+        type="text"
+        id="tkNewTitle"
+        placeholder="+ Nova tarefa DOTS ou diretiva para Subagente (ex: Refatorar cache PPR e validar testes)..."
+        style="background:#08080b; border:1px solid var(--border); border-radius:5px; padding:6px 10px; color:#ffffff; font-size:11.5px; font-family:var(--font-sans); outline:none;"
+        onkeydown="if(event.key==='Enter') createNewTaskFromPageUI()"
+      />
+      <input
+        type="text"
+        id="tkNewWorkspace"
+        placeholder="Workspace (ex: brain_mcp)"
+        value="brain_mcp"
+        style="background:#08080b; border:1px solid var(--border); border-radius:5px; padding:6px 9px; color:#d4d4d8; font-size:11px; font-family:var(--font-mono); outline:none;"
+      />
+      <select id="tkNewPriority" class="studio-console-select" style="padding:6px 8px;">
+        <option value="P0">🔥 P0 · Crítica</option>
+        <option value="P1" selected>⚡ P1 · Alta</option>
+        <option value="P2">📌 P2 · Normal</option>
+      </select>
+      <select id="tkNewAssignee" class="studio-console-select" style="padding:6px 8px;">
+        <option value="ARCH-01">👑 ARCH-01 (Argon)</option>
+        <option value="SCOUT-01">🔭 SCOUT-01 (AST)</option>
+        <option value="UI-01">🎨 UI-01 (Studio OS)</option>
+        <option value="API-01">⚙️ API-01 (Backend)</option>
+        <option value="QA-01">🛡️ QA-01 (Test Suite)</option>
+        <option value="DOCS-01">📄 DOCS-01 (Vault)</option>
+      </select>
+      <select id="tkNewDependsOn" class="studio-console-select" style="padding:6px 8px;" title="Dependência no Grafo DOTS DAG (opcional)">
+        <option value="">Sem Dependência (Ready)</option>
+      </select>
+      <button class="office-btn primary" onclick="createNewTaskFromPageUI()" style="padding:6px 14px; font-size:11px;">
+        + Criar Tarefa DAG
+      </button>
+    </div>
+
+    <!-- 4-Column Kanban Studio Board -->
+    <div class="tasks-kanban-grid" id="tasksKanbanGrid">
+      <!-- Column 1: Blocked / Backlog -->
+      <div class="tasks-kanban-col">
+        <div class="tasks-col-head">
+          <span style="color:#fcd34d;">⏳ 01 // BLOQUEADAS &amp; FILA</span>
+          <span class="rc-badge paused" id="tkCountBlocked">0</span>
+        </div>
+        <div class="tasks-col-body" id="tkColBlocked"></div>
+      </div>
+
+      <!-- Column 2: Ready (DOTS Unblocked) -->
+      <div class="tasks-kanban-col" style="border-color:rgba(6,182,212,0.3);">
+        <div class="tasks-col-head">
+          <span style="color:#67e8f9;">🎯 02 // PRONTAS (DOTS READY)</span>
+          <span class="rc-badge" style="background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.35); color:#67e8f9;" id="tkCountReady">0</span>
+        </div>
+        <div class="tasks-col-body" id="tkColReady"></div>
+      </div>
+
+      <!-- Column 3: Running / In Progress -->
+      <div class="tasks-kanban-col" style="border-color:rgba(16,185,129,0.35);">
+        <div class="tasks-col-head">
+          <span style="color:#6ee7b7;">⚡ 03 // EM EXECUÇÃO (EM CURSO)</span>
+          <span class="rc-badge working" id="tkCountRunning">0</span>
+        </div>
+        <div class="tasks-col-body" id="tkColRunning"></div>
+      </div>
+
+      <!-- Column 4: Completed / Done -->
+      <div class="tasks-kanban-col">
+        <div class="tasks-col-head">
+          <span style="color:#a1a1aa;">✓ 04 // CONCLUÍDAS (DONE)</span>
+          <span class="rc-badge" style="background:#18181f; border:1px solid var(--border); color:#d4d4d8;" id="tkCountDone">0</span>
+        </div>
+        <div class="tasks-col-body" id="tkColDone"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Split Panel: Interactive Topological DOTS DAG Canvas + Selected Task Inspector -->
+    <div style="display:grid; grid-template-columns:7fr 5fr; gap:12px; min-height:220px;">
+      <!-- Left: Topological DOTS DAG Graph Canvas -->
+      <div class="studio-card" style="padding:10px 12px; display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#10b981; letter-spacing:0.05em;">
+              GRAFO TOPOLÓGICO DE DEPENDÊNCIAS DOTS DAG (.dots/*.md)
+            </span>
+            <span style="font-size:10px; color:var(--text-muted);" id="tasksDagSummaryLbl">Clique num nó para inspecionar ou avançar estado</span>
+          </div>
+          <div style="display:flex; gap:10px; font-size:9.5px; font-family:var(--font-mono); color:var(--text-muted);">
+            <span><i class="legend-dot" style="background:#f59e0b;"></i>BLOCKED</span>
+            <span><i class="legend-dot" style="background:#06b6d4;"></i>READY</span>
+            <span><i class="legend-dot" style="background:#10b981;"></i>RUNNING</span>
+            <span><i class="legend-dot" style="background:#71717a;"></i>DONE</span>
+          </div>
+        </div>
+        <canvas id="tasksDagCanvas" width="760" height="175" style="width:100%; height:175px; background:#09090c; border:1px solid var(--border); border-radius:6px; cursor:pointer;"></canvas>
+      </div>
+
+      <!-- Right: Selected Task Inspector & Execution Telemetry -->
+      <div class="studio-card" style="padding:10px 12px; display:flex; flex-direction:column; justify-content:space-between; gap:8px;" id="tasksSelectedInspectorCard">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:6px;">
+          <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#10b981; letter-spacing:0.05em;">
+            INSPETOR DE TAREFA &amp; CONTROLO DIRETO
+          </span>
+          <span class="tk-chip" id="tkInspBadge">SELECIONE UMA TAREFA</span>
+        </div>
+        <div id="tasksSelectedDetailBox" style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:6px; font-size:11px; color:var(--text-secondary);">
+          <div style="color:var(--text-muted); font-family:var(--font-mono); font-size:10.5px;">
+            Selecione qualquer cartão nas 4 colunas Kanban ou clique num nó do Grafo Topológico DOTS DAG para inspecionar dependências, ficheiros afetados, agente responsável e executar ações diretas.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
     </div><!-- /studioStageViewport -->
@@ -8806,15 +9126,12 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     let selfLearnPollTimer = null;
     let selfLearnAnimRunning = false;
     let vaultStudioAnimRunning = false;
+    let tasksPollTimer = null;
 
     function switchMainView(viewName) {
       let normView = String(viewName || '').toLowerCase().trim();
       if (normView === 'office3d') normView = 'office';
       if (normView === 'vault6x') normView = 'vault';
-      if (normView === 'tasks') {
-        openOfficeTasksTab();
-        return;
-      }
       if (normView === 'orbit') {
         openOrbitOsModal();
         return;
@@ -8829,6 +9146,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       else if (normView === 'selflearn') activeMainView = 'selflearn';
       else if (normView === 'promptforge') activeMainView = 'promptforge';
       else if (normView === 'vault') activeMainView = 'vault';
+      else if (normView === 'tasks') activeMainView = 'tasks';
       else activeMainView = 'graph';
 
       const gWs = document.getElementById('graphWorkspace');
@@ -8837,12 +9155,14 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const slWs = document.getElementById('selfLearnWorkspace');
       const pfWs = document.getElementById('promptForgeWorkspace');
       const vWs = document.getElementById('vaultWorkspace');
+      const tWs = document.getElementById('tasksWorkspace');
       const btnG = document.getElementById('tabBtnGraph');
       const btnS = document.getElementById('tabBtnSwarm');
       const btnO = document.getElementById('tabBtnOffice');
       const btnSL = document.getElementById('tabBtnSelfLearn');
       const btnPF = document.getElementById('tabBtnPromptForge');
       const btnV = document.getElementById('tabBtnVault');
+      const btnT = document.getElementById('tabBtnTasks');
 
       gWs.style.display = activeMainView === 'graph' ? 'flex' : 'none';
       sWs.classList.toggle('active', activeMainView === 'swarm');
@@ -8850,6 +9170,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (slWs) slWs.classList.toggle('active', activeMainView === 'selflearn');
       if (pfWs) pfWs.classList.toggle('active', activeMainView === 'promptforge');
       if (vWs) vWs.classList.toggle('active', activeMainView === 'vault');
+      if (tWs) tWs.classList.toggle('active', activeMainView === 'tasks');
 
       btnG.classList.toggle('active', activeMainView === 'graph');
       btnS.classList.toggle('active', activeMainView === 'swarm');
@@ -8857,6 +9178,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (btnSL) btnSL.classList.toggle('active', activeMainView === 'selflearn');
       if (btnPF) btnPF.classList.toggle('active', activeMainView === 'promptforge');
       if (btnV) btnV.classList.toggle('active', activeMainView === 'vault');
+      if (btnT) btnT.classList.toggle('active', activeMainView === 'tasks');
 
       const subConceptEl = document.getElementById('lblTopSubConcept');
       if (subConceptEl) {
@@ -8870,6 +9192,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           subConceptEl.textContent = 'Prompt Forge · Antigravity Architect';
         } else if (activeMainView === 'vault') {
           subConceptEl.textContent = 'Vault 6x Lab · Defuddle + .MD';
+        } else if (activeMainView === 'tasks') {
+          subConceptEl.textContent = 'Tasks & DOTS DAG · Kanban 4x';
         } else {
           subConceptEl.textContent = 'Neural Cortex · JEV-S1';
         }
@@ -8886,6 +9210,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (selfLearnPollTimer) {
         clearInterval(selfLearnPollTimer);
         selfLearnPollTimer = null;
+      }
+      if (tasksPollTimer) {
+        clearInterval(tasksPollTimer);
+        tasksPollTimer = null;
       }
 
       if (activeMainView === 'swarm') {
@@ -8920,6 +9248,12 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           vaultStudioAnimRunning = true;
           requestAnimationFrame(renderVaultStudioLoop);
         }
+      } else if (activeMainView === 'tasks') {
+        window.location.hash = 'tasks';
+        if (typeof fetchTasksStudioPage === 'function') fetchTasksStudioPage(true);
+        tasksPollTimer = setInterval(() => {
+          if (!document.hidden && typeof fetchTasksStudioPage === 'function') fetchTasksStudioPage(false);
+        }, 2500);
       } else {
         window.location.hash = 'graph';
         resizeCanvas();
@@ -9634,32 +9968,32 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     // ZONA 3 (Ponte de Comando Norte: 0..1), ZONA 4 (Ala Engenharia Swarm: 2..9), ZONA 5 (Ala Conversas & Workers: 10..23)
     const DESK_SLOTS = [
       // ZONA 3: PONTE DE COMANDO ARGON & SCOUT AST (Norte Central)
-      { x: -165, z: -255, label: 'COMMAND · ARGON', color: '#ec4899' },
-      { x: -20, z: -255, label: 'SCOUT · AST MAP', color: '#10b981' },
+      { x: -165, z: -255, label: 'COMMAND · ARGON', color: '#10b981' },
+      { x: -20, z: -255, label: 'SCOUT · AST MAP', color: '#06b6d4' },
       // ZONA 4: ALA DE ENGENHARIA SWARM (Grelha 4x2 Espaçada no Centro-Norte · 8 Secretárias)
       { x: -245, z: -105, label: 'UI-01 · 3D/WEBGL', color: '#06b6d4' },
       { x: -105, z: -105, label: 'UI-02 · HUD/CSS', color: '#38bdf8' },
-      { x: 35, z: -105, label: 'API-01 · CORE DB', color: '#8b5cf6' },
-      { x: 165, z: -105, label: 'API-02 · HOOKS', color: '#a855f7' },
+      { x: 35, z: -105, label: 'API-01 · CORE DB', color: '#10b981' },
+      { x: 165, z: -105, label: 'API-02 · HOOKS', color: '#34d399' },
       { x: -245, z: -15, label: 'TEST-01 · QA GATE', color: '#f59e0b' },
-      { x: -105, z: -15, label: 'DOC-01 · GIT SYNC', color: '#3b82f6' },
+      { x: -105, z: -15, label: 'DOC-01 · GIT SYNC', color: '#06b6d4' },
       { x: 35, z: -15, label: 'SWARM-07 · ORBIT', color: '#10b981' },
-      { x: 165, z: -15, label: 'SWARM-08 · VAULT', color: '#ec4899' },
+      { x: 165, z: -15, label: 'SWARM-08 · VAULT', color: '#22d3ee' },
       // ZONA 5: ALA DE CONVERSAS, SUBAGENTES & SWARM PODS (14 Secretárias no Centro-Sul)
       { x: -255, z: 120, label: 'CONV-01', color: '#06b6d4' },
-      { x: -150, z: 120, label: 'CONV-02', color: '#f43f5e' },
-      { x: -45, z: 120, label: 'CONV-03', color: '#10b981' },
+      { x: -150, z: 120, label: 'CONV-02', color: '#10b981' },
+      { x: -45, z: 120, label: 'CONV-03', color: '#34d399' },
       { x: 60, z: 120, label: 'CONV-04', color: '#f59e0b' },
-      { x: 165, z: 120, label: 'CONV-05', color: '#8b5cf6' },
-      { x: -202, z: 192, label: 'POD-06', color: '#38bdf8' },
-      { x: -97, z: 192, label: 'POD-07', color: '#a855f7' },
+      { x: 165, z: 120, label: 'CONV-05', color: '#38bdf8' },
+      { x: -202, z: 192, label: 'POD-06', color: '#22d3ee' },
+      { x: -97, z: 192, label: 'POD-07', color: '#10b981' },
       { x: 8, z: 192, label: 'POD-08', color: '#14b8a6' },
-      { x: 113, z: 192, label: 'POD-09', color: '#f97316' },
-      { x: -255, z: 265, label: 'CONV-10', color: '#ec4899' },
-      { x: -150, z: 265, label: 'CONV-11', color: '#3b82f6' },
+      { x: 113, z: 192, label: 'POD-09', color: '#f59e0b' },
+      { x: -255, z: 265, label: 'CONV-10', color: '#10b981' },
+      { x: -150, z: 265, label: 'CONV-11', color: '#06b6d4' },
       { x: -45, z: 265, label: 'CONV-12', color: '#14b8a6' },
-      { x: 60, z: 265, label: 'CONV-13', color: '#a855f7' },
-      { x: 165, z: 265, label: 'CONV-14', color: '#f97316' }
+      { x: 60, z: 265, label: 'CONV-13', color: '#38bdf8' },
+      { x: 165, z: 265, label: 'CONV-14', color: '#f59e0b' }
     ];
 
     // ZONA 6 (Ala Este): Lounge, Bar de Café Espresso, Arcade e Sofás de Descanso
@@ -9683,12 +10017,15 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     function resizeOfficeCanvas() {
       const wrap = document.getElementById('officeStageWrap');
       if (!wrap || !officeCanvas) return;
-      officeCanvas.width = wrap.clientWidth || 960;
-      officeCanvas.height = wrap.clientHeight || 680;
+      const cw = officeCanvas.clientWidth || wrap.clientWidth || 960;
+      const ch = officeCanvas.clientHeight || Math.max(420, (wrap.clientHeight || 680) - 165);
+      officeCanvas.width = cw;
+      officeCanvas.height = ch;
     }
 
     window.addEventListener('resize', () => {
       if (activeMainView === 'office') resizeOfficeCanvas();
+      if (activeMainView === 'tasks' && typeof renderTasksDagCanvas === 'function') renderTasksDagCanvas();
     });
 
     function setOfficeCameraPreset(preset) {
@@ -9737,8 +10074,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     }
 
     function openOfficeTasksTab() {
-      switchMainView('office');
-      setOfficeRosterFilter('tasks');
+      switchMainView('tasks');
     }
 
     function toggleOfficeAutoRotate() {
@@ -10860,7 +11196,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (isSelected || isHovered) {
         officeCtx.beginPath();
         officeCtx.ellipse(groundPt.x, groundPt.y, 20 * officeCam.zoom, 11 * officeCam.zoom, 0, 0, Math.PI * 2);
-        officeCtx.strokeStyle = isSelected ? '#ec4899' : '#38bdf8';
+        officeCtx.strokeStyle = isSelected ? '#10b981' : '#06b6d4';
         officeCtx.lineWidth = 2.2;
         officeCtx.stroke();
 
@@ -10874,7 +11210,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
               else officeCtx.lineTo(tp.x, tp.y);
             }
             officeCtx.lineTo(groundPt.x, groundPt.y);
-            officeCtx.strokeStyle = 'rgba(0, 240, 255, 0.45)';
+            officeCtx.strokeStyle = 'rgba(16, 185, 129, 0.45)';
             officeCtx.lineWidth = Math.max(1.5, 2.5 * officeCam.zoom);
             officeCtx.setLineDash([4, 4]);
             officeCtx.stroke();
@@ -10894,7 +11230,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
             0,
             Math.PI * 2
           );
-          officeCtx.strokeStyle = '#00f0ff';
+          officeCtx.strokeStyle = '#10b981';
           officeCtx.lineWidth = 1.6;
           officeCtx.stroke();
           officeCtx.restore();
@@ -10905,13 +11241,13 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const walkSwing = isWalking ? Math.sin(nowMs * 0.014 + sim.walkPhase) * 5.5 : 0;
       const bobY = isWalking ? Math.abs(Math.sin(nowMs * 0.014 + sim.walkPhase)) * 3.2 : (isWorking ? Math.sin(nowMs * 0.01 + sim.typePhase) * 0.8 : 0);
 
-      // 1. PERNAS 3D (Esquerda e Direita) + Sapatos c/ Sola Neon
-      drawBox3D(x - 4, 2, z + walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
-      drawBox3D(x + 4, 2, z - walkSwing * 0.6, 5, 13, 5, '#334155', '#1e293b', '#0f172a');
+      // 1. PERNAS 3D (Esquerda e Direita) + Sapatos Carbon
+      drawBox3D(x - 4, 2, z + walkSwing * 0.6, 5, 13, 5, '#27272a', '#18181b', '#09090b');
+      drawBox3D(x + 4, 2, z - walkSwing * 0.6, 5, 13, 5, '#27272a', '#18181b', '#09090b');
 
       // 2. TRONCO 3D (Cor do Agente / Departamento)
-      const baseColor = ag.avatar_color || '#ec4899';
-      drawBox3D(x, 15 + bobY, z, 15, 17, 9, baseColor, baseColor, '#1e293b', 'rgba(255,255,255,0.22)');
+      const baseColor = ag.avatar_color || '#10b981';
+      drawBox3D(x, 15 + bobY, z, 15, 17, 9, baseColor, baseColor, '#18181b', 'rgba(255,255,255,0.22)');
 
       // Mochila / Core LED nas costas/peito
       const ledColor = isWorking ? '#10b981' : '#f59e0b';
@@ -10922,12 +11258,12 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const typeRight = isWorking ? Math.cos(nowMs * 0.028 + sim.typePhase) * 3.5 : 0;
       const armZOffset = isWorking ? -6 : 0;
 
-      drawBox3D(x - 10, 17 + bobY + typeLeft, z + armZOffset - walkSwing * 0.5, 4.5, 13, 5, baseColor, '#334155', '#1e293b');
-      drawBox3D(x + 10, 17 + bobY + typeRight, z + armZOffset + walkSwing * 0.5, 4.5, 13, 5, baseColor, '#334155', '#1e293b');
+      drawBox3D(x - 10, 17 + bobY + typeLeft, z + armZOffset - walkSwing * 0.5, 4.5, 13, 5, baseColor, '#27272a', '#18181b');
+      drawBox3D(x + 10, 17 + bobY + typeRight, z + armZOffset + walkSwing * 0.5, 4.5, 13, 5, baseColor, '#27272a', '#18181b');
 
       // Se estiver em pausa no Lounge, desenha uma Caneca de Café 3D na mão direita + vapor!
       if (isPaused) {
-        drawBox3D(x + 12, 22 + bobY, z - 5, 5, 6, 5, '#ffffff', '#e2e8f0', '#cbd5e1');
+        drawBox3D(x + 12, 22 + bobY, z - 5, 5, 6, 5, '#ffffff', '#e4e4e7', '#a1a1aa');
         const steamPt = projectOffice3D(x + 12, 31 + bobY + ((nowMs * 0.015) % 8), z - 5);
         officeCtx.fillStyle = 'rgba(255,255,255,0.45)';
         officeCtx.beginPath();
@@ -10935,17 +11271,17 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         officeCtx.fill();
       }
 
-      // 4. CABEÇA 3D + VISOR CYBERPUNK + HEADPHONES 3D
+      // 4. CABEÇA 3D + VISOR STUDIO + HEADPHONES 3D
       const headLookX = isWorking ? Math.sin(nowMs * 0.005 + sim.typePhase) * 1.5 : 0;
       drawBox3D(x + headLookX, 33 + bobY, z, 13, 12, 12, '#fde68a', '#fcd34d', '#f59e0b', 'rgba(255,255,255,0.2)');
       // Capacete / Cabelo Topo + Arco dos Headphones
-      drawBox3D(x + headLookX, 43 + bobY, z, 13.8, 3.5, 12.6, '#1e293b', '#0f172a', '#08080a');
+      drawBox3D(x + headLookX, 43 + bobY, z, 13.8, 3.5, 12.6, '#27272a', '#18181b', '#09090b');
       // Earcups 3D dos Headphones (Brilham quando está em Deep Focus / A Trabalhar)
-      const hpCol = isWorking ? '#06b6d4' : '#475569';
-      drawBox3D(x + headLookX - 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#0891b2', '#0f172a');
-      drawBox3D(x + headLookX + 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#0891b2', '#0f172a');
-      // Visor Luminoso Neon (Olhos)
-      const visorCol = isWorking ? '#6ee7b7' : (ag.kind === 'architect' ? '#f472b6' : '#38bdf8');
+      const hpCol = isWorking ? '#10b981' : '#52525b';
+      drawBox3D(x + headLookX - 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#059669', '#09090b');
+      drawBox3D(x + headLookX + 7.4, 36 + bobY, z, 2.2, 6, 6, hpCol, '#059669', '#09090b');
+      // Visor Luminoso (Olhos)
+      const visorCol = isWorking ? '#6ee7b7' : (ag.kind === 'architect' ? '#34d399' : '#38bdf8');
       drawBox3D(x + headLookX, 37 + bobY, z - 5.8, 10, 3.2, 2, visorCol, visorCol, visorCol);
 
       // Coroa 3D Dourada para o Arquiteto Gemini 4 Argon (ARCH-01)
@@ -10976,7 +11312,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         const grad = officeCtx.createLinearGradient(groundPt.x, pTop.y, groundPt.x, groundPt.y);
         grad.addColorStop(0, 'rgba(6, 182, 212, 0)');
         grad.addColorStop(0.5, 'rgba(6, 182, 212, 0.35)');
-        grad.addColorStop(1, 'rgba(236, 72, 153, 0.55)');
+        grad.addColorStop(1, 'rgba(16, 185, 129, 0.55)');
         officeCtx.fillStyle = grad;
         officeCtx.fillRect(groundPt.x - 16 * officeCam.zoom, pTop.y, 32 * officeCam.zoom, groundPt.y - pTop.y);
       }
@@ -11013,15 +11349,15 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const by = headPt.y - h;
 
       officeCtx.fillStyle = isSelected
-        ? 'rgba(236, 72, 153, 0.92)'
-        : (isWorking ? 'rgba(15, 23, 42, 0.88)' : 'rgba(30, 27, 38, 0.82)');
+        ? 'rgba(16, 185, 129, 0.92)'
+        : (isWorking ? 'rgba(14, 14, 20, 0.92)' : 'rgba(20, 20, 27, 0.88)');
       officeCtx.strokeStyle = isSelected
-        ? '#fff'
+        ? '#ffffff'
         : (isWorking ? '#10b981' : 'rgba(245, 158, 11, 0.65)');
       officeCtx.lineWidth = isSelected ? 1.6 : 1.1;
 
       officeCtx.beginPath();
-      officeCtx.roundRect(bx, by, w, h, 6);
+      officeCtx.roundRect(bx, by, w, h, 5);
       officeCtx.fill();
       officeCtx.stroke();
 
@@ -11054,14 +11390,14 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           const tw = sim._taskW || 130;
           const tx = headPt.x - tw * 0.5;
           const ty = by - 19;
-          officeCtx.fillStyle = 'rgba(11, 11, 14, 0.94)';
+          officeCtx.fillStyle = 'rgba(11, 11, 15, 0.95)';
           officeCtx.strokeStyle = isLoungeTalking ? '#f59e0b' : (ag.avatar_color || '#10b981');
           officeCtx.lineWidth = 1;
           officeCtx.beginPath();
           officeCtx.roundRect(tx, ty, tw, 16, 4);
           officeCtx.fill();
           officeCtx.stroke();
-          officeCtx.fillStyle = '#e2e8f0';
+          officeCtx.fillStyle = '#e4e4e7';
           officeCtx.fillText(taskShort, headPt.x, ty + 11.5);
         }
       }
@@ -11075,6 +11411,13 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
       const frameStartMs = performance.now();
       try {
+      // Auto-sync canvas resolution with its flex container
+      if (officeCanvas && officeCanvas.clientWidth > 0 && officeCanvas.clientHeight > 0) {
+        if (officeCanvas.width !== officeCanvas.clientWidth || officeCanvas.height !== officeCanvas.clientHeight) {
+          officeCanvas.width = officeCanvas.clientWidth;
+          officeCanvas.height = officeCanvas.clientHeight;
+        }
+      }
       // Atualizar contador FPS ao vivo no HUD
       officeFpsFrames++;
       if (nowMs - officeFpsLastTime >= 1200) {
@@ -11171,17 +11514,17 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         officeCtx.restore();
       }
 
-      // 2. Desenhar a Base / Chão do Escritório 3D (1120 x 760) — Carbon Studio OS v7.1
+      // 2. Desenhar a Base / Chão do Escritório 3D (1120 x 760) — Carbon Studio OS v7.2
       drawBox3D(
         0, -10, 5, 1120, 10, 760,
-        '#0d0d12',
-        '#0b0b0e',
+        '#0e0e13',
+        '#0b0b0f',
         '#08080a',
         isTechRev ? '#00f0ff' : 'rgba(16, 185, 129, 0.35)'
       );
 
-      // Grelha de Piso Isométrica 3D + Lasers Divisores Diagonais (Batched num único stroke!)
-      officeCtx.strokeStyle = isTechRev ? 'rgba(0, 240, 255, 0.14)' : 'rgba(255, 255, 255, 0.036)';
+      // Grelha de Piso Isométrica 3D (Batched num único stroke!)
+      officeCtx.strokeStyle = isTechRev ? 'rgba(0, 240, 255, 0.14)' : 'rgba(255, 255, 255, 0.04)';
       officeCtx.lineWidth = isTechRev ? 1.15 : 1;
       officeCtx.beginPath();
       for (let gx = -520; gx <= 520; gx += 80) {
@@ -11197,56 +11540,43 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         officeCtx.lineTo(p2.x, p2.y);
       }
       officeCtx.stroke();
-      if (isTechRev) {
-        const dA1 = projectOffice3D(-540, 0.8, -355);
-        const dA2 = projectOffice3D(540, 0.8, 365);
-        const dB1 = projectOffice3D(540, 0.8, -355);
-        const dB2 = projectOffice3D(-540, 0.8, 365);
-        officeCtx.save();
-        officeCtx.lineWidth = 1.4;
-        officeCtx.strokeStyle = 'rgba(0, 240, 255, 0.28)';
-        officeCtx.beginPath(); officeCtx.moveTo(dA1.x, dA1.y); officeCtx.lineTo(dA2.x, dA2.y); officeCtx.stroke();
-        officeCtx.strokeStyle = 'rgba(255, 42, 133, 0.28)';
-        officeCtx.beginPath(); officeCtx.moveTo(dB1.x, dB1.y); officeCtx.lineTo(dB2.x, dB2.y); officeCtx.stroke();
-        officeCtx.restore();
-      }
 
-      // Tapetes Arquitetónicos das 6 Zonas Holográficas 3D
-      drawFloorCarpet3D(-445, -265, 175, 135, isTechRev ? 'rgba(0, 240, 255, 0.13)' : 'rgba(6, 182, 212, 0.11)', isTechRev ? '#00f0ff' : '#06b6d4', 'ZONA 1 // PORTAL QUÂNTICO 3D');
-      drawFloorCarpet3D(-445, 55, 175, 420, isTechRev ? 'rgba(0, 240, 255, 0.10)' : 'rgba(56, 189, 248, 0.08)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 2 // SALA SERVIDORES MCP 3D');
-      drawFloorCarpet3D(-45, -265, 535, 135, isTechRev ? 'rgba(255, 42, 133, 0.14)' : 'rgba(236, 72, 153, 0.10)', isTechRev ? '#ff2a85' : '#ec4899', 'ZONA 3 // PONTE DE COMANDO ARGON');
+      // Tapetes Arquitetónicos das 6 Zonas Carbon Studio 3D
+      drawFloorCarpet3D(-445, -265, 175, 135, 'rgba(6, 182, 212, 0.09)', '#06b6d4', 'ZONA 1 // PORTAL QUÂNTICO 3D');
+      drawFloorCarpet3D(-445, 55, 175, 420, 'rgba(6, 182, 212, 0.07)', '#38bdf8', 'ZONA 2 // SALA SERVIDORES MCP 3D');
+      drawFloorCarpet3D(-45, -265, 535, 135, 'rgba(16, 185, 129, 0.09)', '#10b981', 'ZONA 3 // PONTE DE COMANDO ARGON');
       const z4Label = officeFloorWingMode === 'wing_b'
         ? 'ZONA 4 // ALA SWARM B (WORKERS 25-48)'
         : (officeFloorWingMode === 'all_48' ? 'ZONA 4 // FROTA COMPLETA 48 AGENTES 3D' : 'ZONA 4 // ALA SWARM A (WORKERS 01-24)');
-      drawFloorCarpet3D(-45, -60, 535, 200, isTechRev ? 'rgba(0, 255, 157, 0.11)' : 'rgba(139, 92, 246, 0.07)', isTechRev ? '#00ff9d' : '#a855f7', z4Label);
-      drawFloorCarpet3D(-45, 200, 535, 265, isTechRev ? 'rgba(0, 240, 255, 0.09)' : 'rgba(59, 130, 246, 0.06)', isTechRev ? '#00f0ff' : '#38bdf8', 'ZONA 5 // SUBAGENTES & CONVERSAS');
-      drawFloorCarpet3D(390, 5, 250, 680, isTechRev ? 'rgba(255, 183, 3, 0.11)' : 'rgba(245, 158, 11, 0.08)', isTechRev ? '#ffb703' : '#f59e0b', 'ZONA 6 // LOUNGE, CAFÉ & ARCADE');
+      drawFloorCarpet3D(-45, -60, 535, 200, 'rgba(16, 185, 129, 0.06)', '#34d399', z4Label);
+      drawFloorCarpet3D(-45, 200, 535, 265, 'rgba(6, 182, 212, 0.06)', '#22d3ee', 'ZONA 5 // SUBAGENTES & CONVERSAS');
+      drawFloorCarpet3D(390, 5, 250, 680, 'rgba(245, 158, 11, 0.07)', '#f59e0b', 'ZONA 6 // LOUNGE, CAFÉ & ARCADE');
 
       // 3. Construir Lista de Objetos 3D filtrada por Frustum Culling
       const renderables = [];
       officeMcpHitboxes = [];
       officeDeskTowerHitboxes = [];
 
-      // Paredes Arquitetónicas Cutaway 3D (Norte e Oeste) com Janelas Panorâmicas Cyberpunk & Friso LED
+      // Paredes Arquitetónicas Cutaway 3D (Norte e Oeste) — Matte Carbon Studio OS v7.2
       renderables.push({
         depth: projectOffice3D(0, 42, -365).depth,
         draw: () => {
-          drawBox3D(0, 0, -368, 1116, 78, 8, '#131a2e', '#0c1120', '#090d18', 'rgba(236,72,153,0.22)');
-          drawBox3D(0, 78, -368, 1116, 3, 9, '#ec4899', '#db2777', '#be185d');
-          drawBox3D(-295, 22, -363, 165, 42, 3, '#0284c7', '#0f172a', '#1e293b', 'rgba(56,189,248,0.45)');
-          drawBox3D(330, 22, -363, 210, 42, 3, '#0284c7', '#0f172a', '#1e293b', 'rgba(56,189,248,0.45)');
-          drawBox3D(285, 22, -361, 20, 28, 2, '#1e1b4b', '#1e1b4b', '#312e81');
-          drawBox3D(325, 22, -361, 24, 36, 2, '#0f172a', '#1e293b', '#38bdf8');
-          drawBox3D(365, 22, -361, 18, 24, 2, '#312e81', '#1e1b4b', '#ec4899');
+          drawBox3D(0, 0, -368, 1116, 78, 8, '#16161f', '#101016', '#0a0a0e', 'rgba(16,185,129,0.22)');
+          drawBox3D(0, 78, -368, 1116, 3, 9, '#10b981', '#059669', '#047857');
+          drawBox3D(-295, 22, -363, 165, 42, 3, '#0e1726', '#090d16', '#111827', 'rgba(6,182,212,0.4)');
+          drawBox3D(330, 22, -363, 210, 42, 3, '#0e1726', '#090d16', '#111827', 'rgba(6,182,212,0.4)');
+          drawBox3D(285, 22, -361, 20, 28, 2, '#18181b', '#18181b', '#27272a');
+          drawBox3D(325, 22, -361, 24, 36, 2, '#09090b', '#18181b', '#06b6d4');
+          drawBox3D(365, 22, -361, 18, 24, 2, '#27272a', '#18181b', '#10b981');
         }
       });
 
       renderables.push({
         depth: projectOffice3D(-555, 42, 5).depth,
         draw: () => {
-          drawBox3D(-556, 0, 5, 8, 78, 756, '#131a2e', '#090d18', '#0c1120', 'rgba(6,182,212,0.22)');
+          drawBox3D(-556, 0, 5, 8, 78, 756, '#16161f', '#0a0a0e', '#101016', 'rgba(6,182,212,0.22)');
           drawBox3D(-556, 78, 5, 9, 3, 756, '#06b6d4', '#0891b2', '#0e7490');
-          drawBox3D(-551, 22, 55, 3, 40, 210, '#0284c7', '#0f172a', '#0369a1', 'rgba(56,189,248,0.4)');
+          drawBox3D(-551, 22, 55, 3, 40, 210, '#0e1726', '#090d16', '#0c4a6e', 'rgba(56,189,248,0.35)');
         }
       });
 
@@ -11282,7 +11612,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: boardTest.depth,
           draw: () => {
-            drawBox3D(-95, 28, -348, 220, 46, 5, '#0f172a', '#1e1b4b', '#312e81', '#ec4899');
+            drawBox3D(-95, 28, -348, 220, 46, 5, '#121218', '#0d0d12', '#181822', '#10b981');
             const pBoard = projectOffice3D(-95, 54, -342);
             const sc = officeCam.zoom;
             const bStats = officeBoardData || {};
@@ -11294,10 +11624,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
             officeCtx.save();
             officeCtx.textAlign = 'center';
             officeCtx.font = `800 ${Math.max(8, Math.round(9.5 * sc))}px Inter, sans-serif`;
-            officeCtx.fillStyle = '#f472b6';
-            officeCtx.fillText('⚡ QUADRO HOLOGRÁFICO · TASKS & SWARM KANBAN', pBoard.x, pBoard.y - 10 * sc);
+            officeCtx.fillStyle = '#6ee7b7';
+            officeCtx.fillText('⚡ QUADRO STUDIO · TASKS DAG & SWARM KANBAN', pBoard.x, pBoard.y - 10 * sc);
             officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * sc))}px "JetBrains Mono", monospace`;
-            officeCtx.fillStyle = '#e2e8f0';
+            officeCtx.fillStyle = '#e4e4e7';
             officeCtx.fillText(
               `TASKS ATIVAS: ${actTasks}  |  SWARM: ${doneT}/${totT}  |  VERIFY: ${verP}/${verT} PASS`,
               pBoard.x,
@@ -11330,21 +11660,21 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: mcpTest.depth,
           draw: () => {
-            const topCol = isOn ? '#0284c7' : '#334155';
-            const leftCol = isOn ? '#0369a1' : '#1e293b';
-            const rightCol = isOn ? '#075985' : '#0f172a';
-            const strokeCol = (hoveredOfficeMcpName === srvName) ? '#ffffff' : (isOn ? '#38bdf8' : 'rgba(148,163,184,0.3)');
+            const topCol = isOn ? '#181822' : '#18181b';
+            const leftCol = isOn ? '#121218' : '#121215';
+            const rightCol = isOn ? '#0c0c10' : '#09090b';
+            const strokeCol = (hoveredOfficeMcpName === srvName) ? '#ffffff' : (isOn ? '#06b6d4' : 'rgba(161,161,170,0.25)');
             drawBox3D(rx, 1, rz, 36, 48, 30, topCol, leftCol, rightCol, strokeCol);
             const ledCol = isOn ? '#10b981' : '#f59e0b';
             drawBox3D(rx, 36, rz + 14, 24, 3, 3, ledCol, ledCol, ledCol);
-            drawBox3D(rx, 25, rz + 14, 24, 3, 3, isOn ? '#38bdf8' : '#475569', ledCol, ledCol);
+            drawBox3D(rx, 25, rz + 14, 24, 3, 3, isOn ? '#06b6d4' : '#52525b', ledCol, ledCol);
 
             const pRack = projectOffice3D(rx, 56, rz);
             officeMcpHitboxes.push({ name: srvName, x: pRack.x, y: pRack.y + 14 * officeCam.zoom });
             officeCtx.save();
             officeCtx.font = `700 ${Math.max(7, Math.round(8.5 * officeCam.zoom))}px "JetBrains Mono", monospace`;
             officeCtx.textAlign = 'center';
-            officeCtx.fillStyle = isOn ? '#7dd3fc' : '#94a3b8';
+            officeCtx.fillStyle = isOn ? '#67e8f9' : '#a1a1aa';
             officeCtx.fillText(`${isOn ? '🟢' : '⏸'} ${srvName.slice(0, 12)}`, pRack.x, pRack.y);
             officeCtx.restore();
           }
@@ -11368,9 +11698,9 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           visiblePropsCount++;
           const isHot = hm.level === 'hot';
           const isWarm = hm.level === 'warm';
-          const topC = isHot ? '#ef4444' : (isWarm ? '#f59e0b' : '#06b6d4');
-          const sideA = isHot ? '#dc2626' : (isWarm ? '#d97706' : '#0891b2');
-          const sideB = isHot ? '#991b1b' : (isWarm ? '#b45309' : '#0e7490');
+          const topC = isHot ? '#10b981' : (isWarm ? '#f59e0b' : '#06b6d4');
+          const sideA = isHot ? '#059669' : (isWarm ? '#d97706' : '#0891b2');
+          const sideB = isHot ? '#047857' : (isWarm ? '#b45309' : '#0e7490');
           renderables.push({
             depth: hmTest.depth,
             draw: () => {
@@ -11379,7 +11709,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
               officeCtx.save();
               officeCtx.font = `700 ${Math.max(7, Math.round(8 * officeCam.zoom))}px "JetBrains Mono", monospace`;
               officeCtx.textAlign = 'center';
-              officeCtx.fillStyle = isHot ? '#fca5a5' : (isWarm ? '#fde68a' : '#a5f3fc');
+              officeCtx.fillStyle = isHot ? '#6ee7b7' : (isWarm ? '#fde68a' : '#a5f3fc');
               officeCtx.fillText(`🔥${hm.heat_pct}% ${String(hm.name || '').slice(0, 10)}`, pTop.x, pTop.y);
               officeCtx.restore();
             }
@@ -11394,10 +11724,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: portalTest.depth,
           draw: () => {
-            drawBox3D(PORTAL_POS.x, 1, PORTAL_POS.z, 70, 4, 70, '#0891b2', '#0e7490', '#155e75');
+            drawBox3D(PORTAL_POS.x, 1, PORTAL_POS.z, 70, 4, 70, '#121218', '#0d0d12', '#09090c', '#06b6d4');
             drawBox3D(PORTAL_POS.x - 30, 5, PORTAL_POS.z - 22, 8, 58, 8, '#22d3ee', '#06b6d4', '#0891b2');
             drawBox3D(PORTAL_POS.x + 30, 5, PORTAL_POS.z - 22, 8, 58, 8, '#22d3ee', '#06b6d4', '#0891b2');
-            drawBox3D(PORTAL_POS.x, 60, PORTAL_POS.z - 22, 72, 7, 10, '#ec4899', '#db2777', '#be185d');
+            drawBox3D(PORTAL_POS.x, 60, PORTAL_POS.z - 22, 72, 7, 10, '#10b981', '#059669', '#047857');
           }
         });
       } else {
@@ -11412,10 +11742,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: coffeeTest.depth,
           draw: () => {
-            drawBox3D(415, 1, -255, 125, 22, 36, '#78350f', '#451a03', '#290f02');
-            drawBox3D(415, 22, -255, 129, 2.5, 38, '#334155', '#1e293b', '#0f172a');
-            drawBox3D(435, 24.5, -255, 28, 20, 20, '#ef4444', '#dc2626', '#991b1b');
-            drawBox3D(385, 24.5, -255, 14, 12, 14, '#e2e8f0', '#94a3b8', '#64748b');
+            drawBox3D(415, 1, -255, 125, 22, 36, '#181820', '#121218', '#0c0c10', 'rgba(245,158,11,0.25)');
+            drawBox3D(415, 22, -255, 129, 2.5, 38, '#27272a', '#18181b', '#09090b');
+            drawBox3D(435, 24.5, -255, 28, 20, 20, '#f59e0b', '#d97706', '#b45309');
+            drawBox3D(385, 24.5, -255, 14, 12, 14, '#e4e4e7', '#a1a1aa', '#71717a');
             for (let sp = 0; sp < 3; sp++) {
               const prog = ((nowMs * 0.0014 + sp * 0.33) % 1);
               const stPos = projectOffice3D(
@@ -11425,7 +11755,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
               );
               officeCtx.beginPath();
               officeCtx.arc(stPos.x, stPos.y, (2.2 + prog * 3.2) * officeCam.zoom, 0, Math.PI * 2);
-              officeCtx.fillStyle = `rgba(226, 232, 240, ${(1 - prog) * 0.38})`;
+              officeCtx.fillStyle = `rgba(228, 228, 231, ${(1 - prog) * 0.38})`;
               officeCtx.fill();
             }
           }
@@ -11441,8 +11771,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: arcadeTest.depth,
           draw: () => {
-            drawBox3D(305, 1, -255, 34, 52, 28, '#8b5cf6', '#6d28d9', '#4c1d95');
-            drawBox3D(305, 26, -240, 24, 16, 4, '#38bdf8', '#0284c7', '#0369a1');
+            drawBox3D(305, 1, -255, 34, 52, 28, '#181822', '#121218', '#0c0c10', '#10b981');
+            drawBox3D(305, 26, -240, 24, 16, 4, '#06b6d4', '#0891b2', '#0e7490');
           }
         });
       } else {
@@ -11458,7 +11788,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           draw: () => {
             drawBox3D(390, 1, -45, 125, 12, 38, '#16161d', '#111116', '#0b0b0e');
             drawBox3D(390, 13, -60, 125, 14, 10, '#10b981', '#059669', '#047857');
-            drawBox3D(352, 13, -42, 16, 6, 16, '#ec4899', '#db2777', '#be185d');
+            drawBox3D(352, 13, -42, 16, 6, 16, '#f59e0b', '#d97706', '#b45309');
             drawBox3D(428, 13, -42, 16, 6, 16, '#06b6d4', '#0891b2', '#0e7490');
           }
         });
@@ -11473,9 +11803,9 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         renderables.push({
           depth: tableTest.depth,
           draw: () => {
-            drawBox3D(385, 1, 55, 72, 10, 42, '#b45309', '#92400e', '#78350f');
+            drawBox3D(385, 1, 55, 72, 10, 42, '#1f1f29', '#16161e', '#0f0f14', 'rgba(255,255,255,0.12)');
             drawBox3D(372, 11, 52, 5, 5, 5, '#f8fafc', '#cbd5e1', '#94a3b8');
-            drawBox3D(396, 11, 58, 7, 2, 9, '#38bdf8', '#0284c7', '#0369a1');
+            drawBox3D(396, 11, 58, 7, 2, 9, '#10b981', '#059669', '#047857');
           }
         });
       } else {
@@ -11789,7 +12119,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
             officeCtx.fill();
 
             drawBox3D(droneX, droneY, droneZ, 14, 6, 14, '#10b981', '#059669', '#047857', '#6ee7b7');
-            drawBox3D(droneX, droneY + 6, droneZ, 6, 3, 6, '#ec4899', '#db2777', '#be185d');
+            drawBox3D(droneX, droneY + 6, droneZ, 6, 3, 6, '#06b6d4', '#0891b2', '#0e7490');
           }
         });
       } else {
@@ -15507,8 +15837,669 @@ ${rulesSection}`;
       }
     }
 
+    // =========================================================================
+    // 07 // DEDICATED TASKS & DOTS DAG COMMAND CENTER ENGINE
+    // =========================================================================
+    let allUnifiedTasks = [];
+    let selectedTaskPageId = '';
+    let tasksDagHitboxes = [];
+    let tasksDagCanvasBound = false;
+
+    async function fetchTasksStudioPage(showNotification = false) {
+      try {
+        const [orbRes, offRes, swRes] = await Promise.all([
+          fetch('/api/orbit/overview').catch(() => null),
+          fetch('/api/office').catch(() => null),
+          fetch('/api/swarm').catch(() => null)
+        ]);
+        const orbData = orbRes ? await orbRes.json().catch(() => ({})) : {};
+        const offData = offRes ? await offRes.json().catch(() => ({})) : {};
+        const swData = swRes ? await swRes.json().catch(() => ({})) : {};
+
+        if (orbData && orbData.ok) {
+          lastOrbitOverviewData = orbData;
+        }
+        if (offData && offData.live_tasks) {
+          officeLiveTasks = offData.live_tasks;
+        }
+
+        const unified = [];
+        const seenIds = new Set();
+
+        // 1. DOTS DAG Tasks (.dots/*.md)
+        const dotsBlock = (orbData && orbData.dots_dag) || (lastOrbitOverviewData && lastOrbitOverviewData.dots_dag) || {};
+        const dotsTasks = Array.isArray(dotsBlock.tasks) ? dotsBlock.tasks : [];
+        dotsTasks.forEach(dt => {
+          const tid = String(dt.id || dt.task_id || `dots-${unified.length + 1}`);
+          if (seenIds.has(tid)) return;
+          seenIds.add(tid);
+          const rawSt = String(dt.status || 'open').toLowerCase();
+          const isReady = Boolean(dt.is_ready);
+          let colState = 'ready';
+          if (rawSt === 'done' || rawSt === 'completed' || rawSt === 'closed') colState = 'done';
+          else if (rawSt === 'in_progress' || rawSt === 'running' || rawSt === 'working') colState = 'running';
+          else if (!isReady && (dt.blocked_by && dt.blocked_by.length > 0)) colState = 'blocked';
+          else colState = 'ready';
+
+          unified.push({
+            id: tid,
+            title: dt.title || tid,
+            workspace: dt.workspace || 'brain_mcp',
+            priority: dt.priority || 'P1',
+            assignee: dt.assignee || 'ARCH-01',
+            source: 'dots',
+            sourceLabel: '🎯 DOTS DAG',
+            colState,
+            rawStatus: rawSt,
+            dependsOn: Array.isArray(dt.depends_on) ? dt.depends_on : [],
+            blockedBy: Array.isArray(dt.blocked_by) ? dt.blocked_by : [],
+            mdFile: dt.md_file || `.dots/${tid}.md`,
+            updatedAt: dt.updated_at || 'Agora'
+          });
+        });
+
+        // 2. Live Subagent & Conversation Tasks (/api/office)
+        const liveList = (offData && Array.isArray(offData.live_tasks)) ? offData.live_tasks : (officeLiveTasks || []);
+        liveList.forEach((lt, idx) => {
+          const tid = String(lt.task_id || `live-${lt.agent_id || idx}`);
+          if (seenIds.has(tid)) return;
+          seenIds.add(tid);
+          const isAct = Boolean(lt.is_active);
+          unified.push({
+            id: tid,
+            title: lt.task || lt.title || 'Tarefa de Subagente em Curso',
+            workspace: lt.workspace || 'brain_mcp',
+            priority: lt.kind === 'architect' ? 'P0' : 'P1',
+            assignee: lt.agent_name || lt.agent_id || 'AGY-AGENT',
+            agentId: lt.agent_id || 'ARCH-01',
+            source: 'live',
+            sourceLabel: '💬 SUBAGENTE LIVE',
+            colState: isAct ? 'running' : 'done',
+            rawStatus: isAct ? 'running' : 'done',
+            dependsOn: [],
+            blockedBy: [],
+            mdFile: lt.source || 'session_transcript',
+            updatedAt: lt.updated_ago || 'Tempo real'
+          });
+        });
+
+        // 3. Swarm 48-Worker Lane Tasks (/api/swarm)
+        const swTasks = (swData && Array.isArray(swData.tasks)) ? swData.tasks : [];
+        swTasks.slice(0, 16).forEach((st, idx) => {
+          const tid = String(st.task_code || st.id || `swarm-${idx + 1}`);
+          if (seenIds.has(tid)) return;
+          seenIds.add(tid);
+          const stLow = String(st.status || 'completed').toLowerCase();
+          let colState = 'done';
+          if (stLow === 'running' || stLow === 'in_progress' || stLow === 'working') colState = 'running';
+          else if (stLow === 'pending' || stLow === 'queued') colState = 'ready';
+          unified.push({
+            id: tid,
+            title: st.description || st.title || `Swarm Lane ${st.lane || 'WORKER'}`,
+            workspace: (swData.run && swData.run.workspace) || 'brain_mcp',
+            priority: st.lane === 'UI' || st.lane === 'API' ? 'P1' : 'P2',
+            assignee: `${st.lane || 'SWARM'}-WORKER`,
+            source: 'swarm',
+            sourceLabel: `⚡ SWARM ${st.lane || 'LANE'}`,
+            colState,
+            rawStatus: stLow,
+            dependsOn: [],
+            blockedBy: [],
+            mdFile: st.target_file || 'swarm_engine.py',
+            updatedAt: st.duration_ms ? `${st.duration_ms}ms` : 'Swarm Verified'
+          });
+        });
+
+        // Ensure default DOTS seed tasks if list is empty
+        if (unified.length === 0) {
+          unified.push(
+            {
+              id: 'dots-01',
+              title: 'Indexar Grafo AST & Construir Mapa Partilhado [SCOUT_SHARED_MAP]',
+              workspace: 'brain_mcp',
+              priority: 'P0',
+              assignee: 'SCOUT-01',
+              source: 'dots',
+              sourceLabel: '🎯 DOTS DAG',
+              colState: 'done',
+              rawStatus: 'done',
+              dependsOn: [],
+              blockedBy: [],
+              mdFile: '.dots/dots-01.md',
+              updatedAt: 'Verificado'
+            },
+            {
+              id: 'dots-02',
+              title: 'Executar Motor Híbrido PPR + Temporal Facts + MCP 2026',
+              workspace: 'brain_mcp',
+              priority: 'P0',
+              assignee: 'ARCH-01',
+              source: 'dots',
+              sourceLabel: '🎯 DOTS DAG',
+              colState: 'running',
+              rawStatus: 'in_progress',
+              dependsOn: ['dots-01'],
+              blockedBy: [],
+              mdFile: '.dots/dots-02.md',
+              updatedAt: 'Em execução'
+            },
+            {
+              id: 'dots-03',
+              title: 'Validar Suite Completa 27/27 Testes & Sincronizar .dots/*.md',
+              workspace: 'brain_mcp',
+              priority: 'P1',
+              assignee: 'QA-01',
+              source: 'dots',
+              sourceLabel: '🎯 DOTS DAG',
+              colState: 'ready',
+              rawStatus: 'open',
+              dependsOn: ['dots-01'],
+              blockedBy: [],
+              mdFile: '.dots/dots-03.md',
+              updatedAt: 'Pronta (Ready)'
+            },
+            {
+              id: 'dots-04',
+              title: 'Publicar Release v7.2 Carbon Studio OS com Office 3D & Tasks Studio',
+              workspace: 'brain_mcp',
+              priority: 'P1',
+              assignee: 'DOCS-01',
+              source: 'dots',
+              sourceLabel: '🎯 DOTS DAG',
+              colState: 'blocked',
+              rawStatus: 'open',
+              dependsOn: ['dots-02', 'dots-03'],
+              blockedBy: ['dots-02', 'dots-03'],
+              mdFile: '.dots/dots-04.md',
+              updatedAt: 'Aguarda dots-02'
+            }
+          );
+        }
+
+        allUnifiedTasks = unified;
+
+        // Populate Workspace filter dropdown
+        const wsSel = document.getElementById('tasksWsFilterSelect');
+        if (wsSel) {
+          const prevWs = wsSel.value || 'all';
+          const wsSet = new Set(['brain_mcp']);
+          unified.forEach(t => { if (t.workspace) wsSet.add(t.workspace); });
+          const wsOpts = ['<option value="all">🌐 Todos Workspaces</option>'];
+          Array.from(wsSet).sort().forEach(w => {
+            wsOpts.push(`<option value="${escapeHtml(w)}" ${w === prevWs ? 'selected' : ''}>📂 ${escapeHtml(w)}</option>`);
+          });
+          wsSel.innerHTML = wsOpts.join('');
+        }
+
+        // Populate DependsOn select in Creator Bar
+        const depSel = document.getElementById('tkNewDependsOn');
+        if (depSel) {
+          const prevDep = depSel.value || '';
+          const dotsOnly = unified.filter(t => t.source === 'dots');
+          const depOpts = ['<option value="">Sem Dependência (Ready)</option>'];
+          dotsOnly.forEach(t => {
+            depOpts.push(`<option value="${escapeHtml(t.id)}" ${t.id === prevDep ? 'selected' : ''}>🔗 Depende de ${escapeHtml(t.id)}: ${escapeHtml(String(t.title).slice(0, 28))}</option>`);
+          });
+          depSel.innerHTML = depOpts.join('');
+        }
+
+        // Update Top Rail & Office Task counters
+        const activeCount = unified.filter(t => t.colState === 'running' || t.colState === 'ready').length;
+        const topCntEl = document.getElementById('topTabTasksCount');
+        if (topCntEl) topCntEl.textContent = String(activeCount);
+        const offCntEl = document.getElementById('offStatTasks');
+        if (offCntEl) offCntEl.textContent = String(activeCount);
+        const rfCntEl = document.getElementById('rfTasksCount');
+        if (rfCntEl) rfCntEl.textContent = String(activeCount);
+
+        renderTasksStudioPage();
+        if (showNotification) {
+          showToast(`📋 Tasks & DOTS Studio sincronizado (${unified.length} tarefas)!`);
+        }
+      } catch (e) {
+        console.warn('Erro em fetchTasksStudioPage:', e);
+      }
+    }
+
+    function renderTasksStudioPage() {
+      const wsFilter = (document.getElementById('tasksWsFilterSelect')?.value || 'all').toLowerCase();
+      const srcFilter = (document.getElementById('tasksSourceFilterSelect')?.value || 'all').toLowerCase();
+      const qFilter = (document.getElementById('tasksSearchInput')?.value || '').toLowerCase().trim();
+
+      const filtered = allUnifiedTasks.filter(t => {
+        if (wsFilter !== 'all' && String(t.workspace || '').toLowerCase() !== wsFilter) return false;
+        if (srcFilter !== 'all' && String(t.source || '').toLowerCase() !== srcFilter) return false;
+        if (qFilter) {
+          const hay = `${t.id} ${t.title} ${t.assignee} ${t.workspace} ${t.mdFile}`.toLowerCase();
+          if (!hay.includes(qFilter)) return false;
+        }
+        return true;
+      });
+
+      const blockedList = filtered.filter(t => t.colState === 'blocked');
+      const readyList = filtered.filter(t => t.colState === 'ready');
+      const runningList = filtered.filter(t => t.colState === 'running');
+      const doneList = filtered.filter(t => t.colState === 'done');
+
+      // Update 6 KPI cards
+      const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+      setTxt('tkKpiTotal', filtered.length);
+      setTxt('tkKpiReady', readyList.length);
+      setTxt('tkKpiRunning', runningList.length);
+      setTxt('tkKpiBlocked', blockedList.length);
+      setTxt('tkKpiDone', doneList.length);
+
+      const pct = filtered.length > 0 ? Math.round((doneList.length / filtered.length) * 100) : 100;
+      setTxt('tkKpiPctSub', `Taxa de conclusão: ${pct}% (${doneList.length}/${filtered.length})`);
+      setTxt('tkCountBlocked', blockedList.length);
+      setTxt('tkCountReady', readyList.length);
+      setTxt('tkCountRunning', runningList.length);
+      setTxt('tkCountDone', doneList.length);
+
+      // Ensure a valid selected task
+      if (!selectedTaskPageId || !filtered.some(t => t.id === selectedTaskPageId)) {
+        const firstChoice = runningList[0] || readyList[0] || blockedList[0] || doneList[0];
+        selectedTaskPageId = firstChoice ? firstChoice.id : '';
+      }
+
+      const renderColCards = (list, emptyMsg) => {
+        if (!list.length) {
+          return `<div style="padding:18px 10px; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:10px; border:1px dashed var(--border); border-radius:6px;">${emptyMsg}</div>`;
+        }
+        return list.map(t => {
+          const isSel = t.id === selectedTaskPageId;
+          const prioCol = t.priority === 'P0' ? '#f43f5e' : (t.priority === 'P1' ? '#10b981' : '#a1a1aa');
+          const stBorder = t.colState === 'running'
+            ? 'rgba(16,185,129,0.45)'
+            : (t.colState === 'ready' ? 'rgba(6,182,212,0.4)' : (t.colState === 'blocked' ? 'rgba(245,158,11,0.4)' : 'var(--border)'));
+          const depBadge = (t.blockedBy && t.blockedBy.length)
+            ? `<div style="font-size:9.5px; color:#fcd34d; font-family:var(--font-mono);">⛔ Aguarda: ${escapeHtml(t.blockedBy.join(', '))}</div>`
+            : ((t.dependsOn && t.dependsOn.length)
+                ? `<div style="font-size:9.5px; color:#67e8f9; font-family:var(--font-mono);">🔗 Dep: ${escapeHtml(t.dependsOn.join(', '))} (OK)</div>`
+                : '');
+
+          let actionBtns = '';
+          if (t.colState !== 'running' && t.colState !== 'done') {
+            actionBtns += `<button class="office-btn primary" style="padding:2px 7px; font-size:9.5px;" onclick="event.stopPropagation(); runTaskActionFromPageUI('${escapeHtml(t.id)}', 'in_progress', '${escapeHtml(t.source)}', '${escapeHtml(t.assignee)}')">▶ Iniciar</button>`;
+          }
+          if (t.colState !== 'done') {
+            actionBtns += `<button class="office-btn emerald" style="padding:2px 7px; font-size:9.5px;" onclick="event.stopPropagation(); runTaskActionFromPageUI('${escapeHtml(t.id)}', 'done', '${escapeHtml(t.source)}', '${escapeHtml(t.assignee)}')">✓ Concluir</button>`;
+          } else {
+            actionBtns += `<button class="office-btn" style="padding:2px 7px; font-size:9.5px;" onclick="event.stopPropagation(); runTaskActionFromPageUI('${escapeHtml(t.id)}', 'open', '${escapeHtml(t.source)}', '${escapeHtml(t.assignee)}')">↺ Reabrir</button>`;
+          }
+
+          return `
+            <div class="tk-card ${isSel ? 'selected' : ''}" style="border-left:3px solid ${stBorder};" onclick="selectTaskOnPage('${escapeHtml(t.id)}')">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:#a1a1aa;">#${escapeHtml(t.id)}</span>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <span class="tk-chip" style="color:${prioCol}; border-color:${prioCol}44;">${escapeHtml(t.priority)}</span>
+                  <span class="tk-chip">${escapeHtml(t.sourceLabel)}</span>
+                </div>
+              </div>
+              <div class="tk-card-title">${escapeHtml(t.title)}</div>
+              ${depBadge}
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; margin-top:2px; pt:4px; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                <span style="font-family:var(--font-mono); font-size:9.5px; color:#6ee7b7;">👤 ${escapeHtml(t.assignee)} · 📂 ${escapeHtml(t.workspace)}</span>
+                <div style="display:flex; gap:4px;">${actionBtns}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      };
+
+      const colB = document.getElementById('tkColBlocked');
+      const colR = document.getElementById('tkColReady');
+      const colP = document.getElementById('tkColRunning');
+      const colD = document.getElementById('tkColDone');
+      if (colB) colB.innerHTML = renderColCards(blockedList, 'Sem tarefas bloqueadas no DAG');
+      if (colR) colR.innerHTML = renderColCards(readyList, 'Nenhuma tarefa em fila Ready');
+      if (colP) colP.innerHTML = renderColCards(runningList, 'Nenhuma tarefa em execução');
+      if (colD) colD.innerHTML = renderColCards(doneList, 'Nenhuma tarefa concluída');
+
+      renderSelectedTaskInspectorOnPage();
+      renderTasksDagCanvas();
+    }
+
+    function selectTaskOnPage(taskId) {
+      selectedTaskPageId = String(taskId || '');
+      renderTasksStudioPage();
+    }
+
+    function renderSelectedTaskInspectorOnPage() {
+      const box = document.getElementById('tasksSelectedDetailBox');
+      const badge = document.getElementById('tkInspBadge');
+      if (!box) return;
+      const task = allUnifiedTasks.find(t => t.id === selectedTaskPageId);
+      if (!task) {
+        if (badge) badge.textContent = 'SELECIONE UMA TAREFA';
+        box.innerHTML = `<div style="color:var(--text-muted); font-family:var(--font-mono); font-size:10.5px;">Selecione uma tarefa nas colunas Kanban ou no Grafo Topológico DOTS DAG.</div>`;
+        return;
+      }
+      if (badge) {
+        badge.textContent = `${task.id.toUpperCase()} · ${task.colState.toUpperCase()}`;
+        badge.style.color = task.colState === 'running' ? '#10b981' : (task.colState === 'ready' ? '#22d3ee' : '#e4e4e7');
+      }
+      const depsStr = (task.dependsOn && task.dependsOn.length) ? task.dependsOn.join(', ') : 'Nenhuma (Raiz Topológica)';
+      const blkStr = (task.blockedBy && task.blockedBy.length) ? task.blockedBy.join(', ') : 'Zero bloqueios ativos';
+      box.innerHTML = `
+        <div style="font-size:13px; font-weight:700; color:#ffffff; line-height:1.35;">${escapeHtml(task.title)}</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:var(--font-mono); font-size:10px;">
+          <div style="background:#0b0b0f; padding:5px 8px; border-radius:5px; border:1px solid var(--border);">
+            <span style="color:var(--text-muted);">AGENTE:</span> <strong style="color:#6ee7b7;">${escapeHtml(task.assignee)}</strong>
+          </div>
+          <div style="background:#0b0b0f; padding:5px 8px; border-radius:5px; border:1px solid var(--border);">
+            <span style="color:var(--text-muted);">WORKSPACE:</span> <strong style="color:#ffffff;">${escapeHtml(task.workspace)}</strong>
+          </div>
+          <div style="background:#0b0b0f; padding:5px 8px; border-radius:5px; border:1px solid var(--border);">
+            <span style="color:var(--text-muted);">DEPENDÊNCIAS:</span> <strong style="color:#67e8f9;">${escapeHtml(depsStr)}</strong>
+          </div>
+          <div style="background:#0b0b0f; padding:5px 8px; border-radius:5px; border:1px solid var(--border);">
+            <span style="color:var(--text-muted);">BLOQUEIOS:</span> <strong style="color:${task.blockedBy && task.blockedBy.length ? '#f59e0b' : '#10b981'};">${escapeHtml(blkStr)}</strong>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
+          <span>📄 Ficheiro/Origem: <strong style="color:#d4d4d8;">${escapeHtml(task.mdFile)}</strong></span>
+          <span>⏱️ ${escapeHtml(task.updatedAt)}</span>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+          <button class="office-btn primary" onclick="runTaskActionFromPageUI('${escapeHtml(task.id)}', 'in_progress', '${escapeHtml(task.source)}', '${escapeHtml(task.assignee)}')">
+            ▶ Executar Tarefa Agora
+          </button>
+          <button class="office-btn emerald" onclick="runTaskActionFromPageUI('${escapeHtml(task.id)}', 'done', '${escapeHtml(task.source)}', '${escapeHtml(task.assignee)}')">
+            ✓ Marcar Concluída (DONE)
+          </button>
+          <button class="office-btn" onclick="switchMainView('office'); selectOfficeAgent('${escapeHtml(task.agentId || task.assignee || 'ARCH-01')}');">
+            🏢 Ver Agente no Office 3D
+          </button>
+        </div>
+      `;
+    }
+
+    function renderTasksDagCanvas() {
+      const can = document.getElementById('tasksDagCanvas');
+      if (!can) return;
+      const cw = can.clientWidth || 760;
+      const ch = can.clientHeight || 175;
+      if (can.width !== cw) can.width = cw;
+      if (can.height !== ch) can.height = ch;
+      const ctx = can.getContext('2d');
+      ctx.clearRect(0, 0, cw, ch);
+
+      if (!tasksDagCanvasBound) {
+        tasksDagCanvasBound = true;
+        can.addEventListener('click', (ev) => {
+          const rect = can.getBoundingClientRect();
+          const mx = ev.clientX - rect.left;
+          const my = ev.clientY - rect.top;
+          for (const hb of tasksDagHitboxes) {
+            if (mx >= hb.x && mx <= hb.x + hb.w && my >= hb.y && my <= hb.y + hb.h) {
+              selectTaskOnPage(hb.id);
+              return;
+            }
+          }
+        });
+      }
+
+      // Draw subtle background grid
+      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let gx = 0; gx < cw; gx += 40) { ctx.moveTo(gx, 0); ctx.lineTo(gx, ch); }
+      for (let gy = 0; gy < ch; gy += 35) { ctx.moveTo(0, gy); ctx.lineTo(cw, gy); }
+      ctx.stroke();
+
+      const dagNodes = allUnifiedTasks.filter(t => t.source === 'dots' || t.colState === 'running').slice(0, 10);
+      if (!dagNodes.length) return;
+
+      // Compute topological depth layer (0, 1, 2, 3)
+      const byId = {};
+      dagNodes.forEach(n => { byId[n.id] = n; });
+      const depthMap = {};
+      const getDepth = (id, visited = new Set()) => {
+        if (depthMap[id] !== undefined) return depthMap[id];
+        if (visited.has(id)) return 0;
+        visited.add(id);
+        const node = byId[id];
+        if (!node || !node.dependsOn || !node.dependsOn.length) {
+          depthMap[id] = 0;
+          return 0;
+        }
+        let maxParent = 0;
+        node.dependsOn.forEach(pId => {
+          if (byId[pId]) maxParent = Math.max(maxParent, getDepth(pId, visited) + 1);
+        });
+        depthMap[id] = Math.min(3, maxParent);
+        return depthMap[id];
+      };
+      dagNodes.forEach(n => getDepth(n.id));
+
+      const layers = [[], [], [], []];
+      dagNodes.forEach(n => {
+        const l = Math.min(3, depthMap[n.id] || 0);
+        layers[l].push(n);
+      });
+      const activeLayers = layers.filter(l => l.length > 0);
+      const numCols = Math.max(1, activeLayers.length);
+      const nodeW = Math.min(168, Math.max(118, Math.floor((cw - 48) / numCols) - 22));
+      const nodeH = 38;
+
+      const posMap = {};
+      tasksDagHitboxes = [];
+      activeLayers.forEach((colNodes, cIdx) => {
+        const x = 20 + cIdx * Math.floor((cw - 36) / numCols);
+        colNodes.forEach((n, rIdx) => {
+          const totalH = colNodes.length * nodeH + (colNodes.length - 1) * 12;
+          const startY = Math.max(12, Math.floor((ch - totalH) * 0.5));
+          const y = startY + rIdx * (nodeH + 12);
+          posMap[n.id] = { x, y, w: nodeW, h: nodeH, node: n };
+          tasksDagHitboxes.push({ id: n.id, x, y, w: nodeW, h: nodeH });
+        });
+      });
+
+      // Draw dependency edges
+      Object.values(posMap).forEach(targetBox => {
+        const deps = targetBox.node.dependsOn || [];
+        deps.forEach(depId => {
+          const srcBox = posMap[depId];
+          if (!srcBox) return;
+          const x1 = srcBox.x + srcBox.w;
+          const y1 = srcBox.y + srcBox.h * 0.5;
+          const x2 = targetBox.x;
+          const y2 = targetBox.y + targetBox.h * 0.5;
+          const isUnblocked = srcBox.node.colState === 'done';
+          ctx.strokeStyle = isUnblocked ? 'rgba(16, 185, 129, 0.65)' : 'rgba(245, 158, 11, 0.65)';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          const cx1 = x1 + (x2 - x1) * 0.5;
+          ctx.bezierCurveTo(cx1, y1, cx1, y2, x2, y2);
+          ctx.stroke();
+
+          // Arrowhead
+          ctx.fillStyle = isUnblocked ? '#10b981' : '#f59e0b';
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - 6, y2 - 4);
+          ctx.lineTo(x2 - 6, y2 + 4);
+          ctx.closePath();
+          ctx.fill();
+        });
+      });
+
+      // Draw DAG nodes
+      Object.values(posMap).forEach(box => {
+        const n = box.node;
+        const isSel = n.id === selectedTaskPageId;
+        const colColor = n.colState === 'running'
+          ? '#10b981'
+          : (n.colState === 'ready' ? '#06b6d4' : (n.colState === 'blocked' ? '#f59e0b' : '#52525b'));
+
+        ctx.fillStyle = isSel ? '#161f1e' : '#121218';
+        ctx.strokeStyle = isSel ? '#ffffff' : colColor;
+        ctx.lineWidth = isSel ? 1.8 : 1.2;
+        ctx.beginPath();
+        ctx.roundRect(box.x, box.y, box.w, box.h, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = colColor;
+        ctx.fillRect(box.x, box.y + 4, 3, box.h - 8);
+
+        ctx.font = '700 9.5px "JetBrains Mono", monospace';
+        ctx.fillStyle = '#a1a1aa';
+        ctx.textAlign = 'left';
+        ctx.fillText(`#${String(n.id).slice(0, 10)} · ${n.assignee}`, box.x + 8, box.y + 13);
+
+        ctx.font = '600 10px Inter, sans-serif';
+        ctx.fillStyle = '#f4f4f5';
+        const shortT = String(n.title).length > 21 ? String(n.title).slice(0, 19) + '…' : String(n.title);
+        ctx.fillText(shortT, box.x + 8, box.y + 28);
+      });
+    }
+
+    async function createNewTaskFromPageUI() {
+      const titleEl = document.getElementById('tkNewTitle');
+      const wsEl = document.getElementById('tkNewWorkspace');
+      const prioEl = document.getElementById('tkNewPriority');
+      const assEl = document.getElementById('tkNewAssignee');
+      const depEl = document.getElementById('tkNewDependsOn');
+      const title = (titleEl?.value || '').trim();
+      if (!title) {
+        showToast('⚠️ Escreva o título ou diretiva da nova tarefa DOTS DAG.');
+        if (titleEl) titleEl.focus();
+        return;
+      }
+      const workspace = (wsEl?.value || 'brain_mcp').trim() || 'brain_mcp';
+      const priority = prioEl?.value || 'P1';
+      const assignee = assEl?.value || 'ARCH-01';
+      const depVal = (depEl?.value || '').trim();
+      const depends_on = depVal ? [depVal] : [];
+
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'dots_create',
+            workspace,
+            title,
+            priority,
+            assignee,
+            depends_on
+          })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          if (titleEl) titleEl.value = '';
+          showToast(`🎯 Tarefa DOTS #${out.created?.id || 'nova'} criada e gravada em .dots/*.md!`);
+          await fetchTasksStudioPage(false);
+          if (out.created?.id) selectTaskOnPage(out.created.id);
+          return;
+        }
+      } catch (e) {
+        console.warn('Erro ao criar tarefa DOTS:', e);
+      }
+    }
+
+    async function runTaskActionFromPageUI(taskId, newStatus, sourceType = 'dots', agentId = 'ARCH-01') {
+      try {
+        if (sourceType === 'dots') {
+          const res = await fetch('/api/orbit/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'dots_update_status',
+              task_id: taskId,
+              status: newStatus
+            })
+          });
+          const out = await res.json();
+          if (out && out.ok) {
+            showToast(`✅ Tarefa #${taskId} atualizada para [${newStatus.toUpperCase()}] (DAG reavaliado)!`);
+            await fetchTasksStudioPage(false);
+            return;
+          }
+        }
+        // Fallback / Live Agent or Swarm task update
+        const taskObj = allUnifiedTasks.find(t => t.id === taskId);
+        if (taskObj) {
+          if (newStatus === 'in_progress') {
+            await fetch('/api/office', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'custom_order', agent_id: agentId, task: taskObj.title })
+            }).catch(() => {});
+          } else if (newStatus === 'done') {
+            await fetch('/api/office', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'complete_all_tasks' })
+            }).catch(() => {});
+          }
+        }
+        showToast(`⚡ Estado da tarefa #${taskId} atualizado para [${newStatus.toUpperCase()}]!`);
+        await fetchTasksStudioPage(false);
+      } catch (e) {
+        console.warn('Erro em runTaskActionFromPageUI:', e);
+      }
+    }
+
+    async function syncDotsMarkdownFromTasksPageUI() {
+      const ws = document.getElementById('tasksWsFilterSelect')?.value;
+      const targetWs = (ws && ws !== 'all') ? ws : 'brain_mcp';
+      try {
+        const res = await fetch('/api/orbit/action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'dots_sync_md', workspace: targetWs })
+        });
+        const out = await res.json();
+        if (out && out.ok) {
+          showToast(`📄 Sincronizados ${(out.synced_files || []).length} ficheiros Markdown em .dots/*.md!`);
+          await fetchTasksStudioPage(false);
+        }
+      } catch (e) {
+        showToast('⚠️ Erro ao sincronizar .dots/*.md: ' + e.message);
+      }
+    }
+
+    async function executeAllReadyTasksFromPageUI() {
+      const readyTasks = allUnifiedTasks.filter(t => t.colState === 'ready');
+      if (!readyTasks.length) {
+        showToast('ℹ️ Não existem tarefas na coluna PRONTAS (DOTS Ready) neste momento.');
+        return;
+      }
+      for (const rt of readyTasks) {
+        await runTaskActionFromPageUI(rt.id, 'in_progress', rt.source, rt.assignee);
+      }
+      showToast(`⚡ ${readyTasks.length} tarefa(s) DOTS Ready enviada(s) para execução!`);
+      await fetchTasksStudioPage(false);
+    }
+
+    async function completeAllTasksFromPageUI() {
+      const runningTasks = allUnifiedTasks.filter(t => t.colState === 'running');
+      for (const rt of runningTasks) {
+        if (rt.source === 'dots') {
+          await fetch('/api/orbit/action', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'dots_update_status', task_id: rt.id, status: 'done' })
+          }).catch(() => {});
+        }
+      }
+      await fetch('/api/office', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'complete_all_tasks' })
+      }).catch(() => {});
+      showToast('✓ Todas as tarefas em execução foram concluídas e o Grafo DOTS DAG desbloqueou as dependentes!');
+      await fetchTasksStudioPage(false);
+    }
+
     setTimeout(() => {
       refreshQuota5hRadarUI(false);
+      fetchTasksStudioPage(false);
       setInterval(() => { if (!document.hidden) refreshQuota5hRadarUI(false); }, 45000);
     }, 1200);
   </script>
