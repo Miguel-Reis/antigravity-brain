@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ====================================================================
-echo  🧠 Instalando Antigravity Brain v7.2 — Carbon Studio OS
+echo  🧠 Instalando Antigravity Brain v8.1 — Carbon Studio OS & Voice Zero-Call
 echo ====================================================================
 python "%~dp0install.py"
 echo.

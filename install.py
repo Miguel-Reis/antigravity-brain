@@ -61,8 +61,8 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
     plugin_json_path = PLUGINS_DIR / "plugin.json"
     plugin_manifest = {
         "name": "antigravity-brain",
-        "version": "2.4.0",
-        "description": "Zero-Round-Trip SQLite FTS5 Memory Engine, Obsidian Graph View & Scout-First Asymmetric Swarm",
+        "version": "8.1.0",
+        "description": "Zero-Round-Trip SQLite FTS5 + 128-D LSH Memory Engine, Voice-Aware Zero-Call Protocol & Asymmetric Swarm",
         "hooks": "./hooks.json",
         "rules": ["./rules/AGENTS.md"],
     }
@@ -83,6 +83,9 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
 4. **Scout-First Asymmetric Swarm Protocol (`SCOUT ➔ PLAN ➔ SWARM ➔ VERIFY`)**:
    - **Shared Codebase Map (`[SCOUT_SHARED_MAP]`)**: Before launching multi-file work, run `SwarmEngine.run_codebase_scout()` (or `swarm_scout` / `swarm_start`) so the codebase is indexed **1 time** and shared in `brain.db` across all agents via `PreInvocation`.
    - **Decoupled Architect & Lightweight Lanes**: Read the goal and `[SCOUT_SHARED_MAP]` once as the Architect, decompose into isolated lanes (`UI`, `API`, `TESTS`, `DOCS`), and delegate parallel execution via `invoke_subagent` with `Model="flash"` or `"flash_lite"`, passing the exact target file and symbols so workers never re-read the codebase.
+5. **Voice-Aware Zero-Call Protocol (`[VOICE_PRE_EXEC]` & `[VOICE_AST_TARGET]`)**:
+   - When the user speaks via voice/STT and `[BRAIN_MEMORY]` contains `[VOICE_PRE_EXEC|...]` (e.g., `store_fact=OK`, `swarm_impact_graph=...`, `swarm_symbol_lookup=...`), **do NOT call that MCP tool again** — the result is already persisted/computed in `<4ms`.
+   - When `[VOICE_AST_TARGET: file.py:Lstart-Lend]` is present, call `read_file` directly on that exact line range instead of running exploratory `grep` or reading whole files, and keep spoken replies concise (`[VOICE_CONCISE_MODE]`).
 """
     (RULES_DIR / "AGENTS.md").write_text(agents_md_content, encoding="utf-8")
 
@@ -96,8 +99,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
                 "server.py",
                 "db_engine.py",
                 "orbit_engine.py",
-                "jarvis_engine.py",
-                "jev_s1_engine.py",
+                "voice_brain_engine.py",
                 "swarm_engine.py",
                 "graphify_engine.py",
                 "ast_impact_watcher.py",
@@ -106,6 +108,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
                 "brain_harvest.py",
                 "web_dashboard.py",
                 "auto_updater.py",
+                "app.py",
                 "index.html",
                 "install.py",
                 "install.bat",
@@ -170,7 +173,7 @@ def configure_hooks_and_plugin(silent: bool = False) -> Dict[str, Any]:
 
     if not silent:
         print("✅ Hooks globais configurados em:", global_hooks_path)
-        print("✅ Plugin Antigravity Brain v2.4 instalado em:", PLUGINS_DIR)
+        print("✅ Plugin Antigravity Brain v8.1 instalado em:", PLUGINS_DIR)
         print("✅ Servidor MCP registado em:", mcp_cfg_path)
 
     return {
@@ -192,7 +195,7 @@ def main() -> None:
     no_restart = "--no-restart" in sys.argv or os.environ.get("BRAIN_NO_RESTART") == "1"
     if not silent:
         print("=" * 68)
-        print(" 🧠 INSTALADOR & AUTO-CONFIGURADOR — ANTIGRAVITY BRAIN v2.4")
+        print(" 🧠 INSTALADOR & AUTO-CONFIGURADOR — ANTIGRAVITY BRAIN v8.1")
         print("=" * 68)
 
     configure_hooks_and_plugin(silent=silent)

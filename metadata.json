@@ -1,6 +1,7 @@
 {
-  "name": "Antigravity Brain v4.8 — Recursive Self-Learn, DOTS Stack, Orbit Agent OS & 3D Command Office",
-  "description": "Zero-Round-Trip SQLite WAL + FTS5 BM25 + 32-D Vector Memory Engine, Orbit Agent OS, Graphify AST Knowledge Graph, 24-Lane Asymmetric Swarm Monitor, and 60 FPS 3D Agent Office.",
+  "name": "Antigravity Brain v8.1 — Voice-Aware Zero-Call Protocol, Orbit Agent OS & 3D Command Office",
+  "version": "8.1.0",
+  "description": "Zero-Round-Trip SQLite WAL + FTS5 BM25 + Vector Memory Engine, Voice-Aware Zero-Call Protocol, Orbit Agent OS, Graphify AST Knowledge Graph, 48-Agent Asymmetric Swarm Monitor, and 60 FPS 3D Agent Office.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

@@ -1178,45 +1178,140 @@ def run_all_tests() -> None:
         ppr_scores = gb_db.compute_memory_ppr({id_v2: 1.0}, [(id_v2, id_v1, "supersedes")])
         assert ppr_scores.get(id_v1, 0.0) > 0.0, f"HippoRAG 2 PPR devia propagar score na aresta: {ppr_scores}"
 
-        # MCP 2026 Resources & Prompts
+        # MCP 2026 Resources & Prompts + Voice-Aware Protocol v8.1
         from server import mcp as mcp_srv
         res_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 91, "method": "resources/list", "params": {}})
         assert len(res_list["result"]["resources"]) >= 4, f"MCP 2026 resources/list incompleto: {res_list}"
+        res_uris = [r["uri"] for r in res_list["result"]["resources"]]
+        assert "brain://voice/protocol" in res_uris and "brain://jarvis/status" not in res_uris, f"URIs MCP inesperados: {res_uris}"
         prm_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 92, "method": "prompts/list", "params": {}})
         assert len(prm_list["result"]["prompts"]) >= 3, f"MCP 2026 prompts/list incompleto: {prm_list}"
+        tools_list = mcp_srv.handle_request({"jsonrpc": "2.0", "id": 93, "method": "tools/list", "params": {}})
+        tool_names = [t["name"] for t in tools_list["result"]["tools"]]
+        assert "brain_voice_optimize" in tool_names and "jarvis_command" not in tool_names, f"Tools MCP inesperadas: {tool_names}"
 
-        # Jarvis Cognitive OS v7.3 (Zero-Ollama Antigravity Bridge)
-        from jarvis_engine import JarvisEngine
-        jv_eng = JarvisEngine(gb_db)
-        jv_tel = jv_eng.get_system_telemetry()
-        assert jv_tel.get("engine_mode") == "ANTIGRAVITY_NATIVE_ZERO_OLLAMA", f"Modo Jarvis inesperado: {jv_tel}"
-        assert jv_tel.get("ram_total_gb", 0) > 0, f"Telemetria RAM inválida: {jv_tel}"
-        jv_cmd = jv_eng.process_command("Bom dia Jarvis, ponto de situação do projeto", workspace="brain_mcp")
-        assert jv_cmd.get("ok") is True and jv_cmd.get("reply_text") and jv_cmd.get("speech_text"), f"Falha process_command Jarvis: {jv_cmd}"
-        jv_disp = jv_eng.dispatch_to_antigravity("Auditar db_engine.py e validar PPR", workspace="brain_mcp", priority="P0")
-        assert jv_disp.get("ok") is True and len(jv_eng.get_pending_directives("brain_mcp")) >= 1, f"Falha dispatch_to_antigravity: {jv_disp}"
-        from brain_inject import build_ephemeral_context
-        jv_ctx = build_ephemeral_context([], {"goal": "Sessão ativa"}, "brain_mcp", db=gb_db)
-        assert "[JARVIS_DIRECTIVE]" in jv_ctx, f"[JARVIS_DIRECTIVE] não injetado no PreInvocation: {jv_ctx}"
-        jv_tts_pt = jv_eng.synthesize_speech_bytes("Às suas ordens, Senhor Miguel.", profile="movie_pt")
-        assert jv_tts_pt.get("ok") is True and len(jv_tts_pt.get("audio_bytes", b"")) > 200, f"Falha synthesize_speech_bytes movie_pt: {jv_tts_pt}"
-        jv_tts_en = jv_eng.format_movie_speech("Bom dia, Sr. Miguel. Memória RAM a 42 por cento.", profile="movie_en")
-        assert "Sir" in jv_tts_en and "42 percent" in jv_tts_en, f"Falha format_movie_speech movie_en: {jv_tts_en}"
+        # 30. Voice-Aware Zero-Call Protocol v8.1 (5 Módulos de Voz + Purga Jarvis + Integridade AST)
+        repo_root_dir = os.path.dirname(os.path.abspath(__file__))
+        assert not os.path.exists(os.path.join(repo_root_dir, "jarvis_engine.py")), "jarvis_engine.py devia ter sido removido!"
+        assert not os.path.exists(os.path.join(repo_root_dir, "BrainVaultLab.bat")), "BrainVaultLab.bat legado devia ter sido removido!"
 
-        # Jarvis Enterprise v8.0 (6 Vierisid/Jarvis Pillars: Next-Action Q-18, Personality, Commitments, Routines, Today Gate, Trust Boundary)
-        jv_next = jv_eng.plan_next_action("brain_mcp")
-        assert jv_next.get("headline") and jv_next.get("recommended_command"), f"Falha plan_next_action Q-18: {jv_next}"
-        jv_pers = jv_eng.update_personality_from_signal("Excelente trabalho, sê sempre direto e técnico", "brain_mcp")
-        assert "JARVIS_STYLE" in jv_pers.get("prompt_vector", ""), f"Falha update_personality_from_signal: {jv_pers}"
-        jv_comms = jv_eng.extract_commitments_and_provenance("Tenho de rever o módulo de segurança amanhã", "brain_mcp")
-        assert len(jv_eng.get_commitments("brain_mcp")) >= 1, f"Falha extract_commitments_and_provenance: {jv_comms}"
-        jv_routines = jv_eng.discover_routines("brain_mcp")
-        assert isinstance(jv_routines, list) and len(jv_routines) >= 1, f"Falha discover_routines: {jv_routines}"
-        jv_today = jv_eng.get_today_work_items("brain_mcp")
-        assert len(jv_today.get("items", [])) >= 1, f"Falha get_today_work_items: {jv_today}"
-        jv_trust = jv_eng.audit_trust_boundary("Auditar ficheiros do projeto")
-        assert jv_trust.get("authority_pinned") is True, f"Falha audit_trust_boundary: {jv_trust}"
-        assert "[JARVIS_STYLE]" in jv_ctx and "[JARVIS_NEXT_ACTION]" in jv_ctx, f"Falta injeção v8.0 em build_ephemeral_context: {jv_ctx}"
+        from voice_brain_engine import (
+            analyze_voice_input,
+            pre_execute_voice_brain_tools,
+            process_voice_turn,
+            resolve_spoken_code_targets,
+        )
+        from brain_inject import (
+            build_ephemeral_context,
+            extract_latest_user_request_with_media,
+            generate_inspector_preview,
+        )
+
+        # 30.1 VoiceSttDenoiser: remoção de muletas PT/EN + normalização fonética de extensões
+        v_stt = analyze_voice_input("então olha lá abre o web dashboard ponto py e vê lá se consegues otimizar")
+        assert v_stt["is_voice_likely"] is True, f"VoiceSttDenoiser devia detetar voz: {v_stt}"
+        assert "web_dashboard.py" in v_stt["clean_query"], f"Extensão falada não convertida: {v_stt}"
+        assert v_stt["filler_removed_count"] >= 2 and len(v_stt["removed_fillers"]) >= 2, f"Muletas não removidas: {v_stt}"
+        assert "[VOICE_CONCISE_MODE" in v_stt["voice_concise_directive"], f"Diretiva concisa em falta: {v_stt}"
+
+        # 30.2 SpokenCodePhoneticResolver: resolução fonética de ficheiro e função para :Lstart-end
+        v_ast = resolve_spoken_code_targets(
+            "abre brain_inject.py na funcao build ephemeral context",
+            workspace_root=repo_root_dir,
+            db=gb_db,
+        )
+        assert "brain_inject.py" in v_ast["resolved_files"], f"Ficheiro brain_inject.py não resolvido: {v_ast}"
+        assert any(p["symbol"] == "build_ephemeral_context" for p in v_ast["ast_pointers"]), f"Ponteiro AST build_ephemeral_context não resolvido: {v_ast}"
+        assert "[VOICE_AST_TARGET:" in v_ast["directive_line"] and ":L" in v_ast["directive_line"], f"Diretiva AST inválida: {v_ast}"
+
+        # 30.3 VoiceZeroCallPreExecutor: store_fact, swarm_impact_graph e swarm_symbol_lookup em <4ms
+        v_store = pre_execute_voice_brain_tools(
+            gb_db,
+            "guarda na memória que o protocolo de voz poupa 68 por cento dos tokens",
+            workspace="brain_mcp",
+            workspace_root=repo_root_dir,
+            allow_write=True,
+        )
+        assert any(i["tool"] == "store_fact" and not i["simulated"] for i in v_store["executed_intents"]), f"Falha store_fact por voz: {v_store}"
+        assert any("ALREADY_SAVED_DO_NOT_CALL_STORE_FACT" in ln for ln in v_store["pre_exec_lines"]), f"Tag store_fact ausente: {v_store}"
+
+        v_impact = pre_execute_voice_brain_tools(
+            gb_db,
+            "qual é o impacto de mexer em db_engine.py",
+            workspace="brain_mcp",
+            workspace_root=repo_root_dir,
+            allow_write=False,
+        )
+        assert any(i["tool"] == "swarm_impact_graph" for i in v_impact["executed_intents"]), f"Falha swarm_impact_graph por voz: {v_impact}"
+
+        v_sym = pre_execute_voice_brain_tools(
+            gb_db,
+            "onde está a função handle pre invocation",
+            workspace="brain_mcp",
+            workspace_root=repo_root_dir,
+            allow_write=False,
+        )
+        assert any(i["tool"] == "swarm_symbol_lookup" and i["location"] is not None for i in v_sym["executed_intents"]), f"Falha swarm_symbol_lookup por voz: {v_sym}"
+
+        # 30.4 MultimodalAudioTurnSupport: turnos de áudio puro sem texto não perdem o contexto
+        audio_transcript = os.path.join(gb_tmp, "audio_turn_transcript.jsonl")
+        with open(audio_transcript, "w", encoding="utf-8") as af:
+            af.write(
+                json.dumps(
+                    {
+                        "type": "USER_INPUT",
+                        "content": "",
+                        "media": [{"mime_type": "audio/webm", "uri": "voice_clip.webm"}],
+                    }
+                )
+                + "\n"
+            )
+        aq, a_sub, a_has_audio = extract_latest_user_request_with_media(audio_transcript)
+        assert a_has_audio is True and aq == "[AUDIO_VOICE_TURN]" and a_sub is False, f"Falha deteção áudio multimodal: {(aq, a_sub, a_has_audio)}"
+
+        # 30.5 Inspector Preview + Orquestrador Completo process_voice_turn
+        v_turn = process_voice_turn(
+            gb_db,
+            "então olha lá vê qual é o impacto de mexer em web dashboard ponto py",
+            workspace="brain_mcp",
+            workspace_root=repo_root_dir,
+            allow_write=False,
+        )
+        assert v_turn["is_voice_likely"] is True and v_turn["total_estimated_tokens_saved"] > 400, f"Falha process_voice_turn: {v_turn}"
+        insp_prev = generate_inspector_preview(
+            gb_db,
+            workspace="brain_mcp",
+            query="então olha lá abre o brain inject ponto py",
+        )
+        assert "6_voice_zero_call_protocol" in insp_prev["token_optimizations"], f"Falta otimização #6 no Inspector: {insp_prev}"
+        eph_voice = build_ephemeral_context(
+            [],
+            {"goal": "Sessão ativa"},
+            "brain_mcp",
+            db=gb_db,
+            voice_context=v_turn,
+        )
+        assert "[VOICE_PRE_EXEC|" in eph_voice and "[JARVIS_" not in eph_voice, f"Bloco efémero de voz inválido: {eph_voice}"
+
+        # 30.6 Gate Global de Integridade AST & Imports Locais em todos os ficheiros .py
+        import ast as _ast_gate
+        py_files = [f for f in os.listdir(repo_root_dir) if f.endswith(".py")]
+        local_modules = {os.path.splitext(f)[0] for f in py_files}
+        assert len(py_files) >= 12, f"Lista de módulos Python inesperada: {py_files}"
+        for pyf in py_files:
+            src_txt = open(os.path.join(repo_root_dir, pyf), "r", encoding="utf-8").read()
+            tree_gate = _ast_gate.parse(src_txt, filename=pyf)
+            if pyf != "test_brain.py":
+                assert "jarvis_engine" not in src_txt, f"Referência órfã a jarvis_engine encontrada em {pyf}!"
+            for node in _ast_gate.walk(tree_gate):
+                if isinstance(node, _ast_gate.ImportFrom) and node.module:
+                    root_mod = node.module.split(".")[0]
+                    assert root_mod != "jarvis_engine", f"Import morto jarvis_engine em {pyf}"
+                    if root_mod.endswith("_engine") or root_mod in ("brain_inject", "brain_harvest", "token_diet", "web_dashboard", "auto_updater", "ast_impact_watcher"):
+                        assert root_mod in local_modules, f"Import local quebrado '{root_mod}' em {pyf}"
+
+    assert 'id="tabBtnJarvis"' not in html_content, "tabBtnJarvis ainda existe em index.html!"
+    assert 'id="jarvisWorkspace"' not in html_content, "jarvisWorkspace ainda existe em index.html!"
 
     for gb_ui_token in (
         'id="tabBtnVault"',
@@ -1259,24 +1354,13 @@ def run_all_tests() -> None:
         "function createNewTaskFromPageUI()",
         "03 // ARCHITECTURAL 3D COMMAND FLOOR",
         "07 // UNIFIED TASKS, SUBAGENTS &amp; DOTS DAG COMMAND CENTER",
-        'id="tabBtnJarvis"',
-        'id="jarvisWorkspace"',
-        'id="jarvisOrbCanvas"',
-        'id="jarvisChatLog"',
-        'id="jarvisVoiceProfileSelect"',
-        'id="btnJarvisTestMovieVoice"',
-        "function fetchJarvisStudioPage(",
-        "function sendJarvisCommandUI(",
-        "function renderJarvisOrbLoop(",
-        "function jarvisApplyWsolaBaritoneShift(",
-        "function testJarvisMovieVoiceUI()",
-        'id="jarvisNextActionBanner"',
-        'id="jarvisEnterpriseV8Card"',
-        "function triggerJarvisNextActionUI()",
-        "function verifyJarvisTodayOutcomeUI(",
+        'id="voiceSimulatorInput"',
+        'id="voiceSimulatorResult"',
+        "function runVoiceSimulatorPreview(",
+        "Voice Zero-Call",
     ):
-        assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v7.0 em falta em index.html: {gb_ui_token}"
-    print("[PASS] Pack Completo v6.0, v6.1, v6.2 & v7.0 Studio OS (Left Dock Rail, IDE Status Bar, Raycast Omnibox, Progressive Disclosure, @starting-style, 128-D LSH + RRF) OK")
+        assert gb_ui_token in html_content, f"Token Global Brain / Vault / Swarm 48x / Studio v8.1 em falta em index.html: {gb_ui_token}"
+    print("[PASS] Pack Completo v6.0..v8.1 Studio OS (7 Estúdios Limpos, Purga Jarvis, Voice-Aware Zero-Call Protocol & Gate AST) OK")
 
 
 if __name__ == "__main__":

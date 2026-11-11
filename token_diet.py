@@ -232,6 +232,7 @@ ALL_BRAIN_MCP_TOOLS = [
     "forget_fact",
     "save_checkpoint",
     "brain_stats",
+    "brain_voice_optimize",
     "swarm_scout",
     "swarm_start",
     "swarm_update_task",

@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from db_engine import BrainDB, ensure_dashboard_running
 from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
+from voice_brain_engine import analyze_voice_input, process_voice_turn, resolve_spoken_code_targets
 
 MAX_EPHEMERAL_CHARS = 1350  # ~320 tokens max budget (inclui Scout Shared Map)
 
@@ -64,10 +65,16 @@ def clean_system_envelope(text: str) -> str:
     return " ".join(s.split()).strip()
 
 
-def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optional[str], bool]:
-    """Lê o último USER_INPUT do transcript.jsonl e deteta se é um subagente (sem tags <USER_REQUEST>)."""
+def extract_latest_user_request_with_media(
+    transcript_path: Optional[str],
+) -> tuple[Optional[str], bool, bool]:
+    """
+    Lê o último USER_INPUT do transcript.jsonl, deteta se é um subagente e
+    se contém dados multimédia de áudio/voz (MultimodalAudioTurnSupport).
+    Retorna (user_query, is_subagent, has_audio_media).
+    """
     if not transcript_path or not os.path.isfile(transcript_path):
-        return None, False
+        return None, False, False
 
     try:
         # Lê apenas os últimos 64KB para ser instantâneo mesmo em conversas grandes
@@ -89,6 +96,20 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                 continue
 
             if step.get("type") == "USER_INPUT":
+                media_list = step.get("media") or []
+                has_audio_media = False
+                if isinstance(media_list, list):
+                    for m in media_list:
+                        if isinstance(m, dict):
+                            m_type = str(m.get("mime_type") or "")
+                            if "audio" in m_type.lower():
+                                has_audio_media = True
+                                break
+                if not has_audio_media:
+                    content_str = str(step.get("content") or "")
+                    if "audio/" in content_str.lower() or "audio_media" in content_str.lower():
+                        has_audio_media = True
+
                 content = step.get("content", "")
                 match = re.search(
                     r"<USER_REQUEST>\s*(.*?)\s*</USER_REQUEST>",
@@ -96,9 +117,15 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                     flags=re.DOTALL,
                 )
                 if match:
-                    return clean_system_envelope(match.group(1).strip()), False
+                    cleaned_req = clean_system_envelope(match.group(1).strip())
+                    if not cleaned_req and has_audio_media:
+                        return "[AUDIO_VOICE_TURN]", False, True
+                    return cleaned_req, False, has_audio_media
+
                 clean_sub = clean_system_envelope(content)[:1000]
-                return clean_sub, bool(clean_sub)
+                if not clean_sub and has_audio_media:
+                    return "[AUDIO_VOICE_TURN]", False, True
+                return clean_sub, bool(clean_sub), has_audio_media
 
             if step.get("type") == "SYSTEM_MESSAGE":
                 content = step.get("content", "")
@@ -109,10 +136,16 @@ def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optiona
                     flags=re.DOTALL,
                 )
                 if m_sub:
-                    return clean_system_envelope(m_sub.group(1))[:1000], True
+                    return clean_system_envelope(m_sub.group(1))[:1000], True, False
     except Exception:
-        return None, False
-    return None, False
+        return None, False, False
+    return None, False, False
+
+
+def extract_latest_user_request(transcript_path: Optional[str]) -> tuple[Optional[str], bool]:
+    """Lê o último USER_INPUT do transcript.jsonl e deteta se é um subagente (sem tags <USER_REQUEST>)."""
+    user_q, is_sub, _ = extract_latest_user_request_with_media(transcript_path)
+    return user_q, is_sub
 
 
 def extract_latest_tool_actions(transcript_path: Optional[str]) -> List[str]:
@@ -240,6 +273,14 @@ def is_micro_confirmation_prompt(user_query: str) -> bool:
     q = (user_query or "").strip().lower()
     q_clean = re.sub(r"[.!?,;:]+$", "", q).strip()
     if not q_clean:
+        return False
+    voice_guards = (
+        "guarda", "memoriza", "lembra", "regista", "save", "remember",
+        "impacto", "blast", "onde", "mostra", "linha", "checkpoint",
+        "ponto py", "dot py", "ponto html", "dot html", "ponto js",
+        "web_dashboard", "db_engine", "brain_inject", "swarm_engine"
+    )
+    if any(vg in q_clean for vg in voice_guards):
         return False
     if q_clean in _MICRO_CONFIRMATION_WORDS:
         return True
@@ -506,6 +547,7 @@ def build_ephemeral_context(
     recent_actions: Optional[List[str]] = None,
     lookahead_notices: Optional[List[str]] = None,
     db: Optional[BrainDB] = None,
+    voice_context: Optional[Dict[str, Any]] = None,
 ) -> str:
     """Formata um bloco ultra-compacto TOON/Telegráfico + Session Delta + Dynamic Top-K + Scout L-Pointers."""
     is_micro = bool(micro_mode or max_chars <= 380)
@@ -538,96 +580,12 @@ def build_ephemeral_context(
         chk_line = f"CHK({checkpoint.get('project') or workspace}):Goal={c_goal}|St={c_status}|Files={c_files}"
         parts.append(chk_line[:220])
 
-    # Injetar Diretivas Pendentes do J.A.R.V.I.S. Studio (jarvis_directives)
-    try:
-        from db_engine import DEFAULT_DB_PATH, _INITIALIZED_DBS
-
-        if db is not None:
-            cand_dbs = [db]
-        else:
-            cand_dbs = [
-                BrainDB(db_path=p_str)
-                for p_str in list(_INITIALIZED_DBS)
-                if os.path.isfile(p_str) and os.path.abspath(p_str) != os.path.abspath(DEFAULT_DB_PATH)
-            ] + [BrainDB()]
-
-        injected_jarvis = 0
-        for j_db in cand_dbs:
-            if injected_jarvis >= 2:
-                break
-            with j_db._connect() as j_conn:
-                has_j_tbl = j_conn.execute(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='jarvis_directives';"
-                ).fetchone()
-                if not has_j_tbl:
-                    continue
-                j_rows = j_conn.execute(
-                    """
-                    SELECT * FROM jarvis_directives
-                    WHERE status = 'pending'
-                    ORDER BY id DESC
-                    LIMIT 2;
-                    """
-                ).fetchall()
-                for jr in j_rows:
-                    if injected_jarvis >= 2:
-                        break
-                    jr_dict = dict(jr)
-                    j_prio = str(jr_dict.get("priority") or "P0").strip()
-                    j_dir = compress_fact_telegraphic(str(jr_dict.get("directive") or ""), 95)
-                    j_ctx = compress_fact_telegraphic(
-                        str(
-                            jr_dict.get("surgical_context")
-                            or jr_dict.get("context")
-                            or jr_dict.get("target_files")
-                            or workspace
-                        ),
-                        65,
-                    )
-                    j_line = f"[JARVIS_DIRECTIVE]: {j_prio} | {j_dir} ({j_ctx})"
-                    if sum(len(p) for p in parts) + len(j_line) + 2 <= max_chars:
-                        parts.append(j_line)
-                        injected_jarvis += 1
-
-                # Enterprise Jarvis v8.0 Next Action & Style Vector injection
-                try:
-                    p_row = j_conn.execute(
-                        "SELECT formality, conciseness, technical_depth, trust_score FROM jarvis_personality WHERE workspace = ? LIMIT 1;",
-                        (workspace,),
-                    ).fetchone()
-                    if not p_row:
-                        p_row = j_conn.execute(
-                            "SELECT formality, conciseness, technical_depth, trust_score FROM jarvis_personality LIMIT 1;"
-                        ).fetchone()
-                    if p_row:
-                        c_p = int(float(p_row["conciseness"] or 0.82) * 100)
-                        td_p = int(float(p_row["technical_depth"] or 0.90) * 100)
-                        tr_p = int(float(p_row["trust_score"] or 0.92) * 100)
-                        t_lbl = "Exec" if float(p_row["formality"] or 0.78) >= 0.7 else "Agile"
-                        style_line = f"[JARVIS_STYLE]: Concise={c_p}% | TechDepth={td_p}% | Trust={tr_p}% | Tone={t_lbl}"
-                        if sum(len(p) for p in parts) + len(style_line) + 2 <= max_chars:
-                            parts.append(style_line)
-                except Exception:
-                    pass
-
-                try:
-                    t_row = j_conn.execute(
-                        "SELECT title, mode FROM jarvis_today_items WHERE workspace = ? AND outcome_verified = 0 ORDER BY action_index ASC LIMIT 1;",
-                        (workspace,),
-                    ).fetchone()
-                    if not t_row:
-                        t_row = j_conn.execute(
-                            "SELECT title, mode FROM jarvis_today_items WHERE outcome_verified = 0 ORDER BY action_index ASC LIMIT 1;"
-                        ).fetchone()
-                    if t_row:
-                        na_title = compress_fact_telegraphic(str(t_row["title"] or ""), 60)
-                        na_line = f"[JARVIS_NEXT_ACTION]: {na_title} ({t_row['mode']})"
-                        if sum(len(p) for p in parts) + len(na_line) + 2 <= max_chars:
-                            parts.append(na_line)
-                except Exception:
-                    pass
-    except Exception:
-        pass
+    # Injetar Diretivas do Voice-Aware Zero-Call Protocol ([VOICE_PRE_EXEC], [VOICE_AST_TARGET], [VOICE_CONCISE_MODE])
+    if voice_context:
+        v_lines = voice_context.get("ephemeral_lines") or []
+        for vl in v_lines:
+            if vl and sum(len(p) for p in parts) + len(vl) + 2 <= max_chars:
+                parts.append(vl)
 
     # Injetar Broadcasts Orbit ativos + último Hand-off Packet entre agentes (Zero-Copy Chaining c/ Delta Dedupe)
     is_delta = bool(delta_info and delta_info.get("is_delta_turn"))
@@ -828,6 +786,16 @@ def generate_inspector_preview(
             "delta_saved_tokens": max(1, saved_c // 4),
         }
 
+    # 6. Executar Voice-Aware Protocol em modo simulação (allow_write=False)
+    voice_ctx = process_voice_turn(
+        db=db,
+        raw_query=raw_q,
+        workspace=ws,
+        scout_map=scout_map,
+        has_audio_media=False,
+        allow_write=False,
+    )
+
     ephemeral_text = build_ephemeral_context(
         combined,
         checkpoint,
@@ -839,6 +807,7 @@ def generate_inspector_preview(
         micro_mode=micro_active,
         user_query=effective_query,
         db=db,
+        voice_context=voice_ctx,
     )
     est_tokens = max(1, len(ephemeral_text) // 4)
     saved_vs_raw = max(0, raw_tokens_est - est_tokens)
@@ -886,7 +855,17 @@ def generate_inspector_preview(
                 "budget_tokens": 85,
                 "description": "Orçamento <90 tokens para confirmações rápidas ('sim', 'continua', 'proceed')",
             },
+            "6_voice_zero_call_protocol": {
+                "active": bool(voice_ctx.get("is_voice_likely") or voice_ctx.get("executed_intents")),
+                "is_voice_likely": bool(voice_ctx.get("is_voice_likely")),
+                "clean_query": voice_ctx.get("clean_query", ""),
+                "ast_pointers": voice_ctx.get("ast_pointers", []),
+                "pre_executed_count": len(voice_ctx.get("executed_intents", [])),
+                "saved_tokens": int(voice_ctx.get("total_estimated_tokens_saved") or 0),
+                "description": "Denoising STT PT/EN, resolução fonética AST (:Lstart-end) e pré-execução Zero-Call de ferramentas Brain em <4ms",
+            },
         },
+        "voice_protocol": voice_ctx,
         "jev_router": jev_route,
         "ephemeral_block": ephemeral_text,
         "pinned_memories": [
@@ -977,7 +956,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     ws = db.normalize_workspace(raw_ws)
 
     transcript_path = resolve_transcript_path(payload)
-    user_query, is_subagent = extract_latest_user_request(transcript_path)
+    user_query, is_subagent, has_audio_media = extract_latest_user_request_with_media(transcript_path)
 
     if ws == "global":
         resolved_ws = resolve_smart_active_workspace(db, user_query, conv_id)
@@ -988,9 +967,9 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
 
     inv_num = int(payload.get("invocationNum", 1))
     if not user_query:
-        if inv_num > 1:
+        if inv_num > 1 and not has_audio_media:
             return {}
-        user_query = f"workspace {ws} architecture environment"
+        user_query = "[AUDIO_VOICE_TURN]" if has_audio_media else f"workspace {ws} architecture environment"
 
     swarm_eng = SwarmEngine(db)
     recent_actions = extract_latest_tool_actions(transcript_path)
@@ -1031,7 +1010,21 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
     except Exception:
         pass
 
+    ws_root = workspaces[0] if (workspaces and os.path.isdir(workspaces[0])) else os.path.dirname(os.path.abspath(__file__))
+    voice_ctx = process_voice_turn(
+        db=db,
+        raw_query=user_query,
+        workspace=ws,
+        workspace_root=ws_root,
+        scout_map="",
+        has_audio_media=has_audio_media,
+        allow_write=True,
+    )
+
     micro_mode = is_micro_confirmation_prompt(user_query)
+    if voice_ctx.get("is_voice_likely") or voice_ctx.get("ephemeral_lines"):
+        micro_mode = False
+
     budget_chars = compute_adaptive_budget(user_query)
     jev_route = db.jev_system1_route(user_query, ws)
     checkpoint = db.get_checkpoint(ws)
@@ -1046,6 +1039,7 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
             jev_route=jev_route,
             micro_mode=True,
             db=db,
+            voice_context=voice_ctx,
         )
         elapsed_ms = (time.perf_counter() - t0) * 1000.0
         injected_tokens = max(1, len(ephemeral_msg) // 4)
@@ -1073,7 +1067,12 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
                 (ws,),
             ).fetchall()
         ]
-    memories = pinned_rows + db.search_memories(query=user_query, workspace=ws, n_results=8)
+    clean_search_q = voice_ctx.get("clean_query") or user_query
+    res_files = voice_ctx.get("resolved_files") or []
+    if res_files:
+        clean_search_q = f"{clean_search_q} {' '.join(res_files)}".strip()
+
+    memories = pinned_rows + db.search_memories(query=clean_search_q, workspace=ws, n_results=8)
     scout_map = ""
     try:
         scout_map = swarm_eng.get_latest_scout_map(ws)
@@ -1082,17 +1081,8 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
 
     lookahead_notices = get_notice_lookahead_alerts(db, ws, recent_actions, user_query)
 
-    has_jarvis_pending = False
-    try:
-        with db._connect() as j_conn:
-            if j_conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='jarvis_directives';").fetchone():
-                has_jarvis_pending = bool(
-                    j_conn.execute("SELECT 1 FROM jarvis_directives WHERE status IN ('pending', 'injected') LIMIT 1;").fetchone()
-                )
-    except Exception:
-        has_jarvis_pending = False
-
-    if not memories and not checkpoint and not scout_map and not lookahead_notices and not has_jarvis_pending:
+    has_voice_pending = bool(voice_ctx and voice_ctx.get("ephemeral_lines"))
+    if not memories and not checkpoint and not scout_map and not lookahead_notices and not has_voice_pending:
         return {}
 
     delta_info = db.compute_session_delta(
@@ -1114,10 +1104,15 @@ def handle_pre_invocation(raw_stdin: str) -> Dict[str, Any]:
         recent_actions=recent_actions,
         lookahead_notices=lookahead_notices,
         db=db,
+        voice_context=voice_ctx,
     )
     elapsed_ms = (time.perf_counter() - t0) * 1000.0
     injected_tokens = max(1, len(ephemeral_msg) // 4)
-    estimated_saved = (4500 if memories else 1500) + int(delta_info.get("delta_saved_tokens") or 0)
+    estimated_saved = (
+        (4500 if memories else 1500)
+        + int(delta_info.get("delta_saved_tokens") or 0)
+        + int(voice_ctx.get("total_estimated_tokens_saved") or 0)
+    )
 
     db.log_telemetry(
         event_type="pre_invocation_inject",

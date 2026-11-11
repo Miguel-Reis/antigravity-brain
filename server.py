@@ -28,7 +28,7 @@ class StdioMCPServer:
     sem depender de 'mcp.server.mcpserver' ou versões específicas do pacote 'mcp'.
     """
 
-    def __init__(self, name: str, version: str = "2.4.0") -> None:
+    def __init__(self, name: str, version: str = "8.1.0") -> None:
         self.name = name
         self.version = version
         self.db: Any = None
@@ -156,15 +156,6 @@ class StdioMCPServer:
 
     def call_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Any:
         args = arguments or {}
-        if name == "jarvis_command":
-            from jarvis_engine import JarvisEngine
-
-            prompt = str(args.get("prompt") or "")
-            workspace = str(args.get("workspace") or "brain_mcp")
-            auto_dispatch_agy = bool(args.get("auto_dispatch_agy", False))
-            return JarvisEngine(self.db or db).process_command(
-                prompt, workspace=workspace, auto_dispatch_agy=auto_dispatch_agy
-            )
         tool_entry = self._tools.get(name)
         if not tool_entry:
             raise ValueError(f"Unknown tool: {name}")
@@ -279,10 +270,10 @@ class StdioMCPServer:
                             "mimeType": "text/markdown",
                         },
                         {
-                            "uri": "brain://jarvis/status",
-                            "name": "J.A.R.V.I.S. Cognitive OS & Antigravity Bridge Status",
-                            "description": "Live status, telemetry, pending Antigravity directives, and logs from J.A.R.V.I.S. Cognitive OS",
-                            "mimeType": "application/json",
+                            "uri": "brain://voice/protocol",
+                            "name": "Voice-Aware Zero-Call Protocol & Phonetic AST Guide",
+                            "description": "Active voice token-saving rules, phonetic AST resolution patterns, and zero-call pre-execution status",
+                            "mimeType": "text/markdown",
                         },
                     ]
                 },
@@ -409,11 +400,16 @@ class StdioMCPServer:
             if uri == "brain://orbit/briefing":
                 brief = orbit.get_executive_briefing_and_roi()
                 return f"# 🪐 Orbit Morning Briefing & ROI\n\n```json\n{json.dumps(brief, indent=2, ensure_ascii=False)}\n```"
-            if uri == "brain://jarvis/status":
-                from jarvis_engine import JarvisEngine
-
-                ov = JarvisEngine(self.db or db).get_overview("brain_mcp")
-                return json.dumps(ov, indent=2, ensure_ascii=False)
+            if uri == "brain://voice/protocol":
+                return (
+                    "# 🎙️ Voice-Aware Zero-Call Protocol & Phonetic AST Guide\n\n"
+                    "## 5 Voice Compatibility Mechanisms\n\n"
+                    "1. **VoiceSttDenoiser**: Filters speech recognition filler words, repeated tokens, conversational stuttering, and STT transcription artifacts.\n"
+                    "2. **SpokenCodePhoneticResolver**: Maps spoken camelCase, snake_case, dot-notation, and phonetically ambiguous filenames/symbols to real AST `:Lstart-end` pointers.\n"
+                    "3. **VoiceZeroCallPreExecutor**: Pre-executes unambiguous voice intent operations (e.g., `store_fact`, `swarm_symbol_lookup`, `swarm_impact_graph`) directly in local SQLite/AST before LLM invocation.\n"
+                    "4. **MultimodalAudioTurnSupport**: Detects spoken/audio-turn contexts and applies conversational formatting suitable for rapid voice synthesis and concise listening.\n"
+                    "5. **VoiceToolPruningRouter**: Dynamically prunes irrelevant MCP tool schemas for voice turns, cutting overhead by up to 68% tokens.\n"
+                )
             if uri.startswith("brain://workspace/") and uri.endswith("/checkpoint"):
                 ws_part = uri[len("brain://workspace/") : -len("/checkpoint")].strip("/") or "brain_mcp"
                 chk = db.get_checkpoint(ws_part) or {}
@@ -607,7 +603,7 @@ except Exception:
     pass
 
 # Create the MCP server
-mcp = MCPServer("antigravity-brain")
+mcp = MCPServer("antigravity-brain", version="8.1.0")
 mcp.db = db
 
 
@@ -914,23 +910,42 @@ def orbit_briefing_roi() -> str:
 
 
 @mcp.tool()
-def jarvis_command(
-    prompt: str,
+def brain_voice_optimize(
+    query: str,
     workspace: str = "brain_mcp",
-    auto_dispatch_agy: bool = False,
+    allow_write: bool = False,
 ) -> str:
-    """Execute a natural language command or query through the local J.A.R.V.I.S. Cognitive OS & Antigravity Bridge
+    """Denoises spoken/STT voice queries, resolves spoken file/symbol names to :Lstart-end AST pointers, and optionally pre-executes Brain intents (store_fact, swarm_impact_graph, swarm_symbol_lookup).
 
     Args:
-        prompt: Natural language command, question, or directive for J.A.R.V.I.S.
+        query: Spoken/STT voice query or natural language audio transcript
         workspace: Target workspace identifier (default 'brain_mcp')
-        auto_dispatch_agy: Automatically dispatch mission directive to Antigravity
+        allow_write: Whether to execute write operations (e.g. store_fact) or only simulate
     """
-    from jarvis_engine import JarvisEngine
+    try:
+        from voice_brain_engine import process_voice_turn
 
-    res = JarvisEngine(mcp.db or db).process_command(
-        prompt, workspace=workspace, auto_dispatch_agy=auto_dispatch_agy
-    )
+        scout_map = ""
+        try:
+            scout_map = swarm.get_latest_scout_map(workspace)
+        except Exception:
+            pass
+        res = process_voice_turn(
+            db=mcp.db or db,
+            raw_query=query,
+            workspace=workspace,
+            workspace_root=CURRENT_DIR,
+            scout_map=scout_map,
+            has_audio_media=False,
+            allow_write=allow_write,
+        )
+    except Exception as e:
+        res = {
+            "ok": False,
+            "error": str(e),
+            "raw_query": query,
+            "denoised_query": query,
+        }
     return json.dumps(res, indent=2, ensure_ascii=False)
 
 

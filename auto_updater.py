@@ -116,24 +116,38 @@ def check_and_apply_update(force_fetch: bool = True) -> Dict[str, Any]:
     }
 
 
-def kill_other_dashboard_processes(exclude_pid: int = 0) -> None:
-    """Termina processos web_dashboard.py antigos para evitar conflito de socket na porta 8765 no Windows."""
+def kill_other_dashboard_processes(exclude_pid: int = 0, port: int = 8765) -> None:
+    """Termina processos web_dashboard.py antigos (<50ms via netstat + taskkill) para evitar conflito na porta 8765 no Windows."""
     if os.environ.get("BRAIN_TEST_MODE") == "1":
         return
     my_pid = exclude_pid or os.getpid()
     try:
         if os.name == "nt":
-            ps_cmd = (
-                "Get-CimInstance Win32_Process -Filter \"Name LIKE 'python%'\" | "
-                f"Where-Object {{ $_.ProcessId -ne {my_pid} -and $_.CommandLine -match 'web_dashboard\\.py' }} | "
-                "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }"
-            )
-            subprocess.run(
-                ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_cmd],
+            ns = subprocess.run(
+                ["netstat", "-ano", "-p", "TCP"],
                 capture_output=True,
-                timeout=6,
+                text=True,
+                encoding="utf-8",
+                errors="ignore",
+                timeout=3,
                 creationflags=0x08000000,
             )
+            pids_to_kill: set[int] = set()
+            port_tok = f":{port}"
+            for line in (ns.stdout or "").splitlines():
+                parts = line.split()
+                if len(parts) >= 5 and port_tok in parts[1] and parts[3].upper() == "LISTENING":
+                    if parts[4].isdigit():
+                        pid_val = int(parts[4])
+                        if pid_val > 0 and pid_val != my_pid:
+                            pids_to_kill.add(pid_val)
+            for pid_val in pids_to_kill:
+                subprocess.run(
+                    ["taskkill", "/PID", str(pid_val), "/F"],
+                    capture_output=True,
+                    timeout=3,
+                    creationflags=0x08000000,
+                )
     except Exception:
         pass
 

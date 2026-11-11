@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ====================================================================
-echo  🔄 A verificar e instalar atualizacoes do Antigravity Brain v7.2...
+echo  🔄 A verificar e instalar atualizacoes do Antigravity Brain v8.1...
 echo ====================================================================
 python "%~dp0auto_updater.py"
 python "%~dp0install.py" --silent

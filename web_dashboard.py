@@ -27,12 +27,6 @@ from db_engine import BrainDB, seed_initial_memories
 import orbit_engine as _orbit_engine_mod
 from orbit_engine import OrbitEngine
 from swarm_engine import SwarmEngine
-try:
-    import jarvis_engine as _jarvis_engine_mod
-    from jarvis_engine import JarvisEngine
-except Exception:
-    _jarvis_engine_mod = None  # type: ignore
-    JarvisEngine = None  # type: ignore
 from token_diet import (
     audit_mcp_servers,
     audit_plugins,
@@ -69,20 +63,6 @@ def _get_fresh_orbit_engine(db: BrainDB) -> Any:
     return OrbitEngine(db)
 
 
-def _ensure_jarvis_engine_imported() -> None:
-    """Garante que JarvisEngine está importado (inclusive se jarvis_engine.py foi criado em paralelo)."""
-    global JarvisEngine, _jarvis_engine_mod
-    if JarvisEngine is None:
-        try:
-            import jarvis_engine as _je_mod
-            from jarvis_engine import JarvisEngine as _JE
-
-            _jarvis_engine_mod = _je_mod
-            JarvisEngine = _JE
-        except Exception:
-            pass
-
-
 def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
     """Popula o Brain com memórias reais das conversas e projetos da máquina."""
     added_memories = seed_initial_memories(db)
@@ -90,6 +70,14 @@ def harvest_all_workspace_context(db: BrainDB) -> Dict[str, int]:
 
     # 1. Enriquecer memórias do motor Brain v4.5 em 6 Clusters Planetários ("Îlots")
     project_facts = [
+        (
+            "Voice-Aware Zero-Call Protocol (voice_brain_engine.py)",
+            "Denoises spoken/STT voice queries, resolves spoken symbols to AST :Lstart-end pointers, and pre-executes Brain intents in zero model calls, saving up to 68% tokens.",
+            "brain_mcp",
+            "optimization",
+            "voice voice_brain_engine stt ast zero_call optimization tokens",
+            5,
+        ),
         (
             "Injetor Efémero PreInvocation (brain_inject.py)",
             "Interceta o evento PreInvocation antes da chamada ao modelo, lê o último USER_INPUT do transcript.jsonl e injeta até 320 tokens via ephemeralMessage + Scout Map em ~15-35ms sem round-trip extra.",
@@ -838,7 +826,7 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
 
         if parsed.path == "/manifest.json":
             manifest = {
-                "name": "Antigravity Brain v7.1 — Carbon Studio OS",
+                "name": "Antigravity Brain v8.1 — Carbon Studio OS",
                 "short_name": "Brain OS",
                 "start_url": "/?app=1#graph",
                 "display": "standalone",
@@ -995,50 +983,49 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json(orbit.get_mission_control_inbox())
             return
 
-        if parsed.path == "/api/jarvis/tts":
-            _ensure_jarvis_engine_imported()
+        if parsed.path == "/api/voice-preview":
             qs = urllib.parse.parse_qs(parsed.query)
-            text_q = qs.get("text", [""])[0] or "Às suas ordens, Senhor. Todos os sistemas do Córtex encontram-se operacionais."
-            prof_q = qs.get("profile", ["movie_pt"])[0] or "movie_pt"
-            fmt_q = qs.get("format", ["json"])[0] or "json"
+            q = qs.get("q", [""])[0]
+            ws = qs.get("workspace", ["brain_mcp"])[0] or "brain_mcp"
+            exec_param = qs.get("execute", ["false"])[0].lower()
+            allow_write = exec_param in ("1", "true", "yes")
             db = BrainDB()
-            tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
-            if fmt_q in ("binary", "raw", "audio"):
-                raw_audio = tts_res.get("audio_bytes", b"")
-                mime = tts_res.get("mime_type", "audio/mpeg")
-                self.send_response(200)
-                self._send_cors_headers()
-                self.send_header("Content-Type", mime)
-                self.send_header("Content-Length", str(len(raw_audio)))
-                self.send_header("Cache-Control", "public, max-age=3600")
-                self.end_headers()
-                self.wfile.write(raw_audio)
-                return
-            json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
-            self._send_json(json_out)
-            return
+            scout_map = ""
+            try:
+                scout_map = SwarmEngine(db).get_latest_scout_map(ws)
+            except Exception:
+                pass
 
-        if parsed.path == "/api/jarvis":
-            _ensure_jarvis_engine_imported()
-            qs = urllib.parse.parse_qs(parsed.query)
-            workspace = qs.get("workspace", ["brain_mcp"])[0] or "brain_mcp"
-            action = qs.get("action", ["overview"])[0]
-            db = BrainDB()
-            je = JarvisEngine(db)
-            if action == "next_action":
-                self._send_json(je.plan_next_action(workspace=workspace))
-            elif action in ("today_items", "today_plan"):
-                self._send_json(je.get_today_work_items(workspace=workspace))
-            elif action == "commitments":
-                self._send_json({"ok": True, "commitments": je.get_commitments(workspace=workspace)})
-            elif action == "routines":
-                self._send_json({"ok": True, "routines": je.discover_routines(workspace=workspace)})
-            elif action == "personality":
-                self._send_json(je.get_personality_state(workspace=workspace))
-            elif action == "trust_boundary":
-                self._send_json(je.audit_trust_boundary(qs.get("prompt", [""])[0]))
-            else:
-                self._send_json(je.get_overview(workspace=workspace))
+            voice_result: Dict[str, Any] = {}
+            try:
+                from voice_brain_engine import process_voice_turn
+
+                voice_result = process_voice_turn(
+                    db=db,
+                    raw_query=q,
+                    workspace=ws,
+                    workspace_root=CURRENT_DIR,
+                    scout_map=scout_map,
+                    has_audio_media=False,
+                    allow_write=allow_write,
+                )
+            except Exception as e:
+                voice_result = {
+                    "ok": False,
+                    "error": str(e),
+                    "raw_query": q,
+                    "denoised_query": q,
+                }
+
+            out = {"ok": True, **voice_result}
+            if qs.get("include_inspector", ["0"])[0] in ("1", "true", "yes"):
+                try:
+                    from brain_inject import generate_inspector_preview
+
+                    out["ephemeral_preview"] = generate_inspector_preview(db=db, workspace=ws, query=q)
+                except Exception:
+                    pass
+            self._send_json(out)
             return
 
         if parsed.path == "/api/memories/revisions":
@@ -1548,130 +1535,41 @@ class BrainDashboardHandler(BaseHTTPRequestHandler):
             self._send_json({**res, "overview": orbit.get_executive_briefing_and_roi(workspace=req_ws)})
             return
 
-        if parsed.path == "/api/jarvis/tts":
-            _ensure_jarvis_engine_imported()
+        if parsed.path == "/api/voice-preview":
             data = body if isinstance(body, dict) else {}
-            text_q = str(data.get("text") or data.get("prompt") or "Às suas ordens, Senhor.")
-            prof_q = str(data.get("profile") or "movie_pt")
-            tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
-            json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
-            self._send_json(json_out)
-            return
+            q = str(data.get("query") or data.get("q") or "").strip()
+            ws = str(data.get("workspace", "brain_mcp")).strip() or "brain_mcp"
+            allow_write = bool(data.get("allow_write", False))
+            has_audio_media = bool(data.get("has_audio_media", False))
+            db = BrainDB()
+            scout_map = ""
+            try:
+                scout_map = SwarmEngine(db).get_latest_scout_map(ws)
+            except Exception:
+                pass
 
-        if parsed.path == "/api/jarvis":
-            _ensure_jarvis_engine_imported()
-            data = body if isinstance(body, dict) else {}
-            action = str(data.get("action") or "command").strip() or "command"
-            workspace = str(data.get("workspace", "brain_mcp")).strip() or "brain_mcp"
-            if action == "tts":
-                text_q = str(data.get("text") or data.get("prompt") or "Às suas ordens, Senhor.")
-                prof_q = str(data.get("profile") or "movie_pt")
-                tts_res = JarvisEngine(db).synthesize_speech_bytes(text=text_q, profile=prof_q)
-                json_out = {k: v for k, v in tts_res.items() if k != "audio_bytes"}
-                self._send_json(json_out)
-                return
-            if action in ("command", "chat"):
-                res = JarvisEngine(db).process_command(
-                    prompt=data.get("prompt", ""),
-                    workspace=data.get("workspace", "brain_mcp"),
-                    auto_dispatch_agy=bool(data.get("auto_dispatch_agy", False)),
+            voice_result: Dict[str, Any] = {}
+            try:
+                from voice_brain_engine import process_voice_turn
+
+                voice_result = process_voice_turn(
+                    db=db,
+                    raw_query=q,
+                    workspace=ws,
+                    workspace_root=CURRENT_DIR,
+                    scout_map=scout_map,
+                    has_audio_media=has_audio_media,
+                    allow_write=allow_write,
                 )
-                self._send_json(res)
-                return
-            elif action == "briefing":
-                res = JarvisEngine(db).process_command(
-                    "Bom dia Jarvis, faz o briefing matinal completo",
-                    workspace=data.get("workspace", "brain_mcp"),
-                )
-                self._send_json(res)
-                return
-            elif action == "dispatch_antigravity":
-                res = JarvisEngine(db).dispatch_to_antigravity(
-                    directive=data.get("directive") or data.get("prompt", ""),
-                    workspace=data.get("workspace", "brain_mcp"),
-                    priority=data.get("priority", "P0"),
-                )
-                self._send_json(res)
-                return
-            elif action == "ack_directive":
-                res = JarvisEngine(db).ack_directive(
-                    int(data.get("id") or data.get("directive_id") or 0)
-                )
-                self._send_json(res)
-                return
-            elif action == "next_action":
-                res = JarvisEngine(db).plan_next_action(workspace=workspace)
-                self._send_json({"ok": True, "next_action": res, **res})
-                return
-            elif action == "verify_today_item":
-                item_id = int(data.get("id") or data.get("item_id") or 0)
-                proof = str(data.get("proof") or "Verificado via AST Gate + QA Suite")
-                res = JarvisEngine(db).verify_today_item_outcome(item_id=item_id, proof=proof)
-                self._send_json(res)
-                return
-            elif action == "complete_commitment":
-                cid = int(data.get("id") or data.get("commitment_id") or 0)
-                res = JarvisEngine(db).complete_commitment(commitment_id=cid)
-                self._send_json(res)
-                return
-            elif action == "update_personality":
-                sig = str(data.get("prompt") or data.get("signal") or "")
-                res = JarvisEngine(db).update_personality_from_signal(sig, workspace=workspace)
-                self._send_json(res)
-                return
-            elif action in ("today_items", "today_plan"):
-                res = JarvisEngine(db).get_today_work_items(workspace=workspace)
-                self._send_json(res)
-                return
-            elif action == "commitments":
-                res = JarvisEngine(db).get_commitments(workspace=workspace)
-                self._send_json({"ok": True, "commitments": res})
-                return
-            elif action == "routines":
-                res = JarvisEngine(db).discover_routines(workspace=workspace)
-                self._send_json({"ok": True, "routines": res})
-                return
-            elif action == "personality":
-                res = JarvisEngine(db).get_personality_state(workspace=workspace)
-                self._send_json(res)
-                return
-            elif action == "trust_boundary":
-                p_check = str(data.get("prompt") or "")
-                res = JarvisEngine(db).audit_trust_boundary(p_check)
-                self._send_json(res)
-                return
-            elif action == "telemetry":
-                self._send_json({"ok": True, "telemetry": JarvisEngine(db).get_system_telemetry()})
-                return
-            elif action == "clear_history":
-                je_inst = JarvisEngine(db)
-                if hasattr(je_inst, "clear_logs") and callable(getattr(je_inst, "clear_logs")):
-                    clear_res = je_inst.clear_logs(workspace=workspace)
-                    if isinstance(clear_res, dict):
-                        self._send_json({"ok": True, **clear_res})
-                        return
-                with db._connect() as conn:
-                    try:
-                        first_row = conn.execute(
-                            "SELECT id FROM jarvis_logs ORDER BY id ASC LIMIT 1;"
-                        ).fetchone()
-                        if first_row:
-                            conn.execute("DELETE FROM jarvis_logs WHERE id != ?;", (first_row["id"],))
-                        else:
-                            conn.execute("DELETE FROM jarvis_logs;")
-                    except Exception:
-                        pass
-                overview = JarvisEngine(db).get_overview(workspace=workspace)
-                self._send_json({"ok": True, **overview})
-                return
-            else:
-                res = JarvisEngine(db).process_command(
-                    prompt=data.get("prompt", ""),
-                    workspace=data.get("workspace", "brain_mcp"),
-                    auto_dispatch_agy=bool(data.get("auto_dispatch_agy", False)),
-                )
-                self._send_json(res)
-                return
+            except Exception as e:
+                voice_result = {
+                    "ok": False,
+                    "error": str(e),
+                    "raw_query": q,
+                    "denoised_query": q,
+                }
+            self._send_json({"ok": True, **voice_result})
+            return
 
         if parsed.path == "/api/app/launch":
             self._send_json(

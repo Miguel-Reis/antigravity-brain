@@ -2273,187 +2273,8 @@
     #orbitSelfLearnProjectsList > div,
     #orbitSelfLearnPlaybookList > div,
     .office-roster-list > div,
-    .tasks-col-body > div,
-    #jarvisChatLog > div,
-    #jarvisDirectivesList > div,
-    #jarvisToolTraceList > div {
+    .tasks-col-body > div {
       flex-shrink: 0;
-    }
-
-    /* =========================================================================
-       08 // J.A.R.V.I.S. COGNITIVE OS & ANTIGRAVITY BRIDGE (CARBON STUDIO v7.3)
-       ========================================================================= */
-    .jarvis-layout-grid {
-      display: grid;
-      grid-template-columns: 360px 1fr 340px;
-      gap: 12px;
-      flex: 1;
-      min-height: 520px;
-    }
-
-    @media (max-width: 1280px) {
-      .jarvis-layout-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .jarvis-orb-stage {
-      background: #0c0c11;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .jarvis-chat-stream {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      background: #09090d;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      min-height: 360px;
-      max-height: 520px;
-    }
-
-    .jv-msg {
-      padding: 10px 12px;
-      border-radius: 7px;
-      border: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 11.5px;
-      line-height: 1.45;
-    }
-
-    .jv-msg.user {
-      background: rgba(6, 182, 212, 0.08);
-      border-color: rgba(6, 182, 212, 0.35);
-      align-self: flex-end;
-      max-width: 88%;
-      color: #f4f4f5;
-    }
-
-    .jv-msg.assistant {
-      background: #121218;
-      border-left: 3px solid #10b981;
-      align-self: flex-start;
-      max-width: 96%;
-      color: #e4e4e7;
-    }
-
-    .jv-tool-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(16, 185, 129, 0.12);
-      border: 1px solid rgba(16, 185, 129, 0.32);
-      color: #6ee7b7;
-    }
-
-    .jv-agy-packet-box {
-      background: #09090c;
-      border: 1px solid rgba(6, 182, 212, 0.35);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      color: #a5f3fc;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .jarvis-input-dock {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      background: #111116;
-      border: 1px solid var(--border-strong);
-      border-radius: 7px;
-      padding: 8px 10px;
-    }
-
-    .jarvis-macro-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .jarvis-macro-btn {
-      background: #121218;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 8px;
-      color: #e4e4e7;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      font-weight: 600;
-      text-align: left;
-      cursor: pointer;
-      transition: all 0.14s ease;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .jarvis-macro-btn:hover {
-      border-color: #10b981;
-      background: rgba(16, 185, 129, 0.1);
-      color: #ffffff;
-    }
-
-    .jarvis-hw-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 7px;
-    }
-
-    .jarvis-hw-card {
-      background: #111117;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 7px 9px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .jarvis-v8-tab {
-      flex: 1;
-      padding: 4px 6px;
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      border-radius: 4px;
-      border: 1px solid transparent;
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.15s ease;
-      text-align: center;
-      white-space: nowrap;
-    }
-    .jarvis-v8-tab:hover {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.05);
-    }
-    .jarvis-v8-tab.active {
-      background: #181824;
-      border-color: rgba(168, 85, 247, 0.4);
-      color: #ffffff;
-      font-weight: 700;
     }
 
     .roster-card:hover {
@@ -3083,11 +2904,6 @@
             <span>Tasks (<span id="topTabTasksCount">0</span>)</span>
             <span class="pulse-dot" id="topTasksPulse" style="background:#10b981; margin-left:auto;"></span>
           </button>
-          <button class="view-tab" id="tabBtnJarvis" onclick="switchMainView('jarvis')" title="08 // J.A.R.V.I.S. Cognitive OS, Voz Bidirecional PT-PT &amp; Ponte Antigravity (Zero-Ollama) [Atalho: Tecla 8]">
-            <span class="rail-idx">08</span>
-            <span>Jarvis OS</span>
-            <span class="pulse-dot" style="background:#06b6d4; margin-left:auto;"></span>
-          </button>
         </div>
       </div>
 
@@ -3097,9 +2913,9 @@
           <span class="rail-idx">OS</span>
           <span>Orbit Mission</span>
         </button>
-        <button type="button" class="view-tab" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST, Blast Radius & Graphify BFS">
-          <span class="rail-idx">AST</span>
-          <span>Graphify BFS</span>
+        <button type="button" class="view-tab" onclick="openAstInspectorModal()" title="Abrir Explorador Cirúrgico AST, Blast Radius &amp; Graphify BFS [Atalho: Tecla 8 ou 9]">
+          <span class="rail-idx">08</span>
+          <span>AST &amp; BFS</span>
         </button>
       </div>
     </nav>
@@ -4975,281 +4791,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     </div>
   </div>
 
-  <!-- =========================================================================
-       08 // J.A.R.V.I.S. COGNITIVE OS & ANTIGRAVITY BRIDGE (#jarvisWorkspace)
-       ========================================================================= -->
-  <div class="swarm-workspace" id="jarvisWorkspace" style="padding:12px 16px; gap:12px; width:100%; max-width:100vw; height:calc(100vh - 50px); overflow-x:hidden; overflow-y:auto; box-sizing:border-box;">
-    <!-- Top Studio Hero Banner -->
-    <div class="studio-hero-banner">
-      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div class="studio-hero-icon" style="border-color:rgba(6,182,212,0.45); color:#22d3ee; font-family:var(--font-mono); font-weight:800;">08</div>
-        <div>
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span class="studio-hero-title">08 // J.A.R.V.I.S. COGNITIVE OS · ZERO-OLLAMA ANTIGRAVITY BRIDGE</span>
-            <span class="rc-badge working" id="jarvisHeroStatusPill">● MARK-VII HUD VOICE DSP + ANTIGRAVITY BRIDGE · 0 GB VRAM</span>
-          </div>
-          <div class="studio-hero-sub">
-            Motor Cognitivo 128-D + HippoRAG PPR + Voz Cinematográfica Barítono (Skywalker Sound Mark-VII Helmet DSP + WSOLA Formant Shifter + FFT 60 FPS) + Ponte Direta Antigravity IDE (<code>[JARVIS_DIRECTIVE]</code>).
-          </div>
-        </div>
-      </div>
 
-      <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
-        <select id="jarvisWorkspaceSelect" class="studio-console-select" onchange="fetchJarvisStudioPage(false)" title="Selecionar workspace alvo para o Jarvis OS">
-          <option value="brain_mcp">📂 brain_mcp</option>
-        </select>
-        <select id="jarvisVoiceProfileSelect" class="studio-console-select" onchange="onJarvisVoiceProfileChangeUI(this.value)" title="Perfil Acústico da Voz do Jarvis (Filtro Capacete Mark-VII / Paul Bettany MCU)">
-          <option value="movie_pt" selected>🎬 Voz do Filme · Mark-VII HUD (PT-PT)</option>
-          <option value="movie_en">🇬🇧 J.A.R.V.I.S. Original MCU (EN-GB · Paul Bettany)</option>
-          <option value="studio_pt">🔊 Voz Studio Limpa (Sem Capacete)</option>
-        </select>
-        <button class="office-btn" id="btnJarvisTestMovieVoice" onclick="testJarvisMovieVoiceUI()" style="border-color:rgba(6,182,212,0.45); color:#67e8f9;" title="Ouvir demonstração imediata da voz cinematográfica do Jarvis (Filtro Capacete Mark-VII + Orbe FFT 60 FPS)">
-          🎬 Ouvir Voz do Filme
-        </button>
-        <button class="office-btn" id="btnJarvisSttToggle" onclick="toggleJarvisVoiceListenUI()" title="Ativar/Desativar reconhecimento de voz contínuo em Português (Web Speech STT)">
-          🎙️ Microfone: OFF
-        </button>
-        <button class="office-btn emerald" id="btnJarvisTtsToggle" onclick="toggleJarvisVoiceTtsUI()" title="Ativar/Desativar síntese de voz cinematográfica do Jarvis">
-          🔊 Voz Jarvis: ON
-        </button>
-        <button class="office-btn primary" onclick="triggerJarvisMorningBriefingUI()" title="Gerar e narrar o Briefing Executivo Matinal do sistema e dos projetos">
-          ☀️ Briefing Matinal
-        </button>
-        <button class="office-btn" onclick="fetchJarvisStudioPage(true)" title="Sincronizar telemetria, fila Antigravity e histórico do Jarvis">
-          🔄 Atualizar
-        </button>
-      </div>
-    </div>
-
-    <!-- 3-Column Main Grid -->
-    <div class="jarvis-layout-grid">
-      <!-- Left Column: Acoustic Reactor Core + Windows PC Telemetry + Quick Directives -->
-      <div class="jarvis-orb-stage">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#22d3ee; letter-spacing:0.05em;">
-            NÚCLEO ACÚSTICO MARK-VII 60 FPS &amp; TELEMETRIA PC
-          </span>
-          <span class="tk-chip" id="jarvisVoiceStateBadge" style="color:#6ee7b7; border-color:rgba(16,185,129,0.35);">● MARK-VII HUD · PT-PT</span>
-        </div>
-
-        <canvas id="jarvisOrbCanvas" width="330" height="210" style="width:100%; height:210px; background:#08080b; border:1px solid var(--border); border-radius:7px; cursor:pointer;" onclick="toggleJarvisVoiceListenUI()" title="Clique no Orbe Acústico para ativar/desativar o Microfone do Jarvis"></canvas>
-
-        <!-- Live Voice Transcript / Waveform strip -->
-        <div id="jarvisLiveTranscriptBar" style="background:#09090d; border:1px solid var(--border); border-radius:6px; padding:7px 10px; font-family:var(--font-mono); font-size:10.5px; color:#a1a1aa; min-height:34px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
-          <span id="jarvisLiveTranscriptTxt">🎙️ Clique no Orbe ou em 🎙️ para falar com o Jarvis em Português...</span>
-          <span style="font-size:9px; color:#22d3ee; white-space:nowrap;" id="jarvisIntentBadge">JEV-S1 READY</span>
-        </div>
-
-        <!-- 2x2 Hardware & Quota Telemetry Grid -->
-        <div class="jarvis-hw-grid">
-          <div class="jarvis-hw-card">
-            <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
-              <span>MEMÓRIA RAM</span>
-              <strong style="color:#10b981;" id="jvStatRam">--%</strong>
-            </div>
-            <div style="height:4px; background:#181820; border-radius:3px; overflow:hidden;">
-              <div id="jvBarRam" style="width:35%; height:100%; background:#10b981; transition:width 0.3s ease;"></div>
-            </div>
-            <div style="font-family:var(--font-mono); font-size:9px; color:var(--text-dim);" id="jvSubRam">Zero-Ollama (0 GB VRAM)</div>
-          </div>
-
-          <div class="jarvis-hw-card">
-            <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
-              <span>DISCO NVMe</span>
-              <strong style="color:#22d3ee;" id="jvStatDisk">--%</strong>
-            </div>
-            <div style="height:4px; background:#181820; border-radius:3px; overflow:hidden;">
-              <div id="jvBarDisk" style="width:42%; height:100%; background:#06b6d4; transition:width 0.3s ease;"></div>
-            </div>
-            <div style="font-family:var(--font-mono); font-size:9px; color:var(--text-dim);" id="jvSubDisk">SQLite WAL mmap</div>
-          </div>
-
-          <div class="jarvis-hw-card">
-            <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
-              <span>CPU / THREADS</span>
-              <strong style="color:#f59e0b;" id="jvStatCpu">--%</strong>
-            </div>
-            <div style="height:4px; background:#181820; border-radius:3px; overflow:hidden;">
-              <div id="jvBarCpu" style="width:18%; height:100%; background:#f59e0b; transition:width 0.3s ease;"></div>
-            </div>
-            <div style="font-family:var(--font-mono); font-size:9px; color:var(--text-dim);" id="jvSubCpu">Windows Kernel</div>
-          </div>
-
-          <div class="jarvis-hw-card">
-            <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
-              <span>QUOTA 5H &amp; IQ</span>
-              <strong style="color:#6ee7b7;" id="jvStatQuota">IQ 98%</strong>
-            </div>
-            <div style="height:4px; background:#181820; border-radius:3px; overflow:hidden;">
-              <div id="jvBarQuota" style="width:88%; height:100%; background:#10b981; transition:width 0.3s ease;"></div>
-            </div>
-            <div style="font-family:var(--font-mono); font-size:9px; color:var(--text-dim);" id="jvSubQuota">-64% Tokens Diet</div>
-          </div>
-        </div>
-
-        <!-- 6 Quick Voice/Click Macro Buttons -->
-        <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:700; color:var(--text-muted); letter-spacing:0.05em; margin-top:2px;">
-          MACROS EXECUTIVAS &amp; COMANDOS DE VOZ RÁPIDOS
-        </div>
-        <div class="jarvis-macro-grid">
-          <button type="button" class="jarvis-macro-btn" onclick="triggerJarvisMorningBriefingUI()">
-            <span>☀️</span> <span>Briefing Matinal</span>
-          </button>
-          <button type="button" class="jarvis-macro-btn" onclick="runJarvisQuickMacroUI('Auditar AST, risco estrutural e ficheiros críticos do projeto', false)">
-            <span>🛡️</span> <span>Auditar AST &amp; Risco</span>
-          </button>
-          <button type="button" class="jarvis-macro-btn" onclick="runJarvisQuickMacroUI('Qual é o estado atual das tarefas no grafo DOTS DAG e subagentes?', false)">
-            <span>📋</span> <span>Estado Tasks DAG</span>
-          </button>
-          <button type="button" class="jarvis-macro-btn" onclick="runJarvisQuickMacroUI('Pesquisar memórias de arquitetura e decisões críticas com HippoRAG PPR', false)">
-            <span>🧬</span> <span>Memórias PPR</span>
-          </button>
-          <button type="button" class="jarvis-macro-btn" onclick="runJarvisQuickMacroUI('Verificar estado Git, ficheiros modificados e saúde dos testes', false)">
-            <span>🧪</span> <span>Estado Git &amp; Testes</span>
-          </button>
-          <button type="button" class="jarvis-macro-btn" style="border-color:rgba(6,182,212,0.35); color:#67e8f9;" onclick="runJarvisQuickMacroUI('Otimizar arquitetura e validar suite completa no Antigravity IDE', true)">
-            <span>🚀</span> <span>Criar Missão Antigravity</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Center Column: Neural Dialogue Stream, Deterministic Planner & Command Input -->
-      <div class="studio-card" style="padding:12px; display:flex; flex-direction:column; gap:10px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:8px;">
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <span style="font-family:var(--font-mono); font-size:10.5px; font-weight:800; color:#10b981; letter-spacing:0.05em;">
-              MOTOR COGNITIVO 128-D + HIPPORAG PPR + EXECUÇÃO REAL DE FERRAMENTAS
-            </span>
-            <span class="tk-chip" id="jarvisActiveToolsCountChip">5 TOOLS READY</span>
-          </div>
-          <button type="button" class="office-btn" style="padding:3px 8px; font-size:10px;" onclick="clearJarvisChatUI()" title="Limpar conversa no painel">
-            🧹 Limpar
-          </button>
-        </div>
-
-        <!-- Sleek Next-Action Deterministic Planner Banner (Q-18 · ZERO-LLM) -->
-        <div id="jarvisNextActionBanner" style="background:linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.06) 100%); border:1px solid rgba(16,185,129,0.35); border-left:4px solid #10b981; border-radius:7px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 2px 8px rgba(0,0,0,0.25);">
-          <div style="display:flex; flex-direction:column; gap:2px; flex:1; min-width:0;">
-            <div style="display:flex; align-items:center; gap:7px; flex-wrap:wrap;">
-              <span class="tk-chip" style="color:#6ee7b7; border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.12); font-weight:800; font-size:9.5px;">
-                🎯 NEXT-ACTION PLANNER (Q-18 · ZERO-LLM)
-              </span>
-              <span class="tk-chip" id="jarvisNextActionConfidence" style="color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.1); font-size:9.5px;">
-                96% CONFIDENCE
-              </span>
-            </div>
-            <div id="jarvisNextActionHeadline" style="font-size:11.5px; font-weight:700; color:#f8fafc; line-height:1.3; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              Auditar AST, risco estrutural e validar suite de testes completa
-            </div>
-            <div id="jarvisNextActionRationale" style="font-size:10px; color:#94a3b8; font-family:var(--font-mono); line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-              Heurística Q-18: 3 ficheiros alterados no workspace sem verificação de impacto recente.
-            </div>
-          </div>
-          <button type="button" class="office-btn emerald" onclick="triggerJarvisNextActionUI()" style="padding:6px 12px; font-size:10.5px; font-weight:700; white-space:nowrap; display:flex; align-items:center; gap:5px; flex-shrink:0;" title="Executar imediatamente a recomendação determinística do Next-Action Planner">
-            ⚡ Executar Agora
-          </button>
-        </div>
-
-        <div class="jarvis-chat-stream" id="jarvisChatLog"></div>
-
-        <div class="jarvis-input-dock">
-          <button type="button" class="office-btn" id="btnJarvisMic" onclick="toggleJarvisVoiceListenUI()" title="Falar comando por voz (Português)" style="padding:6px 10px;">
-            🎙️
-          </button>
-          <input
-            type="text"
-            id="jarvisPromptInput"
-            placeholder="Pergunte ao Jarvis ou dite uma diretiva para o Antigravity IDE (Enter para executar)..."
-            onkeydown="if(event.key==='Enter') sendJarvisCommandUI(false)"
-            style="flex:1; background:#08080b; border:1px solid var(--border); border-radius:6px; padding:7px 11px; color:#ffffff; font-size:11.5px; font-family:var(--font-sans); outline:none;"
-          />
-          <button type="button" class="office-btn emerald" onclick="sendJarvisCommandUI(false)" title="Executar comando no motor local do Jarvis (memórias PPR, AST, DOTS, telemetria PC)">
-            ⚡ Executar
-          </button>
-          <button type="button" class="office-btn primary" onclick="sendJarvisCommandUI(true)" title="Compilar Super-Prompt com contexto AST+PPR e enfileirar diretiva cirúrgica para o Antigravity IDE ([JARVIS_DIRECTIVE])">
-            🚀 Despachar p/ Antigravity
-          </button>
-        </div>
-      </div>
-
-      <!-- Right Column: Enterprise Intelligence v8.0 + Antigravity IDE Bridge Queue + Live Tool Execution Trace -->
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <!-- Enterprise Intelligence v8.0 Matrix Card -->
-        <div class="studio-card" id="jarvisEnterpriseV8Card" style="padding:12px; display:flex; flex-direction:column; gap:8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:6px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#a855f7; letter-spacing:0.05em;">
-                🧠 ENTERPRISE INTELLIGENCE v8.0
-              </span>
-              <span class="tk-chip" style="color:#c084fc; border-color:rgba(168,85,247,0.35); font-size:8.5px;">Q-18 MATRIX</span>
-            </div>
-            <span class="rc-badge working" id="jarvisTodayVerifiedBadge" style="font-size:9px;">0% VERIFIED</span>
-          </div>
-
-          <!-- Tab Navigation for V8 Modules -->
-          <div style="display:flex; gap:4px; background:#09090e; padding:3px; border-radius:6px; border:1px solid var(--border);">
-            <button type="button" class="jarvis-v8-tab active" id="tabBtnJarvisToday" onclick="switchJarvisV8Tab('today')">
-              📅 Today Items
-            </button>
-            <button type="button" class="jarvis-v8-tab" id="tabBtnJarvisCommitments" onclick="switchJarvisV8Tab('commitments')">
-              🤝 Compromissos
-            </button>
-            <button type="button" class="jarvis-v8-tab" id="tabBtnJarvisPersonality" onclick="switchJarvisV8Tab('personality')">
-              🧬 Perfil &amp; Rotinas
-            </button>
-          </div>
-
-          <!-- Section 1: Today Work-Items & Outcome Gate -->
-          <div id="jarvisTodayTabPane" style="display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9px; color:var(--text-dim);">
-              <span>PROVA DE OUTCOME (AST / REGRESSÃO QA)</span>
-              <span style="color:#10b981; font-weight:700;">1-CLICK GATE</span>
-            </div>
-            <div id="jarvisTodayItemsList" style="display:flex; flex-direction:column; gap:6px; max-height:210px; overflow-y:auto;"></div>
-          </div>
-
-          <!-- Section 2: Commitments & Provenance Extractor -->
-          <div id="jarvisCommitmentsTabPane" style="display:none; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9px; color:var(--text-dim);">
-              <span>COMPROMISSOS ([CONFIRMED] / [INFERRED])</span>
-              <span style="color:#c084fc; font-weight:700;">PROVENIÊNCIA</span>
-            </div>
-            <div id="jarvisCommitmentsList" style="display:flex; flex-direction:column; gap:6px; max-height:210px; overflow-y:auto;"></div>
-          </div>
-
-          <!-- Section 3: Adaptive Personality Engine, Routine Discovery & Trust Boundary -->
-          <div id="jarvisPersonalityTabPane" style="display:none; flex-direction:column; gap:6px;">
-            <div id="jarvisPersonalityAndRoutinesBox" style="display:flex; flex-direction:column; gap:8px;"></div>
-          </div>
-        </div>
-
-        <!-- Top Card: Antigravity IDE Bridge Queue -->
-        <div class="studio-card" style="padding:12px; display:flex; flex-direction:column; gap:8px; flex:1; min-height:210px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:6px;">
-            <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#22d3ee; letter-spacing:0.05em;">
-              PONTE BIDIRECIONAL JARVIS ⇄ ANTIGRAVITY IDE
-            </span>
-            <span class="rc-badge working" id="jarvisPendingDirectivesBadge">0 FILA</span>
-          </div>
-          <div style="font-size:10px; color:var(--text-muted); line-height:1.35;">
-            Diretivas enfileiradas aqui são injetadas automaticamente no próximo turno do Antigravity via <code>PreInvocation</code> (<code>[JARVIS_DIRECTIVE]</code>) ou podem ser copiadas como Super-Prompt.
-          </div>
-          <div id="jarvisDirectivesList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:7px; max-height:200px;"></div>
-        </div>
-
-        <!-- Bottom Card: Live Tool Execution Trace -->
-        <div class="studio-card" style="padding:12px; display:flex; flex-direction:column; gap:8px; flex:1; min-height:190px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:6px;">
-            <span style="font-family:var(--font-mono); font-size:10px; font-weight:800; color:#10b981; letter-spacing:0.05em;">
-              RASTO DE EXECUÇÃO DE FERRAMENTAS LOCAIS (REACT TRACE)
-            </span>
-            <span class="tk-chip" id="jarvisTraceLatencyChip">0.0ms</span>
-          </div>
-          <div id="jarvisToolTraceList" style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:6px; max-height:180px;"></div>
-        </div>
-      </div>
-    </div>
-  </div>
     </div><!-- /studioStageViewport -->
   </div><!-- /studioShellBody -->
 
@@ -5286,7 +4828,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
 
   <!-- MODAL EDITOR MARKDOWN INTERATIVO DO VAULT (.BRAIN_VAULT/*.MD) -->
   <div class="modal-backdrop" id="vaultNoteEditorModal" onclick="if(event.target===this) closeVaultNoteEditorModal()">
-    <div class="modal" style="width: 820px; max-width: 95vw;">
+    <div class="modal" style="width: 820px; max-width: 95vw; max-height: 90vh; overflow-y: auto;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:8px; flex-wrap:wrap;">
         <h3 style="margin:0; color:#f8fafc;">📝 Editor Markdown Interativo · <code>.brain_vault/</code></h3>
         <div style="display:flex; gap:6px; align-items:center;">
@@ -5407,8 +4949,8 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         <span id="doctorStatusMsg" style="font-size:11px; color:#6ee7b7; align-self:center; font-family:var(--font-mono);"></span>
       </div>
 
-      <!-- Controlos de Simulação do PreInvocation Hook + 5 Otimizações de Poupança de Tokens -->
-      <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; margin-bottom:10px;" id="tokenOpt5PillarsStrip">
+      <!-- Controlos de Simulação do PreInvocation Hook + 6 Otimizações de Poupança de Tokens -->
+      <div style="display:grid; grid-template-columns:repeat(6, 1fr); gap:6px; margin-bottom:10px;" id="tokenOpt5PillarsStrip">
         <div class="studio-section-card" style="padding:7px 9px; font-size:10px;">
           <div class="text-emerald" style="font-weight:700;">⚡ 1. Session Delta</div>
           <div style="color:var(--text-muted); font-size:9.5px; margin-top:2px;">Turno 2+: <strong style="color:#fff;">-64% tok</strong></div>
@@ -5428,6 +4970,10 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         <div class="studio-section-card" style="padding:7px 9px; font-size:10px;">
           <div class="text-rose" style="font-weight:700;">🛡️ 5. Micro-Prompt</div>
           <div style="color:var(--text-muted); font-size:9.5px; margin-top:2px;" id="inspOptMicroVal">&lt;90 tok ("Sim/OK")</div>
+        </div>
+        <div class="studio-section-card" style="padding:7px 9px; font-size:10px;">
+          <div style="font-weight:700; color:#38bdf8;" title="Remove muletas orais STT (PT/EN), converte fala (&quot;web dashboard ponto py&quot;) em ponteiros cirúrgicos :Lstart-end e pré-executa ferramentas do Brain sem round-trip MCP.">🎙️ #6 Voice Zero-Call</div>
+          <div style="color:var(--text-muted); font-size:9.5px; margin-top:2px;" id="inspOptVoiceVal"><strong style="color:#38bdf8;">-68% Voice</strong> · &lt;4ms</div>
         </div>
       </div>
 
@@ -5464,6 +5010,57 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         ⚡ Bloco Exato Injetado no Antigravity (`ephemeralMessage` + `[SCOUT_SHARED_MAP :Lstart-end]` + `TOON/Delta`):
       </div>
       <pre id="inspPreviewBody" style="background:#08080a; color:#e2e8f0; padding:12px; border-radius:8px; border:1px solid var(--border); font-family:var(--font-mono); font-size:11px; max-height:240px; overflow:auto; white-space:pre-wrap; margin:0;"></pre>
+
+      <!-- 🎙️ Simulador de Voz ➔ Antigravity Zero-Call (Lane 3 Voice Token HUD) -->
+      <div class="studio-section-card" style="margin-top:10px; padding:10px 12px; border:1px solid rgba(6,182,212,0.3); background:rgba(8,12,18,0.72); border-radius:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; font-weight:700; color:#38bdf8; font-family:var(--font-mono); letter-spacing:0.02em;">
+              🎙️ SIMULADOR DE VOZ ➔ ANTIGRAVITY ZERO-CALL (DSP + AST FONÉTICO)
+            </span>
+            <span class="rc-badge working" style="font-size:9px; background:rgba(6,182,212,0.12); color:#22d3ee; border:1px solid rgba(6,182,212,0.35);">
+              -68% TOKENS · &lt;4ms
+            </span>
+          </div>
+          <span style="font-size:10px; color:var(--text-muted); font-family:var(--font-mono);">
+            Zero MCP Round-Trip
+          </span>
+        </div>
+
+        <!-- Quick preset chips -->
+        <div style="display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap;">
+          <button type="button" class="btn" style="padding:3px 8px; font-size:10px; background:#111827; border:1px solid rgba(56,189,248,0.25); color:#7dd3fc;"
+                  onclick="setVoiceSimulatorPreset('então olha lá abre o web dashboard ponto py na função handle pre invocation')">
+            🎯 Ponteiro AST Fonético
+          </button>
+          <button type="button" class="btn" style="padding:3px 8px; font-size:10px; background:#111827; border:1px solid rgba(168,85,247,0.25); color:#c084fc;"
+                  onclick="setVoiceSimulatorPreset('tipo assim vê lá qual é o impacto de mexer em db engine ponto py')">
+            💥 Blast Radius Zero-Call
+          </button>
+          <button type="button" class="btn" style="padding:3px 8px; font-size:10px; background:#111827; border:1px solid rgba(160,85,247,0.25); color:#6ee7b7;"
+                  onclick="setVoiceSimulatorPreset('guarda na memória que os comandos por voz usam pré-execução zero call em menos de 4ms')">
+            🧠 Guardar Memória por Voz
+          </button>
+        </div>
+
+        <!-- Input row with button -->
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input
+            type="text"
+            id="voiceSimulatorInput"
+            class="search-input"
+            style="flex:1; font-family:var(--font-mono); font-size:11px; padding:7px 10px; background:#080a0e; border:1px solid var(--border-strong); color:#f1f5f9; border-radius:6px;"
+            placeholder='Ex: "então olha lá abre o web dashboard ponto py e vê qual é o impacto de mexer em build ephemeral context"'
+            onkeydown="if(event.key==='Enter') runVoiceSimulatorPreview(false)"
+          />
+          <button type="button" class="btn btn-primary" style="padding:7px 12px; font-size:11px; white-space:nowrap; background:#0284c7; border-color:#38bdf8;" onclick="runVoiceSimulatorPreview(false)">
+            🎙️ Simular Otimização de Voz
+          </button>
+        </div>
+
+        <!-- Output container -->
+        <div id="voiceSimulatorResult" style="margin-top:8px; display:none; flex-direction:column; gap:6px;"></div>
+      </div>
 
       <!-- Time-Travel Memory Revisions & 1-Click Rollback -->
       <div class="studio-section-card" style="margin-top:10px; padding:9px 11px;">
@@ -9587,14 +9184,11 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
     let selfLearnAnimRunning = false;
     let vaultStudioAnimRunning = false;
     let tasksPollTimer = null;
-    let jarvisPollTimer = null;
-    let jarvisOrbAnimRunning = false;
 
     function switchMainView(viewName) {
       let normView = String(viewName || '').toLowerCase().trim();
       if (normView === 'office3d') normView = 'office';
       if (normView === 'vault6x') normView = 'vault';
-      if (normView === 'jarvisos') normView = 'jarvis';
       if (normView === 'orbit') {
         openOrbitOsModal();
         return;
@@ -9610,7 +9204,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       else if (normView === 'promptforge') activeMainView = 'promptforge';
       else if (normView === 'vault') activeMainView = 'vault';
       else if (normView === 'tasks') activeMainView = 'tasks';
-      else if (normView === 'jarvis') activeMainView = 'jarvis';
       else activeMainView = 'graph';
 
       const gWs = document.getElementById('graphWorkspace');
@@ -9620,7 +9213,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const pfWs = document.getElementById('promptForgeWorkspace');
       const vWs = document.getElementById('vaultWorkspace');
       const tWs = document.getElementById('tasksWorkspace');
-      const jWs = document.getElementById('jarvisWorkspace');
       const btnG = document.getElementById('tabBtnGraph');
       const btnS = document.getElementById('tabBtnSwarm');
       const btnO = document.getElementById('tabBtnOffice');
@@ -9628,7 +9220,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       const btnPF = document.getElementById('tabBtnPromptForge');
       const btnV = document.getElementById('tabBtnVault');
       const btnT = document.getElementById('tabBtnTasks');
-      const btnJ = document.getElementById('tabBtnJarvis');
 
       gWs.style.display = activeMainView === 'graph' ? 'flex' : 'none';
       sWs.classList.toggle('active', activeMainView === 'swarm');
@@ -9637,7 +9228,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (pfWs) pfWs.classList.toggle('active', activeMainView === 'promptforge');
       if (vWs) vWs.classList.toggle('active', activeMainView === 'vault');
       if (tWs) tWs.classList.toggle('active', activeMainView === 'tasks');
-      if (jWs) jWs.classList.toggle('active', activeMainView === 'jarvis');
 
       btnG.classList.toggle('active', activeMainView === 'graph');
       btnS.classList.toggle('active', activeMainView === 'swarm');
@@ -9646,7 +9236,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (btnPF) btnPF.classList.toggle('active', activeMainView === 'promptforge');
       if (btnV) btnV.classList.toggle('active', activeMainView === 'vault');
       if (btnT) btnT.classList.toggle('active', activeMainView === 'tasks');
-      if (btnJ) btnJ.classList.toggle('active', activeMainView === 'jarvis');
 
       const subConceptEl = document.getElementById('lblTopSubConcept');
       if (subConceptEl) {
@@ -9662,8 +9251,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
           subConceptEl.textContent = 'Vault 6x Lab · Defuddle + .MD';
         } else if (activeMainView === 'tasks') {
           subConceptEl.textContent = 'Tasks & DOTS DAG · Kanban 4x';
-        } else if (activeMainView === 'jarvis') {
-          subConceptEl.textContent = 'J.A.R.V.I.S. OS · Voice + AGY Bridge';
         } else {
           subConceptEl.textContent = 'Neural Cortex · JEV-S1';
         }
@@ -9684,10 +9271,6 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       if (tasksPollTimer) {
         clearInterval(tasksPollTimer);
         tasksPollTimer = null;
-      }
-      if (jarvisPollTimer) {
-        clearInterval(jarvisPollTimer);
-        jarvisPollTimer = null;
       }
 
       if (activeMainView === 'swarm') {
@@ -9728,16 +9311,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         tasksPollTimer = setInterval(() => {
           if (!document.hidden && typeof fetchTasksStudioPage === 'function') fetchTasksStudioPage(false);
         }, 2500);
-      } else if (activeMainView === 'jarvis') {
-        window.location.hash = 'jarvis';
-        if (typeof fetchJarvisStudioPage === 'function') fetchJarvisStudioPage(true);
-        jarvisPollTimer = setInterval(() => {
-          if (!document.hidden && typeof fetchJarvisStudioPage === 'function') fetchJarvisStudioPage(false);
-        }, 4000);
-        if (!jarvisOrbAnimRunning && typeof renderJarvisOrbLoop === 'function') {
-          jarvisOrbAnimRunning = true;
-          requestAnimationFrame(renderJarvisOrbLoop);
-        }
+
       } else {
         window.location.hash = 'graph';
         resizeCanvas();
@@ -11326,6 +10900,18 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
             ? '<strong style="color:#34d399;">ATIVO (' + data.estimated_tokens + ' tok)</strong>'
             : '&lt;90 tok ("Sim/OK")';
         }
+        const voiceOpt = (data.token_optimizations && data.token_optimizations['6_voice_zero_call_protocol']) || null;
+        const voiceProto = data.voice_protocol || null;
+        const voiceOptEl = document.getElementById('inspOptVoiceVal');
+        if (voiceOptEl) {
+          if (voiceOpt && voiceOpt.active) {
+            voiceOptEl.innerHTML = `<strong style="color:#38bdf8;">-${voiceOpt.reduction_pct || 68}% Voice</strong> · ${voiceOpt.latency_ms || '<4'}ms`;
+          } else if (voiceProto && voiceProto.is_voice) {
+            voiceOptEl.innerHTML = `<strong style="color:#38bdf8;">VOZ ATIVA (-68%)</strong> · &lt;4ms`;
+          } else {
+            voiceOptEl.innerHTML = `<strong style="color:#38bdf8;">-68% Voice</strong> · &lt;4ms`;
+          }
+        }
         if (topBadge && data.compression_pct > 0) {
           topBadge.textContent = `-${Math.round(data.compression_pct)}% Tokens`;
         }
@@ -11342,6 +10928,115 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         }
       } catch (e) {
         console.error('Erro no Inspector Preview:', e);
+      }
+    }
+
+    function setVoiceSimulatorPreset(text) {
+      const el = document.getElementById('voiceSimulatorInput');
+      if (el) el.value = text;
+      runVoiceSimulatorPreview(false);
+    }
+
+    async function runVoiceSimulatorPreview(allowWrite = false) {
+      const inputEl = document.getElementById('voiceSimulatorInput');
+      const resContainer = document.getElementById('voiceSimulatorResult');
+      if (!resContainer) return;
+      const q = (inputEl ? inputEl.value : '').trim();
+      if (!q) {
+        showToast('Escreva ou clique num preset para simular o comando de voz.');
+        return;
+      }
+      const ws = (document.getElementById('inspWsSelect') || {}).value || 'brain_mcp';
+
+      resContainer.style.display = 'flex';
+      resContainer.innerHTML = '<div style="font-size:10.5px; color:#38bdf8; font-family:var(--font-mono); padding:6px 0;">⚡ A executar DSP fonético e pré-execução zero-call...</div>';
+
+      try {
+        const url = `/api/voice-preview?q=${encodeURIComponent(q)}&workspace=${encodeURIComponent(ws)}&execute=${allowWrite ? '1' : '0'}`;
+        const resp = await fetch(url);
+        const data = await resp.json();
+
+        if (!data || data.ok === false) {
+          resContainer.innerHTML = `<div style="font-size:10.5px; color:#fb7185; font-family:var(--font-mono);">❌ Erro no simulador: ${escapeHtml(data?.error || 'Falha ao processar comando de voz')}</div>`;
+          return;
+        }
+
+        const cleanQ = data.clean_query || data.denoised_query || q;
+        const stt = data.stt_analysis || {};
+        const fillers = Array.isArray(stt.removed_fillers) ? stt.removed_fillers : (Array.isArray(stt.fillers_removed) ? stt.fillers_removed : []);
+        const fillersStr = fillers.length ? fillers.map(f => `<code style="color:#f43f5e; background:rgba(244,63,94,0.1); padding:1px 4px; border-radius:3px;">"${escapeHtml(f)}"</code>`).join(' ') : '<em style="color:var(--text-muted);">nenhum detetado</em>';
+
+        const resolvedFiles = Array.isArray(data.resolved_files) ? data.resolved_files : [];
+        const astPointers = Array.isArray(data.ast_pointers) ? data.ast_pointers : [];
+        const preExecLines = Array.isArray(data.pre_exec_lines) ? data.pre_exec_lines : [];
+        const voiceToolsLine = data.voice_tools_line || '';
+        const savedTokens = Number(data.total_estimated_tokens_saved || 0);
+        const latencyMs = data.latency_ms != null ? data.latency_ms : '<4';
+
+        let astHtml = '';
+        if (astPointers.length > 0) {
+          astHtml = astPointers.map(p => {
+            const ptrStr = typeof p === 'string' ? p : `${p.file || ''} :L${p.start_line || 1}-L${p.end_line || ''} (${p.symbol || 'bloco'})`;
+            return `<div style="color:#fbbf24; font-family:var(--font-mono); font-size:10px;">📍 <code style="color:#a7f3d0;">${escapeHtml(ptrStr)}</code></div>`;
+          }).join('');
+        } else if (resolvedFiles.length > 0) {
+          astHtml = resolvedFiles.map(f => `<div style="color:#6ee7b7; font-family:var(--font-mono); font-size:10px;">📄 ${escapeHtml(String(f))}</div>`).join('');
+        } else {
+          astHtml = '<div style="color:var(--text-muted); font-size:10px; font-style:italic;">Nenhum ficheiro/símbolo específico mapeado diretamente.</div>';
+        }
+
+        let preExecHtml = '';
+        if (preExecLines.length > 0) {
+          preExecHtml = preExecLines.map(line => `<div style="color:#38bdf8; font-family:var(--font-mono); font-size:10px; white-space:pre-wrap; word-break:break-all;">${escapeHtml(line)}</div>`).join('');
+        } else {
+          preExecHtml = '<div style="color:var(--text-muted); font-size:10px; font-style:italic;">Sem injeção direta de pré-execução necessária.</div>';
+        }
+
+        let toolsPruneHtml = '';
+        if (voiceToolsLine) {
+          toolsPruneHtml = `<div style="margin-top:3px; padding:4px 6px; background:#0d1117; border-radius:4px; border:1px dashed rgba(56,189,248,0.3); color:#38bdf8; font-family:var(--font-mono); font-size:9.5px;">🛠️ <strong>Pruning:</strong> ${escapeHtml(voiceToolsLine)}</div>`;
+        }
+
+        resContainer.innerHTML = `
+          <div style="background:#090d13; border:1px solid rgba(56,189,248,0.2); border-radius:6px; padding:9px 11px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:5px;">
+              <span style="font-size:10px; font-weight:800; color:#38bdf8; font-family:var(--font-mono);">
+                ⚡ RESULTADO DA OTIMIZAÇÃO DE VOZ ZERO-CALL
+              </span>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="rc-badge working" style="background:rgba(16,185,129,0.15); color:#6ee7b7; border-color:rgba(16,185,129,0.3); font-size:9.5px;">
+                  ~${savedTokens.toLocaleString()} tokens poupados
+                </span>
+                <span class="tk-chip" style="font-size:9.5px; color:#38bdf8;">${latencyMs}ms</span>
+              </div>
+            </div>
+
+            <div style="font-size:10.5px;">
+              <span style="color:var(--text-muted); font-weight:700;">Query Limpa (STT Denoised):</span>
+              <span style="color:#f1f5f9; font-weight:600; font-family:var(--font-mono);"> "${escapeHtml(cleanQ)}"</span>
+              <div style="font-size:9.5px; color:var(--text-dim); margin-top:1px;">
+                Muletas Removidas: ${fillersStr}
+              </div>
+            </div>
+
+            <div style="font-size:10.5px;">
+              <span style="color:var(--text-muted); font-weight:700;">Ponteiros Cirúrgicos AST Resolvidos:</span>
+              <div style="margin-top:2px; display:flex; flex-direction:column; gap:2px; padding:4px 6px; background:#05070a; border-radius:4px; border:1px solid var(--border);">
+                ${astHtml}
+              </div>
+            </div>
+
+            <div style="font-size:10.5px;">
+              <span style="color:var(--text-muted); font-weight:700;">Pré-Execução Zero-Call &amp; Pruning:</span>
+              <div style="margin-top:2px; padding:4px 6px; background:#05070a; border-radius:4px; border:1px solid var(--border);">
+                ${preExecHtml}
+                ${toolsPruneHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        resContainer.innerHTML = `<div style="font-size:10.5px; color:#fb7185; font-family:var(--font-mono);">❌ Erro de rede: ${escapeHtml(err.message || String(err))}</div>`;
       }
     }
 
@@ -12843,7 +12538,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
       { id: 'view_vault', label: '💎 Ir para 06 Vault 6x & Defuddle (#vault)', tag: '06 VAULT 6X', run: () => switchMainView('vault') },
       { id: 'view_tasks', label: '📋 Ir para 07 Tasks em Curso (#tasks)', tag: '07 TASKS', run: () => openOfficeTasksTab() },
       { id: 'orbit_os', label: '🛰️ Abrir OS Orbit Mission Control (#orbit)', tag: '08 ORBIT OS', run: () => openOrbitOsModal() },
-      { id: 'ast_inspector', label: '🔎 Abrir AST & Graphify Inspector (#ast)', tag: '09 AST & BFS', run: () => openAstInspectorModal('BrainDB') },
+      { id: 'ast_inspector', label: '🔎 Abrir AST & Graphify Inspector (#ast)', tag: '08 AST & BFS', run: () => openAstInspectorModal('BrainDB') },
       { id: 'swarm_run', label: '🚀 Lançar Swarm Run Completo (24 Lanes Assimétricas)', tag: 'SWARM', run: () => { switchMainView('swarm'); triggerSwarmRun(); } },
       { id: 'swarm_verify', label: '✅ Executar Verify Gate 48/48 (AST + JS + SQLite WAL)', tag: 'QA 48/48', run: () => { switchMainView('swarm'); triggerSwarmAction('verify_all'); } },
       { id: 'ruflo_steal', label: '⚖️ Ruflo Work-Stealing: Rebalancear Claims entre Workers', tag: 'RUFLO', run: () => { switchMainView('swarm'); triggerSwarmAction('work_steal'); } },
@@ -13500,8 +13195,7 @@ Links: [[orbit_engine.py]] · [[AGENTS.md]]</pre>
         if (e.key === '5') { switchMainView('promptforge'); return; }
         if (e.key === '6') { switchMainView('vault'); return; }
         if (e.key === '7') { openOfficeTasksTab(); return; }
-        if (e.key === '8') { switchMainView('jarvis'); return; }
-        if (e.key === '9') { openAstInspectorModal(); return; }
+        if (e.key === '8' || e.key === '9') { openAstInspectorModal(); return; }
         if (e.key === '0') { openOrbitOsModal(); return; }
       }
       if (activeMainView === 'office' && (e.key === '[' || e.key === ']')) {
@@ -15398,8 +15092,6 @@ ${rulesSection}`;
         switchMainView('vault');
       } else if (rawHash === 'tasks') {
         openOfficeTasksTab();
-      } else if (rawHash === 'jarvis' || rawHash === 'jarvisos') {
-        switchMainView('jarvis');
       } else if (rawHash === 'orbit') {
         openOrbitOsModal();
       } else if (rawHash === 'ast') {
@@ -16984,1591 +16676,7 @@ ${rulesSection}`;
       await fetchTasksStudioPage(false);
     }
 
-    // =========================================================================
-    // 08 // J.A.R.V.I.S. COGNITIVE OS & SKYWALKER SOUND MARK-VII HELMET VOICE DSP
-    // =========================================================================
-    let jarvisTtsEnabled = true;
-    let jarvisVoiceProfile = 'movie_pt';
-    let jarvisIsListening = false;
-    let jarvisIsSpeaking = false;
-    let jarvisIsThinking = false;
-    let jarvisSpeechRec = null;
-    let jarvisAudioCtx = null;
-    let jarvisVoiceAnalyser = null;
-    let jarvisFftData = null;
-    let jarvisActiveSourceNode = null;
-    let jarvisActiveLfoNodes = [];
-    let jarvisChatHistoryLocal = [];
-    let jarvisToolTraceLocal = [];
-    let jarvisPendingDirectivesLocal = [];
-    let jarvisLastStateData = null;
-    let jarvisRecommendedNextActionCmd = 'Auditar AST, risco estrutural e ficheiros críticos do projeto';
-    let jarvisActiveV8Tab = 'today';
 
-    function getJarvisAudioContext() {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return null;
-      if (!jarvisAudioCtx) {
-        jarvisAudioCtx = new AudioCtx();
-        jarvisVoiceAnalyser = jarvisAudioCtx.createAnalyser();
-        jarvisVoiceAnalyser.fftSize = 256;
-        jarvisVoiceAnalyser.smoothingTimeConstant = 0.76;
-        jarvisFftData = new Uint8Array(jarvisVoiceAnalyser.frequencyBinCount);
-      }
-      if (jarvisAudioCtx.state === 'suspended') {
-        jarvisAudioCtx.resume().catch(() => {});
-      }
-      return jarvisAudioCtx;
-    }
-
-    function stopJarvisActiveAudio() {
-      if (jarvisActiveSourceNode) {
-        try { jarvisActiveSourceNode.stop(); } catch (_) {}
-        try { jarvisActiveSourceNode.disconnect(); } catch (_) {}
-        jarvisActiveSourceNode = null;
-      }
-      if (Array.isArray(jarvisActiveLfoNodes)) {
-        jarvisActiveLfoNodes.forEach(n => {
-          try { n.stop(); } catch (_) {}
-          try { n.disconnect(); } catch (_) {}
-        });
-        jarvisActiveLfoNodes = [];
-      }
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        try { window.speechSynthesis.cancel(); } catch (_) {}
-      }
-    }
-
-    function playJarvisHudChime(ctx) {
-      if (!ctx) return;
-      try {
-        const now = ctx.currentTime;
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc1.type = 'sine';
-        osc2.type = 'triangle';
-        osc1.frequency.setValueAtTime(1760, now);
-        osc1.frequency.exponentialRampToValueAtTime(2637, now + 0.065);
-        osc2.frequency.setValueAtTime(880, now);
-        osc2.frequency.exponentialRampToValueAtTime(1318.5, now + 0.065);
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.linearRampToValueAtTime(0.055, now + 0.012);
-        gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.095);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.10);
-        osc2.stop(now + 0.10);
-      } catch (_) {}
-    }
-
-    /**
-     * Hann-Windowed WSOLA (Waveform Similarity Overlap-Add) Time-Compressor.
-     * Compresses duration by `stretchFactor` (e.g. 1.28x faster) while preserving
-     * original pitch and phase coherence via cross-correlation search, so that subsequent
-     * `playbackRate = 0.815` resampling shifts pitch & vocal tract formants (F1/F2/F3)
-     * down into an authentic Paul Bettany Male Baritone at 1.04x natural speaking speed!
-     */
-    function jarvisApplyWsolaBaritoneShift(ctx, inputBuffer, stretchFactor = 1.28) {
-      if (!ctx || !inputBuffer || stretchFactor <= 1.02) return inputBuffer;
-      try {
-        const sr = inputBuffer.sampleRate;
-        const inData = inputBuffer.getChannelData(0);
-        const inLen = inData.length;
-        if (inLen < 2048) return inputBuffer;
-
-        const winSize = 1024;
-        const halfWin = 512;
-        const hopOut = halfWin;
-        const hopIn = Math.round(hopOut * stretchFactor);
-        const searchTol = 96;
-        const outLen = Math.max(winSize, Math.floor(inLen / stretchFactor));
-        const outBuffer = ctx.createBuffer(1, outLen, sr);
-        const outData = outBuffer.getChannelData(0);
-
-        const hann = new Float32Array(winSize);
-        for (let i = 0; i < winSize; i++) {
-          hann[i] = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (winSize - 1)));
-        }
-
-        let inPos = 0;
-        let outPos = 0;
-
-        // Copy first window
-        for (let i = 0; i < winSize && i < inLen && i < outLen; i++) {
-          outData[i] = inData[i] * hann[i];
-        }
-        inPos += hopIn;
-        outPos += hopOut;
-
-        while (outPos + winSize < outLen && inPos + winSize + searchTol < inLen) {
-          // Cross-correlation search around `inPos` to lock phase with existing overlap tail
-          let bestOffset = 0;
-          let bestCorr = -1e18;
-          const minOff = Math.max(-searchTol, -inPos);
-          const maxOff = Math.min(searchTol, inLen - winSize - inPos - 1);
-
-          for (let off = minOff; off <= maxOff; off += 4) {
-            let corr = 0;
-            const candStart = inPos + off;
-            for (let k = 0; k < halfWin; k += 4) {
-              corr += outData[outPos + k] * inData[candStart + k];
-            }
-            if (corr > bestCorr) {
-              bestCorr = corr;
-              bestOffset = off;
-            }
-          }
-
-          const chosenIn = inPos + bestOffset;
-          for (let i = 0; i < winSize; i++) {
-            outData[outPos + i] += inData[chosenIn + i] * hann[i];
-          }
-
-          inPos = chosenIn + hopIn;
-          outPos += hopOut;
-        }
-        return outBuffer;
-      } catch (_) {
-        return inputBuffer;
-      }
-    }
-
-    function updateJarvisVoiceBadgesUI() {
-      const badge = document.getElementById('jarvisVoiceStateBadge');
-      const sttBtn = document.getElementById('btnJarvisSttToggle');
-      const ttsBtn = document.getElementById('btnJarvisTtsToggle');
-      const micBtn = document.getElementById('btnJarvisMic');
-      const profSel = document.getElementById('jarvisVoiceProfileSelect');
-      if (profSel && profSel.value) {
-        jarvisVoiceProfile = profSel.value;
-      }
-      const modeTag = jarvisVoiceProfile === 'movie_en'
-        ? 'MCU EN-GB'
-        : (jarvisVoiceProfile === 'studio_pt' ? 'STUDIO PT' : 'MARK-VII PT');
-
-      if (sttBtn) {
-        sttBtn.textContent = jarvisIsListening ? '🎙️ Microfone: ESCUTA ATIVA' : '🎙️ Microfone: OFF';
-        sttBtn.classList.toggle('primary', jarvisIsListening);
-      }
-      if (micBtn) {
-        micBtn.textContent = jarvisIsListening ? '🔴' : '🎙️';
-        micBtn.classList.toggle('primary', jarvisIsListening);
-      }
-      if (ttsBtn) {
-        ttsBtn.textContent = jarvisTtsEnabled ? '🔊 Voz Jarvis: ON' : '🔇 Voz Jarvis: OFF';
-        ttsBtn.classList.toggle('emerald', jarvisTtsEnabled);
-      }
-      if (badge) {
-        if (jarvisIsThinking) {
-          badge.textContent = '⚡ PROCESSANDO NLU + PPR...';
-          badge.style.color = '#fcd34d';
-          badge.style.borderColor = 'rgba(245,158,11,0.45)';
-        } else if (jarvisIsSpeaking) {
-          badge.textContent = `🔊 A FALAR · ${modeTag}`;
-          badge.style.color = '#6ee7b7';
-          badge.style.borderColor = 'rgba(16,185,129,0.5)';
-        } else if (jarvisIsListening) {
-          badge.textContent = '🎙️ ESCUTA ATIVA · PT-PT';
-          badge.style.color = '#22d3ee';
-          badge.style.borderColor = 'rgba(6,182,212,0.55)';
-        } else {
-          badge.textContent = `● ${modeTag} · STANDBY`;
-          badge.style.color = '#6ee7b7';
-          badge.style.borderColor = 'rgba(16,185,129,0.35)';
-        }
-      }
-    }
-
-    function onJarvisVoiceProfileChangeUI(newProfile) {
-      jarvisVoiceProfile = newProfile || 'movie_pt';
-      updateJarvisVoiceBadgesUI();
-      const labels = {
-        movie_pt: '🎬 Filtro Capacete Mark-VII (PT-PT Barítono) ativado!',
-        movie_en: '🇬🇧 Voz Original MCU J.A.R.V.I.S. (EN-GB · Paul Bettany HUD) ativada!',
-        studio_pt: '🔊 Voz Neural Studio Limpa (PT-PT) ativada!'
-      };
-      showToast(labels[jarvisVoiceProfile] || labels.movie_pt);
-    }
-
-    function testJarvisMovieVoiceUI() {
-      const wasOff = !jarvisTtsEnabled;
-      if (wasOff) jarvisTtsEnabled = true;
-      const sampleText = jarvisVoiceProfile === 'movie_en'
-        ? 'At your service, Sir. All Antigravity Cortex systems are online and operational. Mark Seven helmet acoustic filter calibrated.'
-        : 'Às suas ordens, Senhor Miguel. Todos os sistemas do Córtex Antigravity encontram-se operacionais. Filtro acústico do capacete Mark Sete calibrado.';
-      speakJarvisText(sampleText, jarvisVoiceProfile);
-      showToast('🎬 A reproduzir Voz Cinematográfica do J.A.R.V.I.S. (Mark-VII Helmet DSP + Orbe FFT 60 FPS)...');
-    }
-
-    async function speakJarvisText(text, forceProfile = '') {
-      const cleanTxt = String(text || '').replace(/[*#`_~]/g, '').trim();
-      if (!cleanTxt || !jarvisTtsEnabled || typeof window === 'undefined') {
-        return;
-      }
-      const profSel = document.getElementById('jarvisVoiceProfileSelect');
-      const profile = forceProfile || (profSel && profSel.value) || jarvisVoiceProfile || 'movie_pt';
-
-      stopJarvisActiveAudio();
-
-      try {
-        const ctx = getJarvisAudioContext();
-        if (ctx) {
-          playJarvisHudChime(ctx);
-          const res = await fetch('/api/jarvis/tts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: cleanTxt, profile })
-          });
-          if (res.ok) {
-            const payload = await res.json();
-            if (payload && payload.ok && payload.audio_b64) {
-              const binStr = atob(payload.audio_b64);
-              const len = binStr.length;
-              const bytes = new Uint8Array(len);
-              for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
-
-              const rawBuffer = await ctx.decodeAudioData(bytes.buffer.slice(0));
-              const dspCfg = payload.dsp_preset || {};
-              const wsolaStretch = Number(dspCfg.wsola_stretch || 1.28);
-              const playRate = Number(dspCfg.playback_rate || 0.815);
-              const useHelmetDsp = dspCfg.helmet_dsp !== false;
-
-              // Step 1: WSOLA Time-Compression + Baritone Formant Resampling
-              const processedBuffer = jarvisApplyWsolaBaritoneShift(ctx, rawBuffer, wsolaStretch);
-              const src = ctx.createBufferSource();
-              src.buffer = processedBuffer;
-              src.playbackRate.value = playRate;
-
-              // Step 2: 6-Stage Skywalker Sound Mark-VII Helmet HUD Filter Graph
-              const hpFilter = ctx.createBiquadFilter();
-              hpFilter.type = 'highpass';
-              hpFilter.frequency.value = 85;
-              hpFilter.Q.value = 0.707;
-
-              const chestShelf = ctx.createBiquadFilter();
-              chestShelf.type = 'lowshelf';
-              chestShelf.frequency.value = 170;
-              chestShelf.gain.value = Number(dspCfg.chest_db ?? 4.2);
-
-              const mudCut = ctx.createBiquadFilter();
-              mudCut.type = 'peaking';
-              mudCut.frequency.value = 500;
-              mudCut.Q.value = 1.4;
-              mudCut.gain.value = -2.5;
-
-              const visorPresence = ctx.createBiquadFilter();
-              visorPresence.type = 'peaking';
-              visorPresence.frequency.value = 2900;
-              visorPresence.Q.value = 1.55;
-              visorPresence.gain.value = Number(dspCfg.presence_db ?? 4.6);
-
-              const airShelf = ctx.createBiquadFilter();
-              airShelf.type = 'highshelf';
-              airShelf.frequency.value = 6400;
-              airShelf.gain.value = useHelmetDsp ? 2.4 : 1.0;
-
-              const comp = ctx.createDynamicsCompressor();
-              comp.threshold.value = -24;
-              comp.knee.value = 12;
-              comp.ratio.value = 4.5;
-              comp.attack.value = 0.003;
-              comp.release.value = 0.12;
-
-              const masterGain = ctx.createGain();
-              masterGain.gain.value = 1.28;
-
-              src.connect(hpFilter);
-              hpFilter.connect(chestShelf);
-              chestShelf.connect(mudCut);
-              mudCut.connect(visorPresence);
-              visorPresence.connect(airShelf);
-
-              // Dry path into compressor
-              airShelf.connect(comp);
-
-              if (useHelmetDsp) {
-                // Skywalker Sound Dual-Voice Holographic Micro-Chorus (5.8ms + 11.2ms) + 17.5ms Helmet Interior Slapback
-                const chorusHp = ctx.createBiquadFilter();
-                chorusHp.type = 'highpass';
-                chorusHp.frequency.value = 920;
-
-                const delay1 = ctx.createDelay(0.05);
-                delay1.delayTime.value = 0.0058;
-                const delay2 = ctx.createDelay(0.05);
-                delay2.delayTime.value = 0.0112;
-                const helmetSlap = ctx.createDelay(0.05);
-                helmetSlap.delayTime.value = 0.0175;
-
-                const lfo1 = ctx.createOscillator();
-                const lfo2 = ctx.createOscillator();
-                const lfoGain1 = ctx.createGain();
-                const lfoGain2 = ctx.createGain();
-                lfo1.frequency.value = 0.85;
-                lfo2.frequency.value = 0.92;
-                lfoGain1.gain.value = 0.00035;
-                lfoGain2.gain.value = -0.00035;
-                lfo1.connect(lfoGain1);
-                lfo2.connect(lfoGain2);
-                lfoGain1.connect(delay1.delayTime);
-                lfoGain2.connect(delay2.delayTime);
-                lfo1.start();
-                lfo2.start();
-                jarvisActiveLfoNodes.push(lfo1, lfo2);
-
-                const wetChorusGain = ctx.createGain();
-                wetChorusGain.gain.value = Number(dspCfg.chorus_wet ?? 0.26);
-                const wetSlapGain = ctx.createGain();
-                wetSlapGain.gain.value = Number(dspCfg.slapback_wet ?? 0.11);
-
-                airShelf.connect(chorusHp);
-                chorusHp.connect(delay1);
-                chorusHp.connect(delay2);
-                chorusHp.connect(helmetSlap);
-                delay1.connect(wetChorusGain);
-                delay2.connect(wetChorusGain);
-                helmetSlap.connect(wetSlapGain);
-                wetChorusGain.connect(comp);
-                wetSlapGain.connect(comp);
-              }
-
-              comp.connect(masterGain);
-              if (jarvisVoiceAnalyser) {
-                masterGain.connect(jarvisVoiceAnalyser);
-                jarvisVoiceAnalyser.connect(ctx.destination);
-              } else {
-                masterGain.connect(ctx.destination);
-              }
-
-              jarvisActiveSourceNode = src;
-              jarvisIsSpeaking = true;
-              updateJarvisVoiceBadgesUI();
-              const barTxt = document.getElementById('jarvisLiveTranscriptTxt');
-              if (barTxt && payload.text_spoken) {
-                barTxt.textContent = `🔊 "${payload.text_spoken}"`;
-              }
-
-              src.onended = () => {
-                if (jarvisActiveSourceNode === src) {
-                  jarvisIsSpeaking = false;
-                  jarvisActiveSourceNode = null;
-                  updateJarvisVoiceBadgesUI();
-                }
-              };
-              src.start(0);
-              return;
-            }
-          }
-        }
-      } catch (_) {}
-
-      // Fallback to browser SpeechSynthesis if AudioContext or /api/jarvis/tts is blocked
-      if (!('speechSynthesis' in window)) return;
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(cleanTxt);
-        const voices = window.speechSynthesis.getVoices ? window.speechSynthesis.getVoices() : [];
-        const ptVoice = voices.find(v => /pt[-_]PT/i.test(v.lang))
-          || voices.find(v => /pt[-_]BR/i.test(v.lang))
-          || voices.find(v => /^pt/i.test(v.lang));
-        if (ptVoice) utter.voice = ptVoice;
-        utter.lang = (ptVoice && ptVoice.lang) ? ptVoice.lang : 'pt-PT';
-        utter.rate = 1.04;
-        utter.pitch = 0.88;
-        utter.onstart = () => {
-          jarvisIsSpeaking = true;
-          updateJarvisVoiceBadgesUI();
-        };
-        utter.onend = () => {
-          jarvisIsSpeaking = false;
-          updateJarvisVoiceBadgesUI();
-        };
-        utter.onerror = () => {
-          jarvisIsSpeaking = false;
-          updateJarvisVoiceBadgesUI();
-        };
-        window.speechSynthesis.speak(utter);
-      } catch (e) {
-        jarvisIsSpeaking = false;
-        updateJarvisVoiceBadgesUI();
-      }
-    }
-
-    function toggleJarvisVoiceTtsUI() {
-      jarvisTtsEnabled = !jarvisTtsEnabled;
-      if (!jarvisTtsEnabled) {
-        stopJarvisActiveAudio();
-        jarvisIsSpeaking = false;
-      }
-      updateJarvisVoiceBadgesUI();
-      showToast(jarvisTtsEnabled ? '🔊 Voz Cinematográfica Mark-VII do Jarvis ativada!' : '🔇 Voz do Jarvis silenciada.');
-    }
-
-    function toggleJarvisVoiceListenUI() {
-      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const barTxt = document.getElementById('jarvisLiveTranscriptTxt');
-      if (!SpeechRec) {
-        showToast('⚠️ O navegador atual não suporta Web Speech Recognition API. Use a barra de comando textual.');
-        if (barTxt) barTxt.textContent = '⚠️ Web Speech STT indisponível neste navegador — utilize o comando textual abaixo.';
-        return;
-      }
-      if (jarvisIsListening && jarvisSpeechRec) {
-        jarvisIsListening = false;
-        try { jarvisSpeechRec.stop(); } catch (_) {}
-        updateJarvisVoiceBadgesUI();
-        if (barTxt) barTxt.textContent = '🎙️ Microfone em espera. Clique no Orbe Acústico para falar.';
-        return;
-      }
-      try {
-        jarvisSpeechRec = new SpeechRec();
-        jarvisSpeechRec.lang = 'pt-PT';
-        jarvisSpeechRec.continuous = false;
-        jarvisSpeechRec.interimResults = true;
-
-        jarvisSpeechRec.onstart = () => {
-          jarvisIsListening = true;
-          updateJarvisVoiceBadgesUI();
-          if (barTxt) barTxt.textContent = '🎙️ A ouvir em Português... Diga o seu comando para o Jarvis.';
-        };
-
-        jarvisSpeechRec.onresult = (ev) => {
-          let interim = '';
-          let finalTxt = '';
-          for (let i = ev.resultIndex; i < ev.results.length; i++) {
-            const tr = ev.results[i][0].transcript;
-            if (ev.results[i].isFinal) finalTxt += tr;
-            else interim += tr;
-          }
-          const displayStr = (finalTxt || interim).trim();
-          if (barTxt && displayStr) {
-            barTxt.textContent = `🗣️ "${displayStr}"`;
-          }
-          if (finalTxt.trim()) {
-            const inp = document.getElementById('jarvisPromptInput');
-            if (inp) inp.value = finalTxt.trim();
-            const wantDispatch = /antigravity|despachar|miss[aã]o|injetar/i.test(finalTxt);
-            sendJarvisCommandUI(wantDispatch, finalTxt.trim());
-          }
-        };
-
-        jarvisSpeechRec.onerror = () => {
-          jarvisIsListening = false;
-          updateJarvisVoiceBadgesUI();
-        };
-
-        jarvisSpeechRec.onend = () => {
-          jarvisIsListening = false;
-          updateJarvisVoiceBadgesUI();
-        };
-
-        jarvisSpeechRec.start();
-      } catch (e) {
-        jarvisIsListening = false;
-        updateJarvisVoiceBadgesUI();
-        showToast('⚠️ Não foi possível iniciar o microfone: ' + e.message);
-      }
-    }
-
-    async function fetchJarvisStudioPage(showNotification = false) {
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      const ws = (wsSel && wsSel.value) ? wsSel.value : 'brain_mcp';
-      try {
-        const res = await fetch(`/api/jarvis?workspace=${encodeURIComponent(ws)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.ok) {
-            jarvisLastStateData = data;
-            renderJarvisStudioPage(data);
-            if (showNotification) {
-              showToast('🤖 J.A.R.V.I.S. Cognitive OS sincronizado (0 GB VRAM · Antigravity Bridge Live)!');
-            }
-            return;
-          }
-        }
-      } catch (_) {}
-
-      // Instant Client-Side Fallback using existing Brain & Orbit telemetry
-      const memCount = (typeof activeNodes !== 'undefined' && Array.isArray(activeNodes)) ? activeNodes.length : 42;
-      const tasksCount = (typeof allUnifiedTasks !== 'undefined' && Array.isArray(allUnifiedTasks)) ? allUnifiedTasks.length : 4;
-      if (jarvisChatHistoryLocal.length === 0) {
-        jarvisChatHistoryLocal.push({
-          role: 'assistant',
-          intent: 'system_boot',
-          timestamp: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-          reply_text: `Sistemas J.A.R.V.I.S. operacionais no workspace **${ws}**. Motor NLU 128-D + HippoRAG PPR ligado a **${memCount} nós semânticos** e **${tasksCount} tarefas DOTS DAG** com **0 GB de consumo VRAM** (Zero-Ollama). A Ponte Antigravity está pronta para injetar diretivas cirúrgicas via \`PreInvocation\`.`,
-          speech_text: `Sistemas Jarvis operacionais no projeto ${ws}. Ponte Antigravity pronta com zero consumo de memória gráfica.`,
-          tools_executed: [
-            { tool: 'windows_telemetry', latency_ms: 0.8, summary: 'RAM, CPU, NVMe & Quota 5h OK' },
-            { tool: 'compute_memory_ppr', latency_ms: 1.4, summary: `${memCount} memórias FTS5 + HippoRAG prontas` },
-            { tool: 'dots_dag', latency_ms: 0.9, summary: `${tasksCount} tarefas no grafo topológico` }
-          ]
-        });
-      }
-      const fallbackData = {
-        ok: true,
-        workspace: ws,
-        telemetry: {
-          ram_used_pct: 41.2,
-          ram_used_gb: 13.2,
-          ram_total_gb: 32.0,
-          disk_used_pct: 48.5,
-          disk_free_gb: 264.0,
-          cpu_load_pct: 14.6,
-          cpu_cores: navigator.hardwareConcurrency || 12,
-          quota_5h_pct: 12,
-          brain_iq: 98.4,
-          vram_gb: 0.0
-        },
-        chat_history: jarvisChatHistoryLocal,
-        pending_directives: jarvisPendingDirectivesLocal,
-        tools_trace: jarvisToolTraceLocal.length ? jarvisToolTraceLocal : [
-          { tool: 'windows_telemetry', latency_ms: 0.8, status: 'OK', summary: 'Kernel Windows ctypes monitorizado' },
-          { tool: 'compute_memory_ppr', latency_ms: 1.4, status: 'OK', summary: 'HippoRAG Personalized PageRank ativo' },
-          { tool: 'ast_impact_watcher', latency_ms: 1.1, status: 'OK', summary: 'Sentinel AST & Blast Radius operacional' },
-          { tool: 'dots_dag', latency_ms: 0.9, status: 'OK', summary: 'Grafo Acíclico .dots/*.md sincronizado' }
-        ],
-        next_action: {
-          headline: 'Auditar AST, risco estrutural e validar suite de testes completa',
-          rationale: 'Heurística Q-18: 3 ficheiros alterados no workspace sem verificação de impacto recente.',
-          confidence: '96% CONFIDENCE',
-          command: 'Auditar AST, risco estrutural e ficheiros críticos do projeto'
-        },
-        today_plan: {
-          verified_pct: 0,
-          items: [
-            {
-              id: 'td-01',
-              title: 'Auditoria AST e Grafo de Dependências',
-              description: 'Varredura sintática de imports circulares e nós órfãos',
-              verified: false,
-              outcome_proof: 'ast_impact_watcher: 0 nós órfãos'
-            },
-            {
-              id: 'td-02',
-              title: 'Validação da Suite de Testes (Brain DB + HippoRAG)',
-              description: 'Executar testes de regressão de memória e RRF híbrido',
-              verified: false,
-              outcome_proof: 'pytest test_brain.py: 48/48 passed'
-            },
-            {
-              id: 'td-03',
-              title: 'Monitorização da Quota 5h e Token Diet',
-              description: 'Garantir economia de tokens superior a 60% com TOON delta',
-              verified: false,
-              outcome_proof: 'TokenDiet: -64% tokens poupados'
-            }
-          ]
-        },
-        commitments: [
-          {
-            id: 'cm-01',
-            text: 'Manter zero consumo Ollama e 0 GB VRAM no Jarvis Studio',
-            provenance: 'CONFIRMED',
-            source: 'Diretiva de Operação',
-            completed: false
-          },
-          {
-            id: 'cm-02',
-            text: 'Sincronizar grafo topológico DOTS DAG e memórias PPR a cada ciclo',
-            provenance: 'CONFIRMED',
-            source: 'Kernel Jev-Mem',
-            completed: false
-          },
-          {
-            id: 'cm-03',
-            text: 'Assegurar validação sintática estrita com node --check no index.html',
-            provenance: 'INFERRED',
-            source: 'Heurística QA Q-18',
-            completed: true
-          }
-        ],
-        personality: {
-          conciseness: 88,
-          tech_depth: 92,
-          proactivity: 78,
-          trust_score: 95
-        },
-        routines: [
-          {
-            title: '☀️ Briefing Matinal & Git Sync',
-            cue: 'routine-cues-v2 · Diário às 09:00',
-            command: 'Gerar Briefing Executivo Matinal completo do sistema, memória PPR, tarefas DOTS DAG e saúde AST'
-          },
-          {
-            title: '🛡️ Auditoria AST & Blast Radius',
-            cue: 'routine-cues-v2 · Pré-Commit / Ficheiro Alterado',
-            command: 'Auditar AST, risco estrutural e ficheiros críticos do projeto'
-          },
-          {
-            title: '🧪 Validação Suite de Testes QA',
-            cue: 'routine-cues-v2 · Ciclo de Verificação Contínua',
-            command: 'Verificar estado Git, ficheiros modificados e saúde dos testes'
-          }
-        ],
-        trust_boundary: {
-          status: 'PINNED',
-          level: 'L4 Autonomous Sandbox',
-          policy: 'Read/Write Verified · Authority-Aware'
-        }
-      };
-      renderJarvisStudioPage(fallbackData);
-      if (showNotification) {
-        showToast('🤖 J.A.R.V.I.S. Cognitive OS sincronizado!');
-      }
-    }
-
-    function renderJarvisStudioPage(data) {
-      if (!data) return;
-      jarvisLastStateData = { ...(jarvisLastStateData || {}), ...data };
-
-      // Populate Workspace Select options from known workspaces
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      if (wsSel) {
-        const curWs = data.workspace || wsSel.value || 'brain_mcp';
-        const wsSet = new Set(['brain_mcp', curWs]);
-        if (Array.isArray(data.workspaces)) data.workspaces.forEach(w => wsSet.add(w));
-        if (typeof allUnifiedTasks !== 'undefined' && Array.isArray(allUnifiedTasks)) {
-          allUnifiedTasks.forEach(t => { if (t.workspace) wsSet.add(t.workspace); });
-        }
-        wsSel.innerHTML = Array.from(wsSet).filter(Boolean).map(w =>
-          `<option value="${escapeHtml(w)}" ${w === curWs ? 'selected' : ''}>📂 ${escapeHtml(w)}</option>`
-        ).join('');
-      }
-
-      // 1. Hardware & Quota Telemetry
-      const tel = data.telemetry || data.hardware || data.system || {};
-      const ramPct = Number(tel.ram_used_pct ?? tel.ram_percent ?? 42);
-      const diskPct = Number(tel.disk_used_pct ?? tel.disk_percent ?? 48);
-      const cpuPct = Number(tel.cpu_load_pct ?? tel.cpu_percent ?? 16);
-      const iqVal = Number(tel.brain_iq ?? 98.4);
-
-      const setElTxt = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
-      const setBarW = (id, pct) => {
-        const el = document.getElementById(id);
-        if (el) el.style.width = `${Math.max(4, Math.min(100, pct))}%`;
-      };
-
-      setElTxt('jvStatRam', `${ramPct.toFixed(0)}%`);
-      setBarW('jvBarRam', ramPct);
-      if (tel.ram_used_gb && tel.ram_total_gb) {
-        setElTxt('jvSubRam', `${tel.ram_used_gb} / ${tel.ram_total_gb} GB · 0 VRAM`);
-      }
-
-      setElTxt('jvStatDisk', `${diskPct.toFixed(0)}%`);
-      setBarW('jvBarDisk', diskPct);
-      if (tel.disk_free_gb !== undefined) {
-        setElTxt('jvSubDisk', `${tel.disk_free_gb} GB livres NVMe`);
-      }
-
-      setElTxt('jvStatCpu', `${cpuPct.toFixed(0)}%`);
-      setBarW('jvBarCpu', cpuPct);
-      if (tel.cpu_cores) {
-        setElTxt('jvSubCpu', `${tel.cpu_cores} Threads · Zero-Ollama`);
-      }
-
-      setElTxt('jvStatQuota', `IQ ${iqVal.toFixed(0)}%`);
-      setBarW('jvBarQuota', iqVal);
-
-      // 2. Chat Stream (#jarvisChatLog)
-      const rawHistory = Array.isArray(data.chat_history)
-        ? data.chat_history
-        : (Array.isArray(data.history) ? data.history : jarvisChatHistoryLocal);
-      if (rawHistory.length) {
-        jarvisChatHistoryLocal = rawHistory;
-      }
-      const chatBox = document.getElementById('jarvisChatLog');
-      if (chatBox) {
-        if (!jarvisChatHistoryLocal.length) {
-          chatBox.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted); font-family:var(--font-mono); font-size:11px;">Nenhum diálogo registado. Clique em ☀️ Briefing Matinal ou faça uma pergunta ao Jarvis.</div>`;
-        } else {
-          chatBox.innerHTML = jarvisChatHistoryLocal.slice(-24).map(msg => {
-            const isUser = String(msg.role || '').toLowerCase() === 'user';
-            const textBody = msg.reply_text || msg.text || msg.content || msg.message || '';
-            const toolsArr = Array.isArray(msg.tools_executed) ? msg.tools_executed : (Array.isArray(msg.tools) ? msg.tools : []);
-            const toolsHtml = toolsArr.length
-              ? `<div style="display:flex; gap:5px; flex-wrap:wrap; margin-top:2px;">` +
-                toolsArr.map(t => {
-                  const tName = typeof t === 'string' ? t : (t.tool || t.name || 'tool');
-                  const tMs = (typeof t === 'object' && t.latency_ms !== undefined) ? ` · ${t.latency_ms}ms` : '';
-                  return `<span class="jv-tool-chip">⚙️ ${escapeHtml(tName)}${escapeHtml(tMs)}</span>`;
-                }).join('') +
-                `</div>`
-              : '';
-            const agyPacket = msg.antigravity_packet || msg.directive || null;
-            const packetHtml = (agyPacket && (agyPacket.super_prompt || agyPacket.directive_text || agyPacket.title))
-              ? `<div class="jv-agy-packet-box">
-                   <div style="display:flex; justify-content:space-between; align-items:center;">
-                     <strong style="color:#22d3ee;">🚀 DIRETIVA ANTIGRAVITY ENFILEIRADA (#${escapeHtml(String(agyPacket.id || 'AGY'))})</strong>
-                     <button type="button" class="office-btn primary" style="padding:2px 7px; font-size:9.5px;" onclick="copyJarvisSuperPromptUI('${encodeURIComponent(agyPacket.super_prompt || agyPacket.directive_text || agyPacket.title || '')}')">📋 Copiar Super-Prompt</button>
-                   </div>
-                   <div style="color:#d4d4d8; font-size:10px; white-space:pre-wrap; max-height:90px; overflow-y:auto;">${escapeHtml(String(agyPacket.super_prompt || agyPacket.directive_text || agyPacket.title).slice(0, 360))}</div>
-                 </div>`
-              : '';
-            const speechSafe = encodeURIComponent(msg.speech_text || textBody);
-            return `
-              <div class="jv-msg ${isUser ? 'user' : 'assistant'}">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; font-family:var(--font-mono); font-size:9.5px; color:var(--text-muted);">
-                  <strong style="color:${isUser ? '#22d3ee' : '#10b981'};">${isUser ? '👤 OPERADOR' : '🤖 J.A.R.V.I.S. COGNITIVE CORE'} ${msg.intent ? `· [${escapeHtml(String(msg.intent).toUpperCase())}]` : ''}</strong>
-                  <div style="display:flex; align-items:center; gap:6px;">
-                    <span>${escapeHtml(msg.timestamp || msg.created_at || 'Agora')}</span>
-                    ${!isUser ? `<button type="button" class="office-btn" style="padding:1px 6px; font-size:9px;" onclick="speakJarvisText(decodeURIComponent('${speechSafe}'))" title="Ouvir resposta em voz alta">🔊 Ouvir</button>` : ''}
-                  </div>
-                </div>
-                <div style="white-space:pre-wrap; word-break:break-word;">${escapeHtml(textBody)}</div>
-                ${toolsHtml}
-                ${packetHtml}
-              </div>
-            `;
-          }).join('');
-          chatBox.scrollTop = chatBox.scrollHeight;
-        }
-      }
-
-      // 3. Antigravity IDE Bridge Queue (#jarvisDirectivesList)
-      const directives = Array.isArray(data.pending_directives)
-        ? data.pending_directives
-        : (Array.isArray(data.directives) ? data.directives : jarvisPendingDirectivesLocal);
-      jarvisPendingDirectivesLocal = directives;
-      const dirBadge = document.getElementById('jarvisPendingDirectivesBadge');
-      if (dirBadge) {
-        const pendingCnt = directives.filter(d => String(d.status || 'pending') === 'pending').length;
-        dirBadge.textContent = `${pendingCnt} PENDENTE(S)`;
-      }
-      const dirBox = document.getElementById('jarvisDirectivesList');
-      if (dirBox) {
-        if (!directives.length) {
-          dirBox.innerHTML = `<div style="padding:14px 10px; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:10px; border:1px dashed var(--border); border-radius:6px;">Sem diretivas pendentes na fila PreInvocation. Use "🚀 Despachar p/ Antigravity" para injetar uma missão cirúrgica.</div>`;
-        } else {
-          dirBox.innerHTML = directives.slice(0, 10).map(d => {
-            const did = d.id || d.directive_id || 'dir-01';
-            const isDone = String(d.status || 'pending') !== 'pending';
-            const spPrompt = d.super_prompt || d.directive_text || d.command || d.title || '';
-            return `
-              <div style="background:#121218; border:1px solid ${isDone ? 'var(--border)' : 'rgba(6,182,212,0.4)'}; border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; gap:5px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9.5px;">
-                  <strong style="color:${isDone ? '#71717a' : '#22d3ee'};">#${escapeHtml(String(did))} · ${escapeHtml(String(d.workspace || 'brain_mcp'))}</strong>
-                  <span class="tk-chip" style="color:${isDone ? '#a1a1aa' : '#6ee7b7'};">${isDone ? '✓ INJETADA/DONE' : '● PRE-INVOCATION'}</span>
-                </div>
-                <div style="font-size:11px; font-weight:600; color:#f4f4f5; line-height:1.3;">${escapeHtml(String(d.title || d.command || spPrompt).slice(0, 110))}</div>
-                <div style="display:flex; justify-content:flex-end; gap:5px; margin-top:2px;">
-                  <button type="button" class="office-btn" style="padding:2px 7px; font-size:9.5px;" onclick="copyJarvisSuperPromptUI('${encodeURIComponent(spPrompt)}')">📋 Copiar Super-Prompt</button>
-                  ${!isDone ? `<button type="button" class="office-btn emerald" style="padding:2px 7px; font-size:9.5px;" onclick="completeJarvisDirectiveUI('${escapeHtml(String(did))}')">✓ Concluir</button>` : ''}
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-
-      // 4. Live Tool Execution Trace (#jarvisToolTraceList)
-      const traces = Array.isArray(data.tools_trace)
-        ? data.tools_trace
-        : (Array.isArray(data.tool_trace) ? data.tool_trace : jarvisToolTraceLocal);
-      if (traces.length) jarvisToolTraceLocal = traces;
-      const traceBox = document.getElementById('jarvisToolTraceList');
-      const latChip = document.getElementById('jarvisTraceLatencyChip');
-      if (traceBox) {
-        if (!jarvisToolTraceLocal.length) {
-          traceBox.innerHTML = `<div style="padding:12px; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:10px;">Aguardando execução de ferramentas locais...</div>`;
-        } else {
-          let totalMs = 0;
-          traceBox.innerHTML = jarvisToolTraceLocal.slice(0, 10).map(tr => {
-            const ms = Number(tr.latency_ms ?? tr.duration_ms ?? 1.1);
-            totalMs += ms;
-            return `
-              <div style="background:#111116; border:1px solid var(--border); border-left:3px solid #10b981; border-radius:5px; padding:6px 9px; display:flex; justify-content:space-between; align-items:center; gap:8px; font-family:var(--font-mono); font-size:9.5px;">
-                <div style="display:flex; flex-direction:column; gap:2px; overflow:hidden;">
-                  <strong style="color:#6ee7b7;">⚙️ ${escapeHtml(tr.tool || tr.name || 'local_tool')}</strong>
-                  <span style="color:var(--text-secondary); font-size:9px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(tr.summary || tr.detail || 'Executado localmente')}</span>
-                </div>
-                <span class="tk-chip" style="color:#22d3ee;">${ms.toFixed(1)}ms</span>
-              </div>
-            `;
-          }).join('');
-          if (latChip) latChip.textContent = `${totalMs.toFixed(1)}ms total`;
-        }
-      }
-
-      // 5. Next-Action Deterministic Planner Q-18
-      const nextAct = data.next_action
-        || (data.enterprise_v8 && data.enterprise_v8.next_action)
-        || (jarvisLastStateData && (jarvisLastStateData.next_action || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.next_action)))
-        || null;
-
-      const naHeadlineEl = document.getElementById('jarvisNextActionHeadline');
-      const naRationaleEl = document.getElementById('jarvisNextActionRationale');
-      const naConfEl = document.getElementById('jarvisNextActionConfidence');
-
-      let recommendedCmd = 'Auditar AST, risco estrutural e ficheiros críticos do projeto';
-      if (nextAct) {
-        const headline = nextAct.headline || nextAct.title || nextAct.action || nextAct.recommendation || 'Auditar AST, risco estrutural e validar suite de testes completa';
-        const rationale = nextAct.rationale || nextAct.reason || nextAct.subtext || 'Heurística Q-18: 3 ficheiros alterados no workspace sem verificação de impacto recente.';
-        let confStr = '96% CONFIDENCE';
-        if (nextAct.confidence !== undefined) {
-          if (typeof nextAct.confidence === 'number') {
-            confStr = nextAct.confidence > 1 ? `${Math.round(nextAct.confidence)}% CONFIDENCE` : `${Math.round(nextAct.confidence * 100)}% CONFIDENCE`;
-          } else {
-            confStr = String(nextAct.confidence);
-            if (!/confidence/i.test(confStr)) confStr += ' CONFIDENCE';
-          }
-        }
-        recommendedCmd = nextAct.command || nextAct.action || headline;
-
-        if (naHeadlineEl) naHeadlineEl.textContent = headline;
-        if (naRationaleEl) naRationaleEl.textContent = rationale;
-        if (naConfEl) naConfEl.textContent = confStr;
-      }
-      jarvisRecommendedNextActionCmd = recommendedCmd;
-
-      // 6. Today Work-Items & Outcome Gate (#jarvisTodayItemsList & #jarvisTodayVerifiedBadge)
-      const rawTodayPlan = data.today_plan
-        || (data.enterprise_v8 && data.enterprise_v8.today_plan)
-        || (jarvisLastStateData && (jarvisLastStateData.today_plan || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.today_plan)))
-        || null;
-
-      let todayItems = [];
-      if (Array.isArray(rawTodayPlan)) {
-        todayItems = rawTodayPlan;
-      } else if (rawTodayPlan && Array.isArray(rawTodayPlan.items)) {
-        todayItems = rawTodayPlan.items;
-      } else if (rawTodayPlan && Array.isArray(rawTodayPlan.work_items)) {
-        todayItems = rawTodayPlan.work_items;
-      } else {
-        todayItems = [
-          {
-            id: 'td-01',
-            title: 'Auditoria AST e Grafo de Dependências',
-            description: 'Varredura sintática de imports circulares e nós órfãos',
-            verified: false,
-            outcome_proof: 'ast_impact_watcher: 0 nós órfãos'
-          },
-          {
-            id: 'td-02',
-            title: 'Validação da Suite de Testes (Brain DB + HippoRAG)',
-            description: 'Executar testes de regressão de memória e RRF híbrido',
-            verified: false,
-            outcome_proof: 'pytest test_brain.py: 48/48 passed'
-          },
-          {
-            id: 'td-03',
-            title: 'Monitorização da Quota 5h e Token Diet',
-            description: 'Garantir economia de tokens superior a 60% com TOON delta',
-            verified: false,
-            outcome_proof: 'TokenDiet: -64% tokens poupados'
-          }
-        ];
-      }
-
-      const verifiedCount = todayItems.filter(it => it.verified || it.status === 'verified').length;
-      const verifiedPct = todayItems.length ? Math.round((verifiedCount / todayItems.length) * 100) : 0;
-      const todayBadge = document.getElementById('jarvisTodayVerifiedBadge');
-      if (todayBadge) {
-        todayBadge.textContent = `${verifiedPct}% VERIFIED`;
-        todayBadge.className = verifiedPct === 100 ? 'rc-badge ready' : 'rc-badge working';
-      }
-
-      const todayListEl = document.getElementById('jarvisTodayItemsList');
-      if (todayListEl) {
-        if (!todayItems.length) {
-          todayListEl.innerHTML = `<div style="padding:12px; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:10px; border:1px dashed var(--border); border-radius:6px;">Nenhum item diário no plano de hoje.</div>`;
-        } else {
-          todayListEl.innerHTML = todayItems.map(it => {
-            const isVer = Boolean(it.verified || it.status === 'verified');
-            const proofTxt = it.outcome_proof || it.proof || it.verification || 'Prova de execução AST / QA pendente';
-            const itemIdSafe = String(it.id || 'td-00');
-            return `
-              <div style="background:#111117; border:1px solid ${isVer ? 'rgba(16,185,129,0.35)' : 'var(--border)'}; border-left:3px solid ${isVer ? '#10b981' : '#f59e0b'}; border-radius:6px; padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                  <div style="font-weight:700; font-size:11px; color:#f4f4f5; line-height:1.2; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                    ${escapeHtml(it.title || it.name || 'Work item')}
-                  </div>
-                  <span class="tk-chip" style="color:${isVer ? '#6ee7b7' : '#fcd34d'}; border-color:${isVer ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}; font-size:8.5px; padding:1px 5px;">
-                    ${isVer ? '✓ VERIFICADO' : 'PENDENTE'}
-                  </span>
-                </div>
-                ${it.description ? `<div style="font-size:9.5px; color:var(--text-muted); line-height:1.3;">${escapeHtml(it.description)}</div>` : ''}
-                <div style="background:#09090d; border:1px solid var(--border); border-radius:4px; padding:4px 6px; font-family:var(--font-mono); font-size:9px; color:#a1a1aa; display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                  <div style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;" title="${escapeHtml(proofTxt)}">
-                    <span style="color:#22d3ee; font-weight:700;">PROVA:</span> ${escapeHtml(proofTxt)}
-                  </div>
-                  ${!isVer ? `<button type="button" class="office-btn emerald" style="padding:2px 7px; font-size:9px; white-space:nowrap; flex-shrink:0;" onclick="verifyJarvisTodayOutcomeUI('${escapeHtml(itemIdSafe)}')">✓ Verificar Outcome</button>` : `<span style="color:#10b981; font-weight:700; font-size:9px;">PROVADO</span>`}
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-
-      // 7. Commitments & Provenance Extractor (#jarvisCommitmentsList)
-      const rawCommitments = data.commitments
-        || (data.enterprise_v8 && data.enterprise_v8.commitments)
-        || (jarvisLastStateData && (jarvisLastStateData.commitments || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.commitments)))
-        || null;
-
-      let commitments = [];
-      if (Array.isArray(rawCommitments)) {
-        commitments = rawCommitments;
-      } else if (rawCommitments && Array.isArray(rawCommitments.items)) {
-        commitments = rawCommitments.items;
-      } else {
-        commitments = [
-          {
-            id: 'cm-01',
-            text: 'Manter zero consumo Ollama e 0 GB VRAM no Jarvis Studio',
-            provenance: 'CONFIRMED',
-            source: 'Diretiva de Operação',
-            completed: false
-          },
-          {
-            id: 'cm-02',
-            text: 'Sincronizar grafo topológico DOTS DAG e memórias PPR a cada ciclo',
-            provenance: 'CONFIRMED',
-            source: 'Kernel Jev-Mem',
-            completed: false
-          },
-          {
-            id: 'cm-03',
-            text: 'Assegurar validação sintática estrita com node --check no index.html',
-            provenance: 'INFERRED',
-            source: 'Heurística QA Q-18',
-            completed: true
-          }
-        ];
-      }
-
-      const commitListEl = document.getElementById('jarvisCommitmentsList');
-      if (commitListEl) {
-        if (!commitments.length) {
-          commitListEl.innerHTML = `<div style="padding:12px; text-align:center; color:var(--text-dim); font-family:var(--font-mono); font-size:10px; border:1px dashed var(--border); border-radius:6px;">Nenhum compromisso registado.</div>`;
-        } else {
-          commitListEl.innerHTML = commitments.map(cm => {
-            const isDone = Boolean(cm.completed || cm.status === 'completed' || cm.done);
-            const provRaw = String(cm.provenance || 'CONFIRMED').toUpperCase();
-            const isConfirmed = provRaw.includes('CONFIRM');
-            const commIdSafe = String(cm.id || 'cm-00');
-            return `
-              <div style="background:#111117; border:1px solid ${isDone ? 'var(--border)' : 'rgba(168,85,247,0.35)'}; border-left:3px solid ${isDone ? '#71717a' : (isConfirmed ? '#10b981' : '#a855f7')}; border-radius:6px; padding:7px 9px; display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-                  <span class="tk-chip" style="color:${isConfirmed ? '#6ee7b7' : '#c084fc'}; border-color:${isConfirmed ? 'rgba(16,185,129,0.35)' : 'rgba(168,85,247,0.35)'}; background:${isConfirmed ? 'rgba(16,185,129,0.08)' : 'rgba(168,85,247,0.08)'}; font-size:8.5px; font-weight:800; padding:1px 5px;">
-                    [${isConfirmed ? 'CONFIRMED' : 'INFERRED'}]
-                  </span>
-                  <span style="font-family:var(--font-mono); font-size:9px; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">
-                    ${escapeHtml(cm.source || cm.provenance_source || 'Diálogo')}
-                  </span>
-                </div>
-                <div style="font-size:10.5px; color:${isDone ? '#71717a' : '#f4f4f5'}; line-height:1.3; font-weight:500; ${isDone ? 'text-decoration:line-through;' : ''}">
-                  ${escapeHtml(cm.text || cm.title || cm.commitment || 'Compromisso')}
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px; font-family:var(--font-mono); font-size:9px;">
-                  <span style="color:var(--text-dim);">${escapeHtml(cm.created_at || cm.date || 'Hoje')}</span>
-                  ${!isDone ? `<button type="button" class="office-btn" style="padding:2px 7px; font-size:9px; border-color:rgba(168,85,247,0.4); color:#c084fc;" onclick="completeJarvisCommitmentUI('${escapeHtml(commIdSafe)}')" title="Marcar compromisso como cumprido">✓ Cumprir</button>` : `<span style="color:#71717a;">✓ Concluído</span>`}
-                </div>
-              </div>
-            `;
-          }).join('');
-        }
-      }
-
-      // 8. Adaptive Personality Engine, Routine Discovery & Trust Boundary (#jarvisPersonalityAndRoutinesBox)
-      const persData = data.personality
-        || (data.enterprise_v8 && data.enterprise_v8.personality)
-        || (jarvisLastStateData && (jarvisLastStateData.personality || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.personality)))
-        || { conciseness: 88, tech_depth: 92, proactivity: 78, trust_score: 95 };
-
-      const routinesData = data.routines
-        || (data.enterprise_v8 && data.enterprise_v8.routines)
-        || (jarvisLastStateData && (jarvisLastStateData.routines || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.routines)))
-        || [
-          {
-            title: '☀️ Briefing Matinal & Git Sync',
-            cue: 'routine-cues-v2 · Diário às 09:00',
-            command: 'Gerar Briefing Executivo Matinal completo do sistema, memória PPR, tarefas DOTS DAG e saúde AST'
-          },
-          {
-            title: '🛡️ Auditoria AST & Blast Radius',
-            cue: 'routine-cues-v2 · Pré-Commit / Ficheiro Alterado',
-            command: 'Auditar AST, risco estrutural e ficheiros críticos do projeto'
-          },
-          {
-            title: '🧪 Validação Suite de Testes QA',
-            cue: 'routine-cues-v2 · Ciclo de Verificação Contínua',
-            command: 'Verificar estado Git, ficheiros modificados e saúde dos testes'
-          }
-        ];
-
-      const trustData = data.trust_boundary
-        || (data.enterprise_v8 && data.enterprise_v8.trust_boundary)
-        || (jarvisLastStateData && (jarvisLastStateData.trust_boundary || (jarvisLastStateData.enterprise_v8 && jarvisLastStateData.enterprise_v8.trust_boundary)))
-        || { status: 'PINNED', level: 'L4 Autonomous Sandbox', policy: 'Read/Write Verified · Authority-Aware' };
-
-      const persBoxEl = document.getElementById('jarvisPersonalityAndRoutinesBox');
-      if (persBoxEl) {
-        const concVal = Math.max(0, Math.min(100, Number(persData.conciseness ?? 88)));
-        const techVal = Math.max(0, Math.min(100, Number(persData.tech_depth ?? 92)));
-        const proactVal = Math.max(0, Math.min(100, Number(persData.proactivity ?? 78)));
-        const trustVal = Math.max(0, Math.min(100, Number(persData.trust_score ?? 95)));
-
-        const routinesListHtml = Array.isArray(routinesData) && routinesData.length ? routinesData.map(r => {
-          const rCmd = r.command || r.title || '';
-          return `
-            <div style="background:#09090d; border:1px solid var(--border); border-radius:5px; padding:5px 8px; display:flex; justify-content:space-between; align-items:center; gap:6px;">
-              <div style="display:flex; flex-direction:column; gap:1px; overflow:hidden;">
-                <div style="font-size:10px; font-weight:700; color:#f4f4f5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${escapeHtml(r.title || r.name || 'Rotina')}
-                </div>
-                <div style="font-family:var(--font-mono); font-size:8.5px; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${escapeHtml(r.cue || r.trigger || 'routine-cues-v2')}
-                </div>
-              </div>
-              <button type="button" class="office-btn" style="padding:2px 6px; font-size:9px; border-color:rgba(168,85,247,0.4); color:#c084fc; flex-shrink:0;" onclick="runJarvisRoutineMacroUI('${encodeURIComponent(rCmd)}')">
-                ⚡ Executar
-              </button>
-            </div>
-          `;
-        }).join('') : `<div style="font-size:9.5px; color:var(--text-dim); text-align:center; padding:6px;">Sem rotinas ativas.</div>`;
-
-        persBoxEl.innerHTML = `
-          <!-- 4 Mini Progress Bars / Pills -->
-          <div style="background:#111117; border:1px solid var(--border); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#38bdf8; letter-spacing:0.04em;">
-                🧬 PERSONALIDADE ADAPTATIVA (ONLINE RL)
-              </span>
-              <span class="tk-chip" style="font-size:8.5px; color:#6ee7b7; border-color:rgba(16,185,129,0.35);">AUTOTUNED</span>
-            </div>
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; font-family:var(--font-mono); font-size:9px;">
-              <div>
-                <div style="display:flex; justify-content:space-between; color:var(--text-muted); margin-bottom:2px;">
-                  <span>Conciseness</span>
-                  <strong style="color:#6ee7b7;">${concVal}%</strong>
-                </div>
-                <div style="height:3px; background:#1c1c28; border-radius:2px; overflow:hidden;">
-                  <div style="width:${concVal}%; height:100%; background:#10b981;"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display:flex; justify-content:space-between; color:var(--text-muted); margin-bottom:2px;">
-                  <span>Tech Depth</span>
-                  <strong style="color:#c084fc;">${techVal}%</strong>
-                </div>
-                <div style="height:3px; background:#1c1c28; border-radius:2px; overflow:hidden;">
-                  <div style="width:${techVal}%; height:100%; background:#a855f7;"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display:flex; justify-content:space-between; color:var(--text-muted); margin-bottom:2px;">
-                  <span>Proactivity</span>
-                  <strong style="color:#fcd34d;">${proactVal}%</strong>
-                </div>
-                <div style="height:3px; background:#1c1c28; border-radius:2px; overflow:hidden;">
-                  <div style="width:${proactVal}%; height:100%; background:#f59e0b;"></div>
-                </div>
-              </div>
-              <div>
-                <div style="display:flex; justify-content:space-between; color:var(--text-muted); margin-bottom:2px;">
-                  <span>Trust Score</span>
-                  <strong style="color:#38bdf8;">${trustVal}%</strong>
-                </div>
-                <div style="height:3px; background:#1c1c28; border-radius:2px; overflow:hidden;">
-                  <div style="width:${trustVal}%; height:100%; background:#06b6d4;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Evidence-Backed Routine Discovery -->
-          <div style="background:#111117; border:1px solid var(--border); border-radius:6px; padding:8px 10px; display:flex; flex-direction:column; gap:6px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#c084fc; letter-spacing:0.04em;">
-                🔄 ROTINAS DESCOBERTAS (ROUTINE-CUES-V2)
-              </span>
-              <span class="tk-chip" style="font-size:8.5px; color:#a78bfa; border-color:rgba(167,139,250,0.35);">EVIDENCE-BACKED</span>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              ${routinesListHtml}
-            </div>
-          </div>
-
-          <!-- Authority-Aware Trust Boundary -->
-          <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:7px 10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
-            <div style="display:flex; align-items:center; gap:6px;">
-              <span style="font-size:14px;">🛡️</span>
-              <div style="display:flex; flex-direction:column; gap:1px;">
-                <div style="font-family:var(--font-mono); font-size:9.5px; font-weight:800; color:#6ee7b7;">
-                  🛡️ Trust Boundary: ${escapeHtml(String(trustData.status || 'PINNED'))}
-                </div>
-                <div style="font-size:8.5px; color:#94a3b8; font-family:var(--font-mono);">
-                  ${escapeHtml(String(trustData.level || 'L4 Autonomous Sandbox'))} · ${escapeHtml(String(trustData.policy || 'Read/Write Verified'))}
-                </div>
-              </div>
-            </div>
-            <span class="tk-chip" style="color:#6ee7b7; border-color:rgba(16,185,129,0.4); background:rgba(16,185,129,0.12); font-size:8.5px; font-weight:800;">
-              ENFORCED
-            </span>
-          </div>
-        `;
-      }
-
-      switchJarvisV8Tab(jarvisActiveV8Tab || 'today');
-    }
-
-    function triggerJarvisNextActionUI() {
-      const cmd = jarvisRecommendedNextActionCmd || 'Auditar AST, risco estrutural e ficheiros críticos do projeto';
-      sendJarvisCommandUI(false, cmd);
-    }
-
-    async function verifyJarvisTodayOutcomeUI(itemId) {
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      const ws = (wsSel && wsSel.value) ? wsSel.value : 'brain_mcp';
-      try {
-        await fetch('/api/jarvis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'verify_today_item', item_id: itemId, id: itemId, workspace: ws })
-        });
-      } catch (_) {}
-      showToast('✅ Outcome verificado com prova AST/QA!');
-      if (jarvisLastStateData) {
-        let items = null;
-        if (Array.isArray(jarvisLastStateData.today_plan)) {
-          items = jarvisLastStateData.today_plan;
-        } else if (jarvisLastStateData.today_plan && Array.isArray(jarvisLastStateData.today_plan.items)) {
-          items = jarvisLastStateData.today_plan.items;
-        } else if (jarvisLastStateData.today_plan && Array.isArray(jarvisLastStateData.today_plan.work_items)) {
-          items = jarvisLastStateData.today_plan.work_items;
-        }
-        if (items) {
-          const it = items.find(x => String(x.id) === String(itemId));
-          if (it) it.verified = true;
-        }
-      }
-      fetchJarvisStudioPage(false);
-    }
-
-    async function completeJarvisCommitmentUI(commId) {
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      const ws = (wsSel && wsSel.value) ? wsSel.value : 'brain_mcp';
-      try {
-        await fetch('/api/jarvis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'complete_commitment', commitment_id: commId, id: commId, workspace: ws })
-        });
-      } catch (_) {}
-      showToast('✓ Compromisso concluído!');
-      if (jarvisLastStateData) {
-        let comms = null;
-        if (Array.isArray(jarvisLastStateData.commitments)) {
-          comms = jarvisLastStateData.commitments;
-        } else if (jarvisLastStateData.commitments && Array.isArray(jarvisLastStateData.commitments.items)) {
-          comms = jarvisLastStateData.commitments.items;
-        }
-        if (comms) {
-          const cm = comms.find(x => String(x.id) === String(commId));
-          if (cm) cm.completed = true;
-        }
-      }
-      fetchJarvisStudioPage(false);
-    }
-
-    function switchJarvisV8Tab(tab) {
-      jarvisActiveV8Tab = tab;
-      const pToday = document.getElementById('jarvisTodayTabPane');
-      const pComm = document.getElementById('jarvisCommitmentsTabPane');
-      const pPers = document.getElementById('jarvisPersonalityTabPane');
-      const bToday = document.getElementById('tabBtnJarvisToday');
-      const bComm = document.getElementById('tabBtnJarvisCommitments');
-      const bPers = document.getElementById('tabBtnJarvisPersonality');
-
-      if (pToday) pToday.style.display = (tab === 'today') ? 'flex' : 'none';
-      if (pComm) pComm.style.display = (tab === 'commitments') ? 'flex' : 'none';
-      if (pPers) pPers.style.display = (tab === 'personality') ? 'flex' : 'none';
-
-      if (bToday) {
-        bToday.className = 'jarvis-v8-tab' + (tab === 'today' ? ' active' : '');
-        bToday.style.background = (tab === 'today') ? '#181824' : 'transparent';
-        bToday.style.color = (tab === 'today') ? '#ffffff' : 'var(--text-muted)';
-        bToday.style.fontWeight = (tab === 'today') ? '700' : '600';
-      }
-      if (bComm) {
-        bComm.className = 'jarvis-v8-tab' + (tab === 'commitments' ? ' active' : '');
-        bComm.style.background = (tab === 'commitments') ? '#181824' : 'transparent';
-        bComm.style.color = (tab === 'commitments') ? '#ffffff' : 'var(--text-muted)';
-        bComm.style.fontWeight = (tab === 'commitments') ? '700' : '600';
-      }
-      if (bPers) {
-        bPers.className = 'jarvis-v8-tab' + (tab === 'personality' ? ' active' : '');
-        bPers.style.background = (tab === 'personality') ? '#181824' : 'transparent';
-        bPers.style.color = (tab === 'personality') ? '#ffffff' : 'var(--text-muted)';
-        bPers.style.fontWeight = (tab === 'personality') ? '700' : '600';
-      }
-    }
-
-    function runJarvisRoutineMacroUI(encodedCmd) {
-      const cmd = decodeURIComponent(encodedCmd || '');
-      if (!cmd) return;
-      sendJarvisCommandUI(false, cmd);
-    }
-
-    async function sendJarvisCommandUI(autoDispatchAgy = false, presetCommand = '') {
-      const inp = document.getElementById('jarvisPromptInput');
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      const ws = (wsSel && wsSel.value) ? wsSel.value : 'brain_mcp';
-      const cmdText = String(presetCommand || (inp ? inp.value : '') || '').trim();
-      if (!cmdText) {
-        showToast('⚠️ Escreva ou dite um comando para o Jarvis.');
-        if (inp) inp.focus();
-        return;
-      }
-      if (inp && !presetCommand) inp.value = '';
-
-      const nowStr = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      jarvisChatHistoryLocal.push({
-        role: 'user',
-        timestamp: nowStr,
-        text: cmdText
-      });
-      jarvisIsThinking = true;
-      updateJarvisVoiceBadgesUI();
-      renderJarvisStudioPage({ workspace: ws, chat_history: jarvisChatHistoryLocal });
-
-      try {
-        const res = await fetch('/api/jarvis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'command',
-            command: cmdText,
-            text: cmdText,
-            workspace: ws,
-            auto_dispatch_agy: Boolean(autoDispatchAgy),
-            dispatch_to_antigravity: Boolean(autoDispatchAgy)
-          })
-        });
-        const out = await res.json();
-        jarvisIsThinking = false;
-        updateJarvisVoiceBadgesUI();
-
-        if (out && out.ok) {
-          const replyObj = out.reply || out;
-          const replyText = replyObj.reply_text || replyObj.response || replyObj.answer || 'Comando processado pelo núcleo J.A.R.V.I.S.';
-          const speechText = replyObj.speech_text || replyText;
-          const toolsExec = replyObj.tools_executed || replyObj.tools_trace || out.tools_trace || [];
-          const intentLbl = replyObj.intent || out.intent || (autoDispatchAgy ? 'antigravity_dispatch' : 'cognitive_exec');
-          const agyDirective = replyObj.directive || out.directive || replyObj.antigravity_packet || null;
-
-          const intentBadge = document.getElementById('jarvisIntentBadge');
-          if (intentBadge) intentBadge.textContent = `INTENT: ${String(intentLbl).toUpperCase()}`;
-
-          if (Array.isArray(out.chat_history) && out.chat_history.length) {
-            jarvisChatHistoryLocal = out.chat_history;
-          } else {
-            jarvisChatHistoryLocal.push({
-              role: 'assistant',
-              intent: intentLbl,
-              timestamp: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-              reply_text: replyText,
-              speech_text: speechText,
-              tools_executed: toolsExec,
-              antigravity_packet: agyDirective
-            });
-          }
-
-          if (Array.isArray(toolsExec) && toolsExec.length) {
-            jarvisToolTraceLocal = [...toolsExec, ...jarvisToolTraceLocal].slice(0, 14);
-          }
-          if (agyDirective) {
-            jarvisPendingDirectivesLocal = [agyDirective, ...jarvisPendingDirectivesLocal];
-            showToast('🚀 Diretiva cirúrgica enfileirada na Ponte Antigravity ([JARVIS_DIRECTIVE])!');
-          }
-
-          renderJarvisStudioPage({
-            ...out,
-            workspace: ws,
-            chat_history: jarvisChatHistoryLocal,
-            tools_trace: jarvisToolTraceLocal,
-            pending_directives: out.pending_directives || out.directives || jarvisPendingDirectivesLocal
-          });
-          speakJarvisText(speechText);
-          return;
-        }
-      } catch (_) {
-        jarvisIsThinking = false;
-        updateJarvisVoiceBadgesUI();
-      }
-
-      // Client-side fallback execution if server hasn't restarted yet
-      const fallbackSuperPrompt = `[JARVIS_DIRECTIVE workspace="${ws}"]\nObjetivo: ${cmdText}\nContexto: Validar AST, manter 0 regressões e atualizar memória se aplicável.`;
-      const newDir = autoDispatchAgy ? {
-        id: 'jv-' + Math.floor(100 + Math.random() * 899),
-        workspace: ws,
-        title: cmdText,
-        super_prompt: fallbackSuperPrompt,
-        status: 'pending'
-      } : null;
-      if (newDir) jarvisPendingDirectivesLocal.unshift(newDir);
-
-      const fallbackReply = autoDispatchAgy
-        ? `Compilei o Super-Prompt para **"${cmdText}"** com o mapa AST e memórias PPR do projeto **${ws}** e enfileirei a diretiva **#${newDir.id}** na Ponte Antigravity (\`PreInvocation\`).`
-        : `Análise concluída para **"${cmdText}"** no workspace **${ws}**: o grafo HippoRAG PPR e o validador AST confirmam integridade estrutural (0 GB VRAM consumidos).`;
-
-      const fallbackTools = [
-        { tool: 'compute_memory_ppr', latency_ms: 1.3, summary: `Pesquisa PPR para "${cmdText.slice(0, 28)}"` },
-        { tool: 'ast_impact_watcher', latency_ms: 1.0, summary: 'Verificação de blast radius AST' }
-      ];
-      jarvisToolTraceLocal = [...fallbackTools, ...jarvisToolTraceLocal].slice(0, 12);
-      jarvisChatHistoryLocal.push({
-        role: 'assistant',
-        intent: autoDispatchAgy ? 'antigravity_bridge' : 'local_cognitive',
-        timestamp: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        reply_text: fallbackReply,
-        speech_text: fallbackReply.replace(/\*\*/g, ''),
-        tools_executed: fallbackTools,
-        antigravity_packet: newDir
-      });
-      renderJarvisStudioPage({
-        workspace: ws,
-        chat_history: jarvisChatHistoryLocal,
-        tools_trace: jarvisToolTraceLocal,
-        pending_directives: jarvisPendingDirectivesLocal
-      });
-      speakJarvisText(fallbackReply);
-    }
-
-    async function triggerJarvisMorningBriefingUI() {
-      const wsSel = document.getElementById('jarvisWorkspaceSelect');
-      const ws = (wsSel && wsSel.value) ? wsSel.value : 'brain_mcp';
-      jarvisIsThinking = true;
-      updateJarvisVoiceBadgesUI();
-      try {
-        const res = await fetch('/api/jarvis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'briefing', workspace: ws })
-        });
-        const out = await res.json();
-        jarvisIsThinking = false;
-        updateJarvisVoiceBadgesUI();
-        if (out && out.ok) {
-          const bObj = out.briefing || out.reply || out;
-          const bText = bObj.reply_text || bObj.briefing_text || bObj.text || 'Briefing executivo gerado com sucesso.';
-          const bSpeech = bObj.speech_text || bText;
-          jarvisChatHistoryLocal.push({
-            role: 'assistant',
-            intent: 'morning_briefing',
-            timestamp: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            reply_text: bText,
-            speech_text: bSpeech,
-            tools_executed: bObj.tools_executed || [
-              { tool: 'windows_telemetry', latency_ms: 0.7, summary: 'Diagnóstico de RAM, CPU e NVMe' },
-              { tool: 'dots_dag', latency_ms: 0.9, summary: 'Estado de tarefas DOTS Ready & Running' },
-              { tool: 'compute_memory_ppr', latency_ms: 1.2, summary: 'Top memórias e regras Self-Learn' }
-            ]
-          });
-          renderJarvisStudioPage({
-            ...out,
-            workspace: ws,
-            chat_history: jarvisChatHistoryLocal
-          });
-          speakJarvisText(bSpeech);
-          showToast('☀️ Briefing Executivo Matinal do Jarvis gerado!');
-          return;
-        }
-      } catch (_) {
-        jarvisIsThinking = false;
-        updateJarvisVoiceBadgesUI();
-      }
-      await sendJarvisCommandUI(false, 'Gerar Briefing Executivo Matinal completo do sistema, memória PPR, tarefas DOTS DAG e saúde AST');
-    }
-
-    function runJarvisQuickMacroUI(cmdText, autoDispatch = false) {
-      sendJarvisCommandUI(autoDispatch, cmdText);
-    }
-
-    function clearJarvisChatUI() {
-      jarvisChatHistoryLocal = [];
-      const chatBox = document.getElementById('jarvisChatLog');
-      if (chatBox) {
-        chatBox.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted); font-family:var(--font-mono); font-size:11px;">Histórico limpo. Pronto para novos comandos de voz ou texto.</div>`;
-      }
-      fetch('/api/jarvis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'clear_history' })
-      }).catch(() => {});
-    }
-
-    function copyJarvisSuperPromptUI(encodedPrompt) {
-      const decoded = decodeURIComponent(encodedPrompt || '');
-      if (!decoded) return;
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(decoded);
-      }
-      showToast('📋 Super-Prompt do Jarvis copiado para a área de transferência!');
-    }
-
-    async function completeJarvisDirectiveUI(directiveId) {
-      try {
-        await fetch('/api/jarvis', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'complete_directive', directive_id: directiveId, id: directiveId })
-        });
-      } catch (_) {}
-      jarvisPendingDirectivesLocal = jarvisPendingDirectivesLocal.map(d =>
-        (String(d.id || d.directive_id) === String(directiveId)) ? { ...d, status: 'completed' } : d
-      );
-      showToast(`✓ Diretiva #${directiveId} marcada como concluída!`);
-      fetchJarvisStudioPage(false);
-    }
-
-    function renderJarvisOrbLoop(nowMs = 0) {
-      if (activeMainView !== 'jarvis') {
-        jarvisOrbAnimRunning = false;
-        return;
-      }
-      const can = document.getElementById('jarvisOrbCanvas');
-      if (!can) {
-        jarvisOrbAnimRunning = false;
-        return;
-      }
-      const cw = can.clientWidth || 330;
-      const ch = can.clientHeight || 210;
-      if (can.width !== cw) can.width = cw;
-      if (can.height !== ch) can.height = ch;
-
-      const ctx = can.getContext('2d');
-      ctx.clearRect(0, 0, cw, ch);
-
-      const t = (nowMs || performance.now()) * 0.001;
-      const cx = cw * 0.5;
-      const cy = ch * 0.46;
-
-      // Subtle tactical grid
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      for (let x = 0; x < cw; x += 28) { ctx.moveTo(x, 0); ctx.lineTo(x, ch); }
-      for (let y = 0; y < ch; y += 28) { ctx.moveTo(0, y); ctx.lineTo(cw, y); }
-      ctx.stroke();
-
-      // Determine active harmonic color & real-time WebAudio FFT energy
-      let primaryHex = '#10b981';
-      let secondaryHex = '#06b6d4';
-      let energy = 0.25;
-      let hasRealFft = false;
-      let fftAvg = 0;
-
-      if (jarvisIsSpeaking && jarvisVoiceAnalyser && jarvisFftData) {
-        try {
-          jarvisVoiceAnalyser.getByteFrequencyData(jarvisFftData);
-          let sum = 0;
-          const binsToRead = Math.min(48, jarvisFftData.length);
-          for (let i = 0; i < binsToRead; i++) sum += jarvisFftData[i];
-          fftAvg = (sum / Math.max(1, binsToRead)) / 255.0;
-          hasRealFft = fftAvg > 0.01;
-        } catch (_) {}
-      }
-
-      if (jarvisIsThinking) {
-        primaryHex = '#f59e0b';
-        secondaryHex = '#10b981';
-        energy = 0.85;
-      } else if (jarvisIsSpeaking) {
-        primaryHex = '#22d3ee';
-        secondaryHex = '#10b981';
-        energy = hasRealFft ? Math.min(1.35, 0.45 + fftAvg * 1.45) : 0.95;
-      } else if (jarvisIsListening) {
-        primaryHex = '#06b6d4';
-        secondaryHex = '#10b981';
-        energy = 0.72;
-      }
-
-      // Outer radial glow
-      const baseR = Math.min(cw, ch) * 0.27;
-      const pulse = 1 + (hasRealFft ? fftAvg * 0.22 : Math.sin(t * (2.4 + energy * 4.0)) * (0.04 + energy * 0.08));
-      const grad = ctx.createRadialGradient(cx, cy, baseR * 0.15, cx, cy, baseR * 1.65 * pulse);
-      grad.addColorStop(0, jarvisIsListening ? 'rgba(6, 182, 212, 0.28)' : (jarvisIsThinking ? 'rgba(245, 158, 11, 0.26)' : (jarvisIsSpeaking ? 'rgba(34, 211, 238, 0.34)' : 'rgba(16, 185, 129, 0.25)')));
-      grad.addColorStop(0.6, 'rgba(6, 182, 212, 0.06)');
-      grad.addColorStop(1, 'rgba(8, 8, 11, 0)');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.arc(cx, cy, baseR * 1.65 * pulse, 0, Math.PI * 2);
-      ctx.fill();
-
-      // 3 Concentric 3D Harmonic Rings
-      for (let rIdx = 0; rIdx < 3; rIdx++) {
-        const ringR = baseR * (0.62 + rIdx * 0.28) * pulse;
-        const speed = (rIdx % 2 === 0 ? 1 : -1) * (0.65 + rIdx * 0.35 + energy * 1.2);
-        const startA = (t * speed) % (Math.PI * 2);
-
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(startA);
-        ctx.strokeStyle = rIdx === 1 ? secondaryHex : primaryHex;
-        ctx.globalAlpha = 0.38 + (2 - rIdx) * 0.16;
-        ctx.lineWidth = rIdx === 0 ? 2.0 : 1.3;
-        ctx.setLineDash(rIdx === 2 ? [5, 7] : [18, 9]);
-        ctx.beginPath();
-        ctx.arc(0, 0, ringR, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // Acoustic Harmonic Polygon / Core (driven by real FFT bins when speaking)
-      const pts = 36;
-      ctx.beginPath();
-      for (let i = 0; i <= pts; i++) {
-        const a = (i / pts) * Math.PI * 2;
-        const binVal = (hasRealFft && jarvisFftData) ? (jarvisFftData[(i * 2) % 48] / 255.0) : 0;
-        const wave = hasRealFft
-          ? (binVal * 15.0 + Math.sin(a * 6 + t * 6.0) * 3.0)
-          : (Math.sin(a * 6 + t * 5.2) * (2.5 + energy * 8.5) + Math.cos(a * 3 - t * 3.7) * (1.5 + energy * 4.5));
-        const rad = baseR * 0.48 + wave;
-        const px = cx + Math.cos(a) * rad;
-        const py = cy + Math.sin(a) * rad;
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.strokeStyle = primaryHex;
-      ctx.lineWidth = 1.8;
-      ctx.stroke();
-
-      // Core label
-      ctx.font = '800 10px "JetBrains Mono", monospace';
-      ctx.fillStyle = '#f4f4f5';
-      ctx.textAlign = 'center';
-      ctx.fillText('J.A.R.V.I.S.', cx, cy + 3);
-
-      // Bottom 24-Bar Acoustic Equalizer Strip inside canvas (Real FFT when speaking)
-      const bars = 24;
-      const barW = 6;
-      const gap = 4;
-      const totalW = bars * barW + (bars - 1) * gap;
-      const startX = (cw - totalW) * 0.5;
-      const baseY = ch - 14;
-
-      for (let b = 0; b < bars; b++) {
-        let amp = 0;
-        if (hasRealFft && jarvisFftData) {
-          amp = Math.min(1.0, (jarvisFftData[b * 2] / 255.0) * 1.25);
-        } else {
-          const phase = t * (4.0 + energy * 8.0) + b * 0.45;
-          amp = Math.abs(Math.sin(phase) * Math.cos(phase * 0.65));
-        }
-        const h = Math.max(3, amp * (8 + energy * 26));
-        ctx.fillStyle = (b % 2 === 0) ? primaryHex : secondaryHex;
-        ctx.globalAlpha = 0.55 + amp * 0.4;
-        ctx.fillRect(startX + b * (barW + gap), baseY - h, barW, h);
-      }
-      ctx.globalAlpha = 1.0;
-
-      requestAnimationFrame(renderJarvisOrbLoop);
-    }
 
     setTimeout(() => {
       refreshQuota5hRadarUI(false);

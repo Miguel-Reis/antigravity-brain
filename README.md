@@ -1,19 +1,19 @@
 <div align="center">
 
-# 🧠 Antigravity Brain v7.3 — Carbon Studio OS & J.A.R.V.I.S. Native Bridge
+# 🧠 Antigravity Brain v8.1 — Carbon Studio OS & Voice-Aware Zero-Call Protocol
 
-**Zero-Round-Trip Persistent Memory Engine, J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge + Voice STT/TTS), 128-Bit Binary Quantization + HippoRAG 2 PPR, Bi-Temporal Graphiti Memory, Git Co-Change Graphify & 48-Agent Asymmetric Swarm**
+**Zero-Round-Trip Persistent Memory Engine, Voice-Aware Zero-Call Protocol (Spoken AST Resolution + Zero-Call Pre-Execution), 128-Bit Binary Quantization + HippoRAG 2 PPR, Bi-Temporal Graphiti Memory, Git Co-Change Graphify & 48-Agent Asymmetric Swarm**
 
-[![Version](https://img.shields.io/badge/version-7.3.0_Jarvis_Carbon_OS-10b981?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
+[![Version](https://img.shields.io/badge/version-8.1.0_Carbon_OS-10b981?style=for-the-badge)](https://github.com/Miguel-Reis/antigravity-brain/releases)
 [![Python](https://img.shields.io/badge/python-3.10%2B%20(Zero--Deps)-38bdf8?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 [![Engine](https://img.shields.io/badge/SQLite_WAL-FTS5_%2B_128--Bit_BQ_%2B_HippoRAG_2_PPR-10b981?style=for-the-badge&logo=sqlite&logoColor=white)](./db_engine.py)
-[![Jarvis](https://img.shields.io/badge/JARVIS_OS-Zero--Ollama_Antigravity_Bridge_%2B_Voice-06b6d4?style=for-the-badge)](./jarvis_engine.py)
+[![Voice Protocol](https://img.shields.io/badge/Voice_Protocol-Zero--Call_Pre--Exec_%26_Phonetic_AST-06b6d4?style=for-the-badge)](./voice_brain_engine.py)
 [![MCP 2026](https://img.shields.io/badge/MCP_2026-19_Tools_%2B_Resources_%2B_Prompts-e4e4e7?style=for-the-badge)](./server.py)
 [![Tests](https://img.shields.io/badge/Tests-27%2F27_Passing-10b981?style=for-the-badge)](./test_brain.py)
 
 *Built with 100% Python Standard Library (`sqlite3`, `ast`, `http.server`, `concurrent.futures`) and Vanilla HTML5 / Canvas2D / ECS `Float32Array` SoA — zero `pip` packages required, zero cloud telemetry, sub-10ms local execution.*
 
-[Quick Install](#-quick-install) • [Frontier Technologies (v7.2)](#-frontier-20252026-technologies-v72) • [Architecture](#-how-it-works-zero-round-trip-memory-protocol) • [Token Diet (-96%)](#-5-stage-token-diet--context-pipeline) • [Carbon Studio OS (9 Views)](#️-carbon-studio-os-dashboard-http1270018765) • [MCP 2026 Server](#-mcp-2026-server-18-tools--resources--prompts) • [Testing](#-verification--test-suite-2727-pass)
+[Quick Install](#-quick-install) • [Frontier Technologies](#-frontier-20252026-technologies-v81) • [Architecture](#-how-it-works-zero-round-trip-memory-protocol) • [Token Diet (-96%)](#-5-stage-token-diet--context-pipeline) • [Carbon Studio OS](#️-carbon-studio-os-dashboard-http1270018765) • [MCP 2026 Server](#-mcp-2026-server-19-tools--resources--prompts) • [Testing](#-verification--test-suite-2727-pass)
 
 </div>
 
@@ -85,7 +85,7 @@ flowchart LR
 
 ## 🖥️ Carbon Studio OS Dashboard (`http://127.0.0.1:8765`)
 
-Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte Carbon `#08080a`**, **Obsidian Zinc `#111116`**, **Hairline Borders `#22222b`**, and **Precision Emerald `#10b981`**) and backed by a persistent 16-worker `ThreadPoolExecutor` HTTP/SSE server:
+Redesigned end-to-end with the **Carbon Studio OS v8.1** design system (**Matte Carbon `#08080a`**, **Obsidian Zinc `#111116`**, **Hairline Borders `#22222b`**, and **Precision Emerald `#10b981`**), featuring the 7-Studio Navigation Rail + AST Inspector + Voice-Aware Zero-Call Protocol:
 
 | Index | View / Route | Key Capabilities |
 | :--- | :--- | :--- |
@@ -96,20 +96,19 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 | **`05`** | **Prompt Forge** (`/#promptforge`) | • **6-Section Technical Specification Synthesizer**: Combines AST `:Lstart-end` pointers, Self-Learn Meta-Rules, DOTS tasks, and **Antigravity Skills (`SKILL.md`)** in `PT-PT` or `EN-EN` with 1-click **Swarm 48x Launch**. |
 | **`06`** | **Vault 6x** (`/#vault`) | • **Interactive Markdown Vault Studio**: Live `.md` editor with `[[wikilinks]]`, **Defuddle Web/HTML Clipper** (with IPv4/IPv6 SSRF protection), **Universal `AGENTS.md` Repo Sync**, and 6 live telemetry canvases. |
 | **`07`** | **Tasks** (`/#tasks`) | • **Dedicated 4-Column Kanban & Topological `.dots/*.md` DAG Studio**: Unifies DOTS DAG tasks, live Antigravity subagents, and 48-worker Swarm lanes with an interactive Bézier DAG canvas (`#tasksDagCanvas`). |
-| **`08`** | **Jarvis OS** (`/#jarvis`) | • **J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge)**: 60 FPS Acoustic Core (`#jarvisOrbCanvas`), continuous PT-PT/EN Speech Recognition (`STT`) + Neural Speech Synthesis (`TTS`), sub-15ms ReAct local tool execution (`PPR`, `AST`, `Git`, `DOTS`, `Windows RAM/CPU/Disk Telemetry`), and 1-click surgical `[JARVIS_DIRECTIVE]` injection into Antigravity IDE. |
+| **`08`** | **AST & BFS Inspector** (`/#ast`) | • **Codebase Knowledge Graph & AST Explorer**: Symbol lookup (`:Lstart-end`), Git Co-Change blast-radius prediction, God Nodes, multi-modal BFS shortest path (`2,349x` compression), and Voice Phonetic AST target resolution. |
 | **`OS`** | **Orbit Mission** (`/#orbit`) | • **Mission Control Modal**: Approval Inbox (*"Needs Your Yes"*), Trust Hierarchy locks, Fleet Broadcasts, 4-IDE MCP Bridge, **Live 5h Quota Radar**, and Engineering ROI Ledger. |
-| **`AST`** | **Graphify BFS** (`/#ast`) | • **Codebase Knowledge Graph (`611` Nodes, `2,013` Edges)**: Symbol lookup (`:Lstart-end`), Git Co-Change blast-radius prediction, God Nodes, and multi-modal BFS shortest path (`2,349x` compression). |
 
 > **Keyboard Shortcuts**:
 > - `Ctrl+K` / `⌘K` — Open **Omni-Search Command Palette** (jump to any view, run studio actions, or search live memory nodes)
-> - `1`–`9` — Switch directly to views `01 Córtex` through `09 AST Graphify BFS`
+> - `1`–`8` — Switch directly to views `01 Córtex` through `08 AST & BFS Inspector`
 > - `Alt+1`–`Alt+8` — Quick-jump across workspace accordions in Córtex
 > - `Escape` — Close the topmost active modal (`#cmdPaletteModal`, `#vaultNoteEditorModal`, `#orbitOsModal`, `#astInspectorModal`, etc.)
 > - `[` / `]` — Cycle 3D Follow Camera across active agents in `#office`
 
 ---
 
-## 🧰 MCP 2026 Server (18 Tools + Resources + Prompts)
+## 🧰 MCP 2026 Server (19 Tools + Resources + Prompts)
 
 [`server.py`](./server.py) implements a zero-dependency **MCP JSON-RPC 2.0 Stdio Server** with exact UTF-8 byte framing and MCP 2026 `Tool Annotations` (`readOnlyHint`, `idempotentHint`, `destructiveHint`):
 
@@ -118,6 +117,7 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 - `brain://scout/map` — Latest `[SCOUT_SHARED_MAP]` AST index with `:Lstart-end` pointers
 - `brain://graph/report` — Deterministic `GRAPH_REPORT.md` architecture summary & God Nodes
 - `brain://orbit/briefing` — Executive Morning Brief, 5h Quota Radar & Engineering ROI
+- `brain://voice/protocol` — Active Voice-Aware Zero-Call Protocol & Phonetic AST Guide
 - `brain://workspace/{workspace}/checkpoint` — Active milestone checkpoint for any workspace
 - `brain://symbol/{symbol_name}` — Surgical AST symbol slice (`:Lstart-end`)
 
@@ -126,7 +126,7 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 - `bugfix-lineage` — Root-cause debugging template with causal bugfix history & AST alerts
 - `swarm-dispatch` — 4-Lane Asymmetric Swarm decomposition template (`UI`, `API`, `TESTS`, `DOCS`)
 
-### 18 Native MCP Tools (`tools/list`, `tools/call`)
+### 19 Native MCP Tools (`tools/list`, `tools/call`)
 | Category | Tool Name | Read-Only | Description |
 | :--- | :--- | :---: | :--- |
 | **Core Memory** | `store_fact` | `false` | Store or update an architectural fact, bug fix, or directive with bi-temporal superseding & secret redaction. |
@@ -147,7 +147,7 @@ Redesigned end-to-end with the **Carbon Studio OS v7.1** design system (**Matte 
 | **AST & Graphify** | `swarm_architecture_report` | `false` | Generate the deterministic [`GRAPH_REPORT.md`](./GRAPH_REPORT.md) with God Nodes, communities, and Git couplings. |
 | **Orbit Agent OS** | `orbit_mission_control` | `false` | Manage Approval Inbox, Fleet Broadcasts, Handoffs, DOTS DAG tasks, Self-Learn, Vault, or Prompt Forge. |
 | **Orbit Agent OS** | `orbit_briefing_roi` | `true` | Generate the executive Morning Brief, 5h Quota Radar, and Engineering ROI report. |
-| **Jarvis OS** | `jarvis_command` | `false` | Execute a natural language command or query through the local J.A.R.V.I.S. Cognitive OS & Antigravity Bridge (`brain://jarvis/status`). |
+| **Voice Protocol** | `brain_voice_optimize` | `false` | Denoise spoken/STT queries, resolve spoken symbols to `:Lstart-end` AST pointers, and pre-execute Brain intents (`brain://voice/protocol`). |
 
 ---
 
@@ -225,14 +225,14 @@ Output (`27/27 PASS`):
 | [`brain_inject.py`](./brain_inject.py) | `PreInvocation` hook: Smart Active-Repo Resolver, Session Delta (`DELTA_CACHE`), TOON telegraphic formatter, Query-Routed `[SCOUT_SHARED_MAP]`, Global Brain Top-3 injection, and **Notice Lookahead**. |
 | [`brain_harvest.py`](./brain_harvest.py) | `Stop` hook: `<SYSTEM_MESSAGE>` hygiene filter, zero-token harvesting of `<!-- brain: Topic \| Fact -->` annotations, file edits, subagent handoffs, and Memory Doctor compaction. |
 | [`orbit_engine.py`](./orbit_engine.py) | Orbit Agent OS engine: Approval Inbox, Trust Hierarchy, Fleet Broadcasts, `.dots/*.md` DAG with cycle detection, Recursive Self-Learning, Global Meta-Brain, Prompt Forge, and Vault 6x Studio (with IPv4/IPv6 SSRF protection). |
-| [`jarvis_engine.py`](./jarvis_engine.py) | **J.A.R.V.I.S. Cognitive OS (Zero-Ollama Antigravity Bridge)**: Bilingual PT/EN intent router, real Windows hardware telemetry (`GlobalMemoryStatusEx`), autonomous ReAct tool loop (`PPR`, `AST`, `Git`, `DOTS`, `QA`), speech synthesizer formatter, and `[JARVIS_DIRECTIVE]` bridge queue. |
+| [`voice_brain_engine.py`](./voice_brain_engine.py) | **Voice-Aware Zero-Call Protocol Engine**: Denoises spoken/STT queries, resolves spoken symbols phonetically to AST `:Lstart-end` pointers, and pre-executes Brain intents in zero model calls (up to 68% token reduction). |
 | [`swarm_engine.py`](./swarm_engine.py) | Asymmetric 48-worker Swarm orchestrator (`4 lanes × 12 workers`), `SCOUT-01` AST indexer, Ruflo Pheromone EMA, **physical `zlib`+`base64` rollback sandboxes**, and 3D Office state manager. |
 | [`graphify_engine.py`](./graphify_engine.py) | Multi-modal AST & architecture knowledge graph (`562` nodes, `1,823` edges), **Git Co-Change Coupling Miner (`CO_CHANGED`)**, `TEST_CASE` indexer, God Node detector, and BFS shortest-path solver. |
 | [`ast_impact_watcher.py`](./ast_impact_watcher.py) | Persistent SQLite AST symbol SHA-256 snapshotter, **Git Diff Blast-Radius Analyzer**, multi-language brace scanner, and unified AI-Defence secret scanner. |
 | [`token_diet.py`](./token_diet.py) | Dynamic intent-based MCP tool pruner across all 18 tools and 5-hour quota profiler (`LEAN` vs `FULL`). |
-| [`server.py`](./server.py) | Zero-dependency **MCP 2026 JSON-RPC 2.0 `stdio` server** with UTF-8 byte framing, 18 tools (`readOnlyHint` annotations), 6 native `Resources` (`brain://...`), and 3 `Prompts`. |
+| [`server.py`](./server.py) | Zero-dependency **MCP 2026 JSON-RPC 2.0 `stdio` server** with UTF-8 byte framing, 19 tools (`readOnlyHint` annotations), 6 native `Resources` (`brain://...`), and 3 `Prompts`. |
 | [`web_dashboard.py`](./web_dashboard.py) | Local HTTP/SSE server (`127.0.0.1:8765`) powered by a 16-worker `ThreadPoolExecutor`, strict `POST`/`DELETE` CSRF protection, `4 MB` payload cap, and secret-redacted edits. |
-| [`index.html`](./index.html) | Single-file **Carbon Studio OS v7.1** UI (`01 Córtex`, `02 Swarm`, `03 Office 3D`, `04 Self-Learn`, `05 Prompt Forge`, `06 Vault 6x`, `07 Tasks`, `08 Orbit OS`, `09 AST & BFS`). |
+| [`index.html`](./index.html) | Single-file **Carbon Studio OS v8.1** UI (`01 Córtex`, `02 Swarm`, `03 Office 3D`, `04 Self-Learn`, `05 Prompt Forge`, `06 Vault 6x`, `07 Tasks`, `08 AST & BFS Inspector`, `Orbit Mission Control`). |
 | [`install.py`](./install.py) / [`auto_updater.py`](./auto_updater.py) | Automated installer, runtime synchronizer, and GitHub `origin/main` hot-reload updater. |
 | [`test_brain.py`](./test_brain.py) | End-to-end 27-suite automated verification benchmark. |
 
